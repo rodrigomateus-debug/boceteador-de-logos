@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Boceteador Formas — Poné tu logo en el producto</title>
+<title>Cargá tu logo — Formas Publicitarias</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap');
 
@@ -38,7 +38,8 @@ header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:2
 header.top h1{font-size:34px;line-height:1.02;margin:8px 0 0}
 
 .grid{display:grid;grid-template-columns:1.25fr .75fr;gap:22px;align-items:start}
-@media (max-width:900px){.grid{grid-template-columns:1fr}}
+#stageCol{position:sticky;top:20px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}#stageCol{position:static}}
 .col{display:flex;flex-direction:column;gap:16px}
 
 /* ---- escenario ---- */
@@ -141,7 +142,7 @@ footer.bottom small{color:var(--text-muted)}
   <header class="top">
     <div>
       <div class="eyebrow">your brand loved</div>
-      <h1 class="display">Boceteador</h1>
+      <h1 class="display">Cargá tu logo</h1>
       <div class="rule" style="margin-top:12px"></div>
     </div>
     <span class="pill">Boceto orientativo</span>
@@ -150,7 +151,7 @@ footer.bottom small{color:var(--text-muted)}
   <div class="grid">
 
     <!-- ============ ESCENARIO ============ -->
-    <div class="col">
+    <div class="col" id="stageCol">
       <div class="card stage-card">
         <div id="frameWrap">
           <div id="emptyState" class="slot">
