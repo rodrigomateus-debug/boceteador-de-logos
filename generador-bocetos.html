@@ -238,7 +238,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
 @media print{html,body{background:#fff}}
 .bcp-slot{background-color:#F1F1F6;background-image:repeating-linear-gradient(-45deg,rgba(0,0,133,.05) 0 10px,rgba(0,0,133,0) 10px 20px)}
 .bcp-slot img{width:100%;height:100%;object-fit:contain;display:block}
-.bcp-foto img{object-fit:cover}
+.bcp-foto img{object-fit:{{FOTO_FIT}}}
 </style>
 </head>
 <body>
@@ -282,7 +282,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
     <div style="display:flex; flex-direction:column;">
       <div style="position:relative; border-radius:24px; border:1px solid var(--border-subtle,#E4E4ED); overflow:hidden;">
         <span style="position:absolute; top:14px; left:14px; z-index:2; display:inline-block; padding:5px 12px; border-radius:999px; background:var(--formas-navy,#000085); color:#fff; font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;">Vista principal</span>
-        <div class="bcp-slot bcp-foto" style="aspect-ratio:1/1.05; display:flex; align-items:center; justify-content:center; text-align:center;">
+        <div class="bcp-slot bcp-foto" style="aspect-ratio:1/1.05; display:flex; align-items:center; justify-content:center; text-align:center; {{FOTO_SLOT_STYLE}}">
           {{FOTO_PRODUCTO}}
         </div>
       </div>
@@ -449,6 +449,12 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <button class="clear" id="clear_foto" style="display:none" title="Quitar imagen">✕</button>
         <input type="file" id="f_foto" accept="image/*">
         <span id="txt_foto">Subir foto ya lista (con el logo aplicado)</span>
+      </div>
+      <label>Ajuste de la foto en la ficha</label>
+      <div class="codeToggle">
+        <button type="button" id="fitCover" aria-pressed="true" title="La foto llena el recuadro y se recorta lo que sobra">Llenar</button>
+        <button type="button" id="fitContain" aria-pressed="false" title="Se ve la foto completa, sin recortes">Entera</button>
+        <button type="button" id="fitFill" aria-pressed="false" title="La foto se estira para ocupar todo (puede deformarse)">Estirar</button>
       </div>
     </fieldset>
 
@@ -685,6 +691,7 @@ let logoBg = 'light';                 // fondo del recuadro "Logo a imprimir": l
 let codeMode = 'hex';                 // hex | pantone
 let printColors = [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
 let fullColor = false;                // impresión a todo color (sin colores planos)
+let fotoFit = 'cover';                // ajuste de la foto en la ficha: cover | contain | fill
 let barW = 100, barH = 100;           // largo (%) de las líneas de medida del logo en la ficha
 let barWOff = 0, barHOff = 0;         // corrimiento (%) del centro de cada línea
 
@@ -742,6 +749,8 @@ function build(){
     COLOR_IMPRESION_HEX: (printColors[0]||{}).hex || '#FFFFFF',
     COLORES_IMPRESION: coloresHtml(),
     LOGO_SLOT_STYLE: logoBg === 'dark' ? 'background-color:#0B0B23; background-image:none;' : '',
+    FOTO_FIT: fotoFit,
+    FOTO_SLOT_STYLE: (imgFoto && fotoFit !== 'cover') ? 'background-color:#FFFFFF; background-image:none;' : '',
     BAR_W_PCT: String(Math.round(barW)),
     BAR_H_PCT: String(Math.round(barH)),
     BAR_W_OFF: String(Math.round(barWOff*10)/10),
@@ -770,7 +779,7 @@ function render(){
 /* --- persistencia local --- */
 function save(){
   try{
-    const data = {accent, logoBg, codeMode, printColors, barW, barH, barWOff, barHOff, fullColor};
+    const data = {accent, logoBg, codeMode, printColors, barW, barH, barWOff, barHOff, fullColor, fotoFit};
     FIELDS.forEach(id => data[id] = $(id).value);
     localStorage.setItem('boceto-formas', JSON.stringify(data));
   }catch(e){}
@@ -789,6 +798,7 @@ function restore(){
     if(typeof data.barWOff === 'number') barWOff = data.barWOff;
     if(typeof data.barHOff === 'number') barHOff = data.barHOff;
     if(typeof data.fullColor === 'boolean') fullColor = data.fullColor;
+    if(data.fotoFit) fotoFit = data.fotoFit;
   }catch(e){}
 }
 
@@ -812,12 +822,18 @@ function syncToggles(){
   $('codeHex').setAttribute('aria-pressed', codeMode==='hex');
   $('codePant').setAttribute('aria-pressed', codeMode==='pantone');
   $('box_logo').classList.toggle('darkbg', logoBg==='dark');
+  $('fitCover').setAttribute('aria-pressed', fotoFit==='cover');
+  $('fitContain').setAttribute('aria-pressed', fotoFit==='contain');
+  $('fitFill').setAttribute('aria-pressed', fotoFit==='fill');
   $('fullColor').checked = fullColor;
   $('printColors').hidden = fullColor;
   $('addColor').hidden = fullColor;
   $('codeToggleRow').hidden = fullColor;
 }
 $('fullColor').addEventListener('change', ()=>{ fullColor = $('fullColor').checked; syncToggles(); render(); });
+$('fitCover').onclick   = ()=>{ fotoFit='cover';   syncToggles(); render(); };
+$('fitContain').onclick = ()=>{ fotoFit='contain'; syncToggles(); render(); };
+$('fitFill').onclick    = ()=>{ fotoFit='fill';    syncToggles(); render(); };
 $('bgLight').onclick = ()=>{ logoBg='light'; syncToggles(); render(); };
 $('bgDark').onclick  = ()=>{ logoBg='dark';  syncToggles(); render(); };
 $('codeHex').onclick  = ()=>{ codeMode='hex';     syncToggles(); drawPrintColors(); render(); };
@@ -1026,7 +1042,7 @@ function tplRefresh(){
   sel.value = cur || '';
 }
 function snapshot(){
-  const d = {accent, logoBg, codeMode, printColors, barW, barH, barWOff, barHOff, fullColor, imgFoto, imgLogo};
+  const d = {accent, logoBg, codeMode, printColors, barW, barH, barWOff, barHOff, fullColor, fotoFit, imgFoto, imgLogo};
   FIELDS.forEach(id => d[id] = $(id).value);
   return d;
 }
@@ -1039,6 +1055,7 @@ function applySnapshot(d){
   barW = d.barW || 100; barH = d.barH || 100;
   barWOff = d.barWOff || 0; barHOff = d.barHOff || 0;
   fullColor = !!d.fullColor;
+  fotoFit = d.fotoFit || 'cover';
   imgFoto = d.imgFoto || null;
   imgLogo = d.imgLogo || null;
   if(imgFoto){ $('txt_foto').innerHTML = '<img src="'+imgFoto+'"><span style="font-size:11px">Imagen de la plantilla</span>'; $('clear_foto').style.display='block'; }
@@ -1116,6 +1133,7 @@ document.addEventListener('keydown', e => { if(e.key === 'Escape' && !bocetoModa
 
 window.__applyBoceto = res => {
   imgFoto = res.foto;
+  fotoFit = 'contain'; // el boceto compuesto se muestra entero, sin recortes
   $('txt_foto').innerHTML = '<img src="'+res.foto+'"><span style="font-size:11px">Boceto aplicado — clic para reemplazar</span>';
   $('clear_foto').style.display = 'block';
   if(res.logo){
@@ -1129,6 +1147,7 @@ window.__applyBoceto = res => {
   if(res.posicion) $('f_posicion').value = res.posicion;
   $('openBoceto').textContent = '✎ Editar el boceto';
   closeBocetoModal();
+  syncToggles();
   render();
 };
 
