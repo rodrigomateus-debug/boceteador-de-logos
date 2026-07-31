@@ -331,9 +331,9 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             </div>
           </div>
         </div>
-        <!-- barrita de medida: ancho -->
-        <div style="display:flex; justify-content:center;">
-          <div id="bcpBarW" style="width:calc({{BAR_W_PCT}}% - 36px); min-width:70px; position:relative; left:{{BAR_W_OFF}}%; display:flex; align-items:center; gap:10px; margin-top:10px; color:var(--formas-navy,#000085); user-select:none;">
+        <!-- barrita de medida: ancho (su espacio es exactamente el recuadro del logo) -->
+        <div style="display:flex; justify-content:center; margin-right:36px;">
+          <div id="bcpBarW" style="width:{{BAR_W_PCT}}%; min-width:70px; position:relative; left:{{BAR_W_OFF}}%; display:flex; align-items:center; gap:10px; margin-top:10px; color:var(--formas-navy,#000085); user-select:none;">
             <div class="bcpGrabW" data-dir="-1" style="flex:1; display:flex; align-items:center; cursor:grab; padding:8px 0;">
               <span style="width:1.5px; height:12px; background:currentColor;"></span>
               <span style="flex:1; height:1.5px; background:currentColor;"></span>
@@ -970,7 +970,7 @@ function attachBarDrag(){
       ? (slot ? clampNum((slot.getBoundingClientRect().width / contSize()) * 100, 15, 100) : 100)
       : 100;
     const getLen = () => horiz ? barW : barH;
-    const setLen = v => { if(horiz){ barW = v; el.style.width = 'calc(' + v + '% - 36px)'; } else { barH = v; el.style.height = v + '%'; } };
+    const setLen = v => { if(horiz){ barW = v; el.style.width = v + '%'; } else { barH = v; el.style.height = v + '%'; } };
     const getOff = () => horiz ? barWOff : barHOff;
     const setOff = v => { if(horiz){ barWOff = v; el.style.left = v + '%'; } else { barHOff = v; el.style.top = v + '%'; } };
     const track = (h, onMove) => {
