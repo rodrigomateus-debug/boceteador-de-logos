@@ -57,6 +57,19 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--lime); border-co
 .pcRow .del:hover{background:#EF7958; color:#fff}
 .addColor{margin-top:8px; width:100%; padding:8px; border:1.5px dashed var(--border); border-radius:8px; background:#fff; font:inherit; font-size:12px; font-weight:700; color:var(--muted); cursor:pointer}
 .addColor:hover{border-color:var(--lime); color:var(--ink)}
+.tplBtns{display:flex; gap:6px; margin-top:8px}
+.tplBtns button{flex:1; padding:8px; border-radius:8px; font:inherit; font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid var(--border); background:#fff; color:var(--ink)}
+.tplBtns #tplLoad{background:var(--navy); border-color:var(--navy); color:#fff}
+.tplBtns #tplLoad:hover{background:#0000a8}
+.tplBtns #tplSave{background:var(--lime); border-color:var(--lime); color:var(--navy)}
+.tplBtns #tplSave:hover{filter:brightness(1.05)}
+.tplBtns #tplDel{flex:0 0 auto; color:var(--muted)}
+.tplBtns #tplDel:hover{border-color:#EF7958; color:#EF7958}
+.fullColorRow{display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:var(--ink); margin-top:8px; cursor:pointer}
+.fullColorRow input{width:15px; height:15px; accent-color:var(--navy)}
+.fileBox.darkbg{background:#0B0B23; border-color:#3A3A55}
+.fileBox.darkbg span{color:#C9C9DC}
+.fileBox.darkbg .clear{background:#1E1E40; color:#C9C9DC; box-shadow:0 0 0 1px #3A3A55}
 /* ---------- Preview ---------- */
 .previewWrap{padding:26px; display:flex; justify-content:center; align-items:flex-start; overflow:auto}
 .sheetScaler{transform-origin:top center; box-shadow:0 10px 40px rgba(11,11,35,.18); border-radius:4px}
@@ -311,7 +324,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           </div>
         </div>
         <!-- barrita de medida: ancho -->
-        <div style="display:flex; justify-content:flex-start;">
+        <div style="display:flex; justify-content:center;">
           <div id="bcpBarW" style="width:calc({{BAR_W_PCT}}% - 36px); min-width:70px; display:flex; align-items:center; gap:10px; margin-top:10px; color:var(--formas-navy,#000085); cursor:ew-resize;">
             <div style="flex:1; display:flex; align-items:center;">
               <span style="width:1.5px; height:12px; background:currentColor;"></span>
@@ -373,6 +386,16 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <button type="button" class="nuevo" id="btn_nuevo">＋ Nuevo boceto</button>
       <button type="button" class="limpiar" id="btn_limpiar">Limpiar</button>
     </div>
+
+    <fieldset>
+      <legend>Plantillas</legend>
+      <select id="tplSelect"><option value="">Elegí una plantilla guardada…</option></select>
+      <div class="tplBtns">
+        <button type="button" id="tplLoad">Cargar</button>
+        <button type="button" id="tplSave">Guardar actual</button>
+        <button type="button" id="tplDel" title="Eliminar la plantilla seleccionada">🗑</button>
+      </div>
+    </fieldset>
 
     <fieldset>
       <legend>Pedido</legend>
@@ -449,7 +472,8 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <div><label>Posición</label><input type="text" id="f_posicion" placeholder="Centrado"></div>
       </div>
       <label>Colores de impresión</label>
-      <div class="codeToggle">
+      <label class="fullColorRow"><input type="checkbox" id="fullColor"> Full color (impresión a todo color)</label>
+      <div class="codeToggle" id="codeToggleRow">
         <button type="button" id="codeHex" aria-pressed="true">Código HEX</button>
         <button type="button" id="codePant" aria-pressed="false">Pantone</button>
       </div>
@@ -603,7 +627,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <div id="logoTools" hidden>
           <div class="label" style="margin-top:12px;letter-spacing:.08em">Color del logo</div>
           <div class="seg" id="tintSeg">
-            <button type="button" data-tint="original" aria-pressed="true">Original</button>
+            <button type="button" data-tint="original" aria-pressed="true">Full color</button>
             <button type="button" data-tint="white" aria-pressed="false">Blanco</button>
             <button type="button" data-tint="black" aria-pressed="false">Negro</button>
           </div>
@@ -652,6 +676,7 @@ let imgFoto = null, imgLogo = null;
 let logoBg = 'light';                 // fondo del recuadro "Logo a imprimir": light | dark
 let codeMode = 'hex';                 // hex | pantone
 let printColors = [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
+let fullColor = false;                // impresión a todo color (sin colores planos)
 let barW = 100, barH = 100;           // largo (%) de las líneas de medida del logo en la ficha
 
 const $ = id => document.getElementById(id);
@@ -673,6 +698,11 @@ const PH_LOGO = '<div style="font-family:ui-monospace,Menlo,Consolas,monospace; 
 const PH_LOGO_DARK = '<div style="font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; line-height:1.6; color:#FFFFFF; opacity:.6;">[ logo del cliente ]<br>vector / alta resolución</div>';
 
 function coloresHtml(){
+  if(fullColor){
+    return '<div style="display:flex; align-items:center; gap:8px; margin-top:5px;">'
+      + '<span style="width:18px; height:18px; border-radius:5px; background:conic-gradient(from 0deg, #E20389, #F9CE32, #8EE021, #089AE1, #000085, #E20389); border:1px solid rgba(0,0,0,.14); flex:none;"></span>'
+      + '<div style="font-family:var(--font-display,sans-serif); font-size:17px; font-weight:800; line-height:1.1; color:var(--formas-navy,#000085);">Full color</div></div>';
+  }
   return printColors.map(c => {
     const code = codeMode === 'pantone' ? (c.pant ? 'PANTONE ' + esc(c.pant) : '') : (c.hex||'').toUpperCase();
     return '<div style="display:flex; align-items:center; gap:8px; margin-top:5px;">'
@@ -729,7 +759,7 @@ function render(){
 /* --- persistencia local --- */
 function save(){
   try{
-    const data = {accent, logoBg, codeMode, printColors, barW, barH};
+    const data = {accent, logoBg, codeMode, printColors, barW, barH, fullColor};
     FIELDS.forEach(id => data[id] = $(id).value);
     localStorage.setItem('boceto-formas', JSON.stringify(data));
   }catch(e){}
@@ -745,6 +775,7 @@ function restore(){
     if(Array.isArray(data.printColors) && data.printColors.length) printColors = data.printColors;
     if(data.barW > 0) barW = data.barW;
     if(data.barH > 0) barH = data.barH;
+    if(typeof data.fullColor === 'boolean') fullColor = data.fullColor;
   }catch(e){}
 }
 
@@ -767,7 +798,13 @@ function syncToggles(){
   $('bgDark').setAttribute('aria-pressed', logoBg==='dark');
   $('codeHex').setAttribute('aria-pressed', codeMode==='hex');
   $('codePant').setAttribute('aria-pressed', codeMode==='pantone');
+  $('box_logo').classList.toggle('darkbg', logoBg==='dark');
+  $('fullColor').checked = fullColor;
+  $('printColors').hidden = fullColor;
+  $('addColor').hidden = fullColor;
+  $('codeToggleRow').hidden = fullColor;
 }
+$('fullColor').addEventListener('change', ()=>{ fullColor = $('fullColor').checked; syncToggles(); render(); });
 $('bgLight').onclick = ()=>{ logoBg='light'; syncToggles(); render(); };
 $('bgDark').onclick  = ()=>{ logoBg='dark';  syncToggles(); render(); };
 $('codeHex').onclick  = ()=>{ codeMode='hex';     syncToggles(); drawPrintColors(); render(); };
@@ -864,8 +901,9 @@ function attachBarDrag(){
       const move = ev=>{
         const r = cont.getBoundingClientRect();
         if(axis==='w'){
-          const pct = clampNum(((ev.clientX - r.left) / r.width) * 100, 15, 100);
-          el.style.width = 'calc(' + pct + '% - 40px)';
+          const cx = (r.left + r.right) / 2;
+          const pct = clampNum((Math.abs(ev.clientX - cx) * 2 / r.width) * 100, 15, 100);
+          el.style.width = 'calc(' + pct + '% - 36px)';
           barW = pct;
         } else {
           const cy = (r.top + r.bottom) / 2;
@@ -881,6 +919,70 @@ function attachBarDrag(){
   }
 }
 $('preview').addEventListener('load', attachBarDrag);
+
+/* --- plantillas con nombre (guardadas en este navegador) --- */
+const TPL_KEY = 'boceto-formas-plantillas';
+function tplAll(){ try{ return JSON.parse(localStorage.getItem(TPL_KEY)||'{}'); }catch(e){ return {}; } }
+function tplRefresh(){
+  const sel = $('tplSelect');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Elegí una plantilla guardada…</option>';
+  Object.keys(tplAll()).sort((a,b)=>a.localeCompare(b,'es')).forEach(n=>{
+    const o = document.createElement('option');
+    o.textContent = n; o.value = n;
+    sel.appendChild(o);
+  });
+  sel.value = cur || '';
+}
+function snapshot(){
+  const d = {accent, logoBg, codeMode, printColors, barW, barH, fullColor, imgFoto, imgLogo};
+  FIELDS.forEach(id => d[id] = $(id).value);
+  return d;
+}
+function applySnapshot(d){
+  FIELDS.forEach(id => { if(d[id]!==undefined) $(id).value = d[id]; });
+  accent = d.accent || accent;
+  logoBg = d.logoBg || 'light';
+  codeMode = d.codeMode || 'hex';
+  printColors = (Array.isArray(d.printColors) && d.printColors.length) ? d.printColors : [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
+  barW = d.barW || 100; barH = d.barH || 100;
+  fullColor = !!d.fullColor;
+  imgFoto = d.imgFoto || null;
+  imgLogo = d.imgLogo || null;
+  if(imgFoto){ $('txt_foto').innerHTML = '<img src="'+imgFoto+'"><span style="font-size:11px">Imagen de la plantilla</span>'; $('clear_foto').style.display='block'; }
+  else { $('txt_foto').textContent = 'Subir foto ya lista (con el logo aplicado)'; $('clear_foto').style.display='none'; }
+  if(imgLogo){ $('txt_logo').innerHTML = '<img src="'+imgLogo+'"><span style="font-size:11px">Logo de la plantilla</span>'; $('clear_logo').style.display='block'; }
+  else { $('txt_logo').textContent = 'Subir logo (vector / alta resolución)'; $('clear_logo').style.display='none'; }
+  drawSwatches(); drawPrintColors(); syncToggles(); render();
+}
+$('tplSave').onclick = () => {
+  const sug = ($('f_cliente').value.trim() + ' — ' + $('f_producto').value.split('\n')[0].trim()).replace(/^ — | — $/g,'').trim();
+  const name = prompt('Nombre de la plantilla:', sug || 'Mi plantilla');
+  if(!name) return;
+  const all = tplAll();
+  if(all[name] && !confirm('Ya existe una plantilla llamada "'+name+'". ¿Reemplazarla?')) return;
+  all[name] = snapshot();
+  try{ localStorage.setItem(TPL_KEY, JSON.stringify(all)); }
+  catch(e){ alert('No se pudo guardar: las imágenes ocupan demasiado para el almacenamiento del navegador. Probá con imágenes más livianas.'); return; }
+  tplRefresh();
+  $('tplSelect').value = name;
+};
+$('tplLoad').onclick = () => {
+  const name = $('tplSelect').value;
+  if(!name){ alert('Elegí primero una plantilla de la lista.'); return; }
+  if(!confirm('Se reemplazará lo que tengas cargado por la plantilla "'+name+'". ¿Continuar?')) return;
+  applySnapshot(tplAll()[name] || {});
+};
+$('tplDel').onclick = () => {
+  const name = $('tplSelect').value;
+  if(!name){ alert('Elegí primero una plantilla de la lista.'); return; }
+  if(!confirm('¿Eliminar la plantilla "'+name+'"?')) return;
+  const all = tplAll();
+  delete all[name];
+  try{ localStorage.setItem(TPL_KEY, JSON.stringify(all)); }catch(e){}
+  tplRefresh();
+};
+tplRefresh();
 
 /* --- nuevo boceto / limpiar --- */
 $('btn_nuevo').onclick = () => window.open(location.href.split('#')[0] + '#nuevo', '_blank');
