@@ -65,12 +65,18 @@ header.top h1{font-size:34px;line-height:1.02;margin:8px 0 0}
 
 #measureChip{position:absolute;z-index:6;translate:-50% 0;background:var(--formas-navy);color:#fff;font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:999px;white-space:nowrap;pointer-events:none;font-variant-numeric:tabular-nums}
 
-/* barrita de medida bajo el escenario */
-.measure-bar{display:flex;align-items:center;gap:10px;margin-top:12px;color:var(--formas-navy)}
-.measure-bar .tickline{flex:1;display:flex;align-items:center}
-.measure-bar .tickline i{width:1.5px;height:12px;background:currentColor}
-.measure-bar .tickline b{flex:1;height:1.5px;background:currentColor}
-.measure-bar .val{font-family:var(--font-display);font-size:13px;font-weight:800;white-space:nowrap}
+/* regla de calibración */
+#ruler{position:absolute;inset:0;pointer-events:none;z-index:7}
+#rulerLine{position:absolute;height:14px;margin-top:-7px;transform-origin:0 50%;pointer-events:auto;cursor:move}
+#rulerLine::before{content:"";position:absolute;left:0;right:0;top:50%;margin-top:-1.25px;height:2.5px;background:var(--formas-navy)}
+#rulerLine i{position:absolute;top:1px;width:2.5px;height:12px;background:var(--formas-navy)}
+#rulerLine i:first-child{left:0}#rulerLine i:last-child{right:0}
+.ruler-handle{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;border:3.5px solid var(--formas-navy);translate:-50% -50%;pointer-events:auto;cursor:grab;box-shadow:0 1px 5px rgba(11,11,35,.35);touch-action:none}
+#rulerLabel{position:absolute;translate:-50% -145%;background:var(--formas-navy);color:#fff;font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:999px;white-space:nowrap;pointer-events:auto;cursor:move;font-variant-numeric:tabular-nums}
+
+/* eliminar logo */
+#logoDelete{position:absolute;top:-13px;right:-13px;width:26px;height:26px;border-radius:50%;background:#fff;border:1.5px solid var(--border-subtle);color:var(--formas-ink);font-size:15px;font-weight:700;line-height:1;cursor:pointer;z-index:6;display:grid;place-items:center;box-shadow:0 1px 5px rgba(11,11,35,.3);padding:0;font-family:var(--font-primary)}
+#logoDelete:hover{background:#EF7958;color:#fff;border-color:#EF7958}
 
 /* ---- panel de pasos ---- */
 .step{padding:16px 16px 18px}
@@ -92,6 +98,7 @@ select:focus,input:focus{outline:2px solid var(--sheet-accent);outline-offset:1p
 .btn-primary{background:var(--sheet-accent);color:var(--formas-navy)}
 .btn-primary:hover{filter:brightness(.95)}
 .btn-primary:disabled{filter:grayscale(.6) opacity(.5);cursor:not-allowed}
+.btn[disabled]{opacity:.65;cursor:progress}
 .btn-secondary{background:var(--surface-page);color:var(--text-strong);border-color:var(--border-subtle)}
 .btn-secondary:hover{background:var(--surface-sunken)}
 .btn:focus-visible{outline:2px solid var(--formas-navy);outline-offset:2px}
@@ -153,14 +160,16 @@ footer.bottom small{color:var(--text-muted)}
               <img id="logoImg" alt="Logo">
               <span class="handle tl" data-corner="tl"></span><span class="handle tr" data-corner="tr"></span>
               <span class="handle bl" data-corner="bl"></span><span class="handle br" data-corner="br"></span>
+              <button id="logoDelete" type="button" aria-label="Quitar logo" title="Quitar logo">×</button>
             </div>
             <div id="measureChip" hidden></div>
+            <div id="ruler" hidden>
+              <div id="rulerLine"><i></i><i></i></div>
+              <span class="ruler-handle" id="rh1"></span>
+              <span class="ruler-handle" id="rh2"></span>
+              <span id="rulerLabel"></span>
+            </div>
           </div>
-        </div>
-        <div class="measure-bar" id="productMeasureBar" hidden>
-          <span class="tickline"><i></i><b></b><i></i></span>
-          <span class="val num" id="productMeasureVal">Ancho del producto: — cm</span>
-          <span class="tickline"><i></i><b></b><i></i></span>
         </div>
       </div>
     </div>
@@ -177,9 +186,16 @@ footer.bottom small{color:var(--text-muted)}
         </label>
         <input type="file" id="photoInput" accept="image/png,image/jpeg,image/webp" hidden>
         <div class="field">
-          <span class="label" style="letter-spacing:.08em">Ancho real del producto</span>
-          <div class="suffix-wrap"><input type="number" id="productWidthCm" placeholder="ej. 15" min="1" max="300" step="0.1"><span class="suffix">cm</span></div>
-          <small style="color:var(--text-muted);font-size:11.5px">Con este dato las medidas del logo se calculan solas. Corresponde al ancho de la foto, por eso conviene una foto recortada al producto.</small>
+          <span class="label" style="letter-spacing:.08em">Escala real · regla</span>
+          <div class="field-row" style="margin-top:0">
+            <div class="field" style="margin-top:0;flex:1.2">
+              <div class="suffix-wrap"><input type="number" id="rulerCm" placeholder="ej. 15" min="0.5" max="500" step="0.1"><span class="suffix">cm</span></div>
+            </div>
+            <div class="field" style="margin-top:0">
+              <button class="btn btn-secondary" type="button" id="rulerToggle" style="padding:9px 12px" disabled>Ocultar regla</button>
+            </div>
+          </div>
+          <small style="color:var(--text-muted);font-size:11.5px">Llevá los extremos de la regla de lado a lado del producto en la foto y anotá cuánto mide esa distancia en la vida real. Con eso las medidas del logo se calculan solas.</small>
         </div>
         <div class="field">
           <span class="label" style="letter-spacing:.08em">Nombre del producto (opcional)</span>
@@ -204,8 +220,8 @@ footer.bottom small{color:var(--text-muted)}
           <span class="txt" id="logoTxt">Elegir logo<small>PNG sin fondo recomendado · también SVG o JPG</small></span>
         </label>
         <input type="file" id="logoInput" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden>
-        <label class="check"><input type="checkbox" id="removeWhite"> Quitar fondo blanco del logo</label>
-        <div class="note" id="jpgNote" hidden>⚠ <span>Tu logo no tiene transparencia: sobre productos oscuros se verá con fondo. Probá activar "Quitar fondo blanco".</span></div>
+        <button class="btn btn-secondary" type="button" id="removeWhiteBtn" style="margin-top:10px" hidden>Quitar fondo blanco</button>
+        <div class="note" id="jpgNote" hidden>⚠ <span>Tu logo no tiene transparencia: sobre productos oscuros se verá con fondo. Probá el botón "Quitar fondo blanco".</span></div>
         <div class="readout" id="logoReadout" hidden>
           <div class="row"><span class="label">Logo aplicado</span><span class="val num" id="logoSizeOut">—</span></div>
         </div>
@@ -226,8 +242,8 @@ footer.bottom small{color:var(--text-muted)}
             <option>Sublimación</option>
           </select>
         </div>
-        <label class="check"><input type="checkbox" id="includeZone"> Incluir el marco del área en la descarga</label>
         <button class="btn btn-primary" type="button" id="downloadBtn" style="margin-top:12px">Descargar boceto PNG</button>
+        <small style="display:block;margin-top:8px;color:var(--text-muted);font-size:11.5px">La descarga es la foto con el logo aplicado, sin regla ni marcas de área.</small>
       </div>
 
     </div>
@@ -252,14 +268,20 @@ const state = {
   logo: null,          // {x,y,w,h}
   logoAspect: 1,       // naturalW/naturalH del logo
   logoOriginalSrc: null,
+  whiteRemoved: false,
   drawMode: false,
+  ruler: null,         // {x1,y1,x2,y2}
+  rulerVisible: false,
 };
 
 /* ---------- helpers ---------- */
 const frameRect = () => ({ w: frame.clientWidth, h: frame.clientHeight });
 const cmPerPx = () => {
-  const cm = parseFloat($('productWidthCm').value);
-  return (cm > 0 && frame.clientWidth > 0) ? cm / frame.clientWidth : null;
+  const cm = parseFloat($('rulerCm').value);
+  if(!(cm > 0) || !state.ruler) return null;
+  const {w:FW,h:FH} = frameRect();
+  const len = Math.hypot((state.ruler.x2-state.ruler.x1)*FW, (state.ruler.y2-state.ruler.y1)*FH);
+  return len > 4 ? cm/len : null;
 };
 const clamp = (v,min,max) => Math.min(Math.max(v,min),max);
 
@@ -273,7 +295,7 @@ function render(){
     $('zoneReadout').hidden = false;
     $('zoneSizeOut').textContent = k
       ? `${fmtCm(z.w*FW*k)} × ${fmtCm(z.h*FH*k)} cm`
-      : 'ingresá el ancho del producto para ver cm';
+      : 'usá la regla para ver cm';
   } else { zoneEl.hidden = true; $('zoneReadout').hidden = true; }
 
   if(state.logo){
@@ -283,7 +305,7 @@ function render(){
     const k = cmPerPx();
     const txt = k
       ? `${fmtCm(l.w*FW*k)} × ${fmtCm(l.h*FH*k)} cm`
-      : 'sin medida — cargá el ancho del producto';
+      : 'sin medida — usá la regla';
     chip.hidden = false;
     chip.textContent = txt;
     chip.style.left = (l.x + l.w/2)*100 + '%';
@@ -293,9 +315,21 @@ function render(){
     $('logoSizeOut').textContent = k ? `${fmtCm(l.w*FW*k)} × ${fmtCm(l.h*FH*k)} cm` : '—';
   } else { logoWrap.hidden = true; chip.hidden = true; $('logoReadout').hidden = true; }
 
-  const cm = parseFloat($('productWidthCm').value);
-  $('productMeasureBar').hidden = !(cm > 0) || frame.hidden;
-  if(cm > 0) $('productMeasureVal').textContent = `Ancho del producto: ${fmtCm(cm)} cm`;
+  /* regla de calibración */
+  if(state.ruler && state.rulerVisible && !frame.hidden){
+    $('ruler').hidden = false;
+    const rl = state.ruler;
+    const p1 = {x:rl.x1*FW, y:rl.y1*FH}, p2 = {x:rl.x2*FW, y:rl.y2*FH};
+    const len = Math.hypot(p2.x-p1.x, p2.y-p1.y);
+    const ang = Math.atan2(p2.y-p1.y, p2.x-p1.x);
+    Object.assign($('rulerLine').style,{left:p1.x+'px',top:p1.y+'px',width:len+'px',transform:`rotate(${ang}rad)`});
+    Object.assign($('rh1').style,{left:p1.x+'px',top:p1.y+'px'});
+    Object.assign($('rh2').style,{left:p2.x+'px',top:p2.y+'px'});
+    const cm = parseFloat($('rulerCm').value);
+    const lbl = $('rulerLabel');
+    lbl.textContent = cm > 0 ? `${fmtCm(cm)} cm` : '¿cuántos cm?';
+    Object.assign(lbl.style,{left:(p1.x+p2.x)/2+'px',top:(p1.y+p2.y)/2+'px'});
+  } else $('ruler').hidden = true;
 }
 
 function setStepStates(){
@@ -320,14 +354,24 @@ function loadPhoto(file){
     frame.hidden = false;
     $('photoThumb').innerHTML = `<img src="${url}" alt="">`;
     $('photoTxt').innerHTML = `${file.name}<small>clic para cambiar la foto</small>`;
-    state.zone = null; state.logo = null;
+    state.zone = null;
+    clearLogo();
+    state.ruler = { x1:.08, y1:.5, x2:.92, y2:.5 };
+    state.rulerVisible = true;
+    $('rulerToggle').disabled = false;
+    $('rulerToggle').textContent = 'Ocultar regla';
     enterDrawMode();
     setStepStates(); render();
   };
   photo.src = url;
 }
 
-$('productWidthCm').addEventListener('input', render);
+$('rulerCm').addEventListener('input', render);
+$('rulerToggle').addEventListener('click', () => {
+  state.rulerVisible = !state.rulerVisible;
+  $('rulerToggle').textContent = state.rulerVisible ? 'Ocultar regla' : 'Mostrar regla';
+  render();
+});
 
 /* ---------- paso 2: dibujar área ---------- */
 $('drawZoneBtn').addEventListener('click', enterDrawMode);
@@ -352,21 +396,40 @@ function loadLogo(file){
   probe.onload = () => {
     state.logoAspect = probe.naturalWidth / probe.naturalHeight;
     state.logoOriginalSrc = url;
+    state.whiteRemoved = false;
     $('jpgNote').hidden = !/jpe?g/i.test(file.type);
-    applyLogoSrc(() => {
+    const btn = $('removeWhiteBtn');
+    btn.hidden = false; btn.disabled = false; btn.textContent = 'Quitar fondo blanco';
+    logoImg.onload = () => {
       placeLogoInZone();
       $('logoThumb').innerHTML = `<img src="${logoImg.src}" alt="">`;
       $('logoTxt').innerHTML = `${file.name}<small>clic para cambiar el logo</small>`;
+      logoImg.onload = null;
       setStepStates(); render();
-    });
+    };
+    logoImg.src = url;
   };
   probe.src = url;
 }
 
-/* quita el fondo blanco con un umbral simple */
-$('removeWhite').addEventListener('change', () => state.logoOriginalSrc && applyLogoSrc(render));
-function applyLogoSrc(done){
-  if(!$('removeWhite').checked){ logoImg.onload = () => done&&done(); logoImg.src = state.logoOriginalSrc; return; }
+/* quitar / restaurar fondo blanco (umbral simple) */
+$('removeWhiteBtn').addEventListener('click', () => {
+  if(!state.logoOriginalSrc) return;
+  const btn = $('removeWhiteBtn');
+
+  if(state.whiteRemoved){
+    logoImg.onload = () => {
+      logoImg.onload = null;
+      state.whiteRemoved = false;
+      btn.textContent = 'Quitar fondo blanco';
+      $('logoThumb').innerHTML = `<img src="${logoImg.src}" alt="">`;
+      render();
+    };
+    logoImg.src = state.logoOriginalSrc;
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Quitando fondo…';
   const img = new Image();
   img.onload = () => {
     const c = document.createElement('canvas');
@@ -378,11 +441,33 @@ function applyLogoSrc(done){
       if(p[i]>238 && p[i+1]>238 && p[i+2]>238) p[i+3]=0;
     }
     ctx.putImageData(d,0,0);
-    logoImg.onload = () => done&&done();
+    logoImg.onload = () => {
+      logoImg.onload = null;
+      state.whiteRemoved = true;
+      btn.disabled = false; btn.textContent = 'Restaurar fondo original';
+      $('logoThumb').innerHTML = `<img src="${logoImg.src}" alt="">`;
+      $('jpgNote').hidden = true;
+      render();
+    };
     logoImg.src = c.toDataURL('image/png');
   };
   img.src = state.logoOriginalSrc;
+});
+
+/* eliminar el logo con la cruz */
+function clearLogo(){
+  state.logo = null; state.logoOriginalSrc = null; state.whiteRemoved = false;
+  $('logoInput').value = '';
+  logoImg.removeAttribute('src');
+  $('logoThumb').innerHTML = '◐';
+  $('logoTxt').innerHTML = 'Elegir logo<small>PNG sin fondo recomendado · también SVG o JPG</small>';
+  $('jpgNote').hidden = true;
+  const btn = $('removeWhiteBtn');
+  btn.hidden = true; btn.disabled = false; btn.textContent = 'Quitar fondo blanco';
+  setStepStates(); render();
 }
+$('logoDelete').addEventListener('pointerdown', e => e.stopPropagation());
+$('logoDelete').addEventListener('click', clearLogo);
 
 function placeLogoInZone(){
   if(!state.zone) return;
@@ -405,6 +490,16 @@ frame.addEventListener('pointerdown', e => {
   const {w:FW,h:FH} = frameRect();
   const r = frame.getBoundingClientRect();
   const px = { x: e.clientX - r.left, y: e.clientY - r.top };
+
+  /* la regla tiene prioridad, incluso en modo dibujo */
+  if(e.target.id === 'rh1' || e.target.id === 'rh2'){
+    active = { mode:'ruler-end', end:e.target.id, startPx:px, start:{...state.ruler} };
+    frame.setPointerCapture(e.pointerId); e.preventDefault(); return;
+  }
+  if(e.target.id === 'rulerLine' || e.target.id === 'rulerLabel' || e.target.parentElement === $('rulerLine')){
+    active = { mode:'ruler-move', startPx:px, start:{...state.ruler} };
+    frame.setPointerCapture(e.pointerId); e.preventDefault(); return;
+  }
 
   if(state.drawMode){
     active = { mode:'draw', startPx:px };
@@ -434,7 +529,18 @@ frame.addEventListener('pointermove', e => {
   const px = { x: clamp(e.clientX - r.left,0,FW), y: clamp(e.clientY - r.top,0,FH) };
   const dx = (px.x - active.startPx.x), dy = (px.y - active.startPx.y);
 
-  if(active.mode === 'draw'){
+  if(active.mode === 'ruler-end'){
+    const s = active.start;
+    const k = active.end === 'rh1' ? {x:'x1',y:'y1'} : {x:'x2',y:'y2'};
+    state.ruler = { ...s, [k.x]: clamp(px.x/FW,0,1), [k.y]: clamp(px.y/FH,0,1) };
+  }
+  else if(active.mode === 'ruler-move'){
+    const s = active.start;
+    const dxn = clamp(dx/FW, -Math.min(s.x1,s.x2), 1-Math.max(s.x1,s.x2));
+    const dyn = clamp(dy/FH, -Math.min(s.y1,s.y2), 1-Math.max(s.y1,s.y2));
+    state.ruler = { x1:s.x1+dxn, y1:s.y1+dyn, x2:s.x2+dxn, y2:s.y2+dyn };
+  }
+  else if(active.mode === 'draw'){
     const sx = active.startPx.x, sy = active.startPx.y;
     state.zone = {
       x: Math.min(sx,px.x)/FW, y: Math.min(sy,px.y)/FH,
@@ -523,50 +629,20 @@ function clampLogoToZone(){
   state.logo = l;
 }
 
-/* ---------- paso 4: descarga ---------- */
-$('downloadBtn').addEventListener('click', async () => {
+/* ---------- paso 4: descarga (solo foto + logo, sin marcas) ---------- */
+$('downloadBtn').addEventListener('click', () => {
   if(!state.logo) return;
-  try{ await document.fonts.load('800 16px Montserrat'); await document.fonts.load('600 16px Poppins'); }catch(_){}
   const NW = photo.naturalWidth, NH = photo.naturalHeight;
   const K = NW / frame.clientWidth; // px reales por px de pantalla
   const FW = frame.clientWidth, FH = frame.clientHeight;
-  const footH = Math.round(clamp(NW*0.11, 90, 220));
   const c = document.createElement('canvas');
-  c.width = NW; c.height = NH + footH;
+  c.width = NW; c.height = NH;
   const ctx = c.getContext('2d');
-
   ctx.drawImage(photo, 0, 0, NW, NH);
   const l = state.logo;
   ctx.drawImage(logoImg, l.x*FW*K, l.y*FH*K, l.w*FW*K, l.h*FH*K);
 
-  if($('includeZone').checked && state.zone){
-    const z = state.zone;
-    ctx.strokeStyle = '#8EE021';
-    ctx.lineWidth = Math.max(2, NW/500);
-    ctx.setLineDash([NW/90, NW/140]);
-    ctx.strokeRect(z.x*FW*K, z.y*FH*K, z.w*FW*K, z.h*FH*K);
-    ctx.setLineDash([]);
-  }
-
-  // pie institucional
-  ctx.fillStyle = '#000085';
-  ctx.fillRect(0, NH, NW, footH);
-  const pad = footH*0.28;
-  const name = $('productName').value.trim() || 'Producto';
-  const tech = $('technique').value;
-  const k = cmPerPx();
-  const meas = k ? ` · Logo ${fmtCm(l.w*FW*k)} × ${fmtCm(l.h*FH*k)} cm` : '';
-  const date = new Date().toLocaleDateString('es-AR');
-  ctx.fillStyle = '#FFFFFF';
-  ctx.textBaseline = 'middle';
-  ctx.font = `800 ${footH*0.26}px Montserrat, sans-serif`;
-  ctx.fillText(`${name} — ${tech}`, pad, NH + footH*0.36, NW - pad*2);
-  ctx.font = `500 ${footH*0.17}px Poppins, sans-serif`;
-  ctx.fillStyle = 'rgba(255,255,255,.75)';
-  ctx.fillText(`Boceto orientativo · Formas Publicitarias · ${date}${meas}`, pad, NH + footH*0.7, NW - pad*2);
-  ctx.fillStyle = '#8EE021';
-  ctx.fillRect(0, NH, NW*0.09, footH*0.06);
-
+  const name = $('productName').value.trim() || 'producto';
   const a = document.createElement('a');
   a.download = `boceto-${name.toLowerCase().replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'')||'producto'}.png`;
   a.href = c.toDataURL('image/png');
