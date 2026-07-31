@@ -86,6 +86,15 @@ header.top h1{font-size:34px;line-height:1.02;margin:8px 0 0}
 .step.locked{opacity:.45;pointer-events:none}
 .step-head h2{font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--formas-navy);margin:0;letter-spacing:-.01em}
 
+/* toggle de modo de medida */
+.mode-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mode-opt{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px;border:1.5px solid var(--border-subtle);border-radius:12px;background:var(--surface-page);cursor:pointer;font-family:var(--font-primary);text-align:left;transition:border-color .15s, box-shadow .15s}
+.mode-opt:hover{border-color:var(--formas-navy)}
+.mode-opt[aria-pressed="true"]{border-color:var(--formas-navy);background:var(--surface-sunken);box-shadow:0 0 0 2.5px color-mix(in srgb,var(--sheet-accent) 55%, transparent)}
+.mode-opt svg{width:26px;height:26px;flex:none}
+.mode-opt .t{font-size:12.5px;font-weight:700;color:var(--text-strong);line-height:1.3}
+.mode-opt small{display:block;margin-top:4px;font-weight:400;color:var(--text-muted);font-size:11px;line-height:1.35}
+
 .field{display:flex;flex-direction:column;gap:6px;margin-top:10px}
 .field-row{display:flex;gap:10px}
 .field-row .field{flex:1;margin-top:10px}
@@ -177,6 +186,28 @@ footer.bottom small{color:var(--text-muted)}
     <!-- ============ PASOS ============ -->
     <div class="col">
 
+      <!-- Modo de medida -->
+      <div class="card step" id="modeCard">
+        <div class="label" style="margin-bottom:10px">¿Con qué dato contás?</div>
+        <div class="mode-row">
+          <button type="button" class="mode-opt" id="modeLogo" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="7" y="9" width="12" height="10" rx="2"/>
+              <path d="M7 5h12M7 3.5v3M19 3.5v3"/>
+              <path d="M3 9v10M1.5 9h3M1.5 19h3"/>
+            </svg>
+            <span class="t">Tengo la medida exacta del logo<small>Marcás el área, cargás el logo y anotás su ancho × alto en cm.</small></span>
+          </button>
+          <button type="button" class="mode-opt" id="modeProduct" aria-pressed="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="9" width="20" height="6" rx="1.5"/>
+              <path d="M6 9v3M10 9v4.5M14 9v3M18 9v4.5"/>
+            </svg>
+            <span class="t">Sé la medida del producto<small>Calibrás con la regla sobre la foto y los cm se calculan solos.</small></span>
+          </button>
+        </div>
+      </div>
+
       <!-- Paso 1: producto -->
       <div class="card step" id="step1">
         <div class="step-head"><span class="step-num">1</span><h2>Foto del producto</h2></div>
@@ -185,7 +216,7 @@ footer.bottom small{color:var(--text-muted)}
           <span class="txt" id="photoTxt">Elegir foto del producto<small>JPG o PNG · se recomienda recortada al producto</small></span>
         </label>
         <input type="file" id="photoInput" accept="image/png,image/jpeg,image/webp" hidden>
-        <div class="field">
+        <div class="field" id="rulerField">
           <span class="label" style="letter-spacing:.08em">Escala real · regla</span>
           <div class="field-row" style="margin-top:0">
             <div class="field" style="margin-top:0;flex:1.2">
@@ -220,6 +251,16 @@ footer.bottom small{color:var(--text-muted)}
           <span class="txt" id="logoTxt">Elegir logo<small>PNG sin fondo recomendado · también SVG o JPG</small></span>
         </label>
         <input type="file" id="logoInput" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden>
+        <div class="field-row" id="logoCmFields" hidden>
+          <div class="field">
+            <span class="label" style="letter-spacing:.08em">Ancho del logo</span>
+            <div class="suffix-wrap"><input type="number" id="logoWcm" placeholder="ej. 5" min="0.1" max="200" step="0.1"><span class="suffix">cm</span></div>
+          </div>
+          <div class="field">
+            <span class="label" style="letter-spacing:.08em">Alto del logo</span>
+            <div class="suffix-wrap"><input type="number" id="logoHcm" placeholder="auto" min="0.1" max="200" step="0.1"><span class="suffix">cm</span></div>
+          </div>
+        </div>
         <button class="btn btn-secondary" type="button" id="removeWhiteBtn" style="margin-top:10px" hidden>Quitar fondo blanco</button>
         <div class="note" id="jpgNote" hidden>⚠ <span>Tu logo no tiene transparencia: sobre productos oscuros se verá con fondo. Probá el botón "Quitar fondo blanco".</span></div>
         <div class="readout" id="logoReadout" hidden>
@@ -272,16 +313,23 @@ const state = {
   drawMode: false,
   ruler: null,         // {x1,y1,x2,y2}
   rulerVisible: false,
+  mode: 'product',     // 'product' = regla | 'logo' = medida exacta del logo
 };
 
 /* ---------- helpers ---------- */
 const frameRect = () => ({ w: frame.clientWidth, h: frame.clientHeight });
 const cmPerPx = () => {
+  if(state.mode !== 'product') return null;
   const cm = parseFloat($('rulerCm').value);
   if(!(cm > 0) || !state.ruler) return null;
   const {w:FW,h:FH} = frameRect();
   const len = Math.hypot((state.ruler.x2-state.ruler.x1)*FW, (state.ruler.y2-state.ruler.y1)*FH);
   return len > 4 ? cm/len : null;
+};
+/* medidas del logo declaradas a mano (modo 'logo') */
+const logoCm = () => {
+  const w = parseFloat($('logoWcm').value), h = parseFloat($('logoHcm').value);
+  return (w > 0 && h > 0) ? {w,h} : null;
 };
 const clamp = (v,min,max) => Math.min(Math.max(v,min),max);
 
@@ -295,7 +343,7 @@ function render(){
     $('zoneReadout').hidden = false;
     $('zoneSizeOut').textContent = k
       ? `${fmtCm(z.w*FW*k)} × ${fmtCm(z.h*FH*k)} cm`
-      : 'usá la regla para ver cm';
+      : (state.mode === 'logo' ? '—' : 'usá la regla para ver cm');
   } else { zoneEl.hidden = true; $('zoneReadout').hidden = true; }
 
   if(state.logo){
@@ -303,20 +351,26 @@ function render(){
     logoWrap.hidden = false;
     Object.assign(logoWrap.style,{left:l.x*100+'%',top:l.y*100+'%',width:l.w*100+'%',height:l.h*100+'%'});
     const k = cmPerPx();
-    const txt = k
-      ? `${fmtCm(l.w*FW*k)} × ${fmtCm(l.h*FH*k)} cm`
-      : 'sin medida — usá la regla';
+    let txt;
+    if(state.mode === 'logo'){
+      const m = logoCm();
+      txt = m ? `${fmtCm(m.w)} × ${fmtCm(m.h)} cm` : 'anotá la medida del logo';
+    } else {
+      txt = k ? `${fmtCm(l.w*FW*k)} × ${fmtCm(l.h*FH*k)} cm` : 'sin medida — usá la regla';
+    }
     chip.hidden = false;
     chip.textContent = txt;
     chip.style.left = (l.x + l.w/2)*100 + '%';
     const belowY = (l.y + l.h)*FH + 10;
     chip.style.top = Math.min(belowY, FH-30) + 'px';
     $('logoReadout').hidden = false;
-    $('logoSizeOut').textContent = k ? `${fmtCm(l.w*FW*k)} × ${fmtCm(l.h*FH*k)} cm` : '—';
+    $('logoSizeOut').textContent = state.mode === 'logo'
+      ? (logoCm() ? `${fmtCm(logoCm().w)} × ${fmtCm(logoCm().h)} cm` : '—')
+      : (k ? `${fmtCm(l.w*FW*k)} × ${fmtCm(l.h*FH*k)} cm` : '—');
   } else { logoWrap.hidden = true; chip.hidden = true; $('logoReadout').hidden = true; }
 
   /* regla de calibración */
-  if(state.ruler && state.rulerVisible && !frame.hidden){
+  if(state.mode === 'product' && state.ruler && state.rulerVisible && !frame.hidden){
     $('ruler').hidden = false;
     const rl = state.ruler;
     const p1 = {x:rl.x1*FW, y:rl.y1*FH}, p2 = {x:rl.x2*FW, y:rl.y2*FH};
@@ -373,6 +427,30 @@ $('rulerToggle').addEventListener('click', () => {
   render();
 });
 
+/* ---------- toggle de modo de medida ---------- */
+function setMode(m){
+  state.mode = m;
+  $('modeLogo').setAttribute('aria-pressed', m === 'logo');
+  $('modeProduct').setAttribute('aria-pressed', m === 'product');
+  $('rulerField').hidden = m !== 'product';
+  $('logoCmFields').hidden = !(m === 'logo' && state.logo);
+  render();
+}
+$('modeLogo').addEventListener('click', () => setMode('logo'));
+$('modeProduct').addEventListener('click', () => setMode('product'));
+
+/* medidas del logo a mano: ancho y alto se sincronizan por proporción */
+$('logoWcm').addEventListener('input', () => {
+  const w = parseFloat($('logoWcm').value);
+  if(w > 0 && state.logoAspect) $('logoHcm').value = (w / state.logoAspect).toFixed(2);
+  render();
+});
+$('logoHcm').addEventListener('input', () => {
+  const h = parseFloat($('logoHcm').value);
+  if(h > 0 && state.logoAspect) $('logoWcm').value = (h * state.logoAspect).toFixed(2);
+  render();
+});
+
 /* ---------- paso 2: dibujar área ---------- */
 $('drawZoneBtn').addEventListener('click', enterDrawMode);
 function enterDrawMode(){
@@ -405,6 +483,9 @@ function loadLogo(file){
       $('logoThumb').innerHTML = `<img src="${logoImg.src}" alt="">`;
       $('logoTxt').innerHTML = `${file.name}<small>clic para cambiar el logo</small>`;
       logoImg.onload = null;
+      $('logoCmFields').hidden = state.mode !== 'logo';
+      const w = parseFloat($('logoWcm').value);
+      if(w > 0) $('logoHcm').value = (w / state.logoAspect).toFixed(2);
       setStepStates(); render();
     };
     logoImg.src = url;
@@ -462,6 +543,8 @@ function clearLogo(){
   $('logoThumb').innerHTML = '◐';
   $('logoTxt').innerHTML = 'Elegir logo<small>PNG sin fondo recomendado · también SVG o JPG</small>';
   $('jpgNote').hidden = true;
+  $('logoCmFields').hidden = true;
+  $('logoWcm').value = ''; $('logoHcm').value = '';
   const btn = $('removeWhiteBtn');
   btn.hidden = true; btn.disabled = false; btn.textContent = 'Quitar fondo blanco';
   setStepStates(); render();
