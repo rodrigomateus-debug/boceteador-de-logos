@@ -314,25 +314,29 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           </div>
           <!-- barrita de medida: alto -->
           <div style="display:flex; align-items:center; justify-content:center; width:28px;">
-            <div id="bcpBarH" style="height:{{BAR_H_PCT}}%; min-height:28px; display:flex; flex-direction:column; align-items:center; color:var(--formas-navy,#000085); cursor:grab; user-select:none;">
-              <span style="height:1.5px; width:12px; background:currentColor; flex:none;"></span>
-              <span style="flex:1; width:1.5px; background:currentColor;"></span>
-              <span style="font-family:var(--font-display,sans-serif); font-size:11px; font-weight:800; white-space:nowrap; writing-mode:vertical-rl; padding:4px 0; cursor:grab;">{{MEDIDA_ALTO}}</span>
-              <span style="flex:1; width:1.5px; background:currentColor;"></span>
-              <span style="height:1.5px; width:12px; background:currentColor; flex:none;"></span>
+            <div id="bcpBarH" style="height:{{BAR_H_PCT}}%; min-height:28px; display:flex; flex-direction:column; align-items:center; color:var(--formas-navy,#000085); user-select:none;">
+              <div class="bcpGrabH" data-dir="-1" style="flex:1; display:flex; flex-direction:column; align-items:center; cursor:grab; padding:0 8px;">
+                <span style="height:1.5px; width:12px; background:currentColor; flex:none;"></span>
+                <span style="flex:1; width:1.5px; background:currentColor;"></span>
+              </div>
+              <span style="font-family:var(--font-display,sans-serif); font-size:11px; font-weight:800; white-space:nowrap; writing-mode:vertical-rl; padding:4px 0;">{{MEDIDA_ALTO}}</span>
+              <div class="bcpGrabH" data-dir="1" style="flex:1; display:flex; flex-direction:column; align-items:center; cursor:grab; padding:0 8px;">
+                <span style="flex:1; width:1.5px; background:currentColor;"></span>
+                <span style="height:1.5px; width:12px; background:currentColor; flex:none;"></span>
+              </div>
             </div>
           </div>
         </div>
         <!-- barrita de medida: ancho -->
         <div style="display:flex; justify-content:center;">
-          <div id="bcpBarW" style="width:calc({{BAR_W_PCT}}% - 36px); min-width:70px; display:flex; align-items:center; gap:10px; margin-top:10px; color:var(--formas-navy,#000085); cursor:grab; user-select:none;">
-            <div style="flex:1; display:flex; align-items:center;">
+          <div id="bcpBarW" style="width:calc({{BAR_W_PCT}}% - 36px); min-width:70px; display:flex; align-items:center; gap:10px; margin-top:10px; color:var(--formas-navy,#000085); user-select:none;">
+            <div class="bcpGrabW" data-dir="-1" style="flex:1; display:flex; align-items:center; cursor:grab; padding:8px 0;">
               <span style="width:1.5px; height:12px; background:currentColor;"></span>
               <span style="flex:1; height:1.5px; background:currentColor;"></span>
               <span style="width:1.5px; height:12px; background:currentColor;"></span>
             </div>
-            <span style="font-family:var(--font-display,sans-serif); font-size:13px; font-weight:800; white-space:nowrap; cursor:grab;">{{MEDIDA_ANCHO}}</span>
-            <div style="flex:1; display:flex; align-items:center;">
+            <span style="font-family:var(--font-display,sans-serif); font-size:13px; font-weight:800; white-space:nowrap;">{{MEDIDA_ANCHO}}</span>
+            <div class="bcpGrabW" data-dir="1" style="flex:1; display:flex; align-items:center; cursor:grab; padding:8px 0;">
               <span style="width:1.5px; height:12px; background:currentColor;"></span>
               <span style="flex:1; height:1.5px; background:currentColor;"></span>
               <span style="width:1.5px; height:12px; background:currentColor;"></span>
@@ -941,40 +945,42 @@ window.addEventListener('resize', rescale);
 function attachBarDrag(){
   const doc = $('preview').contentDocument;
   if(!doc) return;
-  const bw = doc.getElementById('bcpBarW'), bh = doc.getElementById('bcpBarH');
-  if(bw) dragBar(bw, 'w');
-  if(bh) dragBar(bh, 'h');
-  function dragBar(el, axis){
-    el.addEventListener('pointerdown', e=>{
-      e.preventDefault();
-      el.style.cursor = 'grabbing';
-      const cont = el.parentElement;
-      const slot = doc.getElementById('bcpLogoSlot');
-      const move = ev=>{
-        const r = cont.getBoundingClientRect();
-        if(axis==='w'){
-          // tope: el ancho del recuadro donde está el logo
-          const maxPct = slot ? clampNum((slot.getBoundingClientRect().width / r.width) * 100, 15, 100) : 100;
-          const cx = (r.left + r.right) / 2;
-          const pct = clampNum((Math.abs(ev.clientX - cx) * 2 / r.width) * 100, 15, maxPct);
-          el.style.width = 'calc(' + pct + '% - 36px)';
-          barW = pct;
-        } else {
-          // tope: el alto del recuadro (el contenedor ya estira a esa altura)
-          const cy = (r.top + r.bottom) / 2;
-          const pct = clampNum((Math.abs(ev.clientY - cy) * 2 / r.height) * 100, 15, 100);
-          el.style.height = pct + '%';
-          barH = pct;
-        }
-      };
-      const up = ()=>{
-        el.style.cursor = 'grab';
-        doc.removeEventListener('pointermove',move);
-        doc.removeEventListener('pointerup',up);
-        save();
-      };
-      doc.addEventListener('pointermove', move);
-      doc.addEventListener('pointerup', up);
+  hookBar('bcpBarW', 'w', '.bcpGrabW');
+  hookBar('bcpBarH', 'h', '.bcpGrabH');
+  /* se agarra desde las puntas: hacia afuera agranda (hasta el tope del
+     recuadro del logo), hacia adentro achica; el número queda fijo al medio */
+  function hookBar(id, axis, sel){
+    const el = doc.getElementById(id);
+    if(!el) return;
+    el.querySelectorAll(sel).forEach(h => {
+      h.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        const dir = parseFloat(h.dataset.dir) || 1;
+        const cont = el.parentElement;
+        const slot = doc.getElementById('bcpLogoSlot');
+        const r0 = cont.getBoundingClientRect();
+        const maxPct = axis === 'w'
+          ? (slot ? clampNum((slot.getBoundingClientRect().width / r0.width) * 100, 15, 100) : 100)
+          : 100;
+        const startX = e.clientX, startY = e.clientY;
+        const startPct = clampNum(axis === 'w' ? barW : barH, 15, maxPct);
+        h.style.cursor = 'grabbing';
+        const move = ev => {
+          const d = axis === 'w' ? (ev.clientX - startX) : (ev.clientY - startY);
+          const size = axis === 'w' ? r0.width : r0.height;
+          const pct = clampNum(startPct + (dir * d * 2 / size) * 100, 15, maxPct);
+          if(axis === 'w'){ el.style.width = 'calc(' + pct + '% - 36px)'; barW = pct; }
+          else { el.style.height = pct + '%'; barH = pct; }
+        };
+        const up = () => {
+          h.style.cursor = 'grab';
+          doc.removeEventListener('pointermove', move);
+          doc.removeEventListener('pointerup', up);
+          save();
+        };
+        doc.addEventListener('pointermove', move);
+        doc.addEventListener('pointerup', up);
+      });
     });
   }
 }
