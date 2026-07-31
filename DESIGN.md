@@ -174,7 +174,86 @@ Costo estimado del MVP en producción: **~USD 0–5/mes** (free tiers).
 | **3 — Cotización** | Técnicas de aplicación por zona, precio por cantidad/tamaño, markup del revendedor (como la captura de referencia) |
 | **4 — Producción y escala** | Archivo de producción con medidas reales, cuentas de vendedores/revendedores, catálogo por API de proveedores, quita de fondo IA, texto/clipart |
 
-## 9. Riesgos y cuidados
+## 9. Sistema de diseño visual
+
+Decisión: la interfaz usa el **design system de Formas Publicitarias**, el
+mismo del "Boceto de producción" oficial (ficha A4 de PDV). Así el boceteador,
+las fichas y la papelería de la empresa hablan el mismo idioma visual, y el
+PDF que exporta la app queda de la familia de los documentos existentes.
+
+Fuente de verdad: el template del Boceto de producción (skill
+`boceto-produccion-formas`). Los tokens de abajo están extraídos de ahí.
+
+### 9.1 Tokens de color
+
+| Token | Valor | Uso |
+|---|---|---|
+| `--formas-navy` | `#000085` | Titulares, marca, pills, iconografía fuerte |
+| `--formas-lime` | `#8EE021` | **Acento por defecto**: CTA principal, zona imprimible activa, barritas |
+| `--formas-green` | `#399F4A` | Eyebrow "your brand loved", estados OK |
+| `--formas-ink` | `#0B0B23` | Texto principal |
+| `--formas-gray-700` | `#3D3D55` | Texto cuerpo |
+| `--formas-gray-500` | `#6E6E85` | Texto secundario, labels |
+| `--formas-gray-200` | `#E4E4ED` | Bordes y divisores |
+| `--formas-gray-100` | `#F1F1F6` | Slots de imagen, fondos hundidos |
+| `--formas-gray-50` | `#F8F8FB` | Paneles hundidos |
+| Fondo de página | `#EDEDF2` (app) / `#FFFFFF` (hoja) | — |
+
+Acentos alternativos de marca (para variar por sección o campaña):
+`#000085` navy, `#EF7958` coral, `#089AE1` celeste, `#E20389` magenta,
+`#F9CE32` amarillo. El acento se define como `--sheet-accent` y es
+intercambiable sin tocar el resto.
+
+### 9.2 Tipografía
+
+| Rol | Fuente | Notas |
+|---|---|---|
+| Display (títulos) | **Montserrat 700/800/900** | Siempre en navy, `letter-spacing: -0.01em`, línea apretada |
+| UI y cuerpo | **Poppins 400–800** | Botones, formularios, texto |
+| Labels | Poppins 600/700, 10–11 px | UPPERCASE con `letter-spacing: 0.14–0.22em` |
+| Datos técnicos / hex | `ui-monospace` | Códigos de color, medidas auxiliares |
+
+En la webapp se self-hostean con `@fontsource/montserrat` y
+`@fontsource/poppins` (el template original las importa de Google Fonts; en
+producción evitamos el CDN externo).
+
+### 9.3 Motivos y componentes del lenguaje Formas
+
+- **Radios generosos**: 12–16 px en tarjetas y barras, 24 px en el marco del
+  canvas, pills `999px` (navy con texto blanco, ej. "Vista principal").
+- **Barrita de acento**: subrayado de 4 px × 56 px bajo títulos de producto;
+  borde izquierdo de 4 px en celdas de especificación.
+- **Slots de imagen**: fondo `#F1F1F6` con rayado diagonal navy al 5 %
+  (`repeating-linear-gradient(-45deg, …)`) — se usa para el placeholder del
+  logo y la galería de vistas.
+- **Barrita de medida**: línea con tics en los extremos y la medida en
+  Montserrat 800 al centro (igual que en la ficha A4) — en el editor es el
+  indicador vivo de cm del logo.
+- **Meta strips**: grillas con bordes `--formas-gray-200`, celdas divididas,
+  label uppercase arriba y valor en bold abajo.
+- **Botón primario**: fondo lima, texto navy 700, radio 12 px. Secundario:
+  borde gris sobre blanco. El lima aparece una vez por pantalla como jerarquía
+  máxima.
+- **Eyebrow institucional**: "your brand loved" en verde, uppercase,
+  `letter-spacing: 0.22em` — reservado a header/footer institucionales.
+- **PDF exportado**: reutiliza directamente el layout del Boceto de
+  producción A4 (mismo template), con la foto compuesta del canvas en el slot
+  `FOTO_PRODUCTO` y el logo en `LOGO_CLIENTE`. El boceteador se vuelve el
+  generador natural de esas fichas.
+
+### 9.4 Tema oscuro
+
+La identidad Formas es blanca/luminosa; la app es **light-first**. Se ofrece
+un modo oscuro adaptado (no invertido): fondos en escala de la tinta
+(`#0B0B23` → `#1A1A38`), el lima intacto como acento (funciona muy bien sobre
+oscuro), y el navy de titulares aclarado a un periwinkle `#9D9DFF` para
+mantener contraste. Implementado por tokens CSS con `prefers-color-scheme` +
+toggle `data-theme`.
+
+Vista previa navegable del sistema aplicado al editor: ver artifact
+"Boceteador — sistema de diseño Formas" (link en el hilo del proyecto).
+
+## 10. Riesgos y cuidados
 
 - **Calidad de logos subidos**: JPG con fondo blanco arruina el boceto sobre
   productos oscuros → avisar al usuario cuando el logo no tiene transparencia
