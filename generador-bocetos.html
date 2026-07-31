@@ -57,6 +57,13 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--lime); border-co
 .pcRow .del:hover{background:#EF7958; color:#fff}
 .addColor{margin-top:8px; width:100%; padding:8px; border:1.5px dashed var(--border); border-radius:8px; background:#fff; font:inherit; font-size:12px; font-weight:700; color:var(--muted); cursor:pointer}
 .addColor:hover{border-color:var(--lime); color:var(--ink)}
+.pageTabs{display:flex; gap:6px; flex-wrap:wrap; margin:0 0 14px}
+.pageTabs .tab{display:flex; align-items:center; gap:6px; padding:7px 10px; border:1.5px solid var(--border); border-radius:8px; background:#fff; font:inherit; font-size:12px; font-weight:700; color:var(--ink); cursor:pointer}
+.pageTabs .tab[aria-current="true"]{border-color:var(--navy); background:var(--sunken); box-shadow:0 0 0 2px rgba(142,224,33,.45)}
+.pageTabs .tab .x{color:var(--muted); font-size:12px; padding:0 2px; line-height:1}
+.pageTabs .tab .x:hover{color:#EF7958}
+.pageTabs .addTab{padding:7px 10px; border:1.5px dashed var(--border); border-radius:8px; background:#fff; font:inherit; font-size:12px; font-weight:700; color:var(--muted); cursor:pointer}
+.pageTabs .addTab:hover{border-color:var(--lime); color:var(--ink)}
 .tplBtns{display:flex; gap:6px; margin-top:8px}
 .tplBtns button{flex:1; padding:8px; border-radius:8px; font:inherit; font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid var(--border); background:#fff; color:var(--ink)}
 .tplBtns #tplLoad{background:var(--navy); border-color:var(--navy); color:#fff}
@@ -270,9 +277,12 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <h1 style="font-family:var(--font-display,sans-serif); font-weight:800; font-size:34px; line-height:1; letter-spacing:-.01em; margin:8px 0 0; color:var(--formas-navy,#000085);">Boceto de producción</h1>
       </div>
     </div>
-    <div style="text-align:right; padding:6px 16px; border-radius:12px; background:var(--sheet-accent,#8EE021);">
-      <div style="font-size:10px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--formas-navy,#000085); opacity:.7;">Número de PDV</div>
-      <div style="font-family:var(--font-display,sans-serif); font-weight:800; font-size:22px; line-height:1.1; color:var(--formas-navy,#000085);">{{PDV_NUMERO}}</div>
+    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+      <div style="text-align:right; padding:6px 16px; border-radius:12px; background:var(--sheet-accent,#8EE021);">
+        <div style="font-size:10px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--formas-navy,#000085); opacity:.7;">Número de PDV</div>
+        <div style="font-family:var(--font-display,sans-serif); font-weight:800; font-size:22px; line-height:1.1; color:var(--formas-navy,#000085);">{{PDV_NUMERO}}</div>
+      </div>
+      {{HOJA_BADGE}}
     </div>
   </header>
 
@@ -412,6 +422,8 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <button type="button" class="limpiar" id="btn_limpiar">Limpiar</button>
     </div>
 
+    <div class="pageTabs" id="pageTabs"></div>
+
     <fieldset>
       <legend>Plantillas</legend>
       <select id="tplSelect"><option value="">Elegí una plantilla guardada…</option></select>
@@ -528,6 +540,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
   <div class="previewWrap">
     <div class="sheetScaler" id="scaler"><iframe id="preview"></iframe></div>
   </div>
+  <iframe id="printFrame" style="position:fixed; left:-3000px; top:0; width:794px; height:1123px; border:0;" aria-hidden="true"></iframe>
 </div>
 
 <!-- ============ Modal: boceteador "Cargá tu logo" ============ -->
@@ -701,23 +714,115 @@ html,body{margin:0;padding:0;background:#EDEDF2}
 <script>
 const TPL = document.getElementById('tpl').innerHTML;
 const ACCENTS = ['#8EE021','#000085','#EF7958','#089AE1','#E20389','#F9CE32'];
-let accent = '#8EE021';
+let accent = '#8EE021';                // compartido entre hojas
+let codeMode = 'hex';                  // compartido: cómo se muestran los códigos de color
+
+/* ---- estado de la hoja activa (se captura en pages[cur]) ---- */
 let imgFoto = null, imgLogo = null;
-let logoBg = 'light';                 // fondo del recuadro "Logo a imprimir": light | dark
-let codeMode = 'hex';                 // hex | pantone
+let logoBg = 'light';
 let printColors = [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
-let fullColor = false;                // impresión a todo color (sin colores planos)
-let fotoFit = 'cover';                // ajuste de la foto en la ficha: cover | contain | fill
-let barW = 100, barH = 100;           // largo (%) de las líneas de medida del logo en la ficha
-let barWOff = 0, barHOff = 0;         // corrimiento (%) del centro de cada línea
+let barW = 100, barH = 100;
+let barWOff = 0, barHOff = 0;
+let fullColor = false;
+let fotoFit = 'cover';
 
 const $ = id => document.getElementById(id);
 const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const clampNum = (v,min,max) => Math.min(Math.max(v,min),max);
 
-const FIELDS = ['f_pdv','f_fecha','f_cliente','f_ejecutivo','f_producto','f_cantidad',
-  'f_colorprod_hex','f_colorprod_nom','f_obsprod','f_medida_w','f_medida_h','f_obslogo',
-  'f_tecnica','f_posicion'];
+/* compartidos entre hojas / propios de cada hoja */
+const SHARED_FIELDS = ['f_pdv','f_fecha','f_cliente','f_ejecutivo','f_producto','f_cantidad','f_colorprod_hex','f_colorprod_nom','f_obsprod'];
+const PAGE_FIELDS = ['f_medida_w','f_medida_h','f_obslogo','f_tecnica','f_posicion'];
+const FIELDS = SHARED_FIELDS.concat(PAGE_FIELDS);
+
+/* ---- hojas ---- */
+function newPage(){
+  return { imgFoto:null, imgLogo:null, logoBg:'light',
+    printColors:[{hex:'#FFFFFF', nom:'Blanco', pant:''}],
+    barW:100, barH:100, barWOff:0, barHOff:0, fullColor:false, fotoFit:'cover',
+    fields:{ f_medida_w:'', f_medida_h:'', f_obslogo:'', f_tecnica:'', f_posicion:'' } };
+}
+let pages = [newPage()];
+let cur = 0;
+
+function capturePage(){
+  const p = pages[cur];
+  p.imgFoto = imgFoto; p.imgLogo = imgLogo;
+  p.logoBg = logoBg; p.printColors = printColors;
+  p.barW = barW; p.barH = barH; p.barWOff = barWOff; p.barHOff = barHOff;
+  p.fullColor = fullColor; p.fotoFit = fotoFit;
+  p.fields = {};
+  PAGE_FIELDS.forEach(id => p.fields[id] = $(id).value);
+}
+function loadPage(i){
+  cur = clampNum(i, 0, pages.length-1);
+  const p = pages[cur];
+  imgFoto = p.imgFoto; imgLogo = p.imgLogo;
+  logoBg = p.logoBg || 'light';
+  printColors = (Array.isArray(p.printColors) && p.printColors.length) ? p.printColors : [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
+  barW = p.barW || 100; barH = p.barH || 100;
+  barWOff = p.barWOff || 0; barHOff = p.barHOff || 0;
+  fullColor = !!p.fullColor;
+  fotoFit = p.fotoFit || 'cover';
+  PAGE_FIELDS.forEach(id => $(id).value = (p.fields && p.fields[id] !== undefined) ? p.fields[id] : '');
+  refreshFotoBox(); refreshLogoBox();
+  drawPrintColors(); syncToggles(); renderTabs(); render();
+}
+function clonePage(p){ return JSON.parse(JSON.stringify(p)); }
+
+function renderTabs(){
+  const box = $('pageTabs'); box.innerHTML = '';
+  pages.forEach((p,i) => {
+    const t = document.createElement('button');
+    t.type = 'button'; t.className = 'tab';
+    t.setAttribute('aria-current', i === cur);
+    t.append('Hoja ' + (i+1));
+    if(pages.length > 1){
+      const x = document.createElement('span');
+      x.className = 'x'; x.textContent = '✕'; x.title = 'Eliminar esta hoja';
+      x.onclick = ev => {
+        ev.stopPropagation();
+        if(!confirm('¿Eliminar la hoja ' + (i+1) + '? Esta acción no se puede deshacer.')) return;
+        if(i === cur) capturePage();
+        pages.splice(i,1);
+        loadPage(Math.min(cur > i ? cur-1 : cur, pages.length-1));
+      };
+      t.appendChild(x);
+    }
+    t.onclick = () => { if(i !== cur){ capturePage(); loadPage(i); } };
+    box.appendChild(t);
+  });
+  const add = document.createElement('button');
+  add.type = 'button'; add.className = 'addTab';
+  add.textContent = '＋ Agregar hoja';
+  add.title = 'Agrega una hoja duplicando la actual';
+  add.onclick = () => {
+    capturePage();
+    pages.splice(cur+1, 0, clonePage(pages[cur]));
+    loadPage(cur+1);
+  };
+  box.appendChild(add);
+}
+
+function refreshFotoBox(){
+  if(imgFoto){
+    $('txt_foto').innerHTML = '<img src="'+imgFoto+'"><span style="font-size:11px">Foto de esta hoja — clic para reemplazar</span>';
+    $('clear_foto').style.display = 'block';
+  } else {
+    $('txt_foto').textContent = 'Subir foto ya lista (con el logo aplicado)';
+    $('clear_foto').style.display = 'none';
+  }
+  $('openBoceto').textContent = imgFoto ? '✎ Editar el boceto' : '✦ Creá el boceto con tu logo';
+}
+function refreshLogoBox(){
+  if(imgLogo){
+    $('txt_logo').innerHTML = '<img src="'+imgLogo+'"><span style="font-size:11px">Logo de esta hoja — clic para reemplazar</span>';
+    $('clear_logo').style.display = 'block';
+  } else {
+    $('txt_logo').textContent = 'Subir logo (vector / alta resolución)';
+    $('clear_logo').style.display = 'none';
+  }
+}
 
 function fechaDDMM(v){
   if(!v) return '';
@@ -729,13 +834,13 @@ const PH_FOTO = '<div style="font-family:ui-monospace,Menlo,Consolas,monospace; 
 const PH_LOGO = '<div style="font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; line-height:1.6; color:#000085; opacity:.55;">[ logo del cliente ]<br>vector / alta resolución</div>';
 const PH_LOGO_DARK = '<div style="font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; line-height:1.6; color:#FFFFFF; opacity:.6;">[ logo del cliente ]<br>vector / alta resolución</div>';
 
-function coloresHtml(){
-  if(fullColor){
+function coloresHtml(pc, fc){
+  if(fc){
     return '<div style="display:flex; align-items:center; gap:8px; margin-top:5px;">'
       + '<span style="width:18px; height:18px; border-radius:5px; background:conic-gradient(from 0deg, #E20389, #F9CE32, #8EE021, #089AE1, #000085, #E20389); border:1px solid rgba(0,0,0,.14); flex:none;"></span>'
       + '<div style="font-family:var(--font-display,sans-serif); font-size:17px; font-weight:800; line-height:1.1; color:var(--formas-navy,#000085);">Full color</div></div>';
   }
-  return printColors.map(c => {
+  return pc.map(c => {
     const code = codeMode === 'pantone' ? (c.pant ? 'PANTONE ' + esc(c.pant) : '') : (c.hex||'').toUpperCase();
     return '<div style="display:flex; align-items:center; gap:8px; margin-top:5px;">'
       + '<span style="width:18px; height:18px; border-radius:5px; background:' + c.hex + '; border:1px solid rgba(0,0,0,.14); flex:none;"></span>'
@@ -744,8 +849,13 @@ function coloresHtml(){
   }).join('');
 }
 
-function build(){
-  const mw = esc($('f_medida_w').value), mh = esc($('f_medida_h').value);
+function buildPage(p, num, total){
+  const f = id => esc((p.fields && p.fields[id]) || '');
+  const mw = f('f_medida_w'), mh = f('f_medida_h');
+  const hojaBadge = total > 1
+    ? '<div style="text-align:right; padding:4px 12px; border-radius:10px; background:var(--formas-navy,#000085);">'
+      + '<span style="font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#fff;">Hoja ' + num + '/' + total + '</span></div>'
+    : '';
   const vals = {
     PDV_NUMERO: esc($('f_pdv').value),
     FECHA: fechaDDMM($('f_fecha').value),
@@ -756,32 +866,52 @@ function build(){
     COLOR_PRODUCTO_HEX: $('f_colorprod_hex').value,
     COLOR_PRODUCTO_NOMBRE: esc($('f_colorprod_nom').value),
     OBS_PRODUCTO: esc($('f_obsprod').value),
-    OBS_LOGO: esc($('f_obslogo').value),
+    OBS_LOGO: f('f_obslogo'),
     MEDIDA_ANCHO: mw,
     MEDIDA_ALTO: mh,
     MEDIDA_COMBI: [mw, mh].filter(Boolean).join(' × '),
-    TECNICA: esc($('f_tecnica').value),
-    POSICION: esc($('f_posicion').value),
-    COLOR_IMPRESION_HEX: (printColors[0]||{}).hex || '#FFFFFF',
-    COLORES_IMPRESION: coloresHtml(),
-    LOGO_SLOT_STYLE: logoBg === 'dark' ? 'background-color:#0B0B23; background-image:none;' : '',
-    FOTO_FIT: fotoFit,
-    FOTO_SLOT_STYLE: (imgFoto && fotoFit !== 'cover') ? 'background-color:#FFFFFF; background-image:none;' : '',
-    BAR_W_PCT: String(Math.round(barW)),
-    BAR_H_PCT: String(Math.round(barH)),
-    BAR_W_OFF: String(Math.round(barWOff*10)/10),
-    BAR_H_OFF: String(Math.round(barHOff*10)/10),
+    TECNICA: f('f_tecnica'),
+    POSICION: f('f_posicion'),
+    COLOR_IMPRESION_HEX: ((p.printColors||[])[0]||{}).hex || '#FFFFFF',
+    COLORES_IMPRESION: coloresHtml(p.printColors || [], !!p.fullColor),
+    LOGO_SLOT_STYLE: p.logoBg === 'dark' ? 'background-color:#0B0B23; background-image:none;' : '',
+    FOTO_FIT: p.fotoFit || 'cover',
+    FOTO_SLOT_STYLE: (p.imgFoto && (p.fotoFit||'cover') !== 'cover') ? 'background-color:#FFFFFF; background-image:none;' : '',
+    BAR_W_PCT: String(Math.round(p.barW || 100)),
+    BAR_H_PCT: String(Math.round(p.barH || 100)),
+    BAR_W_OFF: String(Math.round((p.barWOff || 0)*10)/10),
+    BAR_H_OFF: String(Math.round((p.barHOff || 0)*10)/10),
+    HOJA_BADGE: hojaBadge,
     COLOR_ACENTO_HEX: accent,
-    FOTO_PRODUCTO: imgFoto ? '<img src="'+imgFoto+'" alt="Producto">' : PH_FOTO,
-    LOGO_CLIENTE: imgLogo ? '<img src="'+imgLogo+'" alt="Logo cliente" style="max-height:100px">' : (logoBg === 'dark' ? PH_LOGO_DARK : PH_LOGO)
+    FOTO_PRODUCTO: p.imgFoto ? '<img src="'+p.imgFoto+'" alt="Producto">' : PH_FOTO,
+    LOGO_CLIENTE: p.imgLogo ? '<img src="'+p.imgLogo+'" alt="Logo cliente" style="max-height:100px">' : (p.logoBg === 'dark' ? PH_LOGO_DARK : PH_LOGO)
   };
   let html = TPL;
   for(const k in vals) html = html.split('{{'+k+'}}').join(vals[k]);
   return html;
 }
 
+function buildCurrent(){
+  capturePage();
+  return buildPage(pages[cur], cur+1, pages.length);
+}
+function buildAll(){
+  capturePage();
+  const docs = pages.map((p,i) => buildPage(p, i+1, pages.length));
+  if(docs.length === 1) return docs[0];
+  const head = docs[0].slice(0, docs[0].indexOf('<body>') + 6);
+  const inners = docs.map(d => {
+    const a = d.indexOf('<body>') + 6, b = d.lastIndexOf('</body>');
+    return d.slice(a, b);
+  });
+  const body = inners.map((inner, i) =>
+    '<div style="' + (i < inners.length-1 ? 'break-after:page; page-break-after:always; ' : '') + 'margin-bottom:24px;">' + inner + '</div>'
+  ).join('\n');
+  return head + '\n' + body + '\n</body>\n</html>';
+}
+
 function docName(){
-  // PDV - Cliente - Ejecutivo - Producto - Cantidad (los que estén cargados)
+  // PDV - Cliente - Ejecutivo - Producto - Cantidad - Posición (los que estén cargados)
   const clean = s => (s||'').replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,' ').trim();
   const parts = [
     clean($('f_pdv').value),
@@ -796,15 +926,15 @@ function docName(){
 
 function render(){
   const f = $('preview');
-  f.srcdoc = build();
+  f.srcdoc = buildCurrent();
   save();
 }
 
 /* --- persistencia local --- */
 function save(){
   try{
-    const data = {accent, logoBg, codeMode, printColors, barW, barH, barWOff, barHOff, fullColor, fotoFit};
-    FIELDS.forEach(id => data[id] = $(id).value);
+    const data = {accent, codeMode, pages, cur};
+    SHARED_FIELDS.forEach(id => data[id] = $(id).value);
     localStorage.setItem('boceto-formas', JSON.stringify(data));
   }catch(e){}
 }
@@ -812,17 +942,24 @@ function restore(){
   if(location.hash === '#nuevo') return; // pestaña "Nuevo boceto": arranca vacía
   try{
     const data = JSON.parse(localStorage.getItem('boceto-formas')||'{}');
-    FIELDS.forEach(id => { if(data[id]!==undefined) $(id).value = data[id]; });
+    SHARED_FIELDS.forEach(id => { if(data[id]!==undefined) $(id).value = data[id]; });
     if(data.accent) accent = data.accent;
-    if(data.logoBg) logoBg = data.logoBg;
     if(data.codeMode) codeMode = data.codeMode;
-    if(Array.isArray(data.printColors) && data.printColors.length) printColors = data.printColors;
-    if(data.barW > 0) barW = data.barW;
-    if(data.barH > 0) barH = data.barH;
-    if(typeof data.barWOff === 'number') barWOff = data.barWOff;
-    if(typeof data.barHOff === 'number') barHOff = data.barHOff;
-    if(typeof data.fullColor === 'boolean') fullColor = data.fullColor;
-    if(data.fotoFit) fotoFit = data.fotoFit;
+    if(Array.isArray(data.pages) && data.pages.length){
+      pages = data.pages;
+      cur = clampNum(data.cur || 0, 0, pages.length-1);
+    } else if(data.barW || data.printColors || data.f_medida_w !== undefined){
+      // migración desde el formato viejo de una sola hoja
+      const p = newPage();
+      p.logoBg = data.logoBg || 'light';
+      if(Array.isArray(data.printColors) && data.printColors.length) p.printColors = data.printColors;
+      p.barW = data.barW || 100; p.barH = data.barH || 100;
+      p.barWOff = data.barWOff || 0; p.barHOff = data.barHOff || 0;
+      p.fullColor = !!data.fullColor;
+      p.fotoFit = data.fotoFit || 'cover';
+      PAGE_FIELDS.forEach(id => { if(data[id] !== undefined) p.fields[id] = data[id]; });
+      pages = [p]; cur = 0;
+    }
   }catch(e){}
 }
 
@@ -839,7 +976,7 @@ function drawSwatches(){
   });
 }
 
-/* --- toggles fondo del logo y hex/pantone --- */
+/* --- toggles --- */
 function syncToggles(){
   $('bgLight').setAttribute('aria-pressed', logoBg==='light');
   $('bgDark').setAttribute('aria-pressed', logoBg==='dark');
@@ -854,16 +991,16 @@ function syncToggles(){
   $('addColor').hidden = fullColor;
   $('codeToggleRow').hidden = fullColor;
 }
-$('fullColor').addEventListener('change', ()=>{ fullColor = $('fullColor').checked; syncToggles(); render(); });
-$('fitCover').onclick   = ()=>{ fotoFit='cover';   syncToggles(); render(); };
-$('fitContain').onclick = ()=>{ fotoFit='contain'; syncToggles(); render(); };
-$('fitFill').onclick    = ()=>{ fotoFit='fill';    syncToggles(); render(); };
 $('bgLight').onclick = ()=>{ logoBg='light'; syncToggles(); render(); };
 $('bgDark').onclick  = ()=>{ logoBg='dark';  syncToggles(); render(); };
 $('codeHex').onclick  = ()=>{ codeMode='hex';     syncToggles(); drawPrintColors(); render(); };
 $('codePant').onclick = ()=>{ codeMode='pantone'; syncToggles(); drawPrintColors(); render(); };
+$('fullColor').addEventListener('change', ()=>{ fullColor = $('fullColor').checked; syncToggles(); render(); });
+$('fitCover').onclick   = ()=>{ fotoFit='cover';   syncToggles(); render(); };
+$('fitContain').onclick = ()=>{ fotoFit='contain'; syncToggles(); render(); };
+$('fitFill').onclick    = ()=>{ fotoFit='fill';    syncToggles(); render(); };
 
-/* --- lista de colores de impresión --- */
+/* --- lista de colores de impresión (de la hoja activa) --- */
 function drawPrintColors(){
   const box = $('printColors'); box.innerHTML='';
   printColors.forEach((c,i)=>{
@@ -949,37 +1086,41 @@ function hookFile(inputId, boxId, txtId, clearId, setter){
     ev.stopPropagation(); ev.preventDefault();
     setter(null);
     $(inputId).value='';
-    $(txtId).textContent = txtId==='txt_foto' ? 'Subir foto ya lista (con el logo aplicado)' : 'Subir logo (vector / alta resolución)';
+    $(txtId).textContent = defaultTxt();
     $(clearId).style.display='none';
     render();
   });
 }
-hookFile('f_foto','box_foto','txt_foto','clear_foto', v=>{imgFoto=v;});
-hookFile('f_logo','box_logo','txt_logo','clear_logo', v=>{imgLogo=v;});
+hookFile('f_foto','box_foto','txt_foto','clear_foto', v=>{ imgFoto=v; refreshFotoBox(); });
+hookFile('f_logo','box_logo','txt_logo','clear_logo', v=>{ imgLogo=v; });
 
 /* --- acciones --- */
 $('btn_print').onclick = ()=>{
-  const f = $('preview');
   const name = docName();
   const prevTitle = document.title;
   // el nombre sugerido del PDF puede salir del título del iframe o del de la
   // página, según el navegador: seteamos los dos y restauramos después
   document.title = name;
-  try{
-    f.contentDocument.title = name;
-    f.contentWindow.focus();
-    f.contentWindow.print();
-  }catch(e){
-    const w = window.open('', '_blank');
-    w.document.write(build());
-    w.document.close();
-    w.document.title = name;
-    setTimeout(()=>w.print(), 400);
-  }
-  setTimeout(()=>{ document.title = prevTitle; }, 1500);
+  const pf = $('printFrame');
+  pf.onload = () => {
+    pf.onload = null;
+    try{
+      pf.contentDocument.title = name;
+      pf.contentWindow.focus();
+      pf.contentWindow.print();
+    }catch(e){
+      const w = window.open('', '_blank');
+      w.document.write(buildAll());
+      w.document.close();
+      w.document.title = name;
+      setTimeout(()=>w.print(), 400);
+    }
+    setTimeout(()=>{ document.title = prevTitle; }, 1500);
+  };
+  pf.srcdoc = buildAll();
 };
 $('btn_download').onclick = ()=>{
-  const blob = new Blob([build()], {type:'text/html'});
+  const blob = new Blob([buildAll()], {type:'text/html'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = docName() + '.html';
@@ -1004,8 +1145,7 @@ function attachBarDrag(){
   hookBar('bcpBarW', 'w');
   hookBar('bcpBarH', 'h');
   /* Puntas: agrandan/achican simétricamente alrededor del centro actual.
-     Número: mueve el centro (la regla entera) mientras haya lugar;
-     con la regla a tope no hay espacio y no se mueve. */
+     Número: mueve el centro (la regla entera) mientras haya lugar. */
   function hookBar(id, axis){
     const el = doc.getElementById(id);
     if(!el) return;
@@ -1026,7 +1166,6 @@ function attachBarDrag(){
       doc.addEventListener('pointermove', onMove);
       doc.addEventListener('pointerup', up);
     };
-
     el.querySelectorAll(horiz ? '.bcpGrabW' : '.bcpGrabH').forEach(h => {
       h.addEventListener('pointerdown', e => {
         e.preventDefault(); e.stopPropagation();
@@ -1041,7 +1180,6 @@ function attachBarDrag(){
         });
       });
     });
-
     const num = el.querySelector(horiz ? '.bcpMoveW' : '.bcpMoveH');
     if(num) num.addEventListener('pointerdown', e => {
       e.preventDefault(); e.stopPropagation();
@@ -1063,37 +1201,43 @@ const TPL_KEY = 'boceto-formas-plantillas';
 function tplAll(){ try{ return JSON.parse(localStorage.getItem(TPL_KEY)||'{}'); }catch(e){ return {}; } }
 function tplRefresh(){
   const sel = $('tplSelect');
-  const cur = sel.value;
+  const cur0 = sel.value;
   sel.innerHTML = '<option value="">Elegí una plantilla guardada…</option>';
   Object.keys(tplAll()).sort((a,b)=>a.localeCompare(b,'es')).forEach(n=>{
     const o = document.createElement('option');
     o.textContent = n; o.value = n;
     sel.appendChild(o);
   });
-  sel.value = cur || '';
+  sel.value = cur0 || '';
 }
 function snapshot(){
-  const d = {accent, logoBg, codeMode, printColors, barW, barH, barWOff, barHOff, fullColor, fotoFit, imgFoto, imgLogo};
-  FIELDS.forEach(id => d[id] = $(id).value);
+  capturePage();
+  const d = {accent, codeMode, pages: JSON.parse(JSON.stringify(pages)), cur};
+  SHARED_FIELDS.forEach(id => d[id] = $(id).value);
   return d;
 }
 function applySnapshot(d){
-  FIELDS.forEach(id => { if(d[id]!==undefined) $(id).value = d[id]; });
+  SHARED_FIELDS.forEach(id => { if(d[id]!==undefined) $(id).value = d[id]; });
   accent = d.accent || accent;
-  logoBg = d.logoBg || 'light';
   codeMode = d.codeMode || 'hex';
-  printColors = (Array.isArray(d.printColors) && d.printColors.length) ? d.printColors : [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
-  barW = d.barW || 100; barH = d.barH || 100;
-  barWOff = d.barWOff || 0; barHOff = d.barHOff || 0;
-  fullColor = !!d.fullColor;
-  fotoFit = d.fotoFit || 'cover';
-  imgFoto = d.imgFoto || null;
-  imgLogo = d.imgLogo || null;
-  if(imgFoto){ $('txt_foto').innerHTML = '<img src="'+imgFoto+'"><span style="font-size:11px">Imagen de la plantilla</span>'; $('clear_foto').style.display='block'; }
-  else { $('txt_foto').textContent = 'Subir foto ya lista (con el logo aplicado)'; $('clear_foto').style.display='none'; }
-  if(imgLogo){ $('txt_logo').innerHTML = '<img src="'+imgLogo+'"><span style="font-size:11px">Logo de la plantilla</span>'; $('clear_logo').style.display='block'; }
-  else { $('txt_logo').textContent = 'Subir logo (vector / alta resolución)'; $('clear_logo').style.display='none'; }
-  drawSwatches(); drawPrintColors(); syncToggles(); render();
+  if(Array.isArray(d.pages) && d.pages.length){
+    pages = JSON.parse(JSON.stringify(d.pages));
+    cur = clampNum(d.cur || 0, 0, pages.length-1);
+  } else {
+    // plantilla del formato viejo (una hoja)
+    const p = newPage();
+    p.imgFoto = d.imgFoto || null; p.imgLogo = d.imgLogo || null;
+    p.logoBg = d.logoBg || 'light';
+    if(Array.isArray(d.printColors) && d.printColors.length) p.printColors = d.printColors;
+    p.barW = d.barW || 100; p.barH = d.barH || 100;
+    p.barWOff = d.barWOff || 0; p.barHOff = d.barHOff || 0;
+    p.fullColor = !!d.fullColor;
+    p.fotoFit = d.fotoFit || 'cover';
+    PAGE_FIELDS.forEach(id => { if(d[id] !== undefined) p.fields[id] = d[id]; });
+    pages = [p]; cur = 0;
+  }
+  drawSwatches();
+  loadPage(cur);
 }
 $('tplSave').onclick = () => {
   const sug = ($('f_cliente').value.trim() + ' — ' + $('f_producto').value.split('\n')[0].trim()).replace(/^ — | — $/g,'').trim();
@@ -1141,9 +1285,7 @@ if(!$('f_fecha').value){
 }
 FIELDS.forEach(id => $(id).addEventListener('input', render));
 drawSwatches();
-drawPrintColors();
-syncToggles();
-render();
+loadPage(cur);
 rescale();
 
 /* ============ Modal "Cargá tu logo" ============ */
@@ -1165,18 +1307,15 @@ document.addEventListener('keydown', e => { if(e.key === 'Escape' && !bocetoModa
 window.__applyBoceto = res => {
   imgFoto = res.foto;
   fotoFit = 'contain'; // el boceto compuesto se muestra entero, sin recortes
-  $('txt_foto').innerHTML = '<img src="'+res.foto+'"><span style="font-size:11px">Boceto aplicado — clic para reemplazar</span>';
-  $('clear_foto').style.display = 'block';
+  refreshFotoBox();
   if(res.logo){
     imgLogo = res.logo;
-    $('txt_logo').innerHTML = '<img src="'+res.logo+'"><span style="font-size:11px">Logo del boceto</span>';
-    $('clear_logo').style.display = 'block';
+    refreshLogoBox();
   }
   if(res.medidaW) $('f_medida_w').value = res.medidaW;
   if(res.medidaH) $('f_medida_h').value = res.medidaH;
   if(res.tecnica) $('f_tecnica').value = res.tecnica;
   /* la posición se completa a mano: arranca vacía a propósito */
-  $('openBoceto').textContent = '✎ Editar el boceto';
   closeBocetoModal();
   syncToggles();
   render();
