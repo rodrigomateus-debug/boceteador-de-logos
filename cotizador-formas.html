@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cotizador Formas — Cuaderno Freedom</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap');
+
+/* ===== Design system Formas Publicitarias ===== */
+:root{
+  --formas-lime:#8EE021; --formas-navy:#000085; --formas-green:#399F4A;
+  --formas-ink:#0B0B23; --formas-gray-700:#3D3D55; --formas-gray-500:#6E6E85;
+  --formas-gray-200:#E4E4ED; --formas-gray-100:#F1F1F6; --formas-gray-50:#F8F8FB;
+  --formas-coral:#EF7958; --formas-sky:#089AE1; --formas-magenta:#E20389; --formas-yellow:#F9CE32;
+  --font-primary:'Poppins',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-display:'Montserrat','Poppins',system-ui,sans-serif;
+  --surface-page:#FFFFFF; --surface-sunken:var(--formas-gray-50);
+  --text-strong:var(--formas-ink); --text-body:var(--formas-gray-700); --text-muted:var(--formas-gray-500);
+  --border-subtle:var(--formas-gray-200);
+  --sheet-accent:var(--formas-lime);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#EDEDF2;color:var(--text-strong);font-family:var(--font-primary);font-size:14.5px;line-height:1.55}
+
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 72px}
+
+/* ---- primitivas del sistema ---- */
+.label{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted)}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--formas-green)}
+.display{font-family:var(--font-display);font-weight:800;letter-spacing:-.01em;color:var(--formas-navy)}
+.pill{display:inline-block;padding:5px 12px;border-radius:999px;background:var(--formas-navy);color:#fff;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.rule{height:4px;width:56px;border-radius:2px;background:var(--sheet-accent)}
+.card{background:var(--surface-page);border:1px solid var(--border-subtle);border-radius:16px}
+.sunken{background:var(--surface-sunken);border:1px solid var(--border-subtle);border-radius:14px}
+.slot{background-color:var(--formas-gray-100);background-image:repeating-linear-gradient(-45deg,rgba(0,0,133,.05) 0 10px,rgba(0,0,133,0) 10px 20px)}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---- header ---- */
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:28px}
+header.top h1{font-size:34px;line-height:1.02;margin:8px 0 0}
+.badge-accent{text-align:right;padding:8px 16px;border-radius:12px;background:var(--sheet-accent)}
+.badge-accent .label{color:var(--formas-navy);opacity:.7}
+.badge-accent .val{font-family:var(--font-display);font-weight:800;font-size:20px;line-height:1.15;color:var(--formas-navy)}
+
+/* ---- layout ---- */
+.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:22px}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:18px}
+
+/* ---- producto ---- */
+.product-visual{position:relative;border-radius:24px;overflow:hidden;border:1px solid var(--border-subtle)}
+.product-visual .pill{position:absolute;top:14px;left:14px;z-index:2}
+.product-visual .stage{aspect-ratio:1/.92;display:flex;align-items:center;justify-content:center}
+.mock-notebook{width:190px;height:258px;border-radius:12px 18px 18px 12px;position:relative;background:linear-gradient(135deg,#3a3a3a,#232323);box-shadow:inset 4px 0 0 #4a4a4a,0 12px 28px rgba(11,11,35,.3)}
+.mock-notebook .strap{position:absolute;right:22px;top:0;bottom:0;width:12px;background:#2c2c2c;box-shadow:-2px 0 4px rgba(0,0,0,.4)}
+.mock-notebook .zone{position:absolute;right:19px;bottom:28px;width:82px;height:104px;border:2px dashed var(--sheet-accent);border-radius:4px;display:grid;place-items:center}
+.mock-notebook .zone span{background:#fff;color:#0B0B23;font-size:9px;font-weight:800;letter-spacing:.04em;border-radius:5px;padding:14px 10px;box-shadow:0 2px 8px rgba(0,0,0,.35);text-align:center}
+
+/* ---- campos ---- */
+.field{display:flex;flex-direction:column;gap:6px}
+.field-row{display:flex;gap:12px;flex-wrap:wrap}
+.field-row .field{flex:1;min-width:120px}
+select,input[type="number"],input[type="text"]{
+  font-family:var(--font-primary);font-size:14.5px;font-weight:600;color:var(--text-strong);
+  background:var(--surface-page);border:1.5px solid var(--border-subtle);border-radius:12px;
+  padding:10px 12px;width:100%;
+}
+select:focus,input:focus{outline:2px solid var(--sheet-accent);outline-offset:1px;border-color:var(--sheet-accent)}
+.suffix-wrap{position:relative}
+.suffix-wrap .suffix{position:absolute;right:12px;top:50%;translate:0 -50%;color:var(--text-muted);font-size:12.5px;font-weight:600;pointer-events:none}
+
+/* ---- specs / desglose ---- */
+.spec-rows{display:flex;flex-direction:column}
+.spec-rows .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-subtle)}
+.spec-rows .row:last-child{border-bottom:0}
+.spec-rows .val{font-weight:700;text-align:right}
+
+.impression-bar{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--border-subtle);border-radius:16px;overflow:hidden}
+.impression-bar>div{padding:14px 16px;border-left:4px solid var(--sheet-accent)}
+.impression-bar>div+div{border-top:0;border-right:0}
+.impression-bar>div:not(:last-child){border-right:1px solid var(--border-subtle)}
+.impression-bar .big{font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--formas-navy);margin-top:4px}
+@media (max-width:600px){.impression-bar{grid-template-columns:1fr}.impression-bar>div:not(:last-child){border-right:0;border-bottom:1px solid var(--border-subtle)}}
+
+.price-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.price-hero .unit .amount{font-family:var(--font-display);font-weight:800;font-size:30px;color:var(--formas-navy);line-height:1.05}
+.price-hero .total{text-align:right}
+.price-hero .total .amount{font-family:var(--font-display);font-weight:800;font-size:22px;color:var(--text-strong)}
+
+.btn{display:block;width:100%;border-radius:12px;padding:13px 18px;font-family:var(--font-primary);font-size:15px;font-weight:700;border:1.5px solid transparent;cursor:pointer;text-align:center;transition:filter .15s}
+.btn-primary{background:var(--sheet-accent);color:var(--formas-navy)}
+.btn-primary:hover{filter:brightness(.95)}
+.btn-secondary{background:var(--surface-page);color:var(--text-strong);border-color:var(--border-subtle)}
+.btn-secondary:hover{background:var(--surface-sunken)}
+.btn:focus-visible{outline:2px solid var(--formas-navy);outline-offset:2px}
+
+.note{display:flex;gap:8px;align-items:baseline;font-size:12.5px;color:var(--text-body);background:var(--surface-sunken);border:1px solid var(--border-subtle);border-left:4px solid var(--formas-yellow);border-radius:12px;padding:10px 12px}
+
+/* ---- markup ---- */
+.markup-card{border-left:4px solid var(--formas-navy)}
+.markup-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:600px){.markup-grid{grid-template-columns:1fr}}
+.markup-result{padding:12px 14px}
+.markup-result .amount{font-family:var(--font-display);font-weight:800;font-size:20px;color:var(--formas-navy)}
+.check{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text-body)}
+.check input{width:16px;height:16px;accent-color:var(--formas-navy)}
+
+footer.bottom{margin-top:32px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid var(--border-subtle);padding-top:18px}
+footer.bottom .tag{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--formas-green)}
+footer.bottom small{color:var(--text-muted)}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header class="top">
+    <div>
+      <div class="eyebrow">your brand loved</div>
+      <h1 class="display">Cotizador</h1>
+      <div class="rule" style="margin-top:12px"></div>
+    </div>
+    <div class="badge-accent">
+      <div class="label">Presupuesto</div>
+      <div class="val num" id="quoteNumber">PPT-0001</div>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- Columna izquierda: producto + aplicación -->
+    <div class="col">
+
+      <div class="product-visual slot">
+        <span class="pill">Frente · inferior derecho</span>
+        <div class="stage">
+          <div class="mock-notebook">
+            <div class="strap"></div>
+            <div class="zone"><span>TU<br>LOGO</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:18px">
+        <div class="label">Producto</div>
+        <h2 class="display" style="font-size:26px;line-height:1.05;margin:6px 0 0">Cuaderno Freedom</h2>
+        <div class="rule" style="margin:14px 0 2px"></div>
+        <div class="spec-rows">
+          <div class="row"><span class="label">Variante</span><span class="val">Negro / Papel</span></div>
+          <div class="row"><span class="label">Área de aplicación</span><span class="val">Frente inferior derecho</span></div>
+          <div class="row"><span class="label">Medida del logo</span><span class="val num" id="logoSizeOut">2,52 × 5,70 cm (14,36 cm²)</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:18px;display:flex;flex-direction:column;gap:14px">
+        <div class="label">Aplicación</div>
+        <div class="field-row">
+          <div class="field" style="flex:2">
+            <span class="label" style="letter-spacing:.08em">Técnica</span>
+            <select id="technique">
+              <option value="dtp" selected>DTP Full Color · mín. 1 un.</option>
+              <option value="serigrafia">Serigrafía 1 color · mín. 50 un.</option>
+              <option value="tampografia">Tampografía · mín. 100 un.</option>
+              <option value="laser">Grabado láser · mín. 25 un.</option>
+              <option value="bordado">Bordado · mín. 20 un.</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <span class="label" style="letter-spacing:.08em">Ancho logo</span>
+            <div class="suffix-wrap"><input type="number" id="logoW" value="2.52" min="0.5" max="12" step="0.01"><span class="suffix">cm</span></div>
+          </div>
+          <div class="field">
+            <span class="label" style="letter-spacing:.08em">Alto logo</span>
+            <div class="suffix-wrap"><input type="number" id="logoH" value="5.70" min="0.5" max="15" step="0.01"><span class="suffix">cm</span></div>
+          </div>
+          <div class="field">
+            <span class="label" style="letter-spacing:.08em">Cantidad</span>
+            <div class="suffix-wrap"><input type="number" id="qty" value="123" min="1" step="1"><span class="suffix">un.</span></div>
+          </div>
+        </div>
+        <div class="note" id="minNote" hidden>⚠ <span>La técnica seleccionada tiene un mínimo mayor a la cantidad ingresada. Se cotiza por el mínimo.</span></div>
+      </div>
+
+      <div class="impression-bar">
+        <div>
+          <div class="label">Técnica</div>
+          <div class="big" id="techOut">DTP Full Color</div>
+        </div>
+        <div>
+          <div class="label">Área de impresión</div>
+          <div class="big num" id="areaOut">14,36 cm²</div>
+        </div>
+        <div>
+          <div class="label">Días hábiles</div>
+          <div class="big num" id="daysOut">3</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Columna derecha: precios -->
+    <div class="col">
+
+      <div class="card" style="padding:18px">
+        <div class="label" style="margin-bottom:6px">Desglose de precio</div>
+        <div class="spec-rows">
+          <div class="row"><span class="label">Producto (unidad)</span><span class="val num" id="baseOut">$ 6.900,00</span></div>
+          <div class="row"><span class="label">Aplicación (unidad)</span><span class="val num" id="appOut">$ 1.435,00</span></div>
+          <div class="row"><span class="label">Costo de preparación</span><span class="val num" id="setupOut">$ 32.500,00</span></div>
+          <div class="row"><span class="label">Descuento por cantidad</span><span class="val num" id="discOut" style="color:var(--formas-green)">− 5 %</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:20px 18px;border-left:4px solid var(--sheet-accent)">
+        <div class="price-hero">
+          <div class="unit">
+            <div class="label">Precio unitario neto</div>
+            <div class="amount num" id="unitOut">$ 8.596,19</div>
+          </div>
+          <div class="total">
+            <div class="label">Total aproximado</div>
+            <div class="amount num" id="totalOut">$ 1.294.174,02</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:18px">
+          <button class="btn btn-primary" type="button">Confirmar</button>
+          <button class="btn btn-secondary" type="button">Creá o agregá a tu presupuesto</button>
+        </div>
+      </div>
+
+      <div class="card markup-card" style="padding:18px">
+        <div class="label">Calculá el precio de tu venta</div>
+        <div class="markup-grid">
+          <div class="field">
+            <span class="label" style="letter-spacing:.08em">Markup</span>
+            <div class="suffix-wrap"><input type="number" id="markup" value="45" min="0" max="500" step="1"><span class="suffix">%</span></div>
+          </div>
+          <label class="check" style="align-self:end;padding-bottom:10px">
+            <input type="checkbox" id="shipping"> Con costo de envío
+          </label>
+        </div>
+        <div class="markup-grid">
+          <div class="sunken markup-result">
+            <div class="label">Total aproximado</div>
+            <div class="amount num" id="saleTotalOut">$ 1.876.552,33</div>
+          </div>
+          <div class="sunken markup-result">
+            <div class="label">Precio unitario de venta</div>
+            <div class="amount num" id="saleUnitOut">$ 12.464,48</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">ℹ <span>El boceto y la cotización son orientativos y podrán tener adaptaciones para lograr el mejor resultado productivo. Precios sin IVA.</span></div>
+
+    </div>
+  </div>
+
+  <footer class="bottom">
+    <span class="tag">Documento interno</span>
+    <small>Formas Publicitarias — Cotizador · los valores son de demostración</small>
+  </footer>
+</div>
+
+<script>
+/* ===== Lógica de cotización (valores de demostración) ===== */
+const TECHNIQUES = {
+  dtp:         { name:'DTP Full Color',    min:1,   perCm2:100, perUnit:0,    setup:32500, days:3 },
+  serigrafia:  { name:'Serigrafía 1 color',min:50,  perCm2:0,   perUnit:520,  setup:48000, days:5 },
+  tampografia: { name:'Tampografía',       min:100, perCm2:0,   perUnit:380,  setup:56000, days:5 },
+  laser:       { name:'Grabado láser',     min:25,  perCm2:65,  perUnit:0,    setup:30000, days:4 },
+  bordado:     { name:'Bordado',           min:20,  perCm2:0,   perUnit:980,  setup:62000, days:7 },
+};
+const PRODUCT_BASE = 6900;           // precio unitario del producto
+const SHIPPING_COST = 45000;         // costo fijo de envío por pedido
+const DISCOUNTS = [ [500,.12], [250,.08], [100,.05], [50,.02] ]; // [desde, %]
+
+const $ = id => document.getElementById(id);
+const fmt = n => '$ ' + n.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtCm = n => n.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+function calc(){
+  const t = TECHNIQUES[$('technique').value];
+  const w = Math.max(parseFloat($('logoW').value) || 0, 0);
+  const h = Math.max(parseFloat($('logoH').value) || 0, 0);
+  const area = w * h;
+  let qty = Math.max(parseInt($('qty').value) || 1, 1);
+
+  const belowMin = qty < t.min;
+  $('minNote').hidden = !belowMin;
+  const effQty = Math.max(qty, t.min);
+
+  const appUnit = t.perCm2 * area + t.perUnit;
+  const disc = (DISCOUNTS.find(([from]) => effQty >= from) || [0,0])[1];
+  const gross = (PRODUCT_BASE + appUnit) * (1 - disc);
+  const unit = gross + t.setup / effQty;
+  const total = unit * effQty;
+
+  const markup = Math.max(parseFloat($('markup').value) || 0, 0) / 100;
+  const shipping = $('shipping').checked ? SHIPPING_COST : 0;
+  const saleTotal = total * (1 + markup) + shipping;
+  const saleUnit = saleTotal / effQty;
+
+  $('logoSizeOut').textContent = `${fmtCm(w)} × ${fmtCm(h)} cm (${fmtCm(area)} cm²)`;
+  $('techOut').textContent = t.name;
+  $('areaOut').textContent = `${fmtCm(area)} cm²`;
+  $('daysOut').textContent = t.days;
+  $('baseOut').textContent = fmt(PRODUCT_BASE);
+  $('appOut').textContent = fmt(appUnit);
+  $('setupOut').textContent = fmt(t.setup);
+  $('discOut').textContent = disc ? `− ${Math.round(disc*100)} %` : '—';
+  $('unitOut').textContent = fmt(unit);
+  $('totalOut').textContent = fmt(total);
+  $('saleTotalOut').textContent = fmt(saleTotal);
+  $('saleUnitOut').textContent = fmt(saleUnit);
+}
+
+['technique','logoW','logoH','qty','markup','shipping'].forEach(id =>
+  $(id).addEventListener('input', calc));
+calc();
+</script>
+</body>
+</html>
