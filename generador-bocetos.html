@@ -496,7 +496,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <legend>Impresión</legend>
       <div class="row">
         <div><label>Técnica</label><input type="text" id="f_tecnica" placeholder="Tampografía"></div>
-        <div><label>Posición</label><input type="text" id="f_posicion" placeholder="Centrado"></div>
+        <div><label>Posición</label><input type="text" id="f_posicion"></div>
       </div>
       <label>Colores de impresión</label>
       <label class="fullColorRow"><input type="checkbox" id="fullColor"> Full color (impresión a todo color)</label>
@@ -790,6 +790,7 @@ function docName(){
     clean($('f_ejecutivo').value),
     clean($('f_producto').value.split('\n')[0]),
     clean($('f_cantidad').value),
+    clean($('f_posicion').value),
   ].filter(Boolean);
   return parts.length ? 'Boceto - ' + parts.join(' - ') : 'Boceto';
 }
@@ -1175,7 +1176,7 @@ window.__applyBoceto = res => {
   if(res.medidaW) $('f_medida_w').value = res.medidaW;
   if(res.medidaH) $('f_medida_h').value = res.medidaH;
   if(res.tecnica) $('f_tecnica').value = res.tecnica;
-  if(res.posicion) $('f_posicion').value = res.posicion;
+  /* la posición se completa a mano: arranca vacía a propósito */
   $('openBoceto').textContent = '✎ Editar el boceto';
   closeBocetoModal();
   syncToggles();
@@ -1743,14 +1744,6 @@ function logoDataUrl(){
   ctx.drawImage(logoImg, 0, 0);
   return c.toDataURL('image/png');
 }
-function posicionTexto(){
-  if(!state.logo) return '';
-  const cx = state.logo.x + state.logo.w/2, cy = state.logo.y + state.logo.h/2;
-  const v = cy < .34 ? 'Superior' : cy < .66 ? 'Centro' : 'Inferior';
-  const h = cx < .34 ? 'izquierdo' : cx < .66 ? 'centrado' : 'derecho';
-  if(v === 'Centro' && h === 'centrado') return 'Centrado';
-  return v + ' ' + h;
-}
 
 /* técnica: "Otra…" despliega un campo libre */
 const techValue = () => $('technique').value === '__otra'
@@ -1771,7 +1764,6 @@ $('applyBtn').addEventListener('click', () => {
     medidaW: m ? fmtCm(m.w) + ' cm' : '',
     medidaH: m ? fmtCm(m.h) + ' cm' : '',
     tecnica: techValue(),
-    posicion: posicionTexto(),
   });
 });
 
