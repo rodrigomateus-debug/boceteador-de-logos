@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boceteador Formas — Poné tu logo en el producto</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap');
+
+/* ===== Design system Formas Publicitarias ===== */
+:root{
+  --formas-lime:#8EE021; --formas-navy:#000085; --formas-green:#399F4A;
+  --formas-ink:#0B0B23; --formas-gray-700:#3D3D55; --formas-gray-500:#6E6E85;
+  --formas-gray-200:#E4E4ED; --formas-gray-100:#F1F1F6; --formas-gray-50:#F8F8FB;
+  --formas-yellow:#F9CE32;
+  --font-primary:'Poppins',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-display:'Montserrat','Poppins',system-ui,sans-serif;
+  --surface-page:#FFFFFF; --surface-sunken:var(--formas-gray-50);
+  --text-strong:var(--formas-ink); --text-body:var(--formas-gray-700); --text-muted:var(--formas-gray-500);
+  --border-subtle:var(--formas-gray-200);
+  --sheet-accent:var(--formas-lime);
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0;padding:0;background:#EDEDF2;color:var(--text-strong);font-family:var(--font-primary);font-size:14.5px;line-height:1.55}
+.page{max-width:1140px;margin:0 auto;padding:40px 24px 72px}
+
+.label{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted)}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--formas-green)}
+.display{font-family:var(--font-display);font-weight:800;letter-spacing:-.01em;color:var(--formas-navy)}
+.pill{display:inline-block;padding:5px 12px;border-radius:999px;background:var(--formas-navy);color:#fff;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.rule{height:4px;width:56px;border-radius:2px;background:var(--sheet-accent)}
+.card{background:var(--surface-page);border:1px solid var(--border-subtle);border-radius:16px}
+.slot{background-color:var(--formas-gray-100);background-image:repeating-linear-gradient(-45deg,rgba(0,0,133,.05) 0 10px,rgba(0,0,133,0) 10px 20px)}
+.num{font-variant-numeric:tabular-nums}
+
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:26px}
+header.top h1{font-size:34px;line-height:1.02;margin:8px 0 0}
+
+.grid{display:grid;grid-template-columns:1.25fr .75fr;gap:22px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:16px}
+
+/* ---- escenario ---- */
+.stage-card{padding:16px}
+#frameWrap{display:flex;justify-content:center}
+#frame{position:relative;display:inline-block;border-radius:14px;overflow:hidden;max-width:100%;touch-action:none;user-select:none;-webkit-user-select:none}
+#photo{display:block;max-width:100%;max-height:580px;width:auto;height:auto}
+#emptyState{aspect-ratio:4/3.4;width:640px;max-width:100%;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;cursor:pointer;border:1.5px dashed var(--border-subtle)}
+#emptyState .big{font-family:var(--font-display);font-weight:800;font-size:19px;color:var(--formas-navy)}
+#emptyState p{margin:0;color:var(--text-muted);font-size:13px;max-width:38ch}
+#frame.drawing{cursor:crosshair}
+#drawHint{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;padding-top:16px;pointer-events:none;z-index:6}
+#drawHint span{background:var(--formas-navy);color:#fff;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:6px 14px;border-radius:999px;box-shadow:0 4px 14px rgba(11,11,35,.35)}
+
+#zone{position:absolute;border:2px dashed var(--sheet-accent);border-radius:4px;cursor:move;z-index:2;box-shadow:0 0 0 9999px rgba(11,11,35,.14)}
+#zone.no-dim{box-shadow:none}
+#logoWrap{position:absolute;cursor:move;z-index:4}
+#logoWrap img{width:100%;height:100%;display:block;pointer-events:none}
+#logoWrap.selected{outline:1.5px solid var(--sheet-accent);outline-offset:1px}
+.handle{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--sheet-accent);border:2.5px solid #fff;box-shadow:0 1px 4px rgba(11,11,35,.35);z-index:5;touch-action:none}
+.handle.tl{top:-8px;left:-8px;cursor:nwse-resize}.handle.tr{top:-8px;right:-8px;cursor:nesw-resize}
+.handle.bl{bottom:-8px;left:-8px;cursor:nesw-resize}.handle.br{bottom:-8px;right:-8px;cursor:nwse-resize}
+#zone .handle{background:#fff;border-color:var(--sheet-accent)}
+
+#measureChip{position:absolute;z-index:6;translate:-50% 0;background:var(--formas-navy);color:#fff;font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:999px;white-space:nowrap;pointer-events:none;font-variant-numeric:tabular-nums}
+
+/* barrita de medida bajo el escenario */
+.measure-bar{display:flex;align-items:center;gap:10px;margin-top:12px;color:var(--formas-navy)}
+.measure-bar .tickline{flex:1;display:flex;align-items:center}
+.measure-bar .tickline i{width:1.5px;height:12px;background:currentColor}
+.measure-bar .tickline b{flex:1;height:1.5px;background:currentColor}
+.measure-bar .val{font-family:var(--font-display);font-size:13px;font-weight:800;white-space:nowrap}
+
+/* ---- panel de pasos ---- */
+.step{padding:16px 16px 18px}
+.step-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--formas-navy);color:#fff;font-family:var(--font-display);font-weight:800;font-size:13px;display:grid;place-items:center;flex:none}
+.step.done .step-num{background:var(--formas-green)}
+.step.locked{opacity:.45;pointer-events:none}
+.step-head h2{font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--formas-navy);margin:0;letter-spacing:-.01em}
+
+.field{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.field-row{display:flex;gap:10px}
+.field-row .field{flex:1;margin-top:10px}
+select,input[type="number"],input[type="text"]{font-family:var(--font-primary);font-size:14px;font-weight:600;color:var(--text-strong);background:var(--surface-page);border:1.5px solid var(--border-subtle);border-radius:12px;padding:9px 12px;width:100%}
+select:focus,input:focus{outline:2px solid var(--sheet-accent);outline-offset:1px;border-color:var(--sheet-accent)}
+.suffix-wrap{position:relative}
+.suffix-wrap .suffix{position:absolute;right:12px;top:50%;translate:0 -50%;color:var(--text-muted);font-size:12px;font-weight:600;pointer-events:none}
+
+.btn{display:block;width:100%;border-radius:12px;padding:11px 16px;font-family:var(--font-primary);font-size:14px;font-weight:700;border:1.5px solid transparent;cursor:pointer;text-align:center;transition:filter .15s}
+.btn-primary{background:var(--sheet-accent);color:var(--formas-navy)}
+.btn-primary:hover{filter:brightness(.95)}
+.btn-primary:disabled{filter:grayscale(.6) opacity(.5);cursor:not-allowed}
+.btn-secondary{background:var(--surface-page);color:var(--text-strong);border-color:var(--border-subtle)}
+.btn-secondary:hover{background:var(--surface-sunken)}
+.btn:focus-visible{outline:2px solid var(--formas-navy);outline-offset:2px}
+.btn+.btn{margin-top:8px}
+
+.upload-tile{border:1.5px dashed var(--border-subtle);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .15s}
+.upload-tile:hover{border-color:var(--sheet-accent)}
+.upload-tile .thumb{width:46px;height:46px;border-radius:10px;flex:none;display:grid;place-items:center;overflow:hidden}
+.upload-tile .thumb img{width:100%;height:100%;object-fit:contain}
+.upload-tile .txt{font-size:13px;font-weight:600}
+.upload-tile .txt small{display:block;font-weight:400;color:var(--text-muted);font-size:11.5px}
+
+.check{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text-body);margin-top:10px;cursor:pointer}
+.check input{width:16px;height:16px;accent-color:var(--formas-navy)}
+
+.note{display:flex;gap:8px;align-items:baseline;font-size:12.5px;color:var(--text-body);background:var(--surface-sunken);border:1px solid var(--border-subtle);border-left:4px solid var(--formas-yellow);border-radius:12px;padding:9px 12px;margin-top:10px}
+
+.readout{display:flex;flex-direction:column;margin-top:10px;border:1px solid var(--border-subtle);border-radius:12px;overflow:hidden}
+.readout .row{display:flex;justify-content:space-between;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border-subtle);font-size:13px}
+.readout .row:last-child{border-bottom:0}
+.readout .val{font-weight:700}
+
+footer.bottom{margin-top:30px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid var(--border-subtle);padding-top:16px}
+footer.bottom .tag{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--formas-green)}
+footer.bottom small{color:var(--text-muted)}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="top">
+    <div>
+      <div class="eyebrow">your brand loved</div>
+      <h1 class="display">Boceteador</h1>
+      <div class="rule" style="margin-top:12px"></div>
+    </div>
+    <span class="pill">Boceto orientativo</span>
+  </header>
+
+  <div class="grid">
+
+    <!-- ============ ESCENARIO ============ -->
+    <div class="col">
+      <div class="card stage-card">
+        <div id="frameWrap">
+          <div id="emptyState" class="slot">
+            <span class="big">Subí la foto del producto</span>
+            <p>Arrastrá una imagen acá o hacé clic para elegirla. Ideal: foto recortada al producto, fondo neutro.</p>
+            <span class="pill" style="background:var(--sheet-accent);color:var(--formas-navy)">Elegir foto</span>
+          </div>
+          <div id="frame" hidden>
+            <img id="photo" alt="Producto">
+            <div id="drawHint" hidden><span>Arrastrá sobre la foto para marcar el área de impresión</span></div>
+            <div id="zone" hidden>
+              <span class="handle tl" data-corner="tl"></span><span class="handle tr" data-corner="tr"></span>
+              <span class="handle bl" data-corner="bl"></span><span class="handle br" data-corner="br"></span>
+            </div>
+            <div id="logoWrap" hidden>
+              <img id="logoImg" alt="Logo">
+              <span class="handle tl" data-corner="tl"></span><span class="handle tr" data-corner="tr"></span>
+              <span class="handle bl" data-corner="bl"></span><span class="handle br" data-corner="br"></span>
+            </div>
+            <div id="measureChip" hidden></div>
+          </div>
+        </div>
+        <div class="measure-bar" id="productMeasureBar" hidden>
+          <span class="tickline"><i></i><b></b><i></i></span>
+          <span class="val num" id="productMeasureVal">Ancho del producto: — cm</span>
+          <span class="tickline"><i></i><b></b><i></i></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PASOS ============ -->
+    <div class="col">
+
+      <!-- Paso 1: producto -->
+      <div class="card step" id="step1">
+        <div class="step-head"><span class="step-num">1</span><h2>Foto del producto</h2></div>
+        <label class="upload-tile" for="photoInput">
+          <span class="thumb slot" id="photoThumb">📷</span>
+          <span class="txt" id="photoTxt">Elegir foto del producto<small>JPG o PNG · se recomienda recortada al producto</small></span>
+        </label>
+        <input type="file" id="photoInput" accept="image/png,image/jpeg,image/webp" hidden>
+        <div class="field">
+          <span class="label" style="letter-spacing:.08em">Ancho real del producto</span>
+          <div class="suffix-wrap"><input type="number" id="productWidthCm" placeholder="ej. 15" min="1" max="300" step="0.1"><span class="suffix">cm</span></div>
+          <small style="color:var(--text-muted);font-size:11.5px">Con este dato las medidas del logo se calculan solas. Corresponde al ancho de la foto, por eso conviene una foto recortada al producto.</small>
+        </div>
+        <div class="field">
+          <span class="label" style="letter-spacing:.08em">Nombre del producto (opcional)</span>
+          <input type="text" id="productName" placeholder="ej. Cuaderno Freedom negro">
+        </div>
+      </div>
+
+      <!-- Paso 2: área -->
+      <div class="card step locked" id="step2">
+        <div class="step-head"><span class="step-num">2</span><h2>Área de impresión</h2></div>
+        <button class="btn btn-secondary" type="button" id="drawZoneBtn">Marcar área sobre la foto</button>
+        <div class="readout" id="zoneReadout" hidden>
+          <div class="row"><span class="label">Área marcada</span><span class="val num" id="zoneSizeOut">—</span></div>
+        </div>
+      </div>
+
+      <!-- Paso 3: logo -->
+      <div class="card step locked" id="step3">
+        <div class="step-head"><span class="step-num">3</span><h2>Logo</h2></div>
+        <label class="upload-tile" for="logoInput">
+          <span class="thumb slot" id="logoThumb">◐</span>
+          <span class="txt" id="logoTxt">Elegir logo<small>PNG sin fondo recomendado · también SVG o JPG</small></span>
+        </label>
+        <input type="file" id="logoInput" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden>
+        <label class="check"><input type="checkbox" id="removeWhite"> Quitar fondo blanco del logo</label>
+        <div class="note" id="jpgNote" hidden>⚠ <span>Tu logo no tiene transparencia: sobre productos oscuros se verá con fondo. Probá activar "Quitar fondo blanco".</span></div>
+        <div class="readout" id="logoReadout" hidden>
+          <div class="row"><span class="label">Logo aplicado</span><span class="val num" id="logoSizeOut">—</span></div>
+        </div>
+      </div>
+
+      <!-- Paso 4: técnica + descarga -->
+      <div class="card step locked" id="step4">
+        <div class="step-head"><span class="step-num">4</span><h2>Técnica y descarga</h2></div>
+        <div class="field" style="margin-top:0">
+          <span class="label" style="letter-spacing:.08em">Técnica de aplicación</span>
+          <select id="technique">
+            <option>DTP Full Color</option>
+            <option>Serigrafía</option>
+            <option>Tampografía</option>
+            <option>Grabado láser</option>
+            <option>Bordado</option>
+            <option>Vinilo</option>
+            <option>Sublimación</option>
+          </select>
+        </div>
+        <label class="check"><input type="checkbox" id="includeZone"> Incluir el marco del área en la descarga</label>
+        <button class="btn btn-primary" type="button" id="downloadBtn" style="margin-top:12px">Descargar boceto PNG</button>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="bottom">
+    <span class="tag">Documento interno</span>
+    <small>Formas Publicitarias — El boceto es orientativo y podrá tener adaptaciones para lograr el mejor resultado productivo.</small>
+  </footer>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const frame = $('frame'), photo = $('photo'), zoneEl = $('zone'), logoWrap = $('logoWrap'), logoImg = $('logoImg');
+const chip = $('measureChip');
+const fmtCm = n => n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+/* Estado en coordenadas normalizadas (0–1) relativas al frame */
+const state = {
+  zone: null,          // {x,y,w,h}
+  logo: null,          // {x,y,w,h}
+  logoAspect: 1,       // naturalW/naturalH del logo
+  logoOriginalSrc: null,
+  drawMode: false,
+};
+
+/* ---------- helpers ---------- */
+const frameRect = () => ({ w: frame.clientWidth, h: frame.clientHeight });
+const cmPerPx = () => {
+  const cm = parseFloat($('productWidthCm').value);
+  return (cm > 0 && frame.clientWidth > 0) ? cm / frame.clientWidth : null;
+};
+const clamp = (v,min,max) => Math.min(Math.max(v,min),max);
+
+function render(){
+  const {w:FW,h:FH} = frameRect();
+  if(state.zone){
+    const z = state.zone;
+    zoneEl.hidden = false;
+    Object.assign(zoneEl.style,{left:z.x*100+'%',top:z.y*100+'%',width:z.w*100+'%',height:z.h*100+'%'});
+    const k = cmPerPx();
+    $('zoneReadout').hidden = false;
+    $('zoneSizeOut').textContent = k
+      ? `${fmtCm(z.w*FW*k)} × ${fmtCm(z.h*FH*k)} cm`
+      : 'ingresá el ancho del producto para ver cm';
+  } else { zoneEl.hidden = true; $('zoneReadout').hidden = true; }
+
+  if(state.logo){
+    const l = state.logo;
+    logoWrap.hidden = false;
+    Object.assign(logoWrap.style,{left:l.x*100+'%',top:l.y*100+'%',width:l.w*100+'%',height:l.h*100+'%'});
+    const k = cmPerPx();
+    const txt = k
+      ? `${fmtCm(l.w*FW*k)} × ${fmtCm(l.h*FH*k)} cm`
+      : 'sin medida — cargá el ancho del producto';
+    chip.hidden = false;
+    chip.textContent = txt;
+    chip.style.left = (l.x + l.w/2)*100 + '%';
+    const belowY = (l.y + l.h)*FH + 10;
+    chip.style.top = Math.min(belowY, FH-30) + 'px';
+    $('logoReadout').hidden = false;
+    $('logoSizeOut').textContent = k ? `${fmtCm(l.w*FW*k)} × ${fmtCm(l.h*FH*k)} cm` : '—';
+  } else { logoWrap.hidden = true; chip.hidden = true; $('logoReadout').hidden = true; }
+
+  const cm = parseFloat($('productWidthCm').value);
+  $('productMeasureBar').hidden = !(cm > 0) || frame.hidden;
+  if(cm > 0) $('productMeasureVal').textContent = `Ancho del producto: ${fmtCm(cm)} cm`;
+}
+
+function setStepStates(){
+  $('step2').classList.toggle('locked', frame.hidden);
+  $('step3').classList.toggle('locked', !state.zone);
+  $('step4').classList.toggle('locked', !state.logo);
+  $('step1').classList.toggle('done', !frame.hidden);
+  $('step2').classList.toggle('done', !!state.zone);
+  $('step3').classList.toggle('done', !!state.logo);
+}
+
+/* ---------- paso 1: foto ---------- */
+$('emptyState').addEventListener('click', () => $('photoInput').click());
+$('emptyState').addEventListener('dragover', e => e.preventDefault());
+$('emptyState').addEventListener('drop', e => { e.preventDefault(); if(e.dataTransfer.files[0]) loadPhoto(e.dataTransfer.files[0]); });
+$('photoInput').addEventListener('change', e => e.target.files[0] && loadPhoto(e.target.files[0]));
+
+function loadPhoto(file){
+  const url = URL.createObjectURL(file);
+  photo.onload = () => {
+    $('emptyState').hidden = true;
+    frame.hidden = false;
+    $('photoThumb').innerHTML = `<img src="${url}" alt="">`;
+    $('photoTxt').innerHTML = `${file.name}<small>clic para cambiar la foto</small>`;
+    state.zone = null; state.logo = null;
+    enterDrawMode();
+    setStepStates(); render();
+  };
+  photo.src = url;
+}
+
+$('productWidthCm').addEventListener('input', render);
+
+/* ---------- paso 2: dibujar área ---------- */
+$('drawZoneBtn').addEventListener('click', enterDrawMode);
+function enterDrawMode(){
+  state.drawMode = true;
+  frame.classList.add('drawing');
+  $('drawHint').hidden = false;
+  $('drawZoneBtn').textContent = state.zone ? 'Redibujar área' : 'Marcar área sobre la foto';
+}
+function exitDrawMode(){
+  state.drawMode = false;
+  frame.classList.remove('drawing');
+  $('drawHint').hidden = true;
+  $('drawZoneBtn').textContent = 'Redibujar área';
+}
+
+/* ---------- paso 3: logo ---------- */
+$('logoInput').addEventListener('change', e => e.target.files[0] && loadLogo(e.target.files[0]));
+function loadLogo(file){
+  const url = URL.createObjectURL(file);
+  const probe = new Image();
+  probe.onload = () => {
+    state.logoAspect = probe.naturalWidth / probe.naturalHeight;
+    state.logoOriginalSrc = url;
+    $('jpgNote').hidden = !/jpe?g/i.test(file.type);
+    applyLogoSrc(() => {
+      placeLogoInZone();
+      $('logoThumb').innerHTML = `<img src="${logoImg.src}" alt="">`;
+      $('logoTxt').innerHTML = `${file.name}<small>clic para cambiar el logo</small>`;
+      setStepStates(); render();
+    });
+  };
+  probe.src = url;
+}
+
+/* quita el fondo blanco con un umbral simple */
+$('removeWhite').addEventListener('change', () => state.logoOriginalSrc && applyLogoSrc(render));
+function applyLogoSrc(done){
+  if(!$('removeWhite').checked){ logoImg.onload = () => done&&done(); logoImg.src = state.logoOriginalSrc; return; }
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img,0,0);
+    const d = ctx.getImageData(0,0,c.width,c.height), p = d.data;
+    for(let i=0;i<p.length;i+=4){
+      if(p[i]>238 && p[i+1]>238 && p[i+2]>238) p[i+3]=0;
+    }
+    ctx.putImageData(d,0,0);
+    logoImg.onload = () => done&&done();
+    logoImg.src = c.toDataURL('image/png');
+  };
+  img.src = state.logoOriginalSrc;
+}
+
+function placeLogoInZone(){
+  if(!state.zone) return;
+  const {w:FW,h:FH} = frameRect();
+  const z = state.zone;
+  const zw = z.w*FW, zh = z.h*FH;
+  let w = zw*.8, h = w/state.logoAspect;
+  if(h > zh*.8){ h = zh*.8; w = h*state.logoAspect; }
+  state.logo = {
+    x: z.x + (z.w - w/FW)/2,
+    y: z.y + (z.h - h/FH)/2,
+    w: w/FW, h: h/FH,
+  };
+}
+
+/* ---------- interacción con punteros ---------- */
+let active = null; // {mode, corner, startPx, startZone, startLogo}
+
+frame.addEventListener('pointerdown', e => {
+  const {w:FW,h:FH} = frameRect();
+  const r = frame.getBoundingClientRect();
+  const px = { x: e.clientX - r.left, y: e.clientY - r.top };
+
+  if(state.drawMode){
+    active = { mode:'draw', startPx:px };
+    state.zone = { x:px.x/FW, y:px.y/FH, w:0, h:0 };
+    frame.setPointerCapture(e.pointerId);
+    render(); return;
+  }
+  const corner = e.target.dataset && e.target.dataset.corner;
+  if(corner && e.target.parentElement === logoWrap && state.logo){
+    active = { mode:'logo-resize', corner, startPx:px, start:{...state.logo} };
+  } else if(corner && e.target.parentElement === zoneEl && state.zone){
+    active = { mode:'zone-resize', corner, startPx:px, start:{...state.zone} };
+  } else if(e.target === logoWrap || e.target === logoImg){
+    active = { mode:'logo-move', startPx:px, start:{...state.logo} };
+  } else if(e.target === zoneEl){
+    active = { mode:'zone-move', startPx:px, start:{...state.zone} };
+  } else return;
+  logoWrap.classList.toggle('selected', active.mode.startsWith('logo'));
+  frame.setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+
+frame.addEventListener('pointermove', e => {
+  if(!active) return;
+  const {w:FW,h:FH} = frameRect();
+  const r = frame.getBoundingClientRect();
+  const px = { x: clamp(e.clientX - r.left,0,FW), y: clamp(e.clientY - r.top,0,FH) };
+  const dx = (px.x - active.startPx.x), dy = (px.y - active.startPx.y);
+
+  if(active.mode === 'draw'){
+    const sx = active.startPx.x, sy = active.startPx.y;
+    state.zone = {
+      x: Math.min(sx,px.x)/FW, y: Math.min(sy,px.y)/FH,
+      w: Math.abs(px.x-sx)/FW, h: Math.abs(px.y-sy)/FH,
+    };
+  }
+  else if(active.mode === 'zone-move'){
+    const s = active.start;
+    state.zone = { ...s,
+      x: clamp(s.x + dx/FW, 0, 1-s.w),
+      y: clamp(s.y + dy/FH, 0, 1-s.h) };
+    clampLogoToZone();
+  }
+  else if(active.mode === 'zone-resize'){
+    state.zone = resizeRect(active.start, active.corner, dx/FW, dy/FH, 30/FW, 30/FH);
+    clampLogoToZone();
+  }
+  else if(active.mode === 'logo-move'){
+    const s = active.start, z = state.zone;
+    state.logo = { ...s,
+      x: clamp(s.x + dx/FW, z.x, z.x+z.w-s.w),
+      y: clamp(s.y + dy/FH, z.y, z.y+z.h-s.h) };
+  }
+  else if(active.mode === 'logo-resize'){
+    resizeLogo(active, dx, dy, FW, FH);
+  }
+  render();
+});
+
+['pointerup','pointercancel'].forEach(ev => frame.addEventListener(ev, e => {
+  if(!active) return;
+  if(active.mode === 'draw'){
+    const {w:FW,h:FH} = frameRect();
+    if(state.zone.w*FW < 24 || state.zone.h*FH < 24){ state.zone = null; }
+    else exitDrawMode();
+    setStepStates();
+  }
+  active = null; render();
+}));
+
+function resizeRect(s, corner, dxn, dyn, minW, minH){
+  let {x,y,w,h} = s;
+  if(corner.includes('l')){ const nx = clamp(x+dxn, 0, x+w-minW); w += x-nx; x = nx; }
+  if(corner.includes('r')){ w = clamp(w+dxn, minW, 1-x); }
+  if(corner.includes('t')){ const ny = clamp(y+dyn, 0, y+h-minH); h += y-ny; y = ny; }
+  if(corner.includes('b')){ h = clamp(h+dyn, minH, 1-y); }
+  return {x,y,w,h};
+}
+
+function resizeLogo(a, dx, dy, FW, FH){
+  const s = a.start, z = state.zone, asp = state.logoAspect;
+  // ancla = esquina opuesta, en px
+  const sx = s.x*FW, sy = s.y*FH, sw = s.w*FW, sh = s.h*FH;
+  const anchor = {
+    x: a.corner.includes('l') ? sx+sw : sx,
+    y: a.corner.includes('t') ? sy+sh : sy,
+  };
+  const dirX = a.corner.includes('l') ? -1 : 1;
+  const dirY = a.corner.includes('t') ? -1 : 1;
+  const cur = { x: a.startPx.x + dx, y: a.startPx.y + dy };
+  let w = Math.max((cur.x - anchor.x) * dirX, 20);
+  let h = w / asp;
+  if(h < 20){ h = 20; w = h*asp; }
+  // límites del área
+  const zx = z.x*FW, zy = z.y*FH, zw = z.w*FW, zh = z.h*FH;
+  const maxW = dirX > 0 ? (zx+zw-anchor.x) : (anchor.x-zx);
+  const maxH = dirY > 0 ? (zy+zh-anchor.y) : (anchor.y-zy);
+  if(w > maxW){ w = maxW; h = w/asp; }
+  if(h > maxH){ h = maxH; w = h*asp; }
+  const nx = dirX > 0 ? anchor.x : anchor.x - w;
+  const ny = dirY > 0 ? anchor.y : anchor.y - h;
+  state.logo = { x:nx/FW, y:ny/FH, w:w/FW, h:h/FH };
+}
+
+function clampLogoToZone(){
+  if(!state.logo || !state.zone) return;
+  const {w:FW,h:FH} = frameRect();
+  const z = state.zone; let l = {...state.logo};
+  // si el logo no entra, reducirlo manteniendo proporción
+  if(l.w > z.w || l.h > z.h){
+    const kw = z.w/l.w, kh = z.h/l.h, k = Math.min(kw,kh);
+    l.w *= k; l.h *= k;
+  }
+  l.x = clamp(l.x, z.x, z.x+z.w-l.w);
+  l.y = clamp(l.y, z.y, z.y+z.h-l.h);
+  state.logo = l;
+}
+
+/* ---------- paso 4: descarga ---------- */
+$('downloadBtn').addEventListener('click', async () => {
+  if(!state.logo) return;
+  try{ await document.fonts.load('800 16px Montserrat'); await document.fonts.load('600 16px Poppins'); }catch(_){}
+  const NW = photo.naturalWidth, NH = photo.naturalHeight;
+  const K = NW / frame.clientWidth; // px reales por px de pantalla
+  const FW = frame.clientWidth, FH = frame.clientHeight;
+  const footH = Math.round(clamp(NW*0.11, 90, 220));
+  const c = document.createElement('canvas');
+  c.width = NW; c.height = NH + footH;
+  const ctx = c.getContext('2d');
+
+  ctx.drawImage(photo, 0, 0, NW, NH);
+  const l = state.logo;
+  ctx.drawImage(logoImg, l.x*FW*K, l.y*FH*K, l.w*FW*K, l.h*FH*K);
+
+  if($('includeZone').checked && state.zone){
+    const z = state.zone;
+    ctx.strokeStyle = '#8EE021';
+    ctx.lineWidth = Math.max(2, NW/500);
+    ctx.setLineDash([NW/90, NW/140]);
+    ctx.strokeRect(z.x*FW*K, z.y*FH*K, z.w*FW*K, z.h*FH*K);
+    ctx.setLineDash([]);
+  }
+
+  // pie institucional
+  ctx.fillStyle = '#000085';
+  ctx.fillRect(0, NH, NW, footH);
+  const pad = footH*0.28;
+  const name = $('productName').value.trim() || 'Producto';
+  const tech = $('technique').value;
+  const k = cmPerPx();
+  const meas = k ? ` · Logo ${fmtCm(l.w*FW*k)} × ${fmtCm(l.h*FH*k)} cm` : '';
+  const date = new Date().toLocaleDateString('es-AR');
+  ctx.fillStyle = '#FFFFFF';
+  ctx.textBaseline = 'middle';
+  ctx.font = `800 ${footH*0.26}px Montserrat, sans-serif`;
+  ctx.fillText(`${name} — ${tech}`, pad, NH + footH*0.36, NW - pad*2);
+  ctx.font = `500 ${footH*0.17}px Poppins, sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,.75)';
+  ctx.fillText(`Boceto orientativo · Formas Publicitarias · ${date}${meas}`, pad, NH + footH*0.7, NW - pad*2);
+  ctx.fillStyle = '#8EE021';
+  ctx.fillRect(0, NH, NW*0.09, footH*0.06);
+
+  const a = document.createElement('a');
+  a.download = `boceto-${name.toLowerCase().replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'')||'producto'}.png`;
+  a.href = c.toDataURL('image/png');
+  a.click();
+});
+
+/* deselección visual del logo */
+document.addEventListener('pointerdown', e => {
+  if(!frame.contains(e.target)) logoWrap.classList.remove('selected');
+});
+
+setStepStates(); render();
+</script>
+</body>
+</html>
