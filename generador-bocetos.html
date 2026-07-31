@@ -314,12 +314,12 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           </div>
           <!-- barrita de medida: alto -->
           <div style="display:flex; align-items:center; justify-content:center; width:28px;">
-            <div id="bcpBarH" style="height:{{BAR_H_PCT}}%; min-height:28px; display:flex; flex-direction:column; align-items:center; color:var(--formas-navy,#000085); user-select:none;">
+            <div id="bcpBarH" style="height:{{BAR_H_PCT}}%; min-height:28px; position:relative; top:{{BAR_H_OFF}}%; display:flex; flex-direction:column; align-items:center; color:var(--formas-navy,#000085); user-select:none;">
               <div class="bcpGrabH" data-dir="-1" style="flex:1; display:flex; flex-direction:column; align-items:center; cursor:grab; padding:0 8px;">
                 <span style="height:1.5px; width:12px; background:currentColor; flex:none;"></span>
                 <span style="flex:1; width:1.5px; background:currentColor;"></span>
               </div>
-              <span style="font-family:var(--font-display,sans-serif); font-size:11px; font-weight:800; white-space:nowrap; writing-mode:vertical-rl; padding:4px 0;">{{MEDIDA_ALTO}}</span>
+              <span class="bcpMoveH" style="font-family:var(--font-display,sans-serif); font-size:11px; font-weight:800; white-space:nowrap; writing-mode:vertical-rl; padding:4px 0; cursor:grab;" title="Arrastrá para mover el centro">{{MEDIDA_ALTO}}</span>
               <div class="bcpGrabH" data-dir="1" style="flex:1; display:flex; flex-direction:column; align-items:center; cursor:grab; padding:0 8px;">
                 <span style="flex:1; width:1.5px; background:currentColor;"></span>
                 <span style="height:1.5px; width:12px; background:currentColor; flex:none;"></span>
@@ -329,13 +329,13 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         </div>
         <!-- barrita de medida: ancho -->
         <div style="display:flex; justify-content:center;">
-          <div id="bcpBarW" style="width:calc({{BAR_W_PCT}}% - 36px); min-width:70px; display:flex; align-items:center; gap:10px; margin-top:10px; color:var(--formas-navy,#000085); user-select:none;">
+          <div id="bcpBarW" style="width:calc({{BAR_W_PCT}}% - 36px); min-width:70px; position:relative; left:{{BAR_W_OFF}}%; display:flex; align-items:center; gap:10px; margin-top:10px; color:var(--formas-navy,#000085); user-select:none;">
             <div class="bcpGrabW" data-dir="-1" style="flex:1; display:flex; align-items:center; cursor:grab; padding:8px 0;">
               <span style="width:1.5px; height:12px; background:currentColor;"></span>
               <span style="flex:1; height:1.5px; background:currentColor;"></span>
               <span style="width:1.5px; height:12px; background:currentColor;"></span>
             </div>
-            <span style="font-family:var(--font-display,sans-serif); font-size:13px; font-weight:800; white-space:nowrap;">{{MEDIDA_ANCHO}}</span>
+            <span class="bcpMoveW" style="font-family:var(--font-display,sans-serif); font-size:13px; font-weight:800; white-space:nowrap; cursor:grab;" title="Arrastrá para mover el centro">{{MEDIDA_ANCHO}}</span>
             <div class="bcpGrabW" data-dir="1" style="flex:1; display:flex; align-items:center; cursor:grab; padding:8px 0;">
               <span style="width:1.5px; height:12px; background:currentColor;"></span>
               <span style="flex:1; height:1.5px; background:currentColor;"></span>
@@ -682,6 +682,7 @@ let codeMode = 'hex';                 // hex | pantone
 let printColors = [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
 let fullColor = false;                // impresión a todo color (sin colores planos)
 let barW = 100, barH = 100;           // largo (%) de las líneas de medida del logo en la ficha
+let barWOff = 0, barHOff = 0;         // corrimiento (%) del centro de cada línea
 
 const $ = id => document.getElementById(id);
 const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -739,6 +740,8 @@ function build(){
     LOGO_SLOT_STYLE: logoBg === 'dark' ? 'background-color:#0B0B23; background-image:none;' : '',
     BAR_W_PCT: String(Math.round(barW)),
     BAR_H_PCT: String(Math.round(barH)),
+    BAR_W_OFF: String(Math.round(barWOff*10)/10),
+    BAR_H_OFF: String(Math.round(barHOff*10)/10),
     COLOR_ACENTO_HEX: accent,
     FOTO_PRODUCTO: imgFoto ? '<img src="'+imgFoto+'" alt="Producto">' : PH_FOTO,
     LOGO_CLIENTE: imgLogo ? '<img src="'+imgLogo+'" alt="Logo cliente" style="max-height:100px">' : (logoBg === 'dark' ? PH_LOGO_DARK : PH_LOGO)
@@ -763,7 +766,7 @@ function render(){
 /* --- persistencia local --- */
 function save(){
   try{
-    const data = {accent, logoBg, codeMode, printColors, barW, barH, fullColor};
+    const data = {accent, logoBg, codeMode, printColors, barW, barH, barWOff, barHOff, fullColor};
     FIELDS.forEach(id => data[id] = $(id).value);
     localStorage.setItem('boceto-formas', JSON.stringify(data));
   }catch(e){}
@@ -779,6 +782,8 @@ function restore(){
     if(Array.isArray(data.printColors) && data.printColors.length) printColors = data.printColors;
     if(data.barW > 0) barW = data.barW;
     if(data.barH > 0) barH = data.barH;
+    if(typeof data.barWOff === 'number') barWOff = data.barWOff;
+    if(typeof data.barHOff === 'number') barHOff = data.barHOff;
     if(typeof data.fullColor === 'boolean') fullColor = data.fullColor;
   }catch(e){}
 }
@@ -945,41 +950,57 @@ window.addEventListener('resize', rescale);
 function attachBarDrag(){
   const doc = $('preview').contentDocument;
   if(!doc) return;
-  hookBar('bcpBarW', 'w', '.bcpGrabW');
-  hookBar('bcpBarH', 'h', '.bcpGrabH');
-  /* se agarra desde las puntas: hacia afuera agranda (hasta el tope del
-     recuadro del logo), hacia adentro achica; el número queda fijo al medio */
-  function hookBar(id, axis, sel){
+  hookBar('bcpBarW', 'w');
+  hookBar('bcpBarH', 'h');
+  /* Puntas: agrandan/achican simétricamente alrededor del centro actual.
+     Número: mueve el centro (la regla entera) mientras haya lugar;
+     con la regla a tope no hay espacio y no se mueve. */
+  function hookBar(id, axis){
     const el = doc.getElementById(id);
     if(!el) return;
-    el.querySelectorAll(sel).forEach(h => {
+    const horiz = axis === 'w';
+    const cont = el.parentElement;
+    const slot = doc.getElementById('bcpLogoSlot');
+    const contSize = () => { const r = cont.getBoundingClientRect(); return horiz ? r.width : r.height; };
+    const maxLen = () => horiz
+      ? (slot ? clampNum((slot.getBoundingClientRect().width / contSize()) * 100, 15, 100) : 100)
+      : 100;
+    const getLen = () => horiz ? barW : barH;
+    const setLen = v => { if(horiz){ barW = v; el.style.width = 'calc(' + v + '% - 36px)'; } else { barH = v; el.style.height = v + '%'; } };
+    const getOff = () => horiz ? barWOff : barHOff;
+    const setOff = v => { if(horiz){ barWOff = v; el.style.left = v + '%'; } else { barHOff = v; el.style.top = v + '%'; } };
+    const track = (h, onMove) => {
+      const up = () => { h.style.cursor = 'grab'; doc.removeEventListener('pointermove', onMove); doc.removeEventListener('pointerup', up); save(); };
+      h.style.cursor = 'grabbing';
+      doc.addEventListener('pointermove', onMove);
+      doc.addEventListener('pointerup', up);
+    };
+
+    el.querySelectorAll(horiz ? '.bcpGrabW' : '.bcpGrabH').forEach(h => {
       h.addEventListener('pointerdown', e => {
-        e.preventDefault();
+        e.preventDefault(); e.stopPropagation();
         const dir = parseFloat(h.dataset.dir) || 1;
-        const cont = el.parentElement;
-        const slot = doc.getElementById('bcpLogoSlot');
-        const r0 = cont.getBoundingClientRect();
-        const maxPct = axis === 'w'
-          ? (slot ? clampNum((slot.getBoundingClientRect().width / r0.width) * 100, 15, 100) : 100)
-          : 100;
-        const startX = e.clientX, startY = e.clientY;
-        const startPct = clampNum(axis === 'w' ? barW : barH, 15, maxPct);
-        h.style.cursor = 'grabbing';
-        const move = ev => {
-          const d = axis === 'w' ? (ev.clientX - startX) : (ev.clientY - startY);
-          const size = axis === 'w' ? r0.width : r0.height;
-          const pct = clampNum(startPct + (dir * d * 2 / size) * 100, 15, maxPct);
-          if(axis === 'w'){ el.style.width = 'calc(' + pct + '% - 36px)'; barW = pct; }
-          else { el.style.height = pct + '%'; barH = pct; }
-        };
-        const up = () => {
-          h.style.cursor = 'grab';
-          doc.removeEventListener('pointermove', move);
-          doc.removeEventListener('pointerup', up);
-          save();
-        };
-        doc.addEventListener('pointermove', move);
-        doc.addEventListener('pointerup', up);
+        const start = horiz ? e.clientX : e.clientY;
+        const size = contSize();
+        const cap = clampNum(maxLen() - 2 * Math.abs(getOff()), 15, 100);
+        const startLen = clampNum(getLen(), 15, cap);
+        track(h, ev => {
+          const d = (horiz ? ev.clientX : ev.clientY) - start;
+          setLen(clampNum(startLen + (dir * d * 2 / size) * 100, 15, cap));
+        });
+      });
+    });
+
+    const num = el.querySelector(horiz ? '.bcpMoveW' : '.bcpMoveH');
+    if(num) num.addEventListener('pointerdown', e => {
+      e.preventDefault(); e.stopPropagation();
+      const start = horiz ? e.clientX : e.clientY;
+      const size = contSize();
+      const startOff = getOff();
+      track(num, ev => {
+        const room = Math.max(0, (maxLen() - getLen()) / 2);
+        const d = (horiz ? ev.clientX : ev.clientY) - start;
+        setOff(clampNum(startOff + (d / size) * 100, -room, room));
       });
     });
   }
@@ -1001,7 +1022,7 @@ function tplRefresh(){
   sel.value = cur || '';
 }
 function snapshot(){
-  const d = {accent, logoBg, codeMode, printColors, barW, barH, fullColor, imgFoto, imgLogo};
+  const d = {accent, logoBg, codeMode, printColors, barW, barH, barWOff, barHOff, fullColor, imgFoto, imgLogo};
   FIELDS.forEach(id => d[id] = $(id).value);
   return d;
 }
@@ -1012,6 +1033,7 @@ function applySnapshot(d){
   codeMode = d.codeMode || 'hex';
   printColors = (Array.isArray(d.printColors) && d.printColors.length) ? d.printColors : [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
   barW = d.barW || 100; barH = d.barH || 100;
+  barWOff = d.barWOff || 0; barHOff = d.barHOff || 0;
   fullColor = !!d.fullColor;
   imgFoto = d.imgFoto || null;
   imgLogo = d.imgLogo || null;
