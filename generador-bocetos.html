@@ -41,6 +41,22 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--lime); border-co
 .btn.ghost{background:var(--lime); color:var(--navy)}
 .btn.ghost:hover{filter:brightness(1.05)}
 .hint{font-size:11px; color:var(--muted); margin-top:10px; line-height:1.5}
+.topActions{display:flex; gap:8px; margin:0 0 14px}
+.topActions button{flex:1; padding:9px 10px; border-radius:10px; font:inherit; font-size:12px; font-weight:700; cursor:pointer}
+.topActions .nuevo{border:none; background:var(--navy); color:#fff}
+.topActions .nuevo:hover{background:#0000a8}
+.topActions .limpiar{border:1.5px solid var(--border); background:#fff; color:var(--muted)}
+.topActions .limpiar:hover{border-color:#EF7958; color:#EF7958}
+.bgToggle,.codeToggle{display:flex; gap:6px; margin-top:6px}
+.bgToggle button,.codeToggle button{flex:1; padding:7px 8px; border:1.5px solid var(--border); border-radius:8px; background:#fff; font:inherit; font-size:11.5px; font-weight:700; color:var(--ink); cursor:pointer}
+.bgToggle button[aria-pressed="true"],.codeToggle button[aria-pressed="true"]{border-color:var(--navy); background:var(--sunken); box-shadow:0 0 0 2px rgba(142,224,33,.45)}
+.pcRow{display:flex; gap:6px; align-items:center; margin-top:6px}
+.pcRow input[type=color]{width:34px; height:32px; border:1px solid var(--border); border-radius:8px; padding:2px; background:#fff; flex:none}
+.pcRow input[type=text]{flex:1; min-width:0}
+.pcRow .del{border:none; background:#fff; border-radius:6px; box-shadow:0 0 0 1px var(--border); cursor:pointer; color:var(--muted); font-size:11px; padding:5px 7px; flex:none}
+.pcRow .del:hover{background:#EF7958; color:#fff}
+.addColor{margin-top:8px; width:100%; padding:8px; border:1.5px dashed var(--border); border-radius:8px; background:#fff; font:inherit; font-size:12px; font-weight:700; color:var(--muted); cursor:pointer}
+.addColor:hover{border-color:var(--lime); color:var(--ink)}
 /* ---------- Preview ---------- */
 .previewWrap{padding:26px; display:flex; justify-content:center; align-items:flex-start; overflow:auto}
 .sheetScaler{transform-origin:top center; box-shadow:0 10px 40px rgba(11,11,35,.18); border-radius:4px}
@@ -166,6 +182,13 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .bm-close:hover{background:#EF7958; color:#fff; border-color:#EF7958}
 #bocetoModal .bm-body{flex:1; overflow:auto; padding:22px}
 #bocetoModal #stageCol{top:0}
+#bocetoModal .seg{display:flex; gap:6px; margin-top:8px}
+#bocetoModal .seg button{flex:1; padding:8px 6px; border:1.5px solid var(--formas-gray-200); border-radius:10px; background:#fff; font-family:var(--font-primary); font-size:12px; font-weight:700; color:var(--formas-ink); cursor:pointer}
+#bocetoModal .seg button[aria-pressed="true"]{border-color:var(--formas-navy); background:var(--formas-gray-50); box-shadow:0 0 0 2.5px color-mix(in srgb, var(--formas-lime) 55%, transparent)}
+#bocetoModal .lockBtn{align-self:end; margin-bottom:1px; width:42px; height:39px; border:1.5px solid var(--formas-gray-200); border-radius:10px; background:#fff; cursor:pointer; font-size:15px; flex:none}
+#bocetoModal .lockBtn[aria-pressed="true"]{border-color:var(--formas-navy); background:var(--formas-navy)}
+#bocetoModal #logoRotate{position:absolute; top:-36px; left:50%; translate:-50% 0; width:26px; height:26px; border-radius:50%; background:#fff; border:1.5px solid var(--formas-gray-200); display:grid; place-items:center; cursor:grab; font-size:14px; font-weight:700; color:var(--formas-navy); box-shadow:0 1px 5px rgba(11,11,35,.3); z-index:6}
+#bocetoModal input[type=range]{width:100%; accent-color:var(--formas-navy)}
 /* botón del generador para abrir el boceteador */
 .btn-boceto{display:block; width:100%; margin-top:6px; padding:11px 12px; border:none; border-radius:10px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
 .btn-boceto:hover{filter:brightness(1.05)}
@@ -193,7 +216,7 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
   --border-subtle:var(--formas-gray-200);
 }
 @page{size:A4;margin:0}
-*{box-sizing:border-box}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 html,body{margin:0;padding:0;background:#EDEDF2}
 @media print{html,body{background:#fff}}
 .bcp-slot{background-color:#F1F1F6;background-image:repeating-linear-gradient(-45deg,rgba(0,0,133,.05) 0 10px,rgba(0,0,133,0) 10px 20px)}
@@ -272,21 +295,35 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <!-- Logo a imprimir -->
       <div style="margin-top:18px;">
         <div style="font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted,#6E6E85); margin-bottom:8px;">Logo a imprimir</div>
-        <div class="bcp-slot" style="height:120px; border-radius:16px; border:1px solid var(--border-subtle,#E4E4ED); display:flex; align-items:center; justify-content:center; text-align:center; padding:10px;">
-          {{LOGO_CLIENTE}}
-        </div>
-        <!-- barrita de medida -->
-        <div style="display:flex; align-items:center; gap:10px; margin-top:10px; color:var(--formas-navy,#000085);">
-          <div style="flex:1; display:flex; align-items:center;">
-            <span style="width:1.5px; height:12px; background:currentColor;"></span>
-            <span style="flex:1; height:1.5px; background:currentColor;"></span>
-            <span style="width:1.5px; height:12px; background:currentColor;"></span>
+        <div style="display:flex; gap:8px; align-items:stretch;">
+          <div class="bcp-slot" style="flex:1; height:120px; border-radius:16px; border:1px solid var(--border-subtle,#E4E4ED); display:flex; align-items:center; justify-content:center; text-align:center; padding:10px; {{LOGO_SLOT_STYLE}}">
+            {{LOGO_CLIENTE}}
           </div>
-          <span style="font-family:var(--font-display,sans-serif); font-size:13px; font-weight:800; white-space:nowrap;">{{MEDIDA_LOGO}}</span>
-          <div style="flex:1; display:flex; align-items:center;">
-            <span style="width:1.5px; height:12px; background:currentColor;"></span>
-            <span style="flex:1; height:1.5px; background:currentColor;"></span>
-            <span style="width:1.5px; height:12px; background:currentColor;"></span>
+          <!-- barrita de medida: alto -->
+          <div style="display:flex; align-items:center; justify-content:center; width:28px;">
+            <div id="bcpBarH" style="height:{{BAR_H_PCT}}%; min-height:28px; display:flex; flex-direction:column; align-items:center; color:var(--formas-navy,#000085); cursor:ns-resize;">
+              <span style="height:1.5px; width:12px; background:currentColor; flex:none;"></span>
+              <span style="flex:1; width:1.5px; background:currentColor;"></span>
+              <span style="font-family:var(--font-display,sans-serif); font-size:11px; font-weight:800; white-space:nowrap; writing-mode:vertical-rl; padding:4px 0;">{{MEDIDA_ALTO}}</span>
+              <span style="flex:1; width:1.5px; background:currentColor;"></span>
+              <span style="height:1.5px; width:12px; background:currentColor; flex:none;"></span>
+            </div>
+          </div>
+        </div>
+        <!-- barrita de medida: ancho -->
+        <div style="display:flex; justify-content:flex-start;">
+          <div id="bcpBarW" style="width:calc({{BAR_W_PCT}}% - 36px); min-width:70px; display:flex; align-items:center; gap:10px; margin-top:10px; color:var(--formas-navy,#000085); cursor:ew-resize;">
+            <div style="flex:1; display:flex; align-items:center;">
+              <span style="width:1.5px; height:12px; background:currentColor;"></span>
+              <span style="flex:1; height:1.5px; background:currentColor;"></span>
+              <span style="width:1.5px; height:12px; background:currentColor;"></span>
+            </div>
+            <span style="font-family:var(--font-display,sans-serif); font-size:13px; font-weight:800; white-space:nowrap;">{{MEDIDA_ANCHO}}</span>
+            <div style="flex:1; display:flex; align-items:center;">
+              <span style="width:1.5px; height:12px; background:currentColor;"></span>
+              <span style="flex:1; height:1.5px; background:currentColor;"></span>
+              <span style="width:1.5px; height:12px; background:currentColor;"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -301,7 +338,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
   <div style="margin-top:24px; display:grid; grid-template-columns:1fr 1fr 1fr 1fr; border:1px solid var(--border-subtle,#E4E4ED); border-radius:16px; overflow:hidden;">
     <div style="padding:16px 18px; border-right:1px solid var(--border-subtle,#E4E4ED); border-left:4px solid var(--sheet-accent,#8EE021);">
       <div style="font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted,#6E6E85);">Medidas del logo</div>
-      <div style="font-family:var(--font-display,sans-serif); font-size:19px; font-weight:800; color:var(--formas-navy,#000085); margin-top:5px;">{{MEDIDA_LOGO}}</div>
+      <div style="font-family:var(--font-display,sans-serif); font-size:17px; font-weight:800; color:var(--formas-navy,#000085); margin-top:5px;">{{MEDIDA_COMBI}}</div>
     </div>
     <div style="padding:16px 18px; border-right:1px solid var(--border-subtle,#E4E4ED); border-left:4px solid var(--sheet-accent,#8EE021);">
       <div style="font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted,#6E6E85);">Técnica</div>
@@ -313,13 +350,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
     </div>
     <div style="padding:16px 18px; border-left:4px solid var(--sheet-accent,#8EE021);">
       <div style="font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted,#6E6E85);">Color de impresión</div>
-      <div style="display:flex; align-items:center; gap:8px; margin-top:5px;">
-        <span style="width:18px; height:18px; border-radius:5px; background:var(--sheet-print,#FFFFFF); border:1px solid rgba(0,0,0,.14); flex:none;"></span>
-        <div>
-          <div style="font-family:var(--font-display,sans-serif); font-size:17px; font-weight:800; line-height:1; color:var(--formas-navy,#000085);">{{COLOR_IMPRESION_NOMBRE}}</div>
-          <div style="font-family:ui-monospace,Menlo,Consolas,monospace; font-size:10px; color:var(--text-muted,#6E6E85); margin-top:3px;">{{COLOR_IMPRESION_HEX}}</div>
-        </div>
-      </div>
+      {{COLORES_IMPRESION}}
     </div>
   </div>
 
@@ -338,6 +369,10 @@ html,body{margin:0;padding:0;background:#EDEDF2}
     <div class="sub">your brand loved</div>
     <h1>Generador de bocetos</h1>
     <p class="hint" style="margin:4px 0 16px">Completá los campos — la hoja se actualiza sola. Lo que dejes vacío queda en blanco.</p>
+    <div class="topActions">
+      <button type="button" class="nuevo" id="btn_nuevo">＋ Nuevo boceto</button>
+      <button type="button" class="limpiar" id="btn_limpiar">Limpiar</button>
+    </div>
 
     <fieldset>
       <legend>Pedido</legend>
@@ -347,7 +382,20 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       </div>
       <div class="row">
         <div><label>Cliente</label><input type="text" id="f_cliente" placeholder="Nombre del cliente"></div>
-        <div><label>Ejecutivo</label><input type="text" id="f_ejecutivo" placeholder="Ejecutivo de cuenta"></div>
+        <div><label>Ejecutivo</label><select id="f_ejecutivo">
+          <option value=""></option>
+          <option>Alejandra Noms</option>
+          <option>Andrea Antelo</option>
+          <option>Carmen Donoso</option>
+          <option>Elizabeth Reynoso</option>
+          <option>Jorgelina Carrasco</option>
+          <option>Lucia Senini</option>
+          <option>Mili Formosa</option>
+          <option>Rodrigo Mateus</option>
+          <option>Sonia Andersen</option>
+          <option>Valeria Andrade</option>
+          <option>Wanda Seidl</option>
+        </select></div>
       </div>
     </fieldset>
 
@@ -380,8 +428,16 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <input type="file" id="f_logo" accept="image/*">
         <span id="txt_logo">Subir logo (vector / alta resolución)</span>
       </div>
-      <label>Medidas del logo <span style="font-weight:400">(barra inferior y ficha de impresión)</span></label>
-      <input type="text" id="f_medida" placeholder="2,5 cm">
+      <label>Fondo del recuadro del logo</label>
+      <div class="bgToggle">
+        <button type="button" id="bgLight" aria-pressed="true">Logo oscuro<br>→ fondo claro</button>
+        <button type="button" id="bgDark" aria-pressed="false">Logo claro<br>→ fondo oscuro</button>
+      </div>
+      <label>Medidas del logo <span style="font-weight:400">(se completan desde el boceto)</span></label>
+      <div class="row">
+        <div><label>Ancho</label><input type="text" id="f_medida_w" placeholder="2,5 cm"></div>
+        <div><label>Alto</label><input type="text" id="f_medida_h" placeholder="1,8 cm"></div>
+      </div>
       <label>Observaciones del logo</label>
       <textarea id="f_obslogo" placeholder="Técnica, cantidad de colores y ubicación de la marca."></textarea>
     </fieldset>
@@ -392,11 +448,13 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <div><label>Técnica</label><input type="text" id="f_tecnica" placeholder="Tampografía"></div>
         <div><label>Posición</label><input type="text" id="f_posicion" placeholder="Centrado"></div>
       </div>
-      <label>Color de impresión</label>
-      <div class="colorRow">
-        <input type="color" id="f_colorimp_hex" value="#FFFFFF">
-        <input type="text" id="f_colorimp_nom" placeholder="Blanco">
+      <label>Colores de impresión</label>
+      <div class="codeToggle">
+        <button type="button" id="codeHex" aria-pressed="true">Código HEX</button>
+        <button type="button" id="codePant" aria-pressed="false">Pantone</button>
       </div>
+      <div id="printColors"></div>
+      <button type="button" class="addColor" id="addColor">＋ Agregar color</button>
     </fieldset>
 
     <fieldset>
@@ -452,6 +510,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
               <span class="handle tl" data-corner="tl"></span><span class="handle tr" data-corner="tr"></span>
               <span class="handle bl" data-corner="bl"></span><span class="handle br" data-corner="br"></span>
               <button id="logoDelete" type="button" aria-label="Quitar logo" title="Quitar logo">×</button>
+              <span id="logoRotate" title="Rotá el logo">⟳</span>
             </div>
             <div id="measureChip" hidden></div>
             <div id="ruler" hidden>
@@ -472,7 +531,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <div class="card step" id="modeCard">
         <div class="label" style="margin-bottom:10px">¿Con qué dato contás?</div>
         <div class="mode-row">
-          <button type="button" class="mode-opt" id="modeLogo" aria-pressed="false">
+          <button type="button" class="mode-opt" id="modeLogo" aria-pressed="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <rect x="7" y="9" width="12" height="10" rx="2"/>
               <path d="M7 5h12M7 3.5v3M19 3.5v3"/>
@@ -480,7 +539,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             </svg>
             <span class="t">Tengo la medida exacta del logo<small>Marcás el área, cargás el logo y anotás su ancho × alto en cm.</small></span>
           </button>
-          <button type="button" class="mode-opt" id="modeProduct" aria-pressed="true">
+          <button type="button" class="mode-opt" id="modeProduct" aria-pressed="false">
             <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <rect x="2" y="9" width="20" height="6" rx="1.5"/>
               <path d="M6 9v3M10 9v4.5M14 9v3M18 9v4.5"/>
@@ -510,10 +569,6 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           </div>
           <small style="color:var(--text-muted);font-size:11.5px">Llevá los extremos de la regla de lado a lado del producto en la foto y anotá cuánto mide esa distancia en la vida real. Con eso las medidas del logo se calculan solas.</small>
         </div>
-        <div class="field">
-          <span class="label" style="letter-spacing:.08em">Nombre del producto (opcional)</span>
-          <input type="text" id="productName" placeholder="ej. Cuaderno Freedom negro">
-        </div>
       </div>
 
       <!-- Paso 2: área -->
@@ -538,12 +593,25 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             <span class="label" style="letter-spacing:.08em">Ancho del logo</span>
             <div class="suffix-wrap"><input type="number" id="logoWcm" placeholder="ej. 5" min="0.1" max="200" step="0.1"><span class="suffix">cm</span></div>
           </div>
+          <button type="button" class="lockBtn" id="lockAspectBtn" aria-pressed="false" title="Proporción desanclada — clic para anclar">🔗</button>
           <div class="field">
             <span class="label" style="letter-spacing:.08em">Alto del logo</span>
-            <div class="suffix-wrap"><input type="number" id="logoHcm" placeholder="auto" min="0.1" max="200" step="0.1"><span class="suffix">cm</span></div>
+            <div class="suffix-wrap"><input type="number" id="logoHcm" placeholder="ej. 3" min="0.1" max="200" step="0.1"><span class="suffix">cm</span></div>
           </div>
         </div>
         <button class="btn btn-secondary" type="button" id="removeWhiteBtn" style="margin-top:10px" hidden>Quitar fondo blanco</button>
+        <div id="logoTools" hidden>
+          <div class="label" style="margin-top:12px;letter-spacing:.08em">Color del logo</div>
+          <div class="seg" id="tintSeg">
+            <button type="button" data-tint="original" aria-pressed="true">Original</button>
+            <button type="button" data-tint="white" aria-pressed="false">Blanco</button>
+            <button type="button" data-tint="black" aria-pressed="false">Negro</button>
+          </div>
+          <div class="field">
+            <span class="label" style="letter-spacing:.08em">Opacidad · <span id="opacityVal">100%</span></span>
+            <input type="range" id="logoOpacity" min="10" max="100" value="100">
+          </div>
+        </div>
         <div class="note" id="jpgNote" hidden>⚠ <span>Tu logo no tiene transparencia: sobre productos oscuros se verá con fondo. Probá el botón "Quitar fondo blanco".</span></div>
         <div class="readout" id="logoReadout" hidden>
           <div class="row"><span class="label">Logo aplicado</span><span class="val num" id="logoSizeOut">—</span></div>
@@ -581,13 +649,18 @@ const TPL = document.getElementById('tpl').innerHTML;
 const ACCENTS = ['#8EE021','#000085','#EF7958','#089AE1','#E20389','#F9CE32'];
 let accent = '#8EE021';
 let imgFoto = null, imgLogo = null;
+let logoBg = 'light';                 // fondo del recuadro "Logo a imprimir": light | dark
+let codeMode = 'hex';                 // hex | pantone
+let printColors = [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
+let barW = 100, barH = 100;           // largo (%) de las líneas de medida del logo en la ficha
 
 const $ = id => document.getElementById(id);
 const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const clampNum = (v,min,max) => Math.min(Math.max(v,min),max);
 
 const FIELDS = ['f_pdv','f_fecha','f_cliente','f_ejecutivo','f_producto','f_cantidad',
-  'f_colorprod_hex','f_colorprod_nom','f_obsprod','f_medida','f_obslogo',
-  'f_tecnica','f_posicion','f_colorimp_hex','f_colorimp_nom'];
+  'f_colorprod_hex','f_colorprod_nom','f_obsprod','f_medida_w','f_medida_h','f_obslogo',
+  'f_tecnica','f_posicion'];
 
 function fechaDDMM(v){
   if(!v) return '';
@@ -597,8 +670,20 @@ function fechaDDMM(v){
 
 const PH_FOTO = '<div style="font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; line-height:1.7; color:#000085; opacity:.55; padding:20px;">[ muestra del producto ]<br>foto con el logo aplicado</div>';
 const PH_LOGO = '<div style="font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; line-height:1.6; color:#000085; opacity:.55;">[ logo del cliente ]<br>vector / alta resolución</div>';
+const PH_LOGO_DARK = '<div style="font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; line-height:1.6; color:#FFFFFF; opacity:.6;">[ logo del cliente ]<br>vector / alta resolución</div>';
+
+function coloresHtml(){
+  return printColors.map(c => {
+    const code = codeMode === 'pantone' ? (c.pant ? 'PANTONE ' + esc(c.pant) : '') : (c.hex||'').toUpperCase();
+    return '<div style="display:flex; align-items:center; gap:8px; margin-top:5px;">'
+      + '<span style="width:18px; height:18px; border-radius:5px; background:' + c.hex + '; border:1px solid rgba(0,0,0,.14); flex:none;"></span>'
+      + '<div><div style="font-family:var(--font-display,sans-serif); font-size:15px; font-weight:800; line-height:1.1; color:var(--formas-navy,#000085);">' + esc(c.nom) + '</div>'
+      + '<div style="font-family:ui-monospace,Menlo,Consolas,monospace; font-size:10px; color:var(--text-muted,#6E6E85); margin-top:2px;">' + code + '</div></div></div>';
+  }).join('');
+}
 
 function build(){
+  const mw = esc($('f_medida_w').value), mh = esc($('f_medida_h').value);
   const vals = {
     PDV_NUMERO: esc($('f_pdv').value),
     FECHA: fechaDDMM($('f_fecha').value),
@@ -610,14 +695,19 @@ function build(){
     COLOR_PRODUCTO_NOMBRE: esc($('f_colorprod_nom').value),
     OBS_PRODUCTO: esc($('f_obsprod').value),
     OBS_LOGO: esc($('f_obslogo').value),
-    MEDIDA_LOGO: esc($('f_medida').value),
+    MEDIDA_ANCHO: mw,
+    MEDIDA_ALTO: mh,
+    MEDIDA_COMBI: [mw, mh].filter(Boolean).join(' × '),
     TECNICA: esc($('f_tecnica').value),
     POSICION: esc($('f_posicion').value),
-    COLOR_IMPRESION_HEX: $('f_colorimp_hex').value.toUpperCase(),
-    COLOR_IMPRESION_NOMBRE: esc($('f_colorimp_nom').value),
+    COLOR_IMPRESION_HEX: (printColors[0]||{}).hex || '#FFFFFF',
+    COLORES_IMPRESION: coloresHtml(),
+    LOGO_SLOT_STYLE: logoBg === 'dark' ? 'background-color:#0B0B23; background-image:none;' : '',
+    BAR_W_PCT: String(Math.round(barW)),
+    BAR_H_PCT: String(Math.round(barH)),
     COLOR_ACENTO_HEX: accent,
     FOTO_PRODUCTO: imgFoto ? '<img src="'+imgFoto+'" alt="Producto">' : PH_FOTO,
-    LOGO_CLIENTE: imgLogo ? '<img src="'+imgLogo+'" alt="Logo cliente" style="max-height:100px">' : PH_LOGO
+    LOGO_CLIENTE: imgLogo ? '<img src="'+imgLogo+'" alt="Logo cliente" style="max-height:100px">' : (logoBg === 'dark' ? PH_LOGO_DARK : PH_LOGO)
   };
   let html = TPL;
   for(const k in vals) html = html.split('{{'+k+'}}').join(vals[k]);
@@ -639,20 +729,26 @@ function render(){
 /* --- persistencia local --- */
 function save(){
   try{
-    const data = {accent};
+    const data = {accent, logoBg, codeMode, printColors, barW, barH};
     FIELDS.forEach(id => data[id] = $(id).value);
     localStorage.setItem('boceto-formas', JSON.stringify(data));
   }catch(e){}
 }
 function restore(){
+  if(location.hash === '#nuevo') return; // pestaña "Nuevo boceto": arranca vacía
   try{
     const data = JSON.parse(localStorage.getItem('boceto-formas')||'{}');
     FIELDS.forEach(id => { if(data[id]!==undefined) $(id).value = data[id]; });
     if(data.accent) accent = data.accent;
+    if(data.logoBg) logoBg = data.logoBg;
+    if(data.codeMode) codeMode = data.codeMode;
+    if(Array.isArray(data.printColors) && data.printColors.length) printColors = data.printColors;
+    if(data.barW > 0) barW = data.barW;
+    if(data.barH > 0) barH = data.barH;
   }catch(e){}
 }
 
-/* --- swatches --- */
+/* --- swatches de acento --- */
 function drawSwatches(){
   const box = $('swatches'); box.innerHTML='';
   ACCENTS.forEach(c=>{
@@ -664,6 +760,36 @@ function drawSwatches(){
     box.appendChild(b);
   });
 }
+
+/* --- toggles fondo del logo y hex/pantone --- */
+function syncToggles(){
+  $('bgLight').setAttribute('aria-pressed', logoBg==='light');
+  $('bgDark').setAttribute('aria-pressed', logoBg==='dark');
+  $('codeHex').setAttribute('aria-pressed', codeMode==='hex');
+  $('codePant').setAttribute('aria-pressed', codeMode==='pantone');
+}
+$('bgLight').onclick = ()=>{ logoBg='light'; syncToggles(); render(); };
+$('bgDark').onclick  = ()=>{ logoBg='dark';  syncToggles(); render(); };
+$('codeHex').onclick  = ()=>{ codeMode='hex';     syncToggles(); drawPrintColors(); render(); };
+$('codePant').onclick = ()=>{ codeMode='pantone'; syncToggles(); drawPrintColors(); render(); };
+
+/* --- lista de colores de impresión --- */
+function drawPrintColors(){
+  const box = $('printColors'); box.innerHTML='';
+  printColors.forEach((c,i)=>{
+    const row = document.createElement('div'); row.className='pcRow';
+    row.innerHTML = '<input type="color" value="'+c.hex+'">'
+      + '<input type="text" class="pcNom" placeholder="Nombre" value="'+esc(c.nom)+'">'
+      + (codeMode==='pantone' ? '<input type="text" class="pcPant" placeholder="Pantone" value="'+esc(c.pant)+'" style="max-width:92px">' : '')
+      + (printColors.length>1 ? '<button type="button" class="del" title="Quitar color">✕</button>' : '');
+    row.querySelector('input[type=color]').addEventListener('input', e=>{ c.hex=e.target.value; render(); });
+    row.querySelector('.pcNom').addEventListener('input', e=>{ c.nom=e.target.value; render(); });
+    const p = row.querySelector('.pcPant'); if(p) p.addEventListener('input', e=>{ c.pant=e.target.value; render(); });
+    const d = row.querySelector('.del'); if(d) d.onclick = ()=>{ printColors.splice(i,1); drawPrintColors(); render(); };
+    box.appendChild(row);
+  });
+}
+$('addColor').onclick = ()=>{ printColors.push({hex:'#000085', nom:'', pant:''}); drawPrintColors(); render(); };
 
 /* --- imágenes --- */
 function hookFile(inputId, boxId, txtId, clearId, setter){
@@ -683,7 +809,7 @@ function hookFile(inputId, boxId, txtId, clearId, setter){
     ev.stopPropagation(); ev.preventDefault();
     setter(null);
     $(inputId).value='';
-    $(txtId).textContent = txtId==='txt_foto' ? 'Subir foto (con el logo aplicado)' : 'Subir logo (vector / alta resolución)';
+    $(txtId).textContent = txtId==='txt_foto' ? 'Subir foto ya lista (con el logo aplicado)' : 'Subir logo (vector / alta resolución)';
     $(clearId).style.display='none';
     render();
   });
@@ -724,6 +850,47 @@ function rescale(){
 }
 window.addEventListener('resize', rescale);
 
+/* --- líneas de medida arrastrables dentro de la ficha --- */
+function attachBarDrag(){
+  const doc = $('preview').contentDocument;
+  if(!doc) return;
+  const bw = doc.getElementById('bcpBarW'), bh = doc.getElementById('bcpBarH');
+  if(bw) dragBar(bw, 'w');
+  if(bh) dragBar(bh, 'h');
+  function dragBar(el, axis){
+    el.addEventListener('pointerdown', e=>{
+      e.preventDefault();
+      const cont = el.parentElement;
+      const move = ev=>{
+        const r = cont.getBoundingClientRect();
+        if(axis==='w'){
+          const pct = clampNum(((ev.clientX - r.left) / r.width) * 100, 15, 100);
+          el.style.width = 'calc(' + pct + '% - 40px)';
+          barW = pct;
+        } else {
+          const cy = (r.top + r.bottom) / 2;
+          const pct = clampNum((Math.abs(ev.clientY - cy) * 2 / r.height) * 100, 15, 100);
+          el.style.height = pct + '%';
+          barH = pct;
+        }
+      };
+      const up = ()=>{ doc.removeEventListener('pointermove',move); doc.removeEventListener('pointerup',up); save(); };
+      doc.addEventListener('pointermove', move);
+      doc.addEventListener('pointerup', up);
+    });
+  }
+}
+$('preview').addEventListener('load', attachBarDrag);
+
+/* --- nuevo boceto / limpiar --- */
+$('btn_nuevo').onclick = () => window.open(location.href.split('#')[0] + '#nuevo', '_blank');
+$('btn_limpiar').onclick = () => {
+  if(!confirm('¿Seguro que querés borrar todo lo cargado en este boceto?\nEsta acción no se puede deshacer.')) return;
+  try{ localStorage.removeItem('boceto-formas'); }catch(e){}
+  location.href = location.href.split('#')[0] + '#nuevo';
+  location.reload();
+};
+
 /* --- init --- */
 restore();
 if(!$('f_fecha').value){
@@ -732,6 +899,8 @@ if(!$('f_fecha').value){
 }
 FIELDS.forEach(id => $(id).addEventListener('input', render));
 drawSwatches();
+drawPrintColors();
+syncToggles();
 render();
 rescale();
 
@@ -740,7 +909,7 @@ const bocetoModal = document.getElementById('bocetoModal');
 function openBocetoModal(){
   bocetoModal.hidden = false;
   document.body.style.overflow = 'hidden';
-  if(window.__bocetoRender) window.__bocetoRender(); // recalcular tamaños al mostrarse
+  if(window.__bocetoRender) window.__bocetoRender();
 }
 function closeBocetoModal(){
   bocetoModal.hidden = true;
@@ -760,15 +929,16 @@ window.__applyBoceto = res => {
     $('txt_logo').innerHTML = '<img src="'+res.logo+'"><span style="font-size:11px">Logo del boceto</span>';
     $('clear_logo').style.display = 'block';
   }
-  if(res.medida) $('f_medida').value = res.medida;
+  if(res.medidaW) $('f_medida_w').value = res.medidaW;
+  if(res.medidaH) $('f_medida_h').value = res.medidaH;
   if(res.tecnica) $('f_tecnica').value = res.tecnica;
   if(res.posicion) $('f_posicion').value = res.posicion;
-  if(res.producto && !$('f_producto').value.trim()) $('f_producto').value = res.producto;
   $('openBoceto').textContent = '✎ Editar el boceto';
   closeBocetoModal();
   render();
 };
 
+/* ============ Boceteador (editor del modal) ============ */
 (function(){
 'use strict';
 const $ = id => document.getElementById(id);
@@ -778,19 +948,22 @@ const fmtCm = n => n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFrac
 
 /* Estado en coordenadas normalizadas (0–1) relativas al frame */
 const state = {
-  zone: null,          // {x,y,w,h}
-  logo: null,          // {x,y,w,h}
-  logoAspect: 1,       // naturalW/naturalH del logo
+  zone: null,           // {x,y,w,h}
+  logo: null,           // {x,y,w,h,rot}
+  logoAspect: 1,
   logoOriginalSrc: null,
   whiteRemoved: false,
+  tint: 'original',     // original | white | black
+  opacity: 1,
+  lockAspect: false,    // por defecto desanclado
   drawMode: false,
-  ruler: null,         // {x1,y1,x2,y2}
+  ruler: null,
   rulerVisible: false,
-  mode: 'product',     // 'product' = regla | 'logo' = medida exacta del logo
+  mode: 'logo',         // por defecto: "Tengo la medida exacta del logo"
 };
 
-/* ---------- helpers ---------- */
 const frameRect = () => ({ w: frame.clientWidth, h: frame.clientHeight });
+const clamp = (v,min,max) => Math.min(Math.max(v,min),max);
 const cmPerPx = () => {
   if(state.mode !== 'product') return null;
   const cm = parseFloat($('rulerCm').value);
@@ -799,12 +972,21 @@ const cmPerPx = () => {
   const len = Math.hypot((state.ruler.x2-state.ruler.x1)*FW, (state.ruler.y2-state.ruler.y1)*FH);
   return len > 4 ? cm/len : null;
 };
-/* medidas del logo declaradas a mano (modo 'logo') */
 const logoCm = () => {
   const w = parseFloat($('logoWcm').value), h = parseFloat($('logoHcm').value);
   return (w > 0 && h > 0) ? {w,h} : null;
 };
-const clamp = (v,min,max) => Math.min(Math.max(v,min),max);
+const productNameVal = () => {
+  const el = document.getElementById('f_producto');
+  return el ? el.value.split('\n')[0].trim() : '';
+};
+function medidaWH(){
+  if(!state.logo) return null;
+  const {w:FW,h:FH} = frameRect();
+  if(state.mode === 'logo'){ const m = logoCm(); return m ? {w:m.w,h:m.h} : null; }
+  const k = cmPerPx();
+  return k ? {w:state.logo.w*FW*k, h:state.logo.h*FH*k} : null;
+}
 
 function render(){
   const {w:FW,h:FH} = frameRect();
@@ -823,26 +1005,18 @@ function render(){
     const l = state.logo;
     logoWrap.hidden = false;
     Object.assign(logoWrap.style,{left:l.x*100+'%',top:l.y*100+'%',width:l.w*100+'%',height:l.h*100+'%'});
-    const k = cmPerPx();
-    let txt;
-    if(state.mode === 'logo'){
-      const m = logoCm();
-      txt = m ? `${fmtCm(m.w)} × ${fmtCm(m.h)} cm` : 'anotá la medida del logo';
-    } else {
-      txt = k ? `${fmtCm(l.w*FW*k)} × ${fmtCm(l.h*FH*k)} cm` : 'sin medida — usá la regla';
-    }
+    logoWrap.style.transform = `rotate(${l.rot||0}deg)`;
+    logoImg.style.opacity = state.opacity;
+    const m = medidaWH();
     chip.hidden = false;
-    chip.textContent = txt;
+    chip.textContent = m ? `${fmtCm(m.w)} × ${fmtCm(m.h)} cm` : (state.mode === 'logo' ? 'anotá la medida del logo' : 'sin medida — usá la regla');
     chip.style.left = (l.x + l.w/2)*100 + '%';
-    const belowY = (l.y + l.h)*FH + 10;
+    const belowY = (l.y + l.h)*FH + 14;
     chip.style.top = Math.min(belowY, FH-30) + 'px';
     $('logoReadout').hidden = false;
-    $('logoSizeOut').textContent = state.mode === 'logo'
-      ? (logoCm() ? `${fmtCm(logoCm().w)} × ${fmtCm(logoCm().h)} cm` : '—')
-      : (k ? `${fmtCm(l.w*FW*k)} × ${fmtCm(l.h*FH*k)} cm` : '—');
+    $('logoSizeOut').textContent = m ? `${fmtCm(m.w)} × ${fmtCm(m.h)} cm` : '—';
   } else { logoWrap.hidden = true; chip.hidden = true; $('logoReadout').hidden = true; }
 
-  /* regla de calibración */
   if(state.mode === 'product' && state.ruler && state.rulerVisible && !frame.hidden){
     $('ruler').hidden = false;
     const rl = state.ruler;
@@ -888,58 +1062,7 @@ function loadPhoto(file){
     $('rulerToggle').disabled = false;
     $('rulerToggle').textContent = 'Ocultar regla';
     enterDrawMode();
-    
-/* ---------- integración con la ficha ---------- */
-function composeFoto(){
-  const NW = photo.naturalWidth, NH = photo.naturalHeight;
-  const K = NW / frame.clientWidth;
-  const FW = frame.clientWidth, FH = frame.clientHeight;
-  const c = document.createElement('canvas');
-  c.width = NW; c.height = NH;
-  const ctx = c.getContext('2d');
-  ctx.drawImage(photo, 0, 0, NW, NH);
-  const l = state.logo;
-  ctx.drawImage(logoImg, l.x*FW*K, l.y*FH*K, l.w*FW*K, l.h*FH*K);
-  return c.toDataURL('image/png');
-}
-function logoDataUrl(){
-  const c = document.createElement('canvas');
-  c.width = logoImg.naturalWidth; c.height = logoImg.naturalHeight;
-  c.getContext('2d').drawImage(logoImg, 0, 0);
-  return c.toDataURL('image/png');
-}
-function medidaTexto(){
-  if(!state.logo) return '';
-  const {w:FW,h:FH} = frameRect();
-  if(state.mode === 'logo'){
-    const m = logoCm();
-    return m ? fmtCm(m.w)+' × '+fmtCm(m.h)+' cm' : '';
-  }
-  const k = cmPerPx();
-  return k ? fmtCm(state.logo.w*FW*k)+' × '+fmtCm(state.logo.h*FH*k)+' cm' : '';
-}
-function posicionTexto(){
-  if(!state.logo) return '';
-  const cx = state.logo.x + state.logo.w/2, cy = state.logo.y + state.logo.h/2;
-  const v = cy < .34 ? 'Superior' : cy < .66 ? 'Centro' : 'Inferior';
-  const h = cx < .34 ? 'izquierdo' : cx < .66 ? 'centrado' : 'derecho';
-  if(v === 'Centro' && h === 'centrado') return 'Centrado';
-  return v + ' ' + h;
-}
-$('applyBtn').addEventListener('click', () => {
-  if(!state.logo) return;
-  window.__applyBoceto({
-    foto: composeFoto(),
-    logo: logoDataUrl(),
-    medida: medidaTexto(),
-    tecnica: $('technique').value,
-    posicion: posicionTexto(),
-    producto: $('productName').value.trim(),
-  });
-});
-window.__bocetoRender = render;
-
-setStepStates(); render();
+    setStepStates(); render();
   };
   photo.src = url;
 }
@@ -951,7 +1074,7 @@ $('rulerToggle').addEventListener('click', () => {
   render();
 });
 
-/* ---------- toggle de modo de medida ---------- */
+/* ---------- modo de medida ---------- */
 function setMode(m){
   state.mode = m;
   $('modeLogo').setAttribute('aria-pressed', m === 'logo');
@@ -963,32 +1086,39 @@ function setMode(m){
 $('modeLogo').addEventListener('click', () => setMode('logo'));
 $('modeProduct').addEventListener('click', () => setMode('product'));
 
-/* medidas del logo a mano: ancho y alto se sincronizan por proporción */
+/* ---------- medidas del logo a mano + ancla de proporción ---------- */
+function syncLockUI(){
+  $('lockAspectBtn').setAttribute('aria-pressed', state.lockAspect);
+  $('lockAspectBtn').title = state.lockAspect ? 'Proporción anclada — clic para desanclar' : 'Proporción desanclada — clic para anclar';
+}
+$('lockAspectBtn').addEventListener('click', () => {
+  state.lockAspect = !state.lockAspect;
+  if(state.lockAspect){
+    // al anclar: el alto se alinea a la proporción real del logo
+    const w = parseFloat($('logoWcm').value);
+    if(w > 0) $('logoHcm').value = (w / state.logoAspect).toFixed(2);
+    if(state.logo){
+      const {w:FW,h:FH} = frameRect();
+      const l = state.logo;
+      state.logo = { ...l, h: (l.w*FW / state.logoAspect) / FH };
+    }
+  }
+  syncLockUI(); render();
+});
 $('logoWcm').addEventListener('input', () => {
-  const w = parseFloat($('logoWcm').value);
-  if(w > 0 && state.logoAspect) $('logoHcm').value = (w / state.logoAspect).toFixed(2);
+  if(state.lockAspect){
+    const w = parseFloat($('logoWcm').value);
+    if(w > 0) $('logoHcm').value = (w / state.logoAspect).toFixed(2);
+  }
   render();
 });
 $('logoHcm').addEventListener('input', () => {
-  const h = parseFloat($('logoHcm').value);
-  if(h > 0 && state.logoAspect) $('logoWcm').value = (h * state.logoAspect).toFixed(2);
+  if(state.lockAspect){
+    const h = parseFloat($('logoHcm').value);
+    if(h > 0) $('logoWcm').value = (h * state.logoAspect).toFixed(2);
+  }
   render();
 });
-
-/* ---------- paso 2: dibujar área ---------- */
-$('drawZoneBtn').addEventListener('click', enterDrawMode);
-function enterDrawMode(){
-  state.drawMode = true;
-  frame.classList.add('drawing');
-  $('drawHint').hidden = false;
-  $('drawZoneBtn').textContent = state.zone ? 'Redibujar área' : 'Marcar área sobre la foto';
-}
-function exitDrawMode(){
-  state.drawMode = false;
-  frame.classList.remove('drawing');
-  $('drawHint').hidden = true;
-  $('drawZoneBtn').textContent = 'Redibujar área';
-}
 
 /* ---------- paso 3: logo ---------- */
 $('logoInput').addEventListener('change', e => e.target.files[0] && loadLogo(e.target.files[0]));
@@ -999,17 +1129,24 @@ function loadLogo(file){
     state.logoAspect = probe.naturalWidth / probe.naturalHeight;
     state.logoOriginalSrc = url;
     state.whiteRemoved = false;
+    state.tint = 'original';
+    state.opacity = 1;
+    $('logoOpacity').value = 100; $('opacityVal').textContent = '100%';
+    syncTintUI();
     $('jpgNote').hidden = !/jpe?g/i.test(file.type);
     const btn = $('removeWhiteBtn');
     btn.hidden = false; btn.disabled = false; btn.textContent = 'Quitar fondo blanco';
+    $('logoTools').hidden = false;
     logoImg.onload = () => {
+      logoImg.onload = null;
       placeLogoInZone();
       $('logoThumb').innerHTML = `<img src="${logoImg.src}" alt="">`;
       $('logoTxt').innerHTML = `${file.name}<small>clic para cambiar el logo</small>`;
-      logoImg.onload = null;
       $('logoCmFields').hidden = state.mode !== 'logo';
-      const w = parseFloat($('logoWcm').value);
-      if(w > 0) $('logoHcm').value = (w / state.logoAspect).toFixed(2);
+      if(state.lockAspect){
+        const w = parseFloat($('logoWcm').value);
+        if(w > 0) $('logoHcm').value = (w / state.logoAspect).toFixed(2);
+      }
       setStepStates(); render();
     };
     logoImg.src = url;
@@ -1017,51 +1154,74 @@ function loadLogo(file){
   probe.src = url;
 }
 
-/* quitar / restaurar fondo blanco (umbral simple) */
-$('removeWhiteBtn').addEventListener('click', () => {
+/* pipeline de imagen del logo: original → sin fondo blanco → tinte */
+function rebuildLogo(done){
   if(!state.logoOriginalSrc) return;
-  const btn = $('removeWhiteBtn');
-
-  if(state.whiteRemoved){
-    logoImg.onload = () => {
-      logoImg.onload = null;
-      state.whiteRemoved = false;
-      btn.textContent = 'Quitar fondo blanco';
-      $('logoThumb').innerHTML = `<img src="${logoImg.src}" alt="">`;
-      render();
-    };
-    logoImg.src = state.logoOriginalSrc;
-    return;
-  }
-
-  btn.disabled = true; btn.textContent = 'Quitando fondo…';
   const img = new Image();
   img.onload = () => {
     const c = document.createElement('canvas');
     c.width = img.naturalWidth; c.height = img.naturalHeight;
     const ctx = c.getContext('2d');
     ctx.drawImage(img,0,0);
-    const d = ctx.getImageData(0,0,c.width,c.height), p = d.data;
-    for(let i=0;i<p.length;i+=4){
-      if(p[i]>238 && p[i+1]>238 && p[i+2]>238) p[i+3]=0;
+    if(state.whiteRemoved){
+      const d = ctx.getImageData(0,0,c.width,c.height), p = d.data;
+      for(let i=0;i<p.length;i+=4){
+        if(p[i]>238 && p[i+1]>238 && p[i+2]>238) p[i+3]=0;
+      }
+      ctx.putImageData(d,0,0);
     }
-    ctx.putImageData(d,0,0);
+    if(state.tint !== 'original'){
+      ctx.globalCompositeOperation = 'source-in';
+      ctx.fillStyle = state.tint === 'white' ? '#FFFFFF' : '#0B0B23';
+      ctx.fillRect(0,0,c.width,c.height);
+      ctx.globalCompositeOperation = 'source-over';
+    }
     logoImg.onload = () => {
       logoImg.onload = null;
-      state.whiteRemoved = true;
-      btn.disabled = false; btn.textContent = 'Restaurar fondo original';
       $('logoThumb').innerHTML = `<img src="${logoImg.src}" alt="">`;
-      $('jpgNote').hidden = true;
+      if(done) done();
       render();
     };
     logoImg.src = c.toDataURL('image/png');
   };
   img.src = state.logoOriginalSrc;
+}
+
+$('removeWhiteBtn').addEventListener('click', () => {
+  if(!state.logoOriginalSrc) return;
+  const btn = $('removeWhiteBtn');
+  const quitando = !state.whiteRemoved;
+  btn.disabled = true; btn.textContent = quitando ? 'Quitando fondo…' : 'Restaurando…';
+  state.whiteRemoved = quitando;
+  rebuildLogo(() => {
+    btn.disabled = false;
+    btn.textContent = state.whiteRemoved ? 'Restaurar fondo original' : 'Quitar fondo blanco';
+    if(state.whiteRemoved) $('jpgNote').hidden = true;
+  });
+});
+
+/* tinte del logo: original / blanco / negro */
+function syncTintUI(){
+  document.querySelectorAll('#tintSeg button').forEach(b =>
+    b.setAttribute('aria-pressed', b.dataset.tint === state.tint));
+}
+document.querySelectorAll('#tintSeg button').forEach(b => b.addEventListener('click', () => {
+  state.tint = b.dataset.tint;
+  syncTintUI();
+  rebuildLogo();
+}));
+
+/* opacidad */
+$('logoOpacity').addEventListener('input', () => {
+  state.opacity = parseInt($('logoOpacity').value,10) / 100;
+  $('opacityVal').textContent = $('logoOpacity').value + '%';
+  render();
 });
 
 /* eliminar el logo con la cruz */
 function clearLogo(){
-  state.logo = null; state.logoOriginalSrc = null; state.whiteRemoved = false;
+  state.logo = null; state.logoOriginalSrc = null;
+  state.whiteRemoved = false; state.tint = 'original'; state.opacity = 1;
   $('logoInput').value = '';
   logoImg.removeAttribute('src');
   $('logoThumb').innerHTML = '◐';
@@ -1069,6 +1229,9 @@ function clearLogo(){
   $('jpgNote').hidden = true;
   $('logoCmFields').hidden = true;
   $('logoWcm').value = ''; $('logoHcm').value = '';
+  $('logoOpacity').value = 100; $('opacityVal').textContent = '100%';
+  $('logoTools').hidden = true;
+  syncTintUI();
   const btn = $('removeWhiteBtn');
   btn.hidden = true; btn.disabled = false; btn.textContent = 'Quitar fondo blanco';
   setStepStates(); render();
@@ -1087,24 +1250,43 @@ function placeLogoInZone(){
     x: z.x + (z.w - w/FW)/2,
     y: z.y + (z.h - h/FH)/2,
     w: w/FW, h: h/FH,
+    rot: 0,
   };
 }
 
+/* ---------- dibujo del área ---------- */
+$('drawZoneBtn').addEventListener('click', enterDrawMode);
+function enterDrawMode(){
+  state.drawMode = true;
+  frame.classList.add('drawing');
+  $('drawHint').hidden = false;
+  $('drawZoneBtn').textContent = state.zone ? 'Redibujar área' : 'Marcar área sobre la foto';
+}
+function exitDrawMode(){
+  state.drawMode = false;
+  frame.classList.remove('drawing');
+  $('drawHint').hidden = true;
+  $('drawZoneBtn').textContent = 'Redibujar área';
+}
+
 /* ---------- interacción con punteros ---------- */
-let active = null; // {mode, corner, startPx, startZone, startLogo}
+let active = null;
 
 frame.addEventListener('pointerdown', e => {
   const {w:FW,h:FH} = frameRect();
   const r = frame.getBoundingClientRect();
   const px = { x: e.clientX - r.left, y: e.clientY - r.top };
 
-  /* la regla tiene prioridad, incluso en modo dibujo */
   if(e.target.id === 'rh1' || e.target.id === 'rh2'){
     active = { mode:'ruler-end', end:e.target.id, startPx:px, start:{...state.ruler} };
     frame.setPointerCapture(e.pointerId); e.preventDefault(); return;
   }
   if(e.target.id === 'rulerLine' || e.target.id === 'rulerLabel' || e.target.parentElement === $('rulerLine')){
     active = { mode:'ruler-move', startPx:px, start:{...state.ruler} };
+    frame.setPointerCapture(e.pointerId); e.preventDefault(); return;
+  }
+  if(e.target.id === 'logoRotate' && state.logo){
+    active = { mode:'logo-rotate', startPx:px, start:{...state.logo} };
     frame.setPointerCapture(e.pointerId); e.preventDefault(); return;
   }
 
@@ -1159,20 +1341,27 @@ frame.addEventListener('pointermove', e => {
     state.zone = { ...s,
       x: clamp(s.x + dx/FW, 0, 1-s.w),
       y: clamp(s.y + dy/FH, 0, 1-s.h) };
-    clampLogoToZone();
   }
   else if(active.mode === 'zone-resize'){
     state.zone = resizeRect(active.start, active.corner, dx/FW, dy/FH, 30/FW, 30/FH);
-    clampLogoToZone();
   }
   else if(active.mode === 'logo-move'){
-    const s = active.start, z = state.zone;
+    const s = active.start;
     state.logo = { ...s,
-      x: clamp(s.x + dx/FW, z.x, z.x+z.w-s.w),
-      y: clamp(s.y + dy/FH, z.y, z.y+z.h-s.h) };
+      x: clamp(s.x + dx/FW, 0, 1-s.w),
+      y: clamp(s.y + dy/FH, 0, 1-s.h) };
   }
   else if(active.mode === 'logo-resize'){
-    resizeLogo(active, dx, dy, FW, FH);
+    resizeLogo(active, px, FW, FH);
+  }
+  else if(active.mode === 'logo-rotate'){
+    const s = active.start;
+    const cx = (s.x + s.w/2)*FW, cy = (s.y + s.h/2)*FH;
+    let ang = Math.atan2(px.y-cy, px.x-cx) * 180/Math.PI + 90;
+    ang = ((ang % 360) + 360) % 360;
+    const snap = [0,45,90,135,180,225,270,315,360].find(a => Math.abs(ang-a) <= 5);
+    if(snap !== undefined) ang = snap % 360;
+    state.logo = { ...s, rot: ang };
   }
   render();
 });
@@ -1197,62 +1386,98 @@ function resizeRect(s, corner, dxn, dyn, minW, minH){
   return {x,y,w,h};
 }
 
-function resizeLogo(a, dx, dy, FW, FH){
-  const s = a.start, z = state.zone, asp = state.logoAspect;
-  // ancla = esquina opuesta, en px
+/* redimensionar el logo: libre por defecto, proporcional si está anclado; el área no limita */
+function resizeLogo(a, cur, FW, FH){
+  const s = a.start, asp = state.logoAspect;
   const sx = s.x*FW, sy = s.y*FH, sw = s.w*FW, sh = s.h*FH;
+
+  if(s.rot){
+    // con rotación: escala proporcional según distancia al centro
+    const cx = sx+sw/2, cy = sy+sh/2;
+    const d0 = Math.max(Math.hypot(a.startPx.x-cx, a.startPx.y-cy), 1);
+    const d1 = Math.hypot(cur.x-cx, cur.y-cy);
+    const k = Math.max(d1/d0, 0.05);
+    let w = clamp(sw*k, 20, FW), h = clamp(sh*k, 20, FH);
+    state.logo = { ...s, x:clamp((cx-w/2)/FW,0,1-w/FW), y:clamp((cy-h/2)/FH,0,1-h/FH), w:w/FW, h:h/FH };
+    return;
+  }
+
   const anchor = {
     x: a.corner.includes('l') ? sx+sw : sx,
     y: a.corner.includes('t') ? sy+sh : sy,
   };
   const dirX = a.corner.includes('l') ? -1 : 1;
   const dirY = a.corner.includes('t') ? -1 : 1;
-  const cur = { x: a.startPx.x + dx, y: a.startPx.y + dy };
   let w = Math.max((cur.x - anchor.x) * dirX, 20);
-  let h = w / asp;
-  if(h < 20){ h = 20; w = h*asp; }
-  // límites del área
-  const zx = z.x*FW, zy = z.y*FH, zw = z.w*FW, zh = z.h*FH;
-  const maxW = dirX > 0 ? (zx+zw-anchor.x) : (anchor.x-zx);
-  const maxH = dirY > 0 ? (zy+zh-anchor.y) : (anchor.y-zy);
-  if(w > maxW){ w = maxW; h = w/asp; }
-  if(h > maxH){ h = maxH; w = h*asp; }
+  let h = Math.max((cur.y - anchor.y) * dirY, 20);
+  if(state.lockAspect){
+    h = w / asp;
+    if(h < 20){ h = 20; w = h*asp; }
+  }
+  const maxW = dirX > 0 ? (FW - anchor.x) : anchor.x;
+  const maxH = dirY > 0 ? (FH - anchor.y) : anchor.y;
+  if(w > maxW){ w = maxW; if(state.lockAspect) h = w/asp; }
+  if(h > maxH){ h = maxH; if(state.lockAspect){ w = h*asp; } }
   const nx = dirX > 0 ? anchor.x : anchor.x - w;
   const ny = dirY > 0 ? anchor.y : anchor.y - h;
-  state.logo = { x:nx/FW, y:ny/FH, w:w/FW, h:h/FH };
+  state.logo = { ...s, x:nx/FW, y:ny/FH, w:w/FW, h:h/FH };
 }
 
-function clampLogoToZone(){
-  if(!state.logo || !state.zone) return;
-  const {w:FW,h:FH} = frameRect();
-  const z = state.zone; let l = {...state.logo};
-  // si el logo no entra, reducirlo manteniendo proporción
-  if(l.w > z.w || l.h > z.h){
-    const kw = z.w/l.w, kh = z.h/l.h, k = Math.min(kw,kh);
-    l.w *= k; l.h *= k;
-  }
-  l.x = clamp(l.x, z.x, z.x+z.w-l.w);
-  l.y = clamp(l.y, z.y, z.y+z.h-l.h);
-  state.logo = l;
-}
-
-/* ---------- paso 4: descarga (solo foto + logo, sin marcas) ---------- */
-$('downloadBtn').addEventListener('click', () => {
-  if(!state.logo) return;
+/* ---------- composición e integración con la ficha ---------- */
+function composeFoto(){
   const NW = photo.naturalWidth, NH = photo.naturalHeight;
-  const K = NW / frame.clientWidth; // px reales por px de pantalla
+  const K = NW / frame.clientWidth;
   const FW = frame.clientWidth, FH = frame.clientHeight;
   const c = document.createElement('canvas');
   c.width = NW; c.height = NH;
   const ctx = c.getContext('2d');
   ctx.drawImage(photo, 0, 0, NW, NH);
   const l = state.logo;
-  ctx.drawImage(logoImg, l.x*FW*K, l.y*FH*K, l.w*FW*K, l.h*FH*K);
+  ctx.save();
+  ctx.globalAlpha = state.opacity;
+  const cx = (l.x + l.w/2)*FW*K, cy = (l.y + l.h/2)*FH*K;
+  ctx.translate(cx, cy);
+  ctx.rotate((l.rot||0) * Math.PI/180);
+  ctx.drawImage(logoImg, -l.w*FW*K/2, -l.h*FH*K/2, l.w*FW*K, l.h*FH*K);
+  ctx.restore();
+  return c.toDataURL('image/png');
+}
+function logoDataUrl(){
+  const c = document.createElement('canvas');
+  c.width = logoImg.naturalWidth; c.height = logoImg.naturalHeight;
+  const ctx = c.getContext('2d');
+  ctx.globalAlpha = state.opacity;
+  ctx.drawImage(logoImg, 0, 0);
+  return c.toDataURL('image/png');
+}
+function posicionTexto(){
+  if(!state.logo) return '';
+  const cx = state.logo.x + state.logo.w/2, cy = state.logo.y + state.logo.h/2;
+  const v = cy < .34 ? 'Superior' : cy < .66 ? 'Centro' : 'Inferior';
+  const h = cx < .34 ? 'izquierdo' : cx < .66 ? 'centrado' : 'derecho';
+  if(v === 'Centro' && h === 'centrado') return 'Centrado';
+  return v + ' ' + h;
+}
 
-  const name = $('productName').value.trim() || 'producto';
+$('applyBtn').addEventListener('click', () => {
+  if(!state.logo) return;
+  const m = medidaWH();
+  window.__applyBoceto({
+    foto: composeFoto(),
+    logo: logoDataUrl(),
+    medidaW: m ? fmtCm(m.w) + ' cm' : '',
+    medidaH: m ? fmtCm(m.h) + ' cm' : '',
+    tecnica: $('technique').value,
+    posicion: posicionTexto(),
+  });
+});
+
+$('downloadBtn').addEventListener('click', () => {
+  if(!state.logo) return;
+  const name = productNameVal() || 'producto';
   const a = document.createElement('a');
   a.download = `boceto-${name.toLowerCase().replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'')||'producto'}.png`;
-  a.href = c.toDataURL('image/png');
+  a.href = composeFoto();
   a.click();
 });
 
@@ -1261,6 +1486,12 @@ document.addEventListener('pointerdown', e => {
   if(!frame.contains(e.target)) logoWrap.classList.remove('selected');
 });
 
+window.__bocetoRender = render;
+
+/* init */
+setMode('logo');
+syncLockUI();
+syncTintUI();
 setStepStates(); render();
 })();
 
