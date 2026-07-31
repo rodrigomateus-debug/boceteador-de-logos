@@ -309,15 +309,15 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <div style="margin-top:18px;">
         <div style="font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted,#6E6E85); margin-bottom:8px;">Logo a imprimir</div>
         <div style="display:flex; gap:8px; align-items:stretch;">
-          <div class="bcp-slot" style="flex:1; height:120px; border-radius:16px; border:1px solid var(--border-subtle,#E4E4ED); display:flex; align-items:center; justify-content:center; text-align:center; padding:10px; {{LOGO_SLOT_STYLE}}">
+          <div class="bcp-slot" id="bcpLogoSlot" style="flex:1; height:120px; border-radius:16px; border:1px solid var(--border-subtle,#E4E4ED); display:flex; align-items:center; justify-content:center; text-align:center; padding:10px; {{LOGO_SLOT_STYLE}}">
             {{LOGO_CLIENTE}}
           </div>
           <!-- barrita de medida: alto -->
           <div style="display:flex; align-items:center; justify-content:center; width:28px;">
-            <div id="bcpBarH" style="height:{{BAR_H_PCT}}%; min-height:28px; display:flex; flex-direction:column; align-items:center; color:var(--formas-navy,#000085); cursor:ns-resize;">
+            <div id="bcpBarH" style="height:{{BAR_H_PCT}}%; min-height:28px; display:flex; flex-direction:column; align-items:center; color:var(--formas-navy,#000085); cursor:grab; user-select:none;">
               <span style="height:1.5px; width:12px; background:currentColor; flex:none;"></span>
               <span style="flex:1; width:1.5px; background:currentColor;"></span>
-              <span style="font-family:var(--font-display,sans-serif); font-size:11px; font-weight:800; white-space:nowrap; writing-mode:vertical-rl; padding:4px 0;">{{MEDIDA_ALTO}}</span>
+              <span style="font-family:var(--font-display,sans-serif); font-size:11px; font-weight:800; white-space:nowrap; writing-mode:vertical-rl; padding:4px 0; cursor:grab;">{{MEDIDA_ALTO}}</span>
               <span style="flex:1; width:1.5px; background:currentColor;"></span>
               <span style="height:1.5px; width:12px; background:currentColor; flex:none;"></span>
             </div>
@@ -325,13 +325,13 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         </div>
         <!-- barrita de medida: ancho -->
         <div style="display:flex; justify-content:center;">
-          <div id="bcpBarW" style="width:calc({{BAR_W_PCT}}% - 36px); min-width:70px; display:flex; align-items:center; gap:10px; margin-top:10px; color:var(--formas-navy,#000085); cursor:ew-resize;">
+          <div id="bcpBarW" style="width:calc({{BAR_W_PCT}}% - 36px); min-width:70px; display:flex; align-items:center; gap:10px; margin-top:10px; color:var(--formas-navy,#000085); cursor:grab; user-select:none;">
             <div style="flex:1; display:flex; align-items:center;">
               <span style="width:1.5px; height:12px; background:currentColor;"></span>
               <span style="flex:1; height:1.5px; background:currentColor;"></span>
               <span style="width:1.5px; height:12px; background:currentColor;"></span>
             </div>
-            <span style="font-family:var(--font-display,sans-serif); font-size:13px; font-weight:800; white-space:nowrap;">{{MEDIDA_ANCHO}}</span>
+            <span style="font-family:var(--font-display,sans-serif); font-size:13px; font-weight:800; white-space:nowrap; cursor:grab;">{{MEDIDA_ANCHO}}</span>
             <div style="flex:1; display:flex; align-items:center;">
               <span style="width:1.5px; height:12px; background:currentColor;"></span>
               <span style="flex:1; height:1.5px; background:currentColor;"></span>
@@ -448,7 +448,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <legend>Logo del cliente</legend>
       <div class="fileBox" id="box_logo">
         <button class="clear" id="clear_logo" style="display:none" title="Quitar imagen">✕</button>
-        <input type="file" id="f_logo" accept="image/*">
+        <input type="file" id="f_logo" accept="image/*,.pdf,.ai,application/pdf">
         <span id="txt_logo">Subir logo (vector / alta resolución)</span>
       </div>
       <label>Fondo del recuadro del logo</label>
@@ -609,9 +609,9 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <div class="step-head"><span class="step-num">3</span><h2>Logo</h2></div>
         <label class="upload-tile" for="logoInput">
           <span class="thumb slot" id="logoThumb">◐</span>
-          <span class="txt" id="logoTxt">Elegir logo<small>PNG sin fondo recomendado · también SVG o JPG</small></span>
+          <span class="txt" id="logoTxt">Elegir logo<small>PNG sin fondo recomendado · también SVG, JPG, PDF o AI</small></span>
         </label>
-        <input type="file" id="logoInput" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden>
+        <input type="file" id="logoInput" accept="image/png,image/jpeg,image/svg+xml,image/webp,.pdf,.ai,application/pdf" hidden>
         <div class="field-row" id="logoCmFields" hidden>
           <div class="field">
             <span class="label" style="letter-spacing:.08em">Ancho del logo</span>
@@ -828,18 +828,68 @@ function drawPrintColors(){
 }
 $('addColor').onclick = ()=>{ printColors.push({hex:'#000085', nom:'', pant:''}); drawPrintColors(); render(); };
 
+/* --- logos vectoriales (PDF / AI) rasterizados con pdf.js --- */
+const PDFJS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+let pdfjsPromise = null;
+function ensurePdfJs(){
+  if(window.pdfjsLib) return Promise.resolve();
+  if(!pdfjsPromise){
+    pdfjsPromise = new Promise((res, rej)=>{
+      const s = document.createElement('script');
+      s.src = PDFJS_URL;
+      s.onload = ()=>{ window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; res(); };
+      s.onerror = ()=>{ pdfjsPromise = null; rej(new Error('cdn')); };
+      document.head.appendChild(s);
+    });
+  }
+  return pdfjsPromise;
+}
+function esVector(file){
+  const n = (file.name||'').toLowerCase();
+  return file.type === 'application/pdf' || n.endsWith('.pdf') || n.endsWith('.ai');
+}
+function esEps(file){
+  const n = (file.name||'').toLowerCase();
+  return n.endsWith('.eps') || file.type === 'application/postscript';
+}
+async function rasterizeVectorFile(file){
+  await ensurePdfJs();
+  const buf = await file.arrayBuffer();
+  const pdf = await window.pdfjsLib.getDocument({data: buf}).promise;
+  const page = await pdf.getPage(1);
+  let vp = page.getViewport({scale: 1});
+  const k = Math.max(1, Math.min(4, 1600 / Math.max(vp.width, vp.height)));
+  vp = page.getViewport({scale: k});
+  const c = document.createElement('canvas');
+  c.width = Math.ceil(vp.width); c.height = Math.ceil(vp.height);
+  await page.render({canvasContext: c.getContext('2d'), viewport: vp}).promise;
+  return c.toDataURL('image/png');
+}
+const MSG_EPS = 'Los archivos EPS no se pueden abrir en el navegador.\nConvertilo a PDF, SVG o PNG (desde Illustrator: Archivo → Guardar como → PDF) y volvé a cargarlo.';
+const MSG_VEC_ERR = 'No se pudo procesar el archivo.\nSi es un .ai viejo (guardado sin compatibilidad PDF), convertilo a PDF o PNG. También verificá la conexión a internet: el conversor se descarga la primera vez.';
+
 /* --- imágenes --- */
 function hookFile(inputId, boxId, txtId, clearId, setter){
-  $(inputId).addEventListener('change', e=>{
+  const defaultTxt = () => txtId==='txt_foto' ? 'Subir foto ya lista (con el logo aplicado)' : 'Subir logo (vector / alta resolución)';
+  $(inputId).addEventListener('change', async e=>{
     const file = e.target.files[0];
     if(!file) return;
-    const r = new FileReader();
-    r.onload = ev=>{
-      setter(ev.target.result);
-      $(txtId).innerHTML = '<img src="'+ev.target.result+'"><span style="font-size:11px">'+esc(file.name)+'</span>';
+    if(esEps(file)){ alert(MSG_EPS); e.target.value=''; return; }
+    const done = data => {
+      setter(data);
+      $(txtId).innerHTML = '<img src="'+data+'"><span style="font-size:11px">'+esc(file.name)+'</span>';
       $(clearId).style.display='block';
       render();
     };
+    if(esVector(file)){
+      $(txtId).textContent = 'Procesando ' + file.name + '…';
+      try{ done(await rasterizeVectorFile(file)); }
+      catch(err){ alert(MSG_VEC_ERR); $(txtId).textContent = defaultTxt(); e.target.value=''; }
+      return;
+    }
+    const r = new FileReader();
+    r.onload = ev=> done(ev.target.result);
     r.readAsDataURL(file);
   });
   $(clearId).addEventListener('click', ev=>{
@@ -897,22 +947,32 @@ function attachBarDrag(){
   function dragBar(el, axis){
     el.addEventListener('pointerdown', e=>{
       e.preventDefault();
+      el.style.cursor = 'grabbing';
       const cont = el.parentElement;
+      const slot = doc.getElementById('bcpLogoSlot');
       const move = ev=>{
         const r = cont.getBoundingClientRect();
         if(axis==='w'){
+          // tope: el ancho del recuadro donde está el logo
+          const maxPct = slot ? clampNum((slot.getBoundingClientRect().width / r.width) * 100, 15, 100) : 100;
           const cx = (r.left + r.right) / 2;
-          const pct = clampNum((Math.abs(ev.clientX - cx) * 2 / r.width) * 100, 15, 100);
+          const pct = clampNum((Math.abs(ev.clientX - cx) * 2 / r.width) * 100, 15, maxPct);
           el.style.width = 'calc(' + pct + '% - 36px)';
           barW = pct;
         } else {
+          // tope: el alto del recuadro (el contenedor ya estira a esa altura)
           const cy = (r.top + r.bottom) / 2;
           const pct = clampNum((Math.abs(ev.clientY - cy) * 2 / r.height) * 100, 15, 100);
           el.style.height = pct + '%';
           barH = pct;
         }
       };
-      const up = ()=>{ doc.removeEventListener('pointermove',move); doc.removeEventListener('pointerup',up); save(); };
+      const up = ()=>{
+        el.style.cursor = 'grab';
+        doc.removeEventListener('pointermove',move);
+        doc.removeEventListener('pointerup',up);
+        save();
+      };
       doc.addEventListener('pointermove', move);
       doc.addEventListener('pointerup', up);
     });
@@ -1225,7 +1285,22 @@ $('logoHcm').addEventListener('input', () => {
 /* ---------- paso 3: logo ---------- */
 $('logoInput').addEventListener('change', e => e.target.files[0] && loadLogo(e.target.files[0]));
 function loadLogo(file){
-  const url = URL.createObjectURL(file);
+  if(esEps(file)){ alert(MSG_EPS); $('logoInput').value = ''; return; }
+  if(esVector(file)){
+    $('logoTxt').innerHTML = `Procesando ${file.name}…<small>convirtiendo el vector a imagen</small>`;
+    rasterizeVectorFile(file)
+      .then(data => loadLogoSrc(data, file.name, false))
+      .catch(() => {
+        alert(MSG_VEC_ERR);
+        $('logoTxt').innerHTML = 'Elegir logo<small>PNG sin fondo recomendado · también SVG, JPG, PDF o AI</small>';
+        $('logoInput').value = '';
+      });
+    return;
+  }
+  loadLogoSrc(URL.createObjectURL(file), file.name, /jpe?g/i.test(file.type));
+}
+function loadLogoSrc(url, name, isJpg){
+  const file = { name };
   const probe = new Image();
   probe.onload = () => {
     state.logoAspect = probe.naturalWidth / probe.naturalHeight;
@@ -1235,7 +1310,7 @@ function loadLogo(file){
     state.opacity = 1;
     $('logoOpacity').value = 100; $('opacityVal').textContent = '100%';
     syncTintUI();
-    $('jpgNote').hidden = !/jpe?g/i.test(file.type);
+    $('jpgNote').hidden = !isJpg;
     const btn = $('removeWhiteBtn');
     btn.hidden = false; btn.disabled = false; btn.textContent = 'Quitar fondo blanco';
     $('logoTools').hidden = false;
@@ -1327,7 +1402,7 @@ function clearLogo(){
   $('logoInput').value = '';
   logoImg.removeAttribute('src');
   $('logoThumb').innerHTML = '◐';
-  $('logoTxt').innerHTML = 'Elegir logo<small>PNG sin fondo recomendado · también SVG o JPG</small>';
+  $('logoTxt').innerHTML = 'Elegir logo<small>PNG sin fondo recomendado · también SVG, JPG, PDF o AI</small>';
   $('jpgNote').hidden = true;
   $('logoCmFields').hidden = true;
   $('logoWcm').value = ''; $('logoHcm').value = '';
