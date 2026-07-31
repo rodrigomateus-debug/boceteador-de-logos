@@ -206,6 +206,19 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal input[type=number]{appearance:textfield; -moz-appearance:textfield}
 #bocetoModal input[type=number]::-webkit-outer-spin-button,
 #bocetoModal input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+/* vista limpia: sin guías, pero el logo sigue siendo arrastrable */
+#bocetoModal .stage-card{position:relative}
+#bocetoModal #cleanToggle{position:absolute; top:28px; right:28px; z-index:10; display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:999px; border:1.5px solid var(--formas-gray-200); background:#fff; color:var(--formas-navy); font-family:var(--font-primary); font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(11,11,35,.18)}
+#bocetoModal #cleanToggle:hover{border-color:var(--formas-navy)}
+#bocetoModal #cleanToggle[aria-pressed="true"]{background:var(--formas-navy); color:#fff; border-color:var(--formas-navy)}
+#bocetoModal #frame.clean #zone,
+#bocetoModal #frame.clean .handle,
+#bocetoModal #frame.clean #measureChip,
+#bocetoModal #frame.clean #ruler,
+#bocetoModal #frame.clean #logoDelete,
+#bocetoModal #frame.clean #logoRotate,
+#bocetoModal #frame.clean #drawHint{display:none !important}
+#bocetoModal #frame.clean #logoWrap.selected{outline:none}
 /* botón del generador para abrir el boceteador */
 .btn-boceto{display:block; width:100%; margin-top:6px; padding:11px 12px; border:none; border-radius:10px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
 .btn-boceto:hover{filter:brightness(1.05)}
@@ -530,6 +543,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
     <!-- ============ ESCENARIO ============ -->
     <div class="col" id="stageCol">
       <div class="card stage-card">
+        <button type="button" id="cleanToggle" aria-pressed="false" hidden>👁 Ocultar guías</button>
         <div id="frameWrap">
           <div id="emptyState" class="slot">
             <span class="big">Subí la foto del producto</span>
@@ -768,9 +782,16 @@ function build(){
 }
 
 function docName(){
-  const pdv = $('f_pdv').value.trim() || 'PDV';
-  const cli = ($('f_cliente').value.trim() || 'Cliente').replace(/[^\wÁÉÍÓÚÑáéíóúñ-]+/g,'');
-  return 'Boceto-' + pdv + '-' + cli;
+  // PDV - Cliente - Ejecutivo - Producto - Cantidad (los que estén cargados)
+  const clean = s => (s||'').replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,' ').trim();
+  const parts = [
+    clean($('f_pdv').value),
+    clean($('f_cliente').value),
+    clean($('f_ejecutivo').value),
+    clean($('f_producto').value.split('\n')[0]),
+    clean($('f_cantidad').value),
+  ].filter(Boolean);
+  return parts.length ? 'Boceto - ' + parts.join(' - ') : 'Boceto';
 }
 
 function render(){
@@ -1287,6 +1308,10 @@ function loadPhoto(file){
     state.rulerVisible = true;
     $('rulerToggle').disabled = false;
     $('rulerToggle').textContent = 'Ocultar regla';
+    $('cleanToggle').hidden = false;
+    frame.classList.remove('clean');
+    $('cleanToggle').setAttribute('aria-pressed', 'false');
+    $('cleanToggle').textContent = '👁 Ocultar guías';
     enterDrawMode();
     setStepStates(); render();
   };
@@ -1750,6 +1775,15 @@ $('downloadBtn').addEventListener('click', () => {
   a.download = `boceto-${name.toLowerCase().replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'')||'producto'}.png`;
   a.href = composeFoto();
   a.click();
+});
+
+/* vista limpia: oculta las guías para ver cómo queda; el logo se sigue pudiendo mover */
+$('cleanToggle').addEventListener('click', () => {
+  const on = !frame.classList.contains('clean');
+  frame.classList.toggle('clean', on);
+  $('cleanToggle').setAttribute('aria-pressed', on);
+  $('cleanToggle').textContent = on ? '👁 Mostrar guías' : '👁 Ocultar guías';
+  if(on) exitDrawMode();
 });
 
 /* deselección visual del logo */
