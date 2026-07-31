@@ -202,6 +202,10 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .lockBtn[aria-pressed="true"]{border-color:var(--formas-navy); background:var(--formas-navy)}
 #bocetoModal #logoRotate{position:absolute; top:-36px; left:50%; translate:-50% 0; width:26px; height:26px; border-radius:50%; background:#fff; border:1.5px solid var(--formas-gray-200); display:grid; place-items:center; cursor:grab; font-size:14px; font-weight:700; color:var(--formas-navy); box-shadow:0 1px 5px rgba(11,11,35,.3); z-index:6}
 #bocetoModal input[type=range]{width:100%; accent-color:var(--formas-navy)}
+#bocetoModal .suffix-wrap input{padding-right:38px}
+#bocetoModal input[type=number]{appearance:textfield; -moz-appearance:textfield}
+#bocetoModal input[type=number]::-webkit-outer-spin-button,
+#bocetoModal input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
 /* botón del generador para abrir el boceteador */
 .btn-boceto{display:block; width:100%; margin-top:6px; padding:11px 12px; border:none; border-radius:10px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
 .btn-boceto:hover{filter:brightness(1.05)}
@@ -1279,19 +1283,15 @@ $('modeProduct').addEventListener('click', () => setMode('product'));
 /* ---------- medidas del logo a mano + ancla de proporción ---------- */
 function syncLockUI(){
   $('lockAspectBtn').setAttribute('aria-pressed', state.lockAspect);
-  $('lockAspectBtn').title = state.lockAspect ? 'Proporción anclada — clic para desanclar' : 'Proporción desanclada — clic para anclar';
+  $('lockAspectBtn').title = state.lockAspect ? 'Medidas ancladas por proporción — clic para desanclar' : 'Medidas desancladas: cargá ancho y alto libres — clic para anclar';
 }
+/* el ancla solo vincula las medidas entre sí; el logo del canvas nunca se deforma */
 $('lockAspectBtn').addEventListener('click', () => {
   state.lockAspect = !state.lockAspect;
   if(state.lockAspect){
     // al anclar: el alto se alinea a la proporción real del logo
     const w = parseFloat($('logoWcm').value);
     if(w > 0) $('logoHcm').value = (w / state.logoAspect).toFixed(2);
-    if(state.logo){
-      const {w:FW,h:FH} = frameRect();
-      const l = state.logo;
-      state.logo = { ...l, h: (l.w*FW / state.logoAspect) / FH };
-    }
   }
   syncLockUI(); render();
 });
@@ -1613,16 +1613,14 @@ function resizeLogo(a, cur, FW, FH){
   };
   const dirX = a.corner.includes('l') ? -1 : 1;
   const dirY = a.corner.includes('t') ? -1 : 1;
+  /* el logo siempre mantiene su proporción: nunca se deforma */
   let w = Math.max((cur.x - anchor.x) * dirX, 20);
-  let h = Math.max((cur.y - anchor.y) * dirY, 20);
-  if(state.lockAspect){
-    h = w / asp;
-    if(h < 20){ h = 20; w = h*asp; }
-  }
+  let h = w / asp;
+  if(h < 20){ h = 20; w = h*asp; }
   const maxW = dirX > 0 ? (FW - anchor.x) : anchor.x;
   const maxH = dirY > 0 ? (FH - anchor.y) : anchor.y;
-  if(w > maxW){ w = maxW; if(state.lockAspect) h = w/asp; }
-  if(h > maxH){ h = maxH; if(state.lockAspect){ w = h*asp; } }
+  if(w > maxW){ w = maxW; h = w/asp; }
+  if(h > maxH){ h = maxH; w = h*asp; }
   const nx = dirX > 0 ? anchor.x : anchor.x - w;
   const ny = dirY > 0 ? anchor.y : anchor.y - h;
   state.logo = { ...s, x:nx/FW, y:ny/FH, w:w/FW, h:h/FH };
