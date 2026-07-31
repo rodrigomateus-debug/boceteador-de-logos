@@ -960,16 +960,23 @@ hookFile('f_logo','box_logo','txt_logo','clear_logo', v=>{imgLogo=v;});
 /* --- acciones --- */
 $('btn_print').onclick = ()=>{
   const f = $('preview');
+  const name = docName();
+  const prevTitle = document.title;
+  // el nombre sugerido del PDF puede salir del título del iframe o del de la
+  // página, según el navegador: seteamos los dos y restauramos después
+  document.title = name;
   try{
-    f.contentDocument.title = docName();
+    f.contentDocument.title = name;
     f.contentWindow.focus();
     f.contentWindow.print();
   }catch(e){
     const w = window.open('', '_blank');
     w.document.write(build());
     w.document.close();
+    w.document.title = name;
     setTimeout(()=>w.print(), 400);
   }
+  setTimeout(()=>{ document.title = prevTitle; }, 1500);
 };
 $('btn_download').onclick = ()=>{
   const blob = new Blob([build()], {type:'text/html'});
