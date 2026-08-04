@@ -241,6 +241,26 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #zoomCtrls button{width:26px; height:26px; border:none; background:none; border-radius:50%; font-family:var(--font-primary); font-size:15px; font-weight:700; color:var(--formas-navy); cursor:pointer; display:grid; place-items:center; padding:0}
 #bocetoModal #zoomCtrls button:hover{background:var(--formas-gray-100)}
 #bocetoModal #zoomCtrls #zoomLabel{font-family:var(--font-display); font-size:11px; font-weight:800; color:var(--formas-navy); min-width:38px; text-align:center; font-variant-numeric:tabular-nums}
+/* alineación rápida del logo en el área */
+#bocetoModal #alignCtrls{position:absolute; bottom:28px; left:28px; z-index:10; display:flex; align-items:center; gap:2px; padding:4px 6px; border-radius:999px; border:1.5px solid var(--formas-gray-200); background:#fff; box-shadow:0 2px 8px rgba(11,11,35,.18)}
+#bocetoModal #alignCtrls button{width:28px; height:26px; border:none; background:none; border-radius:8px; font-size:14px; font-weight:700; color:var(--formas-navy); cursor:pointer; display:grid; place-items:center; padding:0}
+#bocetoModal #alignCtrls button:hover{background:var(--formas-gray-100)}
+/* el área se desvanece mientras se manipula el logo */
+#bocetoModal #zone{transition:opacity .15s}
+#bocetoModal #zone.faded{opacity:.15; box-shadow:none !important}
+/* recorte manual */
+#bocetoModal #cropModal{position:absolute; inset:0; z-index:50; background:rgba(11,11,35,.5); display:flex; align-items:center; justify-content:center; padding:20px}
+#bocetoModal .cm-card{background:#fff; border-radius:16px; padding:18px; width:min(700px,100%); max-height:100%; overflow:auto; box-shadow:0 20px 60px rgba(11,11,35,.4)}
+#bocetoModal .cm-head{display:flex; justify-content:space-between; align-items:center; gap:12px}
+#bocetoModal .cm-head h3{font-family:var(--font-display); font-weight:800; color:var(--formas-navy); font-size:17px; margin:0}
+#bocetoModal .cm-hint{font-size:12.5px; color:var(--formas-gray-500); margin:6px 0 12px}
+#bocetoModal #cropStageWrap{display:flex; justify-content:center}
+#bocetoModal #cropStage{position:relative; display:inline-block; max-width:100%; touch-action:none; user-select:none; -webkit-user-select:none; background:repeating-conic-gradient(#ECECF2 0 25%, #fff 0 50%) 0 0/16px 16px; border-radius:8px; overflow:hidden}
+#bocetoModal #cropImg{display:block; max-width:100%; max-height:52vh}
+#bocetoModal #cropRect{position:absolute; border:2px dashed var(--formas-navy); box-shadow:0 0 0 9999px rgba(255,255,255,.6); cursor:move}
+#bocetoModal #cropRect .handle{background:#fff; border:2.5px solid var(--formas-navy)}
+#bocetoModal .cm-actions{display:flex; gap:10px; margin-top:14px}
+#bocetoModal .cm-actions .btn{flex:1; margin:0}
 #bocetoModal input[type=number]{appearance:textfield; -moz-appearance:textfield}
 #bocetoModal input[type=number]::-webkit-outer-spin-button,
 #bocetoModal input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
@@ -583,6 +603,28 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       </div>
       <button type="button" class="bm-close" id="bocetoClose" aria-label="Cerrar" title="Cerrar (el trabajo no se pierde)">×</button>
     </div>
+    <div id="cropModal" hidden>
+      <div class="cm-card">
+        <div class="cm-head">
+          <h3>Recorte manual del logo</h3>
+          <button type="button" class="bm-close" id="cropClose" aria-label="Cerrar">×</button>
+        </div>
+        <p class="cm-hint">Ajustá el rectángulo al logo real: lo de afuera se descarta para la medida y el boceto. Arrastrá el cuadro para moverlo y las esquinas para cambiar el tamaño.</p>
+        <div id="cropStageWrap">
+          <div id="cropStage">
+            <img id="cropImg" alt="Logo original">
+            <div id="cropRect">
+              <span class="handle tl" data-corner="tl"></span><span class="handle tr" data-corner="tr"></span>
+              <span class="handle bl" data-corner="bl"></span><span class="handle br" data-corner="br"></span>
+            </div>
+          </div>
+        </div>
+        <div class="cm-actions">
+          <button type="button" class="btn btn-secondary" id="cropAuto">Detectar automático</button>
+          <button type="button" class="btn btn-primary" id="cropApply">Aplicar recorte</button>
+        </div>
+      </div>
+    </div>
     <div class="bm-body">
       <div class="grid">
 
@@ -595,6 +637,10 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           <span id="zoomLabel">100%</span>
           <button type="button" id="zoomIn" title="Acercar">＋</button>
           <button type="button" id="zoomReset" title="Volver al 100%">⟲</button>
+        </div>
+        <div id="alignCtrls" hidden>
+          <button type="button" id="alignH" title="Centrar el logo horizontalmente en el área">⇔</button>
+          <button type="button" id="alignV" title="Centrar el logo verticalmente en el área">⇕</button>
         </div>
         <div id="frameWrap">
           <div id="emptyState" class="slot">
@@ -699,6 +745,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           </div>
         </div>
         <button class="btn btn-secondary" type="button" id="removeWhiteBtn" style="margin-top:10px" hidden>Quitar fondo blanco</button>
+        <button class="btn btn-secondary" type="button" id="cropEditBtn" hidden>✂ Editar recorte</button>
         <div id="logoTools" hidden>
           <div class="label" style="margin-top:12px;letter-spacing:.08em">Color del logo</div>
           <div class="seg" id="tintSeg">
@@ -810,11 +857,16 @@ function clonePage(p){ return JSON.parse(JSON.stringify(p)); }
 
 function renderTabs(){
   const box = $('pageTabs'); box.innerHTML = '';
+  const posOf = i => {
+    const v = ((i === cur ? $('f_posicion').value : (pages[i].fields || {}).f_posicion) || '').trim();
+    if(!v) return '';
+    return ' — ' + (v.length > 16 ? v.slice(0, 15) + '…' : v);
+  };
   pages.forEach((p,i) => {
     const t = document.createElement('button');
     t.type = 'button'; t.className = 'tab';
     t.setAttribute('aria-current', i === cur);
-    t.append('Hoja ' + (i+1));
+    t.append('Hoja ' + (i+1) + (pages.length > 1 ? posOf(i) : ''));
     if(pages.length > 1){
       const x = document.createElement('span');
       x.className = 'x'; x.textContent = '✕'; x.title = 'Eliminar esta hoja';
@@ -890,9 +942,13 @@ function coloresHtml(pc, fc){
 function buildPage(p, num, total){
   const f = id => esc((p.fields && p.fields[id]) || '');
   const mw = f('f_medida_w'), mh = f('f_medida_h');
+  const pos = f('f_posicion');
   const hojaBadge = total > 1
-    ? '<div style="text-align:right; padding:4px 12px; border-radius:10px; background:var(--formas-navy,#000085);">'
+    ? '<div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">'
+      + '<div style="text-align:right; padding:4px 12px; border-radius:10px; background:var(--formas-navy,#000085);">'
       + '<span style="font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#fff;">Hoja ' + num + '/' + total + '</span></div>'
+      + (pos ? '<div style="font-family:var(--font-display,sans-serif); font-weight:800; font-size:26px; line-height:1.05; letter-spacing:-.01em; color:var(--formas-navy,#000085); text-align:right; max-width:280px;">' + pos + '</div>' : '')
+      + '</div>'
     : '';
   const vals = {
     PDV_NUMERO: esc($('f_pdv').value),
@@ -965,6 +1021,7 @@ function docName(){
 function render(){
   const f = $('preview');
   f.srcdoc = buildCurrent();
+  renderTabs(); // el nombre de la pestaña incluye la posición
   save();
 }
 
@@ -1517,6 +1574,20 @@ $('frameWrap').addEventListener('wheel', e => {
   setZoomAt(state.zoom * (e.deltaY < 0 ? 1.15 : 1/1.15), e.clientX, e.clientY);
 }, { passive: false });
 
+/* ---------- alineación rápida del logo en el área ---------- */
+$('alignH').addEventListener('click', () => {
+  const L = selLogo();
+  if(!L || !state.zone) return;
+  L.x = clamp(state.zone.x + (state.zone.w - L.w)/2, 0, Math.max(0, 1 - L.w));
+  render();
+});
+$('alignV').addEventListener('click', () => {
+  const L = selLogo();
+  if(!L || !state.zone) return;
+  L.y = clamp(state.zone.y + (state.zone.h - L.h)/2, 0, Math.max(0, 1 - L.h));
+  render();
+});
+
 const selLogo = () => state.logos[state.sel] || null;
 const frameRect = () => ({ w: frame.clientWidth, h: frame.clientHeight });
 const clamp = (v,min,max) => Math.min(Math.max(v,min),max);
@@ -1655,6 +1726,7 @@ function loadPhoto(file){
     $('cleanToggle').setAttribute('aria-pressed', 'false');
     $('cleanToggle').textContent = '👁 Ocultar guías';
     $('zoomCtrls').hidden = false;
+    $('alignCtrls').hidden = false;
     state.zoom = 1; state.pan = {x:0, y:0};
     applyView();
     enterDrawMode();
@@ -1931,13 +2003,16 @@ function syncLogoUI(){
     $('logoThumb').innerHTML = L.img && L.img.src ? `<img src="${L.img.src}" alt="">` : '◐';
     $('logoTxt').innerHTML = `${L.name}<small>clic para reemplazar este logo</small>`;
     $('jpgNote').hidden = !(L.isJpg && !L.whiteRemoved);
+    $('cropEditBtn').hidden = false;
     $('trimNote').hidden = !(L.crop && L.crop.trimmed);
     if(L.crop && L.crop.trimmed){
       const activo = L.useTrim !== false;
       $('trimUndo').textContent = activo ? 'Deshacer recorte' : 'Volver a recortar';
-      $('trimNoteTxt').textContent = activo
-        ? 'Se recortaron los márgenes vacíos del logo: la medida corresponde al logo real, no al recuadro del archivo.'
-        : 'Recorte deshecho: la medida corresponde al archivo completo, con sus márgenes.';
+      $('trimNoteTxt').textContent = !activo
+        ? 'Recorte deshecho: la medida corresponde al archivo completo, con sus márgenes.'
+        : (L.crop.manual
+          ? 'Recorte manual aplicado: la medida corresponde al rectángulo que marcaste.'
+          : 'Se recortaron los márgenes vacíos del logo: la medida corresponde al logo real, no al recuadro del archivo.');
     }
     $('logoOpacity').value = Math.round(L.opacity*100);
     $('opacityVal').textContent = Math.round(L.opacity*100) + '%';
@@ -1952,9 +2027,101 @@ function syncLogoUI(){
     $('logoTxt').innerHTML = 'Elegir logo<small>PNG sin fondo recomendado · también SVG, JPG, PDF o AI</small>';
     $('jpgNote').hidden = true;
     $('trimNote').hidden = true;
+    $('cropEditBtn').hidden = true;
     $('logoWcm').value = ''; $('logoHcm').value = '';
   }
 }
+
+/* ---------- recorte manual del logo ---------- */
+let cropState = null; // {x,y,w,h} normalizado a la imagen original
+$('cropEditBtn').addEventListener('click', () => {
+  const L = selLogo();
+  if(!L) return;
+  const img = $('cropImg');
+  img.onload = () => {
+    img.onload = null;
+    const c = (L.useTrim !== false && L.crop) ? L.crop : { x:0, y:0, w:L.fullW, h:L.fullH };
+    cropState = { x:c.x/L.fullW, y:c.y/L.fullH, w:c.w/L.fullW, h:c.h/L.fullH };
+    renderCrop();
+  };
+  img.src = L.src;
+  $('cropModal').hidden = false;
+});
+function renderCrop(){
+  if(!cropState) return;
+  Object.assign($('cropRect').style, {
+    left: cropState.x*100+'%', top: cropState.y*100+'%',
+    width: cropState.w*100+'%', height: cropState.h*100+'%',
+  });
+}
+let cropActive = null;
+$('cropStage').addEventListener('pointerdown', e => {
+  if(!cropState) return;
+  const stage = $('cropStage');
+  const r = stage.getBoundingClientRect();
+  const px = { x: (e.clientX - r.left)/r.width, y: (e.clientY - r.top)/r.height };
+  if(e.target.dataset && e.target.dataset.corner){
+    cropActive = { mode:'resize', corner:e.target.dataset.corner, startPx:px, start:{...cropState} };
+  } else if(e.target.id === 'cropRect'){
+    cropActive = { mode:'move', startPx:px, start:{...cropState} };
+  } else {
+    // clic sobre la imagen: empezar un rectángulo nuevo desde ahí
+    cropState = { x:px.x, y:px.y, w:0, h:0 };
+    cropActive = { mode:'draw', startPx:px };
+  }
+  stage.setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+$('cropStage').addEventListener('pointermove', e => {
+  if(!cropActive) return;
+  const r = $('cropStage').getBoundingClientRect();
+  const px = { x: clamp((e.clientX - r.left)/r.width, 0, 1), y: clamp((e.clientY - r.top)/r.height, 0, 1) };
+  const dx = px.x - cropActive.startPx.x, dy = px.y - cropActive.startPx.y;
+  if(cropActive.mode === 'move'){
+    const s = cropActive.start;
+    cropState = { ...s, x: clamp(s.x + dx, 0, 1 - s.w), y: clamp(s.y + dy, 0, 1 - s.h) };
+  } else if(cropActive.mode === 'resize'){
+    cropState = resizeRect(cropActive.start, cropActive.corner, dx, dy, 0.02, 0.02);
+  } else if(cropActive.mode === 'draw'){
+    const s = cropActive.startPx;
+    cropState = { x: Math.min(s.x, px.x), y: Math.min(s.y, px.y), w: Math.abs(px.x - s.x), h: Math.abs(px.y - s.y) };
+  }
+  renderCrop();
+});
+['pointerup','pointercancel'].forEach(ev => $('cropStage').addEventListener(ev, () => {
+  if(cropActive && cropActive.mode === 'draw' && (cropState.w < 0.02 || cropState.h < 0.02)){
+    cropState = { x:0, y:0, w:1, h:1 };
+    renderCrop();
+  }
+  cropActive = null;
+}));
+$('cropClose').addEventListener('click', () => { $('cropModal').hidden = true; });
+$('cropAuto').addEventListener('click', () => {
+  const L = selLogo();
+  if(!L) return;
+  const probe = new Image();
+  probe.onload = () => {
+    const c = computeTrim(probe);
+    cropState = { x:c.x/L.fullW, y:c.y/L.fullH, w:c.w/L.fullW, h:c.h/L.fullH };
+    renderCrop();
+  };
+  probe.src = L.src;
+});
+$('cropApply').addEventListener('click', () => {
+  const L = selLogo();
+  if(!L || !cropState) return;
+  const x = Math.round(cropState.x * L.fullW), y = Math.round(cropState.y * L.fullH);
+  const w = Math.max(2, Math.round(cropState.w * L.fullW)), h = Math.max(2, Math.round(cropState.h * L.fullH));
+  const esTodo = x === 0 && y === 0 && w >= L.fullW - 1 && h >= L.fullH - 1;
+  L.crop = { x, y, w, h, trimmed: !esTodo, manual: !esTodo };
+  L.useTrim = true;
+  const {w:FW,h:FH} = frameRect();
+  L.aspect = w / h;
+  L.h = (L.w*FW / L.aspect) / FH; // conserva el ancho en pantalla
+  if(state.mode === 'logo' && state.lockAspect && L.cmW > 0) L.cmH = L.cmW / L.aspect;
+  $('cropModal').hidden = true;
+  rebuildLogo(L, () => { syncLogoUI(); render(); });
+});
 
 /* deshacer / rehacer el recorte automático del logo seleccionado */
 $('trimUndo').addEventListener('click', () => {
@@ -2044,10 +2211,12 @@ frame.addEventListener('pointerdown', e => {
       } else {
         active = { mode:'logo-move', logo:L, startPx:px, start:{x:L.x,y:L.y,w:L.w,h:L.h,rot:L.rot} };
       }
+      zoneEl.classList.add('faded'); // el área no molesta mientras se trabaja el logo
       frame.setPointerCapture(e.pointerId);
       e.preventDefault(); render(); return;
     }
   }
+  zoneEl.classList.remove('faded');
 
   if(state.drawMode){
     active = { mode:'draw', startPx:px };
@@ -2130,6 +2299,7 @@ frame.addEventListener('pointermove', e => {
 });
 
 ['pointerup','pointercancel'].forEach(ev => frame.addEventListener(ev, e => {
+  zoneEl.classList.remove('faded');
   if(!active) return;
   if(active.mode === 'draw'){
     const {w:FW,h:FH} = frameRect();
