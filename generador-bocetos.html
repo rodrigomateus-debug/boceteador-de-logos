@@ -214,6 +214,15 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal input.need{border-color:#F9CE32; box-shadow:0 0 0 2.5px rgba(249,206,50,.35)}
 #bocetoModal #trimUndo{border:none; background:none; color:var(--formas-navy); font-family:var(--font-primary); font-size:12px; font-weight:700; text-decoration:underline; cursor:pointer; padding:0; flex:none; white-space:nowrap}
 #bocetoModal #trimUndo:hover{color:#EF7958}
+/* zoom y paneo del canvas */
+#bocetoModal #frameWrap{overflow:hidden; position:relative; border-radius:14px}
+#bocetoModal #frame{transform-origin:0 0}
+#bocetoModal #frame.panable{cursor:grab}
+#bocetoModal #frame.panable:active{cursor:grabbing}
+#bocetoModal #zoomCtrls{position:absolute; bottom:28px; right:28px; z-index:10; display:flex; align-items:center; gap:2px; padding:4px 6px; border-radius:999px; border:1.5px solid var(--formas-gray-200); background:#fff; box-shadow:0 2px 8px rgba(11,11,35,.18)}
+#bocetoModal #zoomCtrls button{width:26px; height:26px; border:none; background:none; border-radius:50%; font-family:var(--font-primary); font-size:15px; font-weight:700; color:var(--formas-navy); cursor:pointer; display:grid; place-items:center; padding:0}
+#bocetoModal #zoomCtrls button:hover{background:var(--formas-gray-100)}
+#bocetoModal #zoomCtrls #zoomLabel{font-family:var(--font-display); font-size:11px; font-weight:800; color:var(--formas-navy); min-width:38px; text-align:center; font-variant-numeric:tabular-nums}
 #bocetoModal input[type=number]{appearance:textfield; -moz-appearance:textfield}
 #bocetoModal input[type=number]::-webkit-outer-spin-button,
 #bocetoModal input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
@@ -563,6 +572,12 @@ html,body{margin:0;padding:0;background:#EDEDF2}
     <div class="col" id="stageCol">
       <div class="card stage-card">
         <button type="button" id="cleanToggle" aria-pressed="false" hidden>👁 Ocultar guías</button>
+        <div id="zoomCtrls" hidden>
+          <button type="button" id="zoomOut" title="Alejar">−</button>
+          <span id="zoomLabel">100%</span>
+          <button type="button" id="zoomIn" title="Acercar">＋</button>
+          <button type="button" id="zoomReset" title="Volver al 100%">⟲</button>
+        </div>
         <div id="frameWrap">
           <div id="emptyState" class="slot">
             <span class="big">Subí la foto del producto</span>
@@ -1351,8 +1366,48 @@ const state = {
   ruler: null,
   rulerVisible: false,
   mode: 'logo',        // por defecto: "Tengo la medida exacta del logo"
+  zoom: 1,
+  pan: {x:0, y:0},
 };
 let pendingAdd = false; // el próximo archivo agrega un logo en vez de reemplazar el seleccionado
+
+/* ---------- zoom y paneo del canvas ---------- */
+function clampPan(){
+  const Z = state.zoom;
+  const W = frame.clientWidth, H = frame.clientHeight;
+  state.pan.x = clamp(state.pan.x, W*(1-Z), 0);
+  state.pan.y = clamp(state.pan.y, H*(1-Z), 0);
+}
+function applyView(){
+  clampPan();
+  frame.style.transform = `translate(${state.pan.x}px, ${state.pan.y}px) scale(${state.zoom})`;
+  frame.classList.toggle('panable', state.zoom > 1);
+  $('zoomLabel').textContent = Math.round(state.zoom*100) + '%';
+}
+function setZoomAt(newZ, clientX, clientY){
+  newZ = clamp(newZ, 1, 4);
+  const oldZ = state.zoom;
+  if(newZ === oldZ) return;
+  const r = frame.getBoundingClientRect();
+  const lx = (clientX - r.left) / oldZ;
+  const ly = (clientY - r.top) / oldZ;
+  state.pan.x += lx * (oldZ - newZ);
+  state.pan.y += ly * (oldZ - newZ);
+  state.zoom = newZ;
+  applyView();
+}
+function zoomCentro(factor){
+  const r = $('frameWrap').getBoundingClientRect();
+  setZoomAt(state.zoom * factor, r.left + r.width/2, r.top + r.height/2);
+}
+$('zoomIn').addEventListener('click', () => zoomCentro(1.25));
+$('zoomOut').addEventListener('click', () => zoomCentro(1/1.25));
+$('zoomReset').addEventListener('click', () => { state.zoom = 1; state.pan = {x:0,y:0}; applyView(); });
+$('frameWrap').addEventListener('wheel', e => {
+  if(frame.hidden) return;
+  e.preventDefault();
+  setZoomAt(state.zoom * (e.deltaY < 0 ? 1.15 : 1/1.15), e.clientX, e.clientY);
+}, { passive: false });
 
 const selLogo = () => state.logos[state.sel] || null;
 const frameRect = () => ({ w: frame.clientWidth, h: frame.clientHeight });
@@ -1491,6 +1546,9 @@ function loadPhoto(file){
     frame.classList.remove('clean');
     $('cleanToggle').setAttribute('aria-pressed', 'false');
     $('cleanToggle').textContent = '👁 Ocultar guías';
+    $('zoomCtrls').hidden = false;
+    state.zoom = 1; state.pan = {x:0, y:0};
+    applyView();
     enterDrawMode();
     syncLogoUI(); setStepStates(); render();
   };
@@ -1853,7 +1911,8 @@ frame.addEventListener('pointerdown', e => {
   if(document.activeElement && document.activeElement.tagName === 'INPUT') document.activeElement.blur();
   const {w:FW,h:FH} = frameRect();
   const r = frame.getBoundingClientRect();
-  const px = { x: e.clientX - r.left, y: e.clientY - r.top };
+  const Z = state.zoom;
+  const px = { x: (e.clientX - r.left)/Z, y: (e.clientY - r.top)/Z };
 
   if(e.target.id === 'rh1' || e.target.id === 'rh2'){
     active = { mode:'ruler-end', end:e.target.id, startPx:px, start:{...state.ruler} };
@@ -1893,6 +1952,9 @@ frame.addEventListener('pointerdown', e => {
     active = { mode:'zone-resize', corner, startPx:px, start:{...state.zone} };
   } else if(e.target === zoneEl){
     active = { mode:'zone-move', startPx:px, start:{...state.zone} };
+  } else if(state.zoom > 1 && (e.target === photo || e.target === frame)){
+    // manito: mover la vista cuando hay zoom
+    active = { mode:'pan', startClient:{x:e.clientX, y:e.clientY}, start:{...state.pan} };
   } else return;
   frame.setPointerCapture(e.pointerId);
   e.preventDefault();
@@ -1900,9 +1962,16 @@ frame.addEventListener('pointerdown', e => {
 
 frame.addEventListener('pointermove', e => {
   if(!active) return;
+  if(active.mode === 'pan'){
+    state.pan.x = active.start.x + (e.clientX - active.startClient.x);
+    state.pan.y = active.start.y + (e.clientY - active.startClient.y);
+    applyView();
+    return;
+  }
   const {w:FW,h:FH} = frameRect();
   const r = frame.getBoundingClientRect();
-  const px = { x: clamp(e.clientX - r.left,0,FW), y: clamp(e.clientY - r.top,0,FH) };
+  const Z = state.zoom;
+  const px = { x: clamp((e.clientX - r.left)/Z,0,FW), y: clamp((e.clientY - r.top)/Z,0,FH) };
   const dx = (px.x - active.startPx.x), dy = (px.y - active.startPx.y);
 
   if(active.mode === 'ruler-end'){
