@@ -676,6 +676,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           </div>
         </div>
         <div class="note" id="jpgNote" hidden>⚠ <span>Tu logo no tiene transparencia: sobre productos oscuros se verá con fondo. Probá el botón "Quitar fondo blanco".</span></div>
+        <div class="note" id="trimNote" hidden>✂ <span>Se recortaron los márgenes vacíos del logo: la medida corresponde al logo real, no al recuadro del archivo.</span></div>
         <div class="readout" id="logoReadout" hidden>
           <div class="row"><span class="label">Logo aplicado</span><span class="val num" id="logoSizeOut">—</span></div>
         </div>
@@ -1600,13 +1601,49 @@ function placeInZone(logo, idx){
   logo.rot = 0;
 }
 
+/* recorta los márgenes vacíos (transparentes o blancos) del logo,
+   para que la medida corresponda a la tinta real y no al recuadro del archivo.
+   Los blancos internos no se tocan: solo se recorta desde los bordes. */
+function computeTrim(img){
+  const W = img.naturalWidth, H = img.naturalHeight;
+  const full = { x:0, y:0, w:W, h:H, trimmed:false };
+  try{
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const d = ctx.getImageData(0, 0, W, H).data;
+    const esTinta = i => d[i+3] > 12 && !(d[i] > 244 && d[i+1] > 244 && d[i+2] > 244);
+    let minX = W, minY = H, maxX = -1, maxY = -1;
+    for(let y = 0; y < H; y++){
+      const row = y * W * 4;
+      for(let x = 0; x < W; x++){
+        if(esTinta(row + x*4)){
+          if(x < minX) minX = x;
+          if(x > maxX) maxX = x;
+          if(y < minY) minY = y;
+          if(y > maxY) maxY = y;
+        }
+      }
+    }
+    if(maxX < 0) return full; // imagen vacía: no tocar
+    const pad = 1; // colchón de 1px para no comer antialiasing
+    minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad);
+    maxX = Math.min(W - 1, maxX + pad); maxY = Math.min(H - 1, maxY + pad);
+    const w = maxX - minX + 1, h = maxY - minY + 1;
+    const trimmed = (W - w) / W > 0.02 || (H - h) / H > 0.02;
+    return { x:minX, y:minY, w, h, trimmed };
+  }catch(e){ return full; }
+}
+
 function loadLogoSrc(url, name, isJpg){
   const probe = new Image();
   probe.onload = () => {
-    const aspect = probe.naturalWidth / probe.naturalHeight;
+    const crop = computeTrim(probe);
+    const aspect = crop.w / crop.h;
     let logo;
     if(pendingAdd || !state.logos.length){
-      logo = { src:url, name, isJpg:!!isJpg, aspect, whiteRemoved:false, tint:'original', opacity:1, cmW:0, cmH:0, rot:0, x:0, y:0, w:0, h:0, el:null, img:null };
+      logo = { src:url, name, isJpg:!!isJpg, aspect, crop, whiteRemoved:false, tint:'original', opacity:1, cmW:0, cmH:0, rot:0, x:0, y:0, w:0, h:0, el:null, img:null };
       makeLogoEl(logo);
       placeInZone(logo, state.logos.length);
       state.logos.push(logo);
@@ -1615,7 +1652,7 @@ function loadLogoSrc(url, name, isJpg){
       // reemplaza el logo seleccionado manteniendo su posición
       logo = selLogo();
       logo.src = url; logo.name = name; logo.isJpg = !!isJpg;
-      logo.aspect = aspect;
+      logo.aspect = aspect; logo.crop = crop;
       logo.whiteRemoved = false; logo.tint = 'original'; logo.opacity = 1;
       const {w:FW,h:FH} = frameRect();
       logo.h = (logo.w*FW / aspect) / FH;
@@ -1630,10 +1667,11 @@ function loadLogoSrc(url, name, isJpg){
 function rebuildLogo(logo, done){
   const img = new Image();
   img.onload = () => {
+    const crop = logo.crop || { x:0, y:0, w:img.naturalWidth, h:img.naturalHeight };
     const c = document.createElement('canvas');
-    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    c.width = crop.w; c.height = crop.h;
     const ctx = c.getContext('2d');
-    ctx.drawImage(img,0,0);
+    ctx.drawImage(img, crop.x, crop.y, crop.w, crop.h, 0, 0, crop.w, crop.h);
     if(logo.whiteRemoved){
       const d = ctx.getImageData(0,0,c.width,c.height), p = d.data;
       for(let i=0;i<p.length;i+=4){
@@ -1698,6 +1736,7 @@ function syncLogoUI(){
     $('logoThumb').innerHTML = L.img && L.img.src ? `<img src="${L.img.src}" alt="">` : '◐';
     $('logoTxt').innerHTML = `${L.name}<small>clic para reemplazar este logo</small>`;
     $('jpgNote').hidden = !(L.isJpg && !L.whiteRemoved);
+    $('trimNote').hidden = !(L.crop && L.crop.trimmed);
     $('logoOpacity').value = Math.round(L.opacity*100);
     $('opacityVal').textContent = Math.round(L.opacity*100) + '%';
     document.querySelectorAll('#tintSeg button').forEach(b =>
@@ -1710,6 +1749,7 @@ function syncLogoUI(){
     $('logoThumb').innerHTML = '◐';
     $('logoTxt').innerHTML = 'Elegir logo<small>PNG sin fondo recomendado · también SVG, JPG, PDF o AI</small>';
     $('jpgNote').hidden = true;
+    $('trimNote').hidden = true;
     $('logoWcm').value = ''; $('logoHcm').value = '';
   }
 }
