@@ -24,6 +24,20 @@ label{display:block; font-size:11px; font-weight:600; color:var(--muted); margin
 input[type=text],input[type=date],textarea,select{width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:8px; font:inherit; font-size:13px; background:#fff}
 textarea{resize:vertical; min-height:52px}
 input:focus,textarea:focus,select:focus{outline:2px solid var(--lime); border-color:transparent}
+/* ---------- desplegables con estética Formas ---------- */
+select{appearance:none; -webkit-appearance:none; padding-right:30px; font-weight:600; cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23000085' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 10px center}
+/* Chrome/Edge modernos: la lista desplegada también toma el design system */
+@supports (appearance: base-select){
+  select, select::picker(select){appearance:base-select}
+  select::picker-icon{display:none}
+  select::picker(select){margin-top:6px; border:1.5px solid #E4E4ED; border-radius:12px; background:#fff; box-shadow:0 12px 32px rgba(11,11,35,.18); padding:6px}
+  select option{padding:9px 12px; border-radius:8px; font-family:'Poppins',system-ui,sans-serif; font-size:13px; font-weight:600; color:#0B0B23; cursor:pointer}
+  select option:hover, select option:focus{background:#F1F1F6}
+  select option:checked{background:#8EE021; color:#000085}
+  select option::checkmark{display:none}
+}
 .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
 .colorRow{display:flex; align-items:center; gap:8px}
 .colorRow input[type=color]{width:38px; height:34px; border:1px solid var(--border); border-radius:8px; padding:2px; background:#fff; flex:none}
@@ -212,6 +226,7 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal input[type=range]{width:100%; accent-color:var(--formas-navy)}
 #bocetoModal .suffix-wrap input{padding-right:38px}
 #bocetoModal input.need{border-color:#F9CE32; box-shadow:0 0 0 2.5px rgba(249,206,50,.35)}
+#bocetoModal select{padding-right:32px}
 #bocetoModal #trimUndo{border:none; background:none; color:var(--formas-navy); font-family:var(--font-primary); font-size:12px; font-weight:700; text-decoration:underline; cursor:pointer; padding:0; flex:none; white-space:nowrap}
 #bocetoModal #trimUndo:hover{color:#EF7958}
 /* zoom y paneo del canvas */
@@ -454,7 +469,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <div class="row">
         <div><label>Cliente</label><input type="text" id="f_cliente" placeholder="Nombre del cliente"></div>
         <div><label>Ejecutivo</label><select id="f_ejecutivo">
-          <option value=""></option>
+          <option value="">Elegí el ejecutivo…</option>
           <option>Alejandra Noms</option>
           <option>Andrea Antelo</option>
           <option>Carmen Donoso</option>
