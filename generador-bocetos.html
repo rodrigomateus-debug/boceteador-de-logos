@@ -211,6 +211,9 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .logoRotate{position:absolute; top:-36px; left:50%; translate:-50% 0; width:26px; height:26px; border-radius:50%; background:#fff; border:1.5px solid var(--formas-gray-200); display:grid; place-items:center; cursor:grab; font-size:14px; font-weight:700; color:var(--formas-navy); box-shadow:0 1px 5px rgba(11,11,35,.3); z-index:6}
 #bocetoModal input[type=range]{width:100%; accent-color:var(--formas-navy)}
 #bocetoModal .suffix-wrap input{padding-right:38px}
+#bocetoModal input.need{border-color:#F9CE32; box-shadow:0 0 0 2.5px rgba(249,206,50,.35)}
+#bocetoModal #trimUndo{border:none; background:none; color:var(--formas-navy); font-family:var(--font-primary); font-size:12px; font-weight:700; text-decoration:underline; cursor:pointer; padding:0; flex:none; white-space:nowrap}
+#bocetoModal #trimUndo:hover{color:#EF7958}
 #bocetoModal input[type=number]{appearance:textfield; -moz-appearance:textfield}
 #bocetoModal input[type=number]::-webkit-outer-spin-button,
 #bocetoModal input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
@@ -676,10 +679,11 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           </div>
         </div>
         <div class="note" id="jpgNote" hidden>⚠ <span>Tu logo no tiene transparencia: sobre productos oscuros se verá con fondo. Probá el botón "Quitar fondo blanco".</span></div>
-        <div class="note" id="trimNote" hidden>✂ <span>Se recortaron los márgenes vacíos del logo: la medida corresponde al logo real, no al recuadro del archivo.</span></div>
+        <div class="note" id="trimNote" hidden>✂ <span id="trimNoteTxt">Se recortaron los márgenes vacíos del logo: la medida corresponde al logo real, no al recuadro del archivo.</span> <button type="button" id="trimUndo">Deshacer recorte</button></div>
         <div class="readout" id="logoReadout" hidden>
           <div class="row"><span class="label">Logo aplicado</span><span class="val num" id="logoSizeOut">—</span></div>
         </div>
+        <div class="note" id="needMeasureNote" hidden>📏 <span></span></div>
       </div>
 
       <!-- Paso 4: técnica + descarga -->
@@ -688,6 +692,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <div class="field" style="margin-top:0">
           <span class="label" style="letter-spacing:.08em">Técnica de aplicación</span>
           <select id="technique">
+            <option value="">Elegí la técnica…</option>
             <option>DTP Full Color</option>
             <option>DTF</option>
             <option>Serigrafía</option>
@@ -1427,15 +1432,38 @@ function render(){
     lbl.textContent = cm > 0 ? `${fmtCm(cm)} cm` : '¿cuántos cm?';
     Object.assign(lbl.style,{left:(p1.x+p2.x)/2+'px',top:(p1.y+p2.y)/2+'px'});
   } else $('ruler').hidden = true;
+
+  /* resaltar lo que falta y mantener vivo el candado del paso 4 */
+  const L2 = selLogo();
+  $('logoWcm').classList.toggle('need', state.mode === 'logo' && !!L2 && !(L2.cmW > 0));
+  $('logoHcm').classList.toggle('need', state.mode === 'logo' && !!L2 && !(L2.cmH > 0));
+  $('rulerCm').classList.toggle('need', state.mode === 'product' && state.logos.length > 0 && !cmPerPx());
+  setStepStates();
+  $('applyBtn').disabled = !techValue();
 }
 
+/* sin medidas no se avanza: en modo logo, ancho y alto de cada logo;
+   en modo producto, la regla calibrada */
+function measuresOk(){
+  if(!state.logos.length) return false;
+  if(state.mode === 'logo') return state.logos.every(l => l.cmW > 0 && l.cmH > 0);
+  return !!cmPerPx();
+}
 function setStepStates(){
+  const mok = measuresOk();
   $('step2').classList.toggle('locked', frame.hidden);
   $('step3').classList.toggle('locked', !state.zone);
-  $('step4').classList.toggle('locked', !state.logos.length);
+  $('step4').classList.toggle('locked', !mok);
   $('step1').classList.toggle('done', !frame.hidden);
   $('step2').classList.toggle('done', !!state.zone);
-  $('step3').classList.toggle('done', !!state.logos.length);
+  $('step3').classList.toggle('done', mok);
+  const note = $('needMeasureNote');
+  if(state.logos.length && !mok){
+    note.hidden = false;
+    note.querySelector('span').textContent = state.mode === 'logo'
+      ? 'Cargá el ancho y el alto de cada logo para habilitar "Técnica y aplicación".'
+      : 'Cargá la medida de la regla (en cm) para habilitar "Técnica y aplicación".';
+  } else note.hidden = true;
 }
 
 /* ---------- paso 1: foto ---------- */
@@ -1643,7 +1671,7 @@ function loadLogoSrc(url, name, isJpg){
     const aspect = crop.w / crop.h;
     let logo;
     if(pendingAdd || !state.logos.length){
-      logo = { src:url, name, isJpg:!!isJpg, aspect, crop, whiteRemoved:false, tint:'original', opacity:1, cmW:0, cmH:0, rot:0, x:0, y:0, w:0, h:0, el:null, img:null };
+      logo = { src:url, name, isJpg:!!isJpg, aspect, crop, useTrim:true, fullW:probe.naturalWidth, fullH:probe.naturalHeight, whiteRemoved:false, tint:'original', opacity:1, cmW:0, cmH:0, rot:0, x:0, y:0, w:0, h:0, el:null, img:null };
       makeLogoEl(logo);
       placeInZone(logo, state.logos.length);
       state.logos.push(logo);
@@ -1652,7 +1680,8 @@ function loadLogoSrc(url, name, isJpg){
       // reemplaza el logo seleccionado manteniendo su posición
       logo = selLogo();
       logo.src = url; logo.name = name; logo.isJpg = !!isJpg;
-      logo.aspect = aspect; logo.crop = crop;
+      logo.aspect = aspect; logo.crop = crop; logo.useTrim = true;
+      logo.fullW = probe.naturalWidth; logo.fullH = probe.naturalHeight;
       logo.whiteRemoved = false; logo.tint = 'original'; logo.opacity = 1;
       const {w:FW,h:FH} = frameRect();
       logo.h = (logo.w*FW / aspect) / FH;
@@ -1667,7 +1696,7 @@ function loadLogoSrc(url, name, isJpg){
 function rebuildLogo(logo, done){
   const img = new Image();
   img.onload = () => {
-    const crop = logo.crop || { x:0, y:0, w:img.naturalWidth, h:img.naturalHeight };
+    const crop = (logo.useTrim !== false && logo.crop) ? logo.crop : { x:0, y:0, w:img.naturalWidth, h:img.naturalHeight };
     const c = document.createElement('canvas');
     c.width = crop.w; c.height = crop.h;
     const ctx = c.getContext('2d');
@@ -1737,6 +1766,13 @@ function syncLogoUI(){
     $('logoTxt').innerHTML = `${L.name}<small>clic para reemplazar este logo</small>`;
     $('jpgNote').hidden = !(L.isJpg && !L.whiteRemoved);
     $('trimNote').hidden = !(L.crop && L.crop.trimmed);
+    if(L.crop && L.crop.trimmed){
+      const activo = L.useTrim !== false;
+      $('trimUndo').textContent = activo ? 'Deshacer recorte' : 'Volver a recortar';
+      $('trimNoteTxt').textContent = activo
+        ? 'Se recortaron los márgenes vacíos del logo: la medida corresponde al logo real, no al recuadro del archivo.'
+        : 'Recorte deshecho: la medida corresponde al archivo completo, con sus márgenes.';
+    }
     $('logoOpacity').value = Math.round(L.opacity*100);
     $('opacityVal').textContent = Math.round(L.opacity*100) + '%';
     document.querySelectorAll('#tintSeg button').forEach(b =>
@@ -1753,6 +1789,19 @@ function syncLogoUI(){
     $('logoWcm').value = ''; $('logoHcm').value = '';
   }
 }
+
+/* deshacer / rehacer el recorte automático del logo seleccionado */
+$('trimUndo').addEventListener('click', () => {
+  const L = selLogo();
+  if(!L || !L.crop || !L.crop.trimmed) return;
+  L.useTrim = L.useTrim === false;
+  const newAspect = L.useTrim ? (L.crop.w / L.crop.h) : (L.fullW / L.fullH);
+  const {w:FW,h:FH} = frameRect();
+  L.aspect = newAspect;
+  L.h = (L.w*FW / newAspect) / FH; // conserva el ancho en pantalla
+  if(state.mode === 'logo' && state.lockAspect && L.cmW > 0) L.cmH = L.cmW / newAspect;
+  rebuildLogo(L, () => { syncLogoUI(); render(); });
+});
 
 /* quitar / restaurar fondo blanco del logo seleccionado */
 $('removeWhiteBtn').addEventListener('click', () => {
@@ -1995,6 +2044,10 @@ $('technique').addEventListener('change', () => {
   const otra = $('technique').value === '__otra';
   $('techniqueOther').hidden = !otra;
   if(otra) $('techniqueOther').focus();
+  $('applyBtn').disabled = !techValue();
+});
+$('techniqueOther').addEventListener('input', () => {
+  $('applyBtn').disabled = !techValue();
 });
 
 $('applyBtn').addEventListener('click', () => {
