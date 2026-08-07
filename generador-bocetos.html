@@ -1689,7 +1689,16 @@ function render(){
     chip.hidden = false;
     chip.textContent = m ? fmtPair(m.w, m.h) : (state.mode === 'logo' ? 'anotá la medida del logo' : 'sin medida — usá la regla');
     chip.style.left = (L.x + L.w/2)*100 + '%';
-    chip.style.top = Math.min((L.y + L.h)*FH + 14/state.zoom, FH - 30/state.zoom) + 'px';
+    /* el chip nunca pisa el logo: se apoya bajo su contorno visual (con la
+       rotación incluida) y si no hay lugar abajo salta arriba, esquivando ⟳ */
+    const rad = (L.rot||0) * Math.PI/180;
+    const vH = Math.abs(L.w*FW*Math.sin(rad)) + Math.abs(L.h*FH*Math.cos(rad));
+    const cyL = (L.y + L.h/2)*FH;
+    const Zc = state.zoom, chipH = 24/Zc, gapC = 10/Zc;
+    let chipTop = cyL + vH/2 + gapC;
+    if(chipTop + chipH > FH) chipTop = cyL - vH/2 - gapC - chipH - 34/Zc;
+    if(chipTop < 0) chipTop = clamp(cyL + vH/2 + gapC, 0, FH - chipH);
+    chip.style.top = chipTop + 'px';
     $('logoReadout').hidden = false;
     $('logoSizeOut').textContent = m ? fmtPair(m.w, m.h) : '—';
     if(state.mode === 'product'){
@@ -2489,7 +2498,13 @@ function resizeLogo(a, cur, FW, FH){
     const d0 = Math.max(Math.hypot(a.startPx.x-cx, a.startPx.y-cy), 1);
     const d1 = Math.hypot(cur.x-cx, cur.y-cy);
     const k = Math.max(d1/d0, 0.05);
-    let w = clamp(sw*k, 20, FW), h = clamp(sh*k, 20, FH);
+    /* los topes se aplican en pareja: la proporción nunca se rompe
+       (y se recompone sola si el logo venía deformado) */
+    let w = sw*k, h = w/asp;
+    if(w > FW){ w = FW; h = w/asp; }
+    if(h > FH){ h = FH; w = h*asp; }
+    if(w < 20){ w = 20; h = w/asp; }
+    if(h < 20){ h = 20; w = h*asp; }
     L.x = clamp((cx-w/2)/FW, 0, 1-w/FW);
     L.y = clamp((cy-h/2)/FH, 0, 1-h/FH);
     L.w = w/FW; L.h = h/FH;
