@@ -138,8 +138,9 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #emptyState .big{font-family:var(--font-display);font-weight:800;font-size:19px;color:var(--formas-navy)}
 #bocetoModal #emptyState p{margin:0;color:var(--text-muted);font-size:13px;max-width:38ch}
 #bocetoModal #frame.drawing{cursor:crosshair}
-#bocetoModal #drawHint{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;padding-top:16px;pointer-events:none;z-index:6}
-#bocetoModal #drawHint span{background:var(--formas-navy);color:#fff;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:6px 14px;border-radius:999px;box-shadow:0 4px 14px rgba(11,11,35,.35)}
+/* el hint vive en #frameWrap (no en #frame): con fotos finitas o zoom no se rompe ni escala */
+#bocetoModal #drawHint{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;padding-top:58px;pointer-events:none;z-index:6}
+#bocetoModal #drawHint span{background:var(--formas-navy);color:#fff;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:6px 14px;border-radius:999px;box-shadow:0 4px 14px rgba(11,11,35,.35);white-space:nowrap}
 #bocetoModal #zone{position:absolute;border:2px dashed var(--sheet-accent);border-radius:4px;cursor:move;z-index:2;box-shadow:0 0 0 9999px rgba(11,11,35,.14)}
 #bocetoModal #zone.no-dim{box-shadow:none}
 #bocetoModal .logoItem{position:absolute;cursor:move;z-index:4}
@@ -251,7 +252,6 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #rulerLine i{width:calc(2.5px/var(--Z)); height:calc(12px/var(--Z))}
 #bocetoModal .ruler-handle{width:calc(18px/var(--Z)); height:calc(18px/var(--Z)); border-width:calc(3.5px/var(--Z))}
 #bocetoModal #rulerLabel{font-size:calc(11.5px/var(--Z)); padding:calc(4px/var(--Z)) calc(12px/var(--Z))}
-#bocetoModal #drawHint span{font-size:calc(11px/var(--Z)); padding:calc(6px/var(--Z)) calc(14px/var(--Z))}
 #bocetoModal #frame.panable{cursor:grab}
 #bocetoModal #frame.panable:active{cursor:grabbing}
 #bocetoModal #zoomCtrls{position:absolute; bottom:28px; right:28px; z-index:10; display:flex; align-items:center; gap:2px; padding:4px 6px; border-radius:999px; border:1.5px solid var(--formas-gray-200); background:#fff; box-shadow:0 2px 8px rgba(11,11,35,.18)}
@@ -297,8 +297,7 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #frame.clean #measureChip,
 #bocetoModal #frame.clean #ruler,
 #bocetoModal #frame.clean .logoDelete,
-#bocetoModal #frame.clean .logoRotate,
-#bocetoModal #frame.clean #drawHint{display:none !important}
+#bocetoModal #frame.clean .logoRotate{display:none !important}
 #bocetoModal #frame.clean .logoItem.selected{outline:none}
 #bocetoModal .logoChips{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
 #bocetoModal .logoChip{width:48px; height:48px; border-radius:10px; border:1.5px solid var(--formas-gray-200); background:#fff; padding:3px; cursor:pointer; flex:none}
@@ -674,7 +673,6 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           </div>
           <div id="frame" hidden>
             <img id="photo" alt="Producto">
-            <div id="drawHint" hidden><span>Arrastrá sobre la foto para marcar el área de impresión</span></div>
             <div id="zone" hidden>
               <span class="handle tl" data-corner="tl"></span><span class="handle tr" data-corner="tr"></span>
               <span class="handle bl" data-corner="bl"></span><span class="handle br" data-corner="br"></span>
@@ -687,6 +685,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
               <span id="rulerLabel"></span>
             </div>
           </div>
+          <div id="drawHint" hidden><span>Arrastrá sobre la foto para marcar el área de impresión</span></div>
         </div>
       </div>
     </div>
