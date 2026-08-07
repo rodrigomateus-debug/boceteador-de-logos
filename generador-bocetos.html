@@ -234,7 +234,24 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #trimUndo:hover, #bocetoModal #undoDeleteBtn:hover{color:#EF7958}
 /* zoom y paneo del canvas */
 #bocetoModal #frameWrap{overflow:hidden; position:relative; border-radius:14px}
-#bocetoModal #frame{transform-origin:0 0}
+#bocetoModal #frame{transform-origin:0 0; --Z:1}
+/* con zoom, los controles compensan la escala (--Z) y mantienen su tamaño visual */
+#bocetoModal .handle{width:calc(14px/var(--Z)); height:calc(14px/var(--Z)); border-width:calc(2.5px/var(--Z))}
+#bocetoModal .handle.tl{top:calc(-8px/var(--Z)); left:calc(-8px/var(--Z))}
+#bocetoModal .handle.tr{top:calc(-8px/var(--Z)); right:calc(-8px/var(--Z))}
+#bocetoModal .handle.bl{bottom:calc(-8px/var(--Z)); left:calc(-8px/var(--Z))}
+#bocetoModal .handle.br{bottom:calc(-8px/var(--Z)); right:calc(-8px/var(--Z))}
+#bocetoModal .logoItem.selected{outline-width:calc(1.5px/var(--Z))}
+#bocetoModal #zone{border-width:calc(2px/var(--Z))}
+#bocetoModal .logoDelete{width:calc(26px/var(--Z)); height:calc(26px/var(--Z)); top:calc(-13px/var(--Z)); right:calc(-13px/var(--Z)); font-size:calc(15px/var(--Z)); border-width:calc(1.5px/var(--Z))}
+#bocetoModal .logoRotate{width:calc(26px/var(--Z)); height:calc(26px/var(--Z)); top:calc(-36px/var(--Z)); font-size:calc(14px/var(--Z)); border-width:calc(1.5px/var(--Z))}
+#bocetoModal #measureChip{font-size:calc(11.5px/var(--Z)); padding:calc(4px/var(--Z)) calc(12px/var(--Z))}
+#bocetoModal #rulerLine{height:calc(14px/var(--Z)); margin-top:calc(-7px/var(--Z))}
+#bocetoModal #rulerLine::before{height:calc(2.5px/var(--Z)); margin-top:calc(-1.25px/var(--Z))}
+#bocetoModal #rulerLine i{width:calc(2.5px/var(--Z)); height:calc(12px/var(--Z))}
+#bocetoModal .ruler-handle{width:calc(18px/var(--Z)); height:calc(18px/var(--Z)); border-width:calc(3.5px/var(--Z))}
+#bocetoModal #rulerLabel{font-size:calc(11.5px/var(--Z)); padding:calc(4px/var(--Z)) calc(12px/var(--Z))}
+#bocetoModal #drawHint span{font-size:calc(11px/var(--Z)); padding:calc(6px/var(--Z)) calc(14px/var(--Z))}
 #bocetoModal #frame.panable{cursor:grab}
 #bocetoModal #frame.panable:active{cursor:grabbing}
 #bocetoModal #zoomCtrls{position:absolute; bottom:28px; right:28px; z-index:10; display:flex; align-items:center; gap:2px; padding:4px 6px; border-radius:999px; border:1.5px solid var(--formas-gray-200); background:#fff; box-shadow:0 2px 8px rgba(11,11,35,.18)}
@@ -1567,6 +1584,7 @@ function clampPan(){
 function applyView(){
   clampPan();
   frame.style.transform = `translate(${state.pan.x}px, ${state.pan.y}px) scale(${state.zoom})`;
+  frame.style.setProperty('--Z', state.zoom); // los controles compensan la escala vía CSS
   frame.classList.toggle('panable', state.zoom > 1);
   $('zoomLabel').textContent = Math.round(state.zoom*100) + '%';
 }
@@ -1659,7 +1677,7 @@ function render(){
     chip.hidden = false;
     chip.textContent = m ? `${fmtCm(m.w)} × ${fmtCm(m.h)} cm` : (state.mode === 'logo' ? 'anotá la medida del logo' : 'sin medida — usá la regla');
     chip.style.left = (L.x + L.w/2)*100 + '%';
-    chip.style.top = Math.min((L.y + L.h)*FH + 14, FH-30) + 'px';
+    chip.style.top = Math.min((L.y + L.h)*FH + 14/state.zoom, FH - 30/state.zoom) + 'px';
     $('logoReadout').hidden = false;
     $('logoSizeOut').textContent = m ? `${fmtCm(m.w)} × ${fmtCm(m.h)} cm` : '—';
     if(state.mode === 'product'){
