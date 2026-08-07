@@ -140,7 +140,10 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #frame.drawing{cursor:crosshair}
 /* el hint vive en #frameWrap (no en #frame): con fotos finitas o zoom no se rompe ni escala */
 #bocetoModal #drawHint{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;padding-top:58px;pointer-events:none;z-index:6}
-#bocetoModal #drawHint span{background:var(--formas-navy);color:#fff;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:6px 14px;border-radius:999px;box-shadow:0 4px 14px rgba(11,11,35,.35);white-space:nowrap}
+#bocetoModal #drawHint span{background:var(--formas-navy);color:#fff;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:6px 14px;border-radius:999px;box-shadow:0 4px 14px rgba(11,11,35,.35);white-space:nowrap;animation:bmHintPulse 1.6s ease-in-out infinite}
+@keyframes bmHintPulse{0%,100%{box-shadow:0 4px 14px rgba(11,11,35,.35)}50%{box-shadow:0 0 0 6px rgba(142,224,33,.45), 0 4px 18px rgba(11,11,35,.4)}}
+/* el botón de dibujar área queda "encendido" mientras se dibuja */
+#bocetoModal #drawZoneBtn[aria-pressed="true"]{background:var(--formas-navy);color:#fff;border-color:var(--formas-navy)}
 #bocetoModal #zone{position:absolute;border:2px dashed var(--sheet-accent);border-radius:4px;cursor:move;z-index:2;box-shadow:0 0 0 9999px rgba(11,11,35,.14)}
 #bocetoModal #zone.no-dim{box-shadow:none}
 #bocetoModal .logoItem{position:absolute;cursor:move;z-index:4}
@@ -756,6 +759,13 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <input type="file" id="logoInput" accept="image/png,image/jpeg,image/svg+xml,image/webp,.pdf,.ai,application/pdf" hidden>
         <div class="logoChips" id="logoChips" hidden></div>
         <button class="btn btn-secondary" type="button" id="addLogoBtn" style="margin-top:10px" hidden>＋ Agregar otro logo</button>
+        <div class="field" id="unitField" hidden>
+          <span class="label" style="letter-spacing:.08em">Unidad de las medidas</span>
+          <div class="seg" style="margin-top:0">
+            <button type="button" id="unitCm" aria-pressed="true">Centímetros (cm)</button>
+            <button type="button" id="unitMm" aria-pressed="false">Milímetros (mm)</button>
+          </div>
+        </div>
         <div class="field-row" id="logoCmFields" hidden>
           <div class="field">
             <span class="label" style="letter-spacing:.08em">Ancho del logo</span>
@@ -1568,9 +1578,12 @@ const state = {
   ruler: null,
   rulerVisible: false,
   mode: 'logo',        // por defecto: "Tengo la medida exacta del logo"
+  unit: 'cm',          // unidad de carga y lectura de medidas: 'cm' o 'mm' (internamente todo vive en cm)
   zoom: 1,
   pan: {x:0, y:0},
 };
+const unitK = () => state.unit === 'mm' ? 10 : 1;
+const fmtPair = (wCm, hCm) => `${fmtCm(wCm*unitK())} × ${fmtCm(hCm*unitK())} ${state.unit}`;
 let pendingAdd = false; // el próximo archivo agrega un logo en vez de reemplazar el seleccionado
 
 /* ---------- zoom y paneo del canvas ---------- */
@@ -1659,8 +1672,8 @@ function render(){
     const k = cmPerPx();
     $('zoneReadout').hidden = false;
     $('zoneSizeOut').textContent = k
-      ? `${fmtCm(z.w*FW*k)} × ${fmtCm(z.h*FH*k)} cm`
-      : (state.mode === 'logo' ? '—' : 'usá la regla para ver cm');
+      ? fmtPair(z.w*FW*k, z.h*FH*k)
+      : (state.mode === 'logo' ? '—' : 'usá la regla para ver la medida');
   } else { zoneEl.hidden = true; $('zoneReadout').hidden = true; }
 
   state.logos.forEach((l,i) => {
@@ -1674,18 +1687,18 @@ function render(){
   if(L){
     const m = medidaWH(L);
     chip.hidden = false;
-    chip.textContent = m ? `${fmtCm(m.w)} × ${fmtCm(m.h)} cm` : (state.mode === 'logo' ? 'anotá la medida del logo' : 'sin medida — usá la regla');
+    chip.textContent = m ? fmtPair(m.w, m.h) : (state.mode === 'logo' ? 'anotá la medida del logo' : 'sin medida — usá la regla');
     chip.style.left = (L.x + L.w/2)*100 + '%';
     chip.style.top = Math.min((L.y + L.h)*FH + 14/state.zoom, FH - 30/state.zoom) + 'px';
     $('logoReadout').hidden = false;
-    $('logoSizeOut').textContent = m ? `${fmtCm(m.w)} × ${fmtCm(m.h)} cm` : '—';
+    $('logoSizeOut').textContent = m ? fmtPair(m.w, m.h) : '—';
     if(state.mode === 'product'){
       const noScale = !cmPerPx();
       $('logoWcm').disabled = noScale;
       $('logoHcm').disabled = noScale;
       if(m){
-        if(document.activeElement !== $('logoWcm')) $('logoWcm').value = m.w.toFixed(2);
-        if(document.activeElement !== $('logoHcm')) $('logoHcm').value = m.h.toFixed(2);
+        if(document.activeElement !== $('logoWcm')) $('logoWcm').value = (m.w*unitK()).toFixed(2);
+        if(document.activeElement !== $('logoHcm')) $('logoHcm').value = (m.h*unitK()).toFixed(2);
       }
     } else { $('logoWcm').disabled = false; $('logoHcm').disabled = false; }
   } else { chip.hidden = true; $('logoReadout').hidden = true; }
@@ -1744,6 +1757,23 @@ $('emptyState').addEventListener('dragover', e => e.preventDefault());
 $('emptyState').addEventListener('drop', e => { e.preventDefault(); if(e.dataTransfer.files[0]) loadPhoto(e.dataTransfer.files[0]); });
 $('photoInput').addEventListener('change', e => e.target.files[0] && loadPhoto(e.target.files[0]));
 
+/* fotos muy alargadas (bolígrafos, lápices…): se montan centradas sobre un
+   lienzo blanco más cuadrado, así queda espacio para trabajar el logo también
+   por fuera de la imagen original */
+function padNarrowPhoto(img){
+  const MAXR = 1.5; // proporción máxima largo/corto antes de agregar fondo
+  const W = img.naturalWidth, H = img.naturalHeight;
+  if(Math.max(W/H, H/W) <= MAXR) return null;
+  const c = document.createElement('canvas');
+  if(H > W){ c.width = Math.round(H/MAXR); c.height = H; }
+  else { c.width = W; c.height = Math.round(W/MAXR); }
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(img, Math.round((c.width-W)/2), Math.round((c.height-H)/2));
+  return c.toDataURL('image/png');
+}
+
 function loadPhoto(file){
   const url = URL.createObjectURL(file);
   photo.onload = () => {
@@ -1759,7 +1789,7 @@ function loadPhoto(file){
     state.ruler = { x1:.08, y1:.5, x2:.92, y2:.5 };
     state.rulerVisible = true;
     $('rulerToggle').disabled = false;
-    $('rulerToggle').textContent = 'Ocultar regla';
+    syncRulerBtn();
     $('cleanToggle').hidden = false;
     frame.classList.remove('clean');
     $('cleanToggle').setAttribute('aria-pressed', 'false');
@@ -1771,13 +1801,19 @@ function loadPhoto(file){
     enterDrawMode();
     syncLogoUI(); setStepStates(); render();
   };
-  photo.src = url;
+  const probe = new Image();
+  probe.onload = () => { photo.src = padNarrowPhoto(probe) || url; };
+  probe.onerror = () => { photo.src = url; };
+  probe.src = url;
 }
 
+function syncRulerBtn(){
+  $('rulerToggle').textContent = state.rulerVisible ? 'Ocultar regla' : 'Medir de nuevo';
+}
 $('rulerCm').addEventListener('input', render);
 $('rulerToggle').addEventListener('click', () => {
   state.rulerVisible = !state.rulerVisible;
-  $('rulerToggle').textContent = state.rulerVisible ? 'Ocultar regla' : 'Mostrar regla';
+  syncRulerBtn();
   render();
 });
 
@@ -1788,6 +1824,7 @@ function setMode(m){
   $('modeProduct').setAttribute('aria-pressed', m === 'product');
   $('rulerField').hidden = m !== 'product';
   $('logoCmFields').hidden = !state.logos.length;
+  $('unitField').hidden = !state.logos.length;
   $('lockAspectBtn').hidden = m === 'product';
   render();
 }
@@ -1804,16 +1841,30 @@ $('lockAspectBtn').addEventListener('click', () => {
   const L = selLogo();
   if(state.lockAspect && L && L.cmW > 0){
     L.cmH = L.cmW / L.aspect;
-    $('logoHcm').value = L.cmH.toFixed(2);
+    $('logoHcm').value = (L.cmH*unitK()).toFixed(2);
   }
   syncLockUI(); render();
 });
+
+/* ---------- unidad de medida: cm / mm ---------- */
+function setUnit(u){
+  state.unit = u;
+  $('unitCm').setAttribute('aria-pressed', u === 'cm');
+  $('unitMm').setAttribute('aria-pressed', u === 'mm');
+  document.querySelectorAll('#logoCmFields .suffix').forEach(s => s.textContent = u);
+  $('logoWcm').placeholder = u === 'mm' ? 'ej. 50' : 'ej. 5';
+  $('logoHcm').placeholder = u === 'mm' ? 'ej. 30' : 'ej. 3';
+  [$('logoWcm'), $('logoHcm')].forEach(i => { i.min = u === 'mm' ? 1 : 0.1; i.max = u === 'mm' ? 2000 : 200; });
+  syncLogoUI(); render();
+}
+$('unitCm').addEventListener('click', () => setUnit('cm'));
+$('unitMm').addEventListener('click', () => setUnit('mm'));
 
 /* en modo producto, tipear una medida redimensiona el logo seleccionado (exacto) */
 function applyTypedCm(axis){
   const k = cmPerPx(), L = selLogo();
   if(!k || !L) return;
-  const v = parseFloat(axis === 'w' ? $('logoWcm').value : $('logoHcm').value);
+  const v = parseFloat(axis === 'w' ? $('logoWcm').value : $('logoHcm').value) / unitK();
   if(!(v > 0)) return;
   const {w:FW,h:FH} = frameRect();
   let wPx = axis === 'w' ? v/k : (v/k) * L.aspect;
@@ -1831,10 +1882,10 @@ $('logoWcm').addEventListener('input', () => {
   const L = selLogo();
   if(state.mode === 'product'){ applyTypedCm('w'); return; }
   if(!L) return;
-  L.cmW = parseFloat($('logoWcm').value) || 0;
+  L.cmW = (parseFloat($('logoWcm').value) / unitK()) || 0;
   if(state.lockAspect && L.cmW > 0){
     L.cmH = L.cmW / L.aspect;
-    $('logoHcm').value = L.cmH.toFixed(2);
+    $('logoHcm').value = (L.cmH*unitK()).toFixed(2);
   }
   render();
 });
@@ -1842,10 +1893,10 @@ $('logoHcm').addEventListener('input', () => {
   const L = selLogo();
   if(state.mode === 'product'){ applyTypedCm('h'); return; }
   if(!L) return;
-  L.cmH = parseFloat($('logoHcm').value) || 0;
+  L.cmH = (parseFloat($('logoHcm').value) / unitK()) || 0;
   if(state.lockAspect && L.cmH > 0){
     L.cmW = L.cmH * L.aspect;
-    $('logoWcm').value = L.cmW.toFixed(2);
+    $('logoWcm').value = (L.cmW*unitK()).toFixed(2);
   }
   render();
 });
@@ -2085,6 +2136,7 @@ function syncLogoUI(){
   $('addLogoBtn').hidden = !state.logos.length;
   $('logoTools').hidden = !L;
   $('logoCmFields').hidden = !state.logos.length;
+  $('unitField').hidden = !state.logos.length;
   $('lockAspectBtn').hidden = state.mode === 'product';
   const btn = $('removeWhiteBtn');
   btn.hidden = !L;
@@ -2110,8 +2162,8 @@ function syncLogoUI(){
     document.querySelectorAll('#tintSeg button').forEach(b =>
       b.setAttribute('aria-pressed', b.dataset.tint === L.tint));
     if(state.mode === 'logo'){
-      $('logoWcm').value = L.cmW > 0 ? +L.cmW.toFixed(2) : '';
-      $('logoHcm').value = L.cmH > 0 ? +L.cmH.toFixed(2) : '';
+      $('logoWcm').value = L.cmW > 0 ? +(L.cmW*unitK()).toFixed(2) : '';
+      $('logoHcm').value = L.cmH > 0 ? +(L.cmH*unitK()).toFixed(2) : '';
     }
   } else {
     $('logoThumb').innerHTML = '◐';
@@ -2264,18 +2316,20 @@ $('logoOpacity').addEventListener('input', () => {
 });
 
 /* ---------- dibujo del área ---------- */
-$('drawZoneBtn').addEventListener('click', enterDrawMode);
+$('drawZoneBtn').addEventListener('click', () => state.drawMode ? exitDrawMode() : enterDrawMode());
 function enterDrawMode(){
   state.drawMode = true;
   frame.classList.add('drawing');
   $('drawHint').hidden = false;
-  $('drawZoneBtn').textContent = state.zone ? 'Redibujar área' : 'Marcar área sobre la foto';
+  $('drawZoneBtn').setAttribute('aria-pressed', 'true');
+  $('drawZoneBtn').textContent = '✏ Dibujando… arrastrá sobre la foto';
 }
 function exitDrawMode(){
   state.drawMode = false;
   frame.classList.remove('drawing');
   $('drawHint').hidden = true;
-  $('drawZoneBtn').textContent = 'Redibujar área';
+  $('drawZoneBtn').setAttribute('aria-pressed', 'false');
+  $('drawZoneBtn').textContent = state.zone ? 'Redibujar área' : 'Marcar área sobre la foto';
 }
 
 /* ---------- interacción con punteros ---------- */
@@ -2403,7 +2457,14 @@ frame.addEventListener('pointermove', e => {
   if(active.mode === 'draw'){
     const {w:FW,h:FH} = frameRect();
     if(state.zone.w*FW < 24 || state.zone.h*FH < 24){ state.zone = null; }
-    else exitDrawMode();
+    else {
+      exitDrawMode();
+      // área lista: la regla ya cumplió su función, se retira sola (vuelve con "Medir de nuevo")
+      if(state.mode === 'product' && cmPerPx() && state.rulerVisible){
+        state.rulerVisible = false;
+        syncRulerBtn();
+      }
+    }
     setStepStates();
   }
   active = null; render();
@@ -2501,11 +2562,11 @@ $('applyBtn').addEventListener('click', () => {
   const principal = state.logos[0]; // el primer logo es el principal de la ficha
   let mW = '', mH = '';
   if(state.mode === 'logo'){
-    if(principal.cmW > 0) mW = fmtCm(principal.cmW) + ' cm';
-    if(principal.cmH > 0) mH = fmtCm(principal.cmH) + ' cm';
+    if(principal.cmW > 0) mW = fmtCm(principal.cmW*unitK()) + ' ' + state.unit;
+    if(principal.cmH > 0) mH = fmtCm(principal.cmH*unitK()) + ' ' + state.unit;
   } else {
     const m = medidaWH(principal);
-    if(m){ mW = fmtCm(m.w) + ' cm'; mH = fmtCm(m.h) + ' cm'; }
+    if(m){ mW = fmtCm(m.w*unitK()) + ' ' + state.unit; mH = fmtCm(m.h*unitK()) + ' ' + state.unit; }
   }
   window.__applyBoceto({
     foto: composeFoto(),
