@@ -1731,7 +1731,7 @@ function render(){
   const L2 = selLogo();
   $('logoWcm').classList.toggle('need', state.mode === 'logo' && !!L2 && !(L2.cmW > 0));
   $('logoHcm').classList.toggle('need', state.mode === 'logo' && !!L2 && !(L2.cmH > 0));
-  $('rulerCm').classList.toggle('need', state.mode === 'product' && state.logos.length > 0 && !cmPerPx());
+  $('rulerCm').classList.toggle('need', state.mode === 'product' && !frame.hidden && !cmPerPx());
   setStepStates();
   $('applyBtn').disabled = !techValue();
 }
@@ -1745,11 +1745,13 @@ function measuresOk(){
 }
 function setStepStates(){
   const mok = measuresOk();
-  $('step2').classList.toggle('locked', frame.hidden);
-  $('step3').classList.toggle('locked', !state.zone);
+  /* en modo "sé la medida del producto" no se avanza sin calibrar la regla */
+  const scaleOk = state.mode !== 'product' || !!cmPerPx();
+  $('step2').classList.toggle('locked', frame.hidden || !scaleOk);
+  $('step3').classList.toggle('locked', !state.zone || !scaleOk);
   $('step4').classList.toggle('locked', !mok);
-  $('step1').classList.toggle('done', !frame.hidden);
-  $('step2').classList.toggle('done', !!state.zone);
+  $('step1').classList.toggle('done', !frame.hidden && scaleOk);
+  $('step2').classList.toggle('done', !!state.zone && scaleOk);
   $('step3').classList.toggle('done', mok);
   const note = $('needMeasureNote');
   if(state.logos.length && !mok){
@@ -1807,7 +1809,8 @@ function loadPhoto(file){
     $('alignCtrls').hidden = false;
     state.zoom = 1; state.pan = {x:0, y:0};
     applyView();
-    enterDrawMode();
+    // en modo producto no se dibuja el área hasta calibrar la regla
+    if(state.mode !== 'product' || cmPerPx()) enterDrawMode();
     syncLogoUI(); setStepStates(); render();
   };
   const probe = new Image();
@@ -1819,7 +1822,14 @@ function loadPhoto(file){
 function syncRulerBtn(){
   $('rulerToggle').textContent = state.rulerVisible ? 'Ocultar regla' : 'Medir de nuevo';
 }
-$('rulerCm').addEventListener('input', render);
+$('rulerCm').addEventListener('input', () => {
+  /* la medida habilita/inhabilita el dibujo del área en modo producto */
+  if(state.mode === 'product' && !frame.hidden){
+    if(cmPerPx() && !state.zone && !state.drawMode) enterDrawMode();
+    if(!cmPerPx() && state.drawMode) exitDrawMode();
+  }
+  render();
+});
 $('rulerToggle').addEventListener('click', () => {
   state.rulerVisible = !state.rulerVisible;
   syncRulerBtn();
@@ -1835,6 +1845,11 @@ function setMode(m){
   $('logoCmFields').hidden = !state.logos.length;
   $('unitField').hidden = !state.logos.length;
   $('lockAspectBtn').hidden = m === 'product';
+  if(!frame.hidden){
+    const scaleOk = m !== 'product' || cmPerPx();
+    if(!scaleOk && state.drawMode) exitDrawMode();
+    if(scaleOk && !state.zone && !state.drawMode) enterDrawMode();
+  }
   render();
 }
 $('modeLogo').addEventListener('click', () => setMode('logo'));
