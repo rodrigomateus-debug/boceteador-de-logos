@@ -500,12 +500,15 @@ html,body{margin:0;padding:0;background:#EDEDF2}
 
     <fieldset>
       <legend>Plantillas</legend>
+      <input type="text" id="tplSearch" placeholder="🔎 Buscar plantilla…" autocomplete="off" style="margin-bottom:6px">
       <select id="tplSelect"><option value="">Elegí una plantilla guardada…</option></select>
       <div class="tplBtns">
         <button type="button" id="tplLoad">Cargar</button>
         <button type="button" id="tplSave">Guardar actual</button>
         <button type="button" id="tplDel" title="Eliminar la plantilla seleccionada">🗑</button>
       </div>
+      <button type="button" class="addColor" id="gdBtn" style="margin-top:8px">☁ Conectar Google Drive</button>
+      <p class="hint" style="margin:6px 0 0">Con Drive conectado, las plantillas se guardan en tu cuenta de Google: no se pierden al limpiar el navegador y no tienen límite de cantidad. La configuración inicial (una sola vez) está en el README del proyecto.</p>
     </fieldset>
 
     <fieldset>
@@ -1659,20 +1662,27 @@ function attachBarDrag(){
 }
 $('preview').addEventListener('load', attachBarDrag);
 
-/* --- plantillas con nombre (guardadas en este navegador) --- */
+/* --- plantillas con nombre (en este navegador y/o en el Drive de cada usuario) --- */
 const TPL_KEY = 'boceto-formas-plantillas';
 function tplAll(){ try{ return JSON.parse(localStorage.getItem(TPL_KEY)||'{}'); }catch(e){ return {}; } }
+const normTxt = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 function tplRefresh(){
   const sel = $('tplSelect');
   const cur0 = sel.value;
+  const filtro = normTxt($('tplSearch').value.trim());
   sel.innerHTML = '<option value="">Elegí una plantilla guardada…</option>';
-  Object.keys(tplAll()).sort((a,b)=>a.localeCompare(b,'es')).forEach(n=>{
+  const add = (val, label) => {
+    if(filtro && !normTxt(label).includes(filtro)) return;
     const o = document.createElement('option');
-    o.textContent = n; o.value = n;
+    o.value = val; o.textContent = label;
     sel.appendChild(o);
-  });
-  sel.value = cur0 || '';
+  };
+  gdFiles.slice().sort((a,b)=>a.name.localeCompare(b.name,'es')).forEach(f => add('gd:'+f.id, '☁ '+f.name));
+  Object.keys(tplAll()).sort((a,b)=>a.localeCompare(b,'es')).forEach(n => add('lc:'+n, (gdOn() ? '💾 ' : '')+n));
+  sel.value = cur0;
+  if(sel.value !== cur0) sel.value = '';
 }
+$('tplSearch').addEventListener('input', tplRefresh);
 function snapshot(){
   capturePage();
   const d = {accent, codeMode, pages: JSON.parse(JSON.stringify(pages)), cur};
@@ -1705,33 +1715,186 @@ function applySnapshot(d){
   loadPage(cur);
   if(window.__bocetoRestore) window.__bocetoRestore(d.boceto || null);
 }
-$('tplSave').onclick = () => {
+$('tplSave').onclick = async () => {
   const sug = ($('f_cliente').value.trim() + ' — ' + $('f_producto').value.split('\n')[0].trim()).replace(/^ — | — $/g,'').trim();
   const name = prompt('Nombre de la plantilla:', sug || 'Mi plantilla');
   if(!name) return;
+  if(gdOn()){
+    if(gdFiles.some(f => f.name === name) && !confirm('Ya existe una plantilla "'+name+'" en tu Drive. ¿Reemplazarla?')) return;
+    const b = $('tplSave'); b.disabled = true; b.textContent = 'Guardando…';
+    try{
+      await gdSave(name, snapshot());
+      await gdList();
+      tplRefresh();
+      const f = gdFiles.find(f2 => f2.name === name);
+      if(f) $('tplSelect').value = 'gd:' + f.id;
+    }catch(e){
+      alert('No se pudo guardar en Drive. Verificá la conexión e intentá de nuevo.');
+    }finally{ b.disabled = false; b.textContent = 'Guardar actual'; }
+    return;
+  }
   const all = tplAll();
   if(all[name] && !confirm('Ya existe una plantilla llamada "'+name+'". ¿Reemplazarla?')) return;
   all[name] = snapshot();
   try{ localStorage.setItem(TPL_KEY, JSON.stringify(all)); }
-  catch(e){ alert('No se pudo guardar: las imágenes ocupan demasiado para el almacenamiento del navegador. Probá con imágenes más livianas.'); return; }
+  catch(e){ alert('No se pudo guardar: las imágenes ocupan demasiado para el almacenamiento del navegador.\nConectá Google Drive para guardar sin límite, o probá con imágenes más livianas.'); return; }
   tplRefresh();
-  $('tplSelect').value = name;
+  $('tplSelect').value = 'lc:' + name;
 };
-$('tplLoad').onclick = () => {
-  const name = $('tplSelect').value;
-  if(!name){ alert('Elegí primero una plantilla de la lista.'); return; }
-  if(!confirm('Se reemplazará lo que tengas cargado por la plantilla "'+name+'". ¿Continuar?')) return;
-  applySnapshot(tplAll()[name] || {});
+$('tplLoad').onclick = async () => {
+  const val = $('tplSelect').value;
+  if(!val){ alert('Elegí primero una plantilla de la lista.'); return; }
+  const label = $('tplSelect').selectedOptions[0].textContent;
+  if(!confirm('Se reemplazará lo que tengas cargado por la plantilla "'+label+'". ¿Continuar?')) return;
+  if(val.startsWith('gd:')){
+    const b = $('tplLoad'); b.disabled = true; b.textContent = 'Cargando…';
+    try{ applySnapshot(await gdLoad(val.slice(3))); }
+    catch(e){ alert('No se pudo cargar la plantilla desde Drive. Verificá la conexión.'); }
+    finally{ b.disabled = false; b.textContent = 'Cargar'; }
+    return;
+  }
+  applySnapshot(tplAll()[val.slice(3)] || {});
 };
-$('tplDel').onclick = () => {
-  const name = $('tplSelect').value;
-  if(!name){ alert('Elegí primero una plantilla de la lista.'); return; }
-  if(!confirm('¿Eliminar la plantilla "'+name+'"?')) return;
+$('tplDel').onclick = async () => {
+  const val = $('tplSelect').value;
+  if(!val){ alert('Elegí primero una plantilla de la lista.'); return; }
+  const label = $('tplSelect').selectedOptions[0].textContent;
+  if(!confirm('¿Eliminar la plantilla "'+label+'"?')) return;
+  if(val.startsWith('gd:')){
+    try{ await gdDelete(val.slice(3)); await gdList(); }
+    catch(e){ alert('No se pudo eliminar de Drive. Verificá la conexión.'); }
+    tplRefresh();
+    return;
+  }
   const all = tplAll();
-  delete all[name];
+  delete all[val.slice(3)];
   try{ localStorage.setItem(TPL_KEY, JSON.stringify(all)); }catch(e){}
   tplRefresh();
 };
+
+/* --- Google Drive del usuario: plantillas sin límite y a prueba de caché ---
+   Requiere la app publicada en la web (no file://) y un Client ID OAuth de
+   Google creado una sola vez para la empresa — instructivo en el README. */
+const GD_DEFAULT_CLIENT_ID = ''; // ← pegá acá el Client ID para que todo el equipo lo tenga ya configurado
+const GD_CID_KEY = 'boceto-gdrive-client-id';
+const GD_ON_KEY = 'boceto-gdrive-on';
+const GD_FOLDER = 'Plantillas Boceteador Formas';
+let gdToken = null, gdTokenClient = null, gdFolderId = null, gdFiles = [];
+const gdClientId = () => (localStorage.getItem(GD_CID_KEY) || GD_DEFAULT_CLIENT_ID || '').trim();
+const gdOn = () => !!gdToken;
+
+let gsiPromise = null;
+function ensureGsi(){
+  if(window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
+  if(!gsiPromise){
+    gsiPromise = new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.onload = res;
+      s.onerror = () => { gsiPromise = null; rej(new Error('gsi')); };
+      document.head.appendChild(s);
+    });
+  }
+  return gsiPromise;
+}
+async function gdEnsureToken(interactive){
+  if(gdToken) return true;
+  if(location.protocol === 'file:'){
+    if(interactive) alert('Para conectar Google Drive, la app tiene que estar publicada en la web (por ejemplo GitHub Pages) — Google no permite la conexión desde un archivo local.\n\nEl instructivo para publicarla está en el README del proyecto.');
+    return false;
+  }
+  let cid = gdClientId();
+  if(!cid){
+    if(!interactive) return false;
+    cid = prompt('Pegá el "ID de cliente OAuth" de Google (termina en .apps.googleusercontent.com).\n\nSe crea una sola vez para toda la empresa — el instructivo paso a paso está en el README del proyecto.');
+    if(!cid) return false;
+    localStorage.setItem(GD_CID_KEY, cid.trim());
+  }
+  try{ await ensureGsi(); }catch(e){ if(interactive) alert('No se pudo cargar el conector de Google. Verificá la conexión a internet.'); return false; }
+  if(!gdTokenClient){
+    gdTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: gdClientId(),
+      scope: 'https://www.googleapis.com/auth/drive.file',
+      callback: () => {},
+    });
+  }
+  const attempt = silent => new Promise(res => {
+    gdTokenClient.callback = t => res(!!(t && t.access_token) && !!(gdToken = t.access_token));
+    gdTokenClient.error_callback = () => res(false);
+    gdTokenClient.requestAccessToken(silent ? { prompt: '' } : {});
+  });
+  return (await attempt(true)) || (interactive && await attempt(false));
+}
+async function gdFetch(url, opts, retry = true){
+  const r = await fetch(url, { ...(opts||{}), headers: { ...((opts||{}).headers||{}), Authorization: 'Bearer ' + gdToken } });
+  if(r.status === 401 && retry){
+    gdToken = null;
+    if(await gdEnsureToken(false)) return gdFetch(url, opts, false);
+  }
+  if(!r.ok) throw new Error('drive ' + r.status);
+  return r;
+}
+async function gdFolder(){
+  if(gdFolderId) return gdFolderId;
+  const q = encodeURIComponent(`name='${GD_FOLDER}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+  const j = await (await gdFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`)).json();
+  if(j.files && j.files.length) return gdFolderId = j.files[0].id;
+  const c = await (await gdFetch('https://www.googleapis.com/drive/v3/files', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: GD_FOLDER, mimeType: 'application/vnd.google-apps.folder' }) })).json();
+  return gdFolderId = c.id;
+}
+async function gdList(){
+  const fid = await gdFolder();
+  const q = encodeURIComponent(`'${fid}' in parents and trashed=false and mimeType='application/json'`);
+  const j = await (await gdFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)&pageSize=1000`)).json();
+  gdFiles = (j.files || []).map(f => ({ id: f.id, name: f.name.replace(/\.json$/i, '') }));
+}
+async function gdSave(name, data){
+  const fid = await gdFolder();
+  const body = JSON.stringify(data);
+  const existing = gdFiles.find(f => f.name === name);
+  if(existing){
+    await gdFetch(`https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=media`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body });
+    return;
+  }
+  const bnd = 'boceto' + Math.floor(performance.now());
+  const meta = { name: name + '.json', parents: [fid], mimeType: 'application/json' };
+  const mp = `--${bnd}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${bnd}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${bnd}--`;
+  await gdFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', { method:'POST', headers:{'Content-Type':'multipart/related; boundary=' + bnd}, body: mp });
+}
+async function gdLoad(id){ return await (await gdFetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`)).json(); }
+async function gdDelete(id){ await gdFetch(`https://www.googleapis.com/drive/v3/files/${id}`, { method:'DELETE' }); }
+
+function gdSyncUI(){
+  $('gdBtn').textContent = gdOn() ? '☁ Drive conectado ✓ — clic para desconectar' : '☁ Conectar Google Drive';
+  $('gdBtn').style.borderColor = gdOn() ? 'var(--green)' : '';
+  $('gdBtn').style.color = gdOn() ? 'var(--green)' : '';
+}
+$('gdBtn').onclick = async () => {
+  if(gdOn()){
+    if(!confirm('¿Desconectar Google Drive? Las plantillas siguen guardadas en tu cuenta; solo se ocultan de la lista.')) return;
+    try{ if(window.google) google.accounts.oauth2.revoke(gdToken, ()=>{}); }catch(e){}
+    gdToken = null; gdFiles = []; gdFolderId = null;
+    localStorage.removeItem(GD_ON_KEY);
+    gdSyncUI(); tplRefresh();
+    return;
+  }
+  const b = $('gdBtn'); b.disabled = true; b.textContent = 'Conectando…';
+  try{
+    if(await gdEnsureToken(true)){
+      localStorage.setItem(GD_ON_KEY, '1');
+      await gdList();
+    }
+  }catch(e){ alert('No se pudo conectar con Google Drive.'); }
+  finally{ b.disabled = false; gdSyncUI(); tplRefresh(); }
+};
+/* reconexión silenciosa si ya estaba conectado en este navegador */
+if(localStorage.getItem(GD_ON_KEY) === '1' && location.protocol !== 'file:' && gdClientId()){
+  gdEnsureToken(false).then(async okTok => {
+    if(okTok){ try{ await gdList(); }catch(e){} }
+    gdSyncUI(); tplRefresh();
+  });
+}
+gdSyncUI();
 tplRefresh();
 
 /* --- nuevo boceto / limpiar --- */
