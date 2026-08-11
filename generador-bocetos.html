@@ -508,6 +508,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <button type="button" id="tplDel" title="Eliminar la plantilla seleccionada">🗑</button>
       </div>
       <button type="button" class="addColor" id="gdBtn" style="margin-top:8px">☁ Conectar Google Drive</button>
+      <button type="button" id="gdCidBtn" hidden style="width:100%; margin-top:6px; padding:6px; border:none; background:none; font:inherit; font-size:11px; font-weight:700; color:var(--muted); text-decoration:underline; cursor:pointer">⚙ Pegar ID de Drive</button>
       <p class="hint" style="margin:6px 0 0">Con Drive conectado, las plantillas se guardan en tu cuenta de Google: no se pierden al limpiar el navegador y no tienen límite de cantidad. La configuración inicial (una sola vez) está en el README del proyecto.</p>
     </fieldset>
 
@@ -1797,18 +1798,38 @@ function ensureGsi(){
   }
   return gsiPromise;
 }
+/* diagnóstico en castellano de lo que suele fallar en la configuración */
+function gdExplain(err){
+  const t = ((err && (err.type || err.message)) || '') + '';
+  if(/popup_closed|popup_failed|user_cancel|access_denied/i.test(t))
+    return 'Se cerró la ventana de Google sin autorizar. Volvé a tocar "Conectar Google Drive" y aceptá el permiso.';
+  if(/idpiframe|origin|invalid_client|unauthorized/i.test(t))
+    return 'Google rechazó esta dirección o el ID de cliente.\n\nRevisá en Google Cloud → Credenciales → tu "ID de cliente de OAuth":\n'
+      + '• En "Orígenes autorizados de JavaScript" tiene que estar exactamente:\n  ' + location.origin + '\n'
+      + '  (sin barra al final y sin la ruta del archivo)\n'
+      + '• Y que el ID pegado en la app sea el de esa misma credencial.\n\n'
+      + 'Si acabás de crearla, puede tardar unos minutos en activarse.\n\n'
+      + 'Con el botón "⚙ Cambiar ID de Drive" podés volver a pegar el ID.';
+  return 'Google no devolvió la autorización' + (t ? ' (' + t + ')' : '') + '.\n\nVerificá que la Google Drive API esté habilitada en el proyecto y que el origen autorizado sea:\n' + location.origin;
+}
 async function gdEnsureToken(interactive){
   if(gdToken) return true;
   if(location.protocol === 'file:'){
-    if(interactive) alert('Para conectar Google Drive, la app tiene que estar publicada en la web (por ejemplo GitHub Pages) — Google no permite la conexión desde un archivo local.\n\nEl instructivo para publicarla está en el README del proyecto.');
+    if(interactive) alert('Para conectar Google Drive, hay que usar la app publicada en la web:\n\nhttps://formas-bocetos-con-logo.netlify.app\n\nGoogle no permite la conexión desde un archivo abierto con doble clic. Las plantillas guardadas en este navegador siguen funcionando igual.');
     return false;
   }
   let cid = gdClientId();
   if(!cid){
     if(!interactive) return false;
-    cid = prompt('Pegá el "ID de cliente OAuth" de Google (termina en .apps.googleusercontent.com).\n\nSe crea una sola vez para toda la empresa — el instructivo paso a paso está en el README del proyecto.');
+    cid = prompt('Pegá el "ID de cliente de OAuth" de Google (termina en .apps.googleusercontent.com).\n\nSe crea una sola vez para toda la empresa — el instructivo paso a paso está en el README del proyecto.');
     if(!cid) return false;
-    localStorage.setItem(GD_CID_KEY, cid.trim());
+    cid = cid.trim();
+    if(!/\.apps\.googleusercontent\.com$/.test(cid)){
+      alert('Ese no parece el ID de cliente: tiene que terminar en ".apps.googleusercontent.com".\n\nOjo: no es el "Secreto de cliente" ni el número de proyecto. Está en Google Cloud → Credenciales → IDs de cliente de OAuth.');
+      return false;
+    }
+    localStorage.setItem(GD_CID_KEY, cid);
+    gdTokenClient = null;
   }
   try{ await ensureGsi(); }catch(e){ if(interactive) alert('No se pudo cargar el conector de Google. Verificá la conexión a internet.'); return false; }
   if(!gdTokenClient){
@@ -1820,10 +1841,16 @@ async function gdEnsureToken(interactive){
   }
   const attempt = silent => new Promise(res => {
     gdTokenClient.callback = t => res(!!(t && t.access_token) && !!(gdToken = t.access_token));
-    gdTokenClient.error_callback = () => res(false);
-    gdTokenClient.requestAccessToken(silent ? { prompt: '' } : {});
+    gdTokenClient.error_callback = err => res(err || false);
+    try{ gdTokenClient.requestAccessToken(silent ? { prompt: '' } : {}); }
+    catch(err){ res(err || false); }
   });
-  return (await attempt(true)) || (interactive && await attempt(false));
+  if((await attempt(true)) === true) return true;
+  if(!interactive) return false;
+  const r = await attempt(false);
+  if(r === true) return true;
+  alert(gdExplain(r));
+  return false;
 }
 async function gdFetch(url, opts, retry = true){
   const r = await fetch(url, { ...(opts||{}), headers: { ...((opts||{}).headers||{}), Authorization: 'Bearer ' + gdToken } });
@@ -1868,6 +1895,9 @@ function gdSyncUI(){
   $('gdBtn').textContent = gdOn() ? '☁ Drive conectado ✓ — clic para desconectar' : '☁ Conectar Google Drive';
   $('gdBtn').style.borderColor = gdOn() ? 'var(--green)' : '';
   $('gdBtn').style.color = gdOn() ? 'var(--green)' : '';
+  const cidBtn = $('gdCidBtn');
+  cidBtn.hidden = gdOn() || location.protocol === 'file:';
+  cidBtn.textContent = gdClientId() ? '⚙ Cambiar ID de Drive' : '⚙ Pegar ID de Drive';
 }
 $('gdBtn').onclick = async () => {
   if(gdOn()){
@@ -1884,8 +1914,30 @@ $('gdBtn').onclick = async () => {
       localStorage.setItem(GD_ON_KEY, '1');
       await gdList();
     }
-  }catch(e){ alert('No se pudo conectar con Google Drive.'); }
+  }catch(e){ alert('Se autorizó, pero Google rechazó el acceso a Drive.\n\nLo más probable: falta habilitar la "Google Drive API" en el proyecto de Google Cloud (Buscar → Google Drive API → Habilitar).'); }
   finally{ b.disabled = false; gdSyncUI(); tplRefresh(); }
+};
+/* corregir / pegar de nuevo el ID de cliente sin tocar el archivo */
+$('gdCidBtn').onclick = () => {
+  const actual = gdClientId();
+  const v = prompt('ID de cliente de OAuth de Google (termina en .apps.googleusercontent.com).\n\nDejalo vacío para borrar el guardado.\n\nEl origen que tiene que estar autorizado en Google Cloud es:\n' + location.origin, actual);
+  if(v === null) return;
+  const cid = v.trim();
+  if(!cid){
+    localStorage.removeItem(GD_CID_KEY);
+    gdTokenClient = null;
+    alert('ID borrado. La próxima vez que toques "Conectar Google Drive" te lo va a pedir de nuevo.');
+    gdSyncUI();
+    return;
+  }
+  if(!/\.apps\.googleusercontent\.com$/.test(cid)){
+    alert('Ese no parece el ID de cliente: tiene que terminar en ".apps.googleusercontent.com".');
+    return;
+  }
+  localStorage.setItem(GD_CID_KEY, cid);
+  gdTokenClient = null;
+  gdSyncUI();
+  alert('ID guardado. Ahora tocá "Conectar Google Drive".');
 };
 /* reconexión silenciosa si ya estaba conectado en este navegador */
 if(localStorage.getItem(GD_ON_KEY) === '1' && location.protocol !== 'file:' && gdClientId()){
