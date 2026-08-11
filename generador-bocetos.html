@@ -608,6 +608,9 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <button class="btn primary" id="btn_print">Imprimir / PDF</button>
       <button class="btn ghost" id="btn_download">Descargar HTML</button>
     </div>
+    <div class="actions" style="margin-top:10px">
+      <button class="btn" id="btn_corel" style="background:#fff; box-shadow:inset 0 0 0 1.5px var(--border); color:var(--ink)" title="PDF en formato clásico: se abre en CorelDRAW y cada texto e imagen es una pieza suelta">PDF editable (Corel) — piezas movibles</button>
+    </div>
     <p class="hint">Al imprimir: destino "Guardar como PDF", tamaño A4, márgenes "Ninguno". Los datos quedan guardados en este navegador para la próxima vez.</p>
   </div>
 
@@ -1329,6 +1332,229 @@ $('btn_download').onclick = ()=>{
   URL.revokeObjectURL(a.href);
 };
 
+/* --- PDF editable para Corel: se genera con jsPDF (formato PDF clásico que
+   CorelDRAW abre sin errores) y cada texto, recuadro e imagen es un objeto
+   suelto y movible --- */
+const JSPDF_URL = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+let jspdfPromise = null;
+function ensureJsPdf(){
+  if(window.jspdf) return Promise.resolve();
+  if(!jspdfPromise){
+    jspdfPromise = new Promise((res, rej)=>{
+      const s = document.createElement('script');
+      s.src = JSPDF_URL;
+      s.onload = res;
+      s.onerror = ()=>{ jspdfPromise = null; rej(new Error('cdn')); };
+      document.head.appendChild(s);
+    });
+  }
+  return jspdfPromise;
+}
+const hex2rgb = hex => { const n = parseInt(String(hex||'#000000').replace('#',''),16) || 0; return [(n>>16)&255, (n>>8)&255, n&255]; };
+function imgInfo(src){
+  // normaliza cualquier imagen a un formato que jsPDF acepte (PNG/JPEG)
+  return new Promise(res => {
+    if(!src){ res(null); return; }
+    const im = new Image();
+    im.onload = () => {
+      if(/^data:image\/png/i.test(src)){ res({data:src, w:im.naturalWidth, h:im.naturalHeight, fmt:'PNG'}); return; }
+      if(/^data:image\/jpe?g/i.test(src)){ res({data:src, w:im.naturalWidth, h:im.naturalHeight, fmt:'JPEG'}); return; }
+      try{
+        const c = document.createElement('canvas');
+        c.width = im.naturalWidth; c.height = im.naturalHeight;
+        c.getContext('2d').drawImage(im, 0, 0);
+        res({data:c.toDataURL('image/png'), w:c.width, h:c.height, fmt:'PNG'});
+      }catch(e){ res(null); }
+    };
+    im.onerror = () => res(null);
+    im.src = src;
+  });
+}
+
+async function corelSheet(doc, p, num, total){
+  const S = doc.internal.pageSize.getWidth() / 794; // diseño en px de la ficha → pt
+  const X = v => v * S;
+  const NAVY=[0,0,133], INK=[11,11,35], GRAY=[110,110,133], BODY=[61,61,85],
+        BORDER=[228,228,237], SUNKEN=[248,248,251], GREEN=[57,159,74], ACC=hex2rgb(accent);
+  const F = id => (p.fields && p.fields[id]) || '';
+  const text = (t, x, y, o) => {
+    o = o || {};
+    doc.setFont('helvetica', o.bold ? 'bold' : 'normal');
+    doc.setFontSize((o.size || 12) * S);
+    doc.setTextColor(...(o.color || INK));
+    if(doc.setCharSpace) doc.setCharSpace(o.ls ? o.ls * S : 0);
+    const lines = o.maxW ? doc.splitTextToSize(String(t), X(o.maxW)) : String(t).split('\n');
+    doc.text(lines, X(x), X(y), { align: o.align || 'left', baseline: 'top' });
+    if(doc.setCharSpace) doc.setCharSpace(0);
+    return lines.length * (o.lh || (o.size || 12) * 1.3);
+  };
+  const tW = (t, size, bold, ls) => {
+    doc.setFont('helvetica', bold ? 'bold' : 'normal');
+    doc.setFontSize(size * S);
+    return doc.getTextWidth(String(t)) / S + (ls || 0) * String(t).length;
+  };
+  const rrect = (x, y, w, h, r, fill, stroke, lw) => {
+    if(fill) doc.setFillColor(...fill);
+    if(stroke){ doc.setDrawColor(...stroke); doc.setLineWidth(X(lw || 1)); }
+    doc.roundedRect(X(x), X(y), X(w), X(h), X(r), X(r), fill && stroke ? 'FD' : (fill ? 'F' : 'S'));
+  };
+  const hline = (x1, y1, x2, color, lw) => {
+    doc.setDrawColor(...color); doc.setLineWidth(X(lw || 1));
+    doc.line(X(x1), X(y1), X(x2), X(y1));
+  };
+  const img = async (src, x, y, w, h) => {
+    const info = await imgInfo(src);
+    if(!info) return;
+    const k = Math.min(w / info.w, h / info.h);
+    const dw = info.w * k, dh = info.h * k;
+    doc.addImage(info.data, info.fmt, X(x + (w - dw)/2), X(y + (h - dh)/2), X(dw), X(dh));
+  };
+  const obsBox = (x, y, w, label, txt) => {
+    const lines = txt ? doc.splitTextToSize(txt, X(w - 32)) : [];
+    const h = 30 + Math.max(lines.length, 1) * 13 * 1.35 + 12;
+    rrect(x, y, w, h, 14, SUNKEN, BORDER, 1);
+    text(label, x + 16, y + 13, { size: 9, bold: true, color: GRAY, ls: 1 });
+    if(txt) text(txt, x + 16, y + 30, { size: 12, color: BODY, maxW: w - 32, lh: 13 * 1.35 });
+    return h;
+  };
+
+  const L = 52, R = 794 - 52, W = R - L;
+  /* ---- header ---- */
+  text('YOUR BRAND LOVED', L, 48, { size: 10, bold: true, color: GREEN, ls: 2 });
+  text('Boceto de producción', L, 66, { size: 32, bold: true, color: NAVY });
+  const pdv = $('f_pdv').value || '—';
+  const bw = Math.max(tW(pdv, 21, true), tW('NÚMERO DE PDV', 8.5, true, 1) + 10) + 34;
+  rrect(R - bw, 46, bw, 52, 12, ACC);
+  text('NÚMERO DE PDV', R - bw/2, 55, { size: 8.5, bold: true, color: NAVY, align: 'center', ls: 1 });
+  text(pdv, R - bw/2, 68, { size: 21, bold: true, color: NAVY, align: 'center' });
+  if(total > 1){
+    const ht = `HOJA ${num}/${total}`;
+    const hw = tW(ht, 9, true, 1) + 26;
+    rrect(R - hw, 104, hw, 20, 10, NAVY);
+    text(ht, R - hw/2, 110, { size: 9, bold: true, color: [255,255,255], align: 'center', ls: 1 });
+    if(F('f_posicion')) text(F('f_posicion'), R, 130, { size: 20, bold: true, color: NAVY, align: 'right' });
+  }
+
+  /* ---- meta strip ---- */
+  let y = 160;
+  rrect(L, y, W, 60, 14, null, BORDER, 1);
+  const metas = [['CLIENTE', $('f_cliente').value], ['EJECUTIVO', $('f_ejecutivo').value], ['FECHA', fechaDDMM($('f_fecha').value)]];
+  metas.forEach((m2, i) => {
+    const cx = L + (W/3) * i;
+    if(i) { doc.setDrawColor(...BORDER); doc.setLineWidth(X(1)); doc.line(X(cx), X(y), X(cx), X(y + 60)); }
+    text(m2[0], cx + 16, y + 12, { size: 9, bold: true, color: GRAY, ls: 1 });
+    text(m2[1] || '—', cx + 16, y + 30, { size: 14, bold: false, color: INK });
+  });
+  y += 60 + 24;
+
+  /* ---- columna izquierda: mockup + obs ---- */
+  const leftW = 366, rightX = L + leftW + 24, rightW = W - leftW - 24;
+  const mockH = Math.round(leftW * 1.05);
+  rrect(L, y, leftW, mockH, 20, [255,255,255], BORDER, 1);
+  if(p.imgFoto) await img(p.imgFoto, L + 10, y + 10, leftW - 20, mockH - 20);
+  const vpW = tW('VISTA PRINCIPAL', 9, true, 1) + 26;
+  rrect(L + 14, y + 14, vpW, 20, 10, NAVY);
+  text('VISTA PRINCIPAL', L + 14 + vpW/2, y + 20, { size: 9, bold: true, color: [255,255,255], align: 'center', ls: 1 });
+  const obsH = obsBox(L, y + mockH + 16, leftW, 'OBSERVACIONES DEL PRODUCTO', $('f_obsprod').value);
+  const leftBottom = y + mockH + 16 + obsH;
+
+  /* ---- columna derecha: specs ---- */
+  let ry = y;
+  text('PRODUCTO', rightX, ry, { size: 10, bold: true, color: GRAY, ls: 1.5 });
+  ry += 18;
+  ry += text($('f_producto').value || '—', rightX, ry, { size: 26, bold: true, color: NAVY, lh: 28 });
+  rrect(rightX, ry + 8, 56, 4, 2, ACC);
+  ry += 26;
+  hline(rightX, ry + 34, rightX + rightW, BORDER, 1);
+  text('CANTIDAD', rightX, ry + 12, { size: 9, bold: true, color: GRAY, ls: 1 });
+  text($('f_cantidad').value || '—', rightX + rightW, ry + 9, { size: 14, bold: true, color: INK, align: 'right' });
+  ry += 34;
+  hline(rightX, ry + 34, rightX + rightW, BORDER, 1);
+  text('COLOR PRODUCTO', rightX, ry + 12, { size: 9, bold: true, color: GRAY, ls: 1 });
+  const cpNom = $('f_colorprod_nom').value || '—';
+  const cpW = tW(cpNom, 14, true);
+  rrect(rightX + rightW - cpW - 24, ry + 9, 15, 15, 4, hex2rgb($('f_colorprod_hex').value), [210,210,218], .5);
+  text(cpNom, rightX + rightW, ry + 9, { size: 14, bold: true, color: INK, align: 'right' });
+  ry += 34 + 16;
+  text('LOGO A IMPRIMIR', rightX, ry, { size: 9, bold: true, color: GRAY, ls: 1 });
+  ry += 16;
+  const slotH = 120;
+  rrect(rightX, ry, rightW, slotH, 16, p.logoBg === 'dark' ? [11,11,35] : [241,241,246], BORDER, 1);
+  if(p.imgLogo) await img(p.imgLogo, rightX + 12, ry + 12, rightW - 24, slotH - 24);
+  ry += slotH + 10;
+  const med = [F('f_medida_w'), F('f_medida_h')].filter(Boolean).join(' × ');
+  if(med){ text(med, rightX + rightW/2, ry, { size: 12, bold: true, color: NAVY, align: 'center' }); ry += 20; }
+  const obsLH = obsBox(rightX, ry + 6, rightW, 'OBSERVACIONES DEL LOGO', F('f_obslogo'));
+  const rightBottom = ry + 6 + obsLH;
+
+  /* ---- barra de impresión ---- */
+  let by = Math.max(leftBottom, rightBottom) + 24;
+  const barH = 78, colW = W / 4;
+  rrect(L, by, W, barH, 16, null, BORDER, 1);
+  const cols = [['MEDIDAS DEL LOGO', med || '—', 15], ['TÉCNICA', F('f_tecnica') || '—', 16], ['POSICIÓN', F('f_posicion') || '—', 16]];
+  cols.forEach((c2, i) => {
+    const cx = L + colW * i;
+    if(i) { doc.setDrawColor(...BORDER); doc.setLineWidth(X(1)); doc.line(X(cx), X(by), X(cx), X(by + barH)); }
+    doc.setFillColor(...ACC);
+    doc.rect(X(cx + (i ? 0 : 2)), X(by + 6), X(4), X(barH - 12), 'F');
+    text(c2[0], cx + 18, by + 16, { size: 8.5, bold: true, color: GRAY, ls: 1 });
+    text(c2[1], cx + 18, by + 34, { size: c2[2], bold: true, color: NAVY, maxW: colW - 30, lh: c2[2] * 1.15 });
+  });
+  const c4x = L + colW * 3;
+  doc.setDrawColor(...BORDER); doc.setLineWidth(X(1)); doc.line(X(c4x), X(by), X(c4x), X(by + barH));
+  doc.setFillColor(...ACC); doc.rect(X(c4x), X(by + 6), X(4), X(barH - 12), 'F');
+  text('COLOR DE IMPRESIÓN', c4x + 18, by + 16, { size: 8.5, bold: true, color: GRAY, ls: 1 });
+  if(p.engraved){
+    rrect(c4x + 18, by + 33, 16, 16, 5, [140,141,150], [210,210,218], .5);
+    doc.setDrawColor(255,255,255); doc.setLineWidth(X(1.2));
+    doc.line(X(c4x + 22), X(by + 44), X(c4x + 29), X(by + 37));
+    doc.line(X(c4x + 25), X(by + 46), X(c4x + 31), X(by + 40));
+    text('Grabado', c4x + 40, by + 33, { size: 14, bold: true, color: NAVY });
+    text('marcado sin tinta', c4x + 40, by + 49, { size: 8, color: GRAY });
+  } else if(p.fullColor){
+    ['#E20389','#F9CE32','#8EE021','#089AE1','#000085'].forEach((h2, i) => {
+      doc.setFillColor(...hex2rgb(h2));
+      doc.rect(X(c4x + 18 + i * 3.2), X(by + 33), X(3.2), X(16), 'F');
+    });
+    text('Full color', c4x + 40, by + 33, { size: 14, bold: true, color: NAVY });
+  } else {
+    const pcs = (p.printColors || []).slice(0, 3);
+    pcs.forEach((c2, i) => {
+      const cy = by + 32 + i * 15;
+      rrect(c4x + 18, cy, 11, 11, 3, hex2rgb(c2.hex), [210,210,218], .5);
+      const code = codeMode === 'pantone' ? (c2.pant ? 'PANTONE ' + c2.pant : '') : (c2.hex || '').toUpperCase();
+      text((c2.nom || '—') + (code ? '  ·  ' + code : ''), c4x + 35, cy, { size: 9.5, bold: true, color: NAVY });
+    });
+    if((p.printColors || []).length > 3) text('+' + (p.printColors.length - 3) + ' más', c4x + 18, by + 32 + 45, { size: 8, color: GRAY });
+  }
+
+  /* ---- footer ---- */
+  const fy = 1123 - 42;
+  hline(L, fy, R, BORDER, 1);
+  text('DOCUMENTO INTERNO', L, fy + 10, { size: 9, bold: true, color: GREEN, ls: 1.5 });
+  text('Formas Publicitarias', R, fy + 10, { size: 10, color: GRAY, align: 'right' });
+}
+
+$('btn_corel').onclick = async () => {
+  const b = $('btn_corel');
+  const t0 = b.textContent;
+  b.disabled = true; b.textContent = 'Generando PDF…';
+  try{
+    capturePage();
+    await ensureJsPdf();
+    const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4', compress: true });
+    for(let i = 0; i < pages.length; i++){
+      if(i) doc.addPage();
+      await corelSheet(doc, pages[i], i + 1, pages.length);
+    }
+    doc.save(docName() + ' (editable).pdf');
+  }catch(e){
+    alert('No se pudo generar el PDF editable.\nVerificá la conexión a internet: el generador se descarga la primera vez.');
+  }finally{
+    b.disabled = false; b.textContent = t0;
+  }
+};
+
 /* --- escala del preview --- */
 function rescale(){
   const wrap = document.querySelector('.previewWrap');
@@ -1451,6 +1677,7 @@ function snapshot(){
   capturePage();
   const d = {accent, codeMode, pages: JSON.parse(JSON.stringify(pages)), cur};
   SHARED_FIELDS.forEach(id => d[id] = $(id).value);
+  d.boceto = (window.__bocetoSnapshot && window.__bocetoSnapshot()) || null; // la edición del boceteador viaja con la plantilla
   return d;
 }
 function applySnapshot(d){
@@ -1476,6 +1703,7 @@ function applySnapshot(d){
   }
   drawSwatches();
   loadPage(cur);
+  if(window.__bocetoRestore) window.__bocetoRestore(d.boceto || null);
 }
 $('tplSave').onclick = () => {
   const sug = ($('f_cliente').value.trim() + ' — ' + $('f_producto').value.split('\n')[0].trim()).replace(/^ — | — $/g,'').trim();
@@ -1785,13 +2013,19 @@ function padNarrowPhoto(img){
   return c.toDataURL('image/png');
 }
 
+let photoName = '';
 function loadPhoto(file){
-  const url = URL.createObjectURL(file);
+  const r = new FileReader();
+  r.onload = ev => loadPhotoSrc(ev.target.result, file.name);
+  r.readAsDataURL(file); // dataURL: sobrevive en plantillas guardadas
+}
+function loadPhotoSrc(url, name){
+  photoName = name || '';
   photo.onload = () => {
     $('emptyState').hidden = true;
     frame.hidden = false;
     $('photoThumb').innerHTML = `<img src="${url}" alt="">`;
-    $('photoTxt').innerHTML = `${file.name}<small>clic para cambiar la foto</small>`;
+    $('photoTxt').innerHTML = `${photoName || 'Foto del producto'}<small>clic para cambiar la foto</small>`;
     state.zone = null;
     state.logos.forEach(l => l.el.remove());
     state.logos = []; state.sel = -1; pendingAdd = false;
@@ -1947,7 +2181,9 @@ function loadLogo(file){
       });
     return;
   }
-  loadLogoSrc(URL.createObjectURL(file), file.name, /jpe?g/i.test(file.type));
+  const r = new FileReader();
+  r.onload = ev => loadLogoSrc(ev.target.result, file.name, /jpe?g/i.test(file.type));
+  r.readAsDataURL(file); // dataURL: sobrevive en plantillas guardadas
 }
 
 function makeLogoEl(logo){
@@ -2627,6 +2863,81 @@ $('cleanToggle').addEventListener('click', () => {
 });
 
 window.__bocetoRender = render;
+
+/* ---------- snapshot / restauración del editor (para plantillas) ---------- */
+window.__bocetoSnapshot = () => {
+  if(frame.hidden) return null;
+  return {
+    photoSrc: photo.src, photoName,
+    zone: state.zone, ruler: state.ruler, rulerVisible: state.rulerVisible,
+    rulerCm: $('rulerCm').value,
+    mode: state.mode, unit: state.unit, lockAspect: state.lockAspect,
+    technique: $('technique').value, techniqueOther: $('techniqueOther').value,
+    sel: state.sel,
+    logos: state.logos.map(l => ({ src:l.src, name:l.name, isJpg:l.isJpg, aspect:l.aspect,
+      crop:l.crop, useTrim:l.useTrim, fullW:l.fullW, fullH:l.fullH,
+      whiteRemoved:l.whiteRemoved, tint:l.tint, opacity:l.opacity,
+      cmW:l.cmW, cmH:l.cmH, rot:l.rot, x:l.x, y:l.y, w:l.w, h:l.h })),
+  };
+};
+window.__bocetoRestore = data => {
+  state.logos.forEach(l => l.el.remove());
+  state.logos = []; state.sel = -1; pendingAdd = false;
+  deletedLogos.length = 0; syncUndoUI();
+  state.zone = null; state.ruler = null;
+  $('logoInput').value = ''; $('photoInput').value = '';
+  if(!data || !data.photoSrc){
+    // plantilla sin boceto: el editor arranca vacío
+    frame.hidden = true;
+    $('emptyState').hidden = false;
+    $('cleanToggle').hidden = true; $('zoomCtrls').hidden = true; $('alignCtrls').hidden = true;
+    $('rulerToggle').disabled = true;
+    $('rulerCm').value = ''; $('technique').value = ''; $('techniqueOther').value = ''; $('techniqueOther').hidden = true;
+    $('photoThumb').innerHTML = '📷';
+    $('photoTxt').innerHTML = 'Elegir foto del producto<small>JPG o PNG · se recomienda recortada al producto</small>';
+    photoName = '';
+    setUnit('cm'); state.lockAspect = false; syncLockUI();
+    setMode('logo');
+    syncLogoUI(); setStepStates(); render();
+    return;
+  }
+  photo.onload = () => {
+    $('emptyState').hidden = true;
+    frame.hidden = false;
+    photoName = data.photoName || '';
+    $('photoThumb').innerHTML = `<img src="${data.photoSrc}" alt="">`;
+    $('photoTxt').innerHTML = `${photoName || 'Foto del producto'}<small>clic para cambiar la foto</small>`;
+    $('cleanToggle').hidden = false;
+    frame.classList.remove('clean');
+    $('cleanToggle').setAttribute('aria-pressed', 'false');
+    $('cleanToggle').textContent = '👁 Ocultar guías';
+    $('zoomCtrls').hidden = false; $('alignCtrls').hidden = false;
+    state.zoom = 1; state.pan = {x:0, y:0};
+    applyView();
+    state.zone = data.zone || null;
+    state.ruler = data.ruler || { x1:.08, y1:.5, x2:.92, y2:.5 };
+    state.rulerVisible = data.rulerVisible !== false;
+    $('rulerToggle').disabled = false;
+    syncRulerBtn();
+    $('rulerCm').value = data.rulerCm || '';
+    state.lockAspect = !!data.lockAspect; syncLockUI();
+    $('technique').value = data.technique || '';
+    $('techniqueOther').value = data.techniqueOther || '';
+    $('techniqueOther').hidden = $('technique').value !== '__otra';
+    setUnit(data.unit === 'mm' ? 'mm' : 'cm');
+    (data.logos || []).forEach(ld => {
+      const logo = { ...ld, el:null, img:null };
+      makeLogoEl(logo);
+      state.logos.push(logo);
+      rebuildLogo(logo, () => { syncLogoUI(); render(); });
+    });
+    state.sel = state.logos.length ? clamp(data.sel >= 0 ? data.sel : 0, 0, state.logos.length-1) : -1;
+    setMode(data.mode === 'product' ? 'product' : 'logo');
+    if(state.zone) exitDrawMode(); // normaliza el texto del botón de área
+    syncLogoUI(); setStepStates(); render();
+  };
+  photo.src = data.photoSrc;
+};
 
 /* init */
 setMode('logo');
