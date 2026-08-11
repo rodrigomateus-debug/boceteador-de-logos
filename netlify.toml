@@ -1,0 +1,4 @@
+# Sitio de archivos estáticos: no hay nada que compilar.
+# Se publica la raíz del repo tal cual; index.html redirige al generador.
+[build]
+  publish = "."
