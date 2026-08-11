@@ -13,6 +13,14 @@ se abren directo en el navegador, sin instalación.
 | `cotizador-formas.html` | Maqueta funcional del cotizador (fase 3 del roadmap): técnica, cantidades, desglose de precio y markup. |
 | `DESIGN.md` | Documento de diseño: flujos, modelo de datos, sistema de diseño Formas, roadmap. |
 
+## App publicada
+
+**https://formas-bocetos-con-logo.netlify.app/** (Netlify). `index.html`
+redirige al generador. Para actualizarla: volver a arrastrar la carpeta en
+Netlify Drop, o mejor, conectar el sitio al repo de GitHub (Netlify →
+Site configuration → Build & deploy → Link repository, rama `main`) para que
+cada cambio se publique solo.
+
 ## Plantillas en Google Drive (configuración inicial, una sola vez)
 
 Las plantillas se guardan por defecto en el navegador. Conectando Google Drive,
@@ -44,7 +52,7 @@ Google no permite la conexión con Drive desde un archivo abierto con doble clic
    como usuarios de prueba) → nombre de la app: "Boceteador Formas" → Guardar.
 4. **APIs y servicios → Credenciales → Crear credenciales → ID de cliente de OAuth**
    → tipo **Aplicación web** → en **Orígenes de JavaScript autorizados** agregá
-   la URL donde publicaste la app (ej. `https://<usuario>.github.io`) → Crear.
+   exactamente: `https://formas-bocetos-con-logo.netlify.app` → Crear.
 5. Copiá el **ID de cliente** (termina en `.apps.googleusercontent.com`).
 6. Pegalo en `generador-bocetos.html`, en la constante `GD_DEFAULT_CLIENT_ID`
    (buscala en el archivo), y subí el cambio. Así todo el equipo lo tiene ya
