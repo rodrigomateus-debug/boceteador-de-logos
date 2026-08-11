@@ -92,6 +92,21 @@ select{appearance:none; -webkit-appearance:none; padding-right:30px; font-weight
 .tplBtns #tplDel:hover{border-color:#EF7958; color:#EF7958}
 .fullColorRow{display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:var(--ink); margin-top:8px; cursor:pointer}
 .fullColorRow input{width:15px; height:15px; accent-color:var(--navy)}
+/* ---------- fila de Google Drive en Plantillas ---------- */
+.gdRow{display:flex; align-items:center; gap:6px; margin-top:8px; position:relative}
+.gdRow .addColor{flex:1; min-width:0}
+#gdStatus{flex:1; min-width:0; padding:8px 10px; border:1.5px solid var(--green); border-radius:8px; font-size:11.5px; font-weight:700; color:var(--green); background:#F4FBF5; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.gdIcon{flex:none; width:32px; height:32px; padding:0; border:1.5px solid var(--border); border-radius:8px; background:#fff; font-size:13px; line-height:1; cursor:pointer; color:var(--ink)}
+.gdIcon:hover{border-color:var(--navy)}
+.infoDot{flex:none; width:17px; height:17px; border-radius:50%; background:var(--muted); color:#fff; font-size:11px; font-weight:700; font-style:italic; display:grid; place-items:center; cursor:help; position:relative; user-select:none}
+.infoDot:hover, .infoDot:focus-visible{background:var(--navy); outline:none}
+.infoDot .tip{position:absolute; right:-2px; bottom:150%; width:250px; padding:9px 11px; border-radius:10px; background:var(--ink); color:#fff; font-size:11px; font-style:normal; font-weight:500; line-height:1.45; text-align:left; box-shadow:0 6px 20px rgba(11,11,35,.3); opacity:0; visibility:hidden; transition:opacity .12s; z-index:20; pointer-events:none}
+.infoDot:hover .tip, .infoDot:focus .tip, .infoDot:focus-within .tip{opacity:1; visibility:visible}
+#gdMenu{margin-top:6px; border:1.5px solid var(--border); border-radius:8px; overflow:hidden}
+#gdMenu button{display:block; width:100%; padding:8px 10px; border:none; background:#fff; font:inherit; font-size:11.5px; font-weight:600; color:var(--muted); text-align:left; cursor:pointer}
+#gdMenu button:hover{background:var(--sunken); color:var(--ink)}
+#gdMenu #gdDisconnect{border-top:1px solid var(--border)}
+#gdMenu #gdDisconnect:hover{color:#EF7958}
 .fileBox.darkbg{background:#0B0B23; border-color:#3A3A55}
 .fileBox.darkbg span{color:#C9C9DC}
 .fileBox.darkbg .clear{background:#1E1E40; color:#C9C9DC; box-shadow:0 0 0 1px #3A3A55}
@@ -507,9 +522,17 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <button type="button" id="tplSave">Guardar actual</button>
         <button type="button" id="tplDel" title="Eliminar la plantilla seleccionada">🗑</button>
       </div>
-      <button type="button" class="addColor" id="gdBtn" style="margin-top:8px">☁ Conectar Google Drive</button>
-      <button type="button" id="gdCidBtn" hidden style="width:100%; margin-top:6px; padding:6px; border:none; background:none; font:inherit; font-size:11px; font-weight:700; color:var(--muted); text-decoration:underline; cursor:pointer">⚙ Pegar ID de Drive</button>
-      <p class="hint" style="margin:6px 0 0">Con Drive conectado, las plantillas se guardan en tu cuenta de Google: no se pierden al limpiar el navegador y no tienen límite de cantidad. La configuración inicial (una sola vez) está en el README del proyecto.</p>
+      <div class="gdRow">
+        <button type="button" class="addColor" id="gdBtn" style="margin-top:0">☁ Conectar Google Drive</button>
+        <span id="gdStatus" hidden>☁ Drive conectado</span>
+        <button type="button" class="gdIcon" id="gdFolderBtn" hidden title="Abrir la carpeta de plantillas en tu Google Drive">📂</button>
+        <span class="infoDot" tabindex="0" role="note" aria-label="Qué hace conectar Google Drive">i<span class="tip">Con Drive conectado, tus plantillas se guardan en tu cuenta de Google: no se pierden al limpiar el navegador y no tienen límite de cantidad. La app solo ve los archivos que ella misma crea, no el resto de tu Drive.</span></span>
+        <button type="button" class="gdIcon" id="gdMenuBtn" title="Opciones de Drive">⚙</button>
+      </div>
+      <div id="gdMenu" hidden>
+        <button type="button" id="gdChangeCid">Cambiar ID de cliente…</button>
+        <button type="button" id="gdDisconnect">Desconectar Drive</button>
+      </div>
     </fieldset>
 
     <fieldset>
@@ -1895,22 +1918,16 @@ async function gdLoad(id){ return await (await gdFetch(`https://www.googleapis.c
 async function gdDelete(id){ await gdFetch(`https://www.googleapis.com/drive/v3/files/${id}`, { method:'DELETE' }); }
 
 function gdSyncUI(){
-  $('gdBtn').textContent = gdOn() ? '☁ Drive conectado ✓ — clic para desconectar' : '☁ Conectar Google Drive';
-  $('gdBtn').style.borderColor = gdOn() ? 'var(--green)' : '';
-  $('gdBtn').style.color = gdOn() ? 'var(--green)' : '';
-  const cidBtn = $('gdCidBtn');
-  cidBtn.hidden = gdOn() || location.protocol === 'file:';
-  cidBtn.textContent = gdClientId() ? '⚙ Cambiar ID de Drive' : '⚙ Pegar ID de Drive';
+  const on = gdOn();
+  $('gdBtn').hidden = on;
+  $('gdStatus').hidden = !on;
+  $('gdFolderBtn').hidden = !on;
+  $('gdStatus').textContent = '☁ Drive conectado ✓';
+  $('gdMenuBtn').hidden = location.protocol === 'file:';
+  $('gdChangeCid').textContent = gdClientId() ? 'Cambiar ID de cliente…' : 'Pegar ID de cliente…';
+  $('gdDisconnect').hidden = !on;
 }
 $('gdBtn').onclick = async () => {
-  if(gdOn()){
-    if(!confirm('¿Desconectar Google Drive? Las plantillas siguen guardadas en tu cuenta; solo se ocultan de la lista.')) return;
-    try{ if(window.google) google.accounts.oauth2.revoke(gdToken, ()=>{}); }catch(e){}
-    gdToken = null; gdFiles = []; gdFolderId = null;
-    localStorage.removeItem(GD_ON_KEY);
-    gdSyncUI(); tplRefresh();
-    return;
-  }
   const b = $('gdBtn'); b.disabled = true; b.textContent = 'Conectando…';
   try{
     if(await gdEnsureToken(true)){
@@ -1918,18 +1935,40 @@ $('gdBtn').onclick = async () => {
       await gdList();
     }
   }catch(e){ alert('Se autorizó, pero Google rechazó el acceso a Drive.\n\nLo más probable: falta habilitar la "Google Drive API" en el proyecto de Google Cloud (Buscar → Google Drive API → Habilitar).'); }
-  finally{ b.disabled = false; gdSyncUI(); tplRefresh(); }
+  finally{ b.disabled = false; b.textContent = '☁ Conectar Google Drive'; gdSyncUI(); tplRefresh(); }
 };
-/* corregir / pegar de nuevo el ID de cliente sin tocar el archivo */
-$('gdCidBtn').onclick = () => {
+/* atajo a la carpeta de plantillas en el Drive del usuario */
+$('gdFolderBtn').onclick = () => {
+  const url = gdFolderId
+    ? 'https://drive.google.com/drive/folders/' + gdFolderId
+    : 'https://drive.google.com/drive/search?q=' + encodeURIComponent(GD_FOLDER);
+  window.open(url, '_blank', 'noopener');
+};
+/* menú discreto: cambiar el ID de cliente o desconectar (fuera del camino habitual) */
+$('gdMenuBtn').onclick = () => { $('gdMenu').hidden = !$('gdMenu').hidden; };
+document.addEventListener('click', e => {
+  if(!$('gdMenu').hidden && !e.target.closest('#gdMenu') && e.target !== $('gdMenuBtn')) $('gdMenu').hidden = true;
+});
+$('gdDisconnect').onclick = () => {
+  $('gdMenu').hidden = true;
+  if(!confirm('¿Desconectar Google Drive?\n\nTus plantillas siguen guardadas en tu cuenta de Google: solo dejan de verse en esta lista hasta que vuelvas a conectar.')) return;
+  try{ if(window.google) google.accounts.oauth2.revoke(gdToken, ()=>{}); }catch(e){}
+  gdToken = null; gdFiles = []; gdFolderId = null;
+  localStorage.removeItem(GD_ON_KEY);
+  gdSyncUI(); tplRefresh();
+};
+$('gdChangeCid').onclick = () => {
+  $('gdMenu').hidden = true;
   const actual = gdClientId();
-  const v = prompt('ID de cliente de OAuth de Google (termina en .apps.googleusercontent.com).\n\nDejalo vacío para borrar el guardado.\n\nEl origen que tiene que estar autorizado en Google Cloud es:\n' + location.origin, actual);
+  const v = prompt('ID de cliente de OAuth de Google (termina en .apps.googleusercontent.com).\n\nDejalo vacío para volver al ID que trae la app.\n\nEl origen que tiene que estar autorizado en Google Cloud es:\n' + location.origin, actual);
   if(v === null) return;
   const cid = v.trim();
   if(!cid){
     localStorage.removeItem(GD_CID_KEY);
     gdTokenClient = null;
-    alert('ID borrado. La próxima vez que toques "Conectar Google Drive" te lo va a pedir de nuevo.');
+    alert(GD_DEFAULT_CLIENT_ID
+      ? 'Listo: vuelve a usarse el ID que trae la app.'
+      : 'ID borrado. La próxima vez que toques "Conectar Google Drive" te lo va a pedir de nuevo.');
     gdSyncUI();
     return;
   }
