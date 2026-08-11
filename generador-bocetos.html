@@ -82,6 +82,16 @@ select{appearance:none; -webkit-appearance:none; padding-right:30px; font-weight
 .pageTabs .tab .x:hover{color:#EF7958}
 .pageTabs .addTab{padding:7px 10px; border:1.5px dashed var(--border); border-radius:8px; background:#fff; font:inherit; font-size:12px; font-weight:700; color:var(--muted); cursor:pointer}
 .pageTabs .addTab:hover{border-color:var(--lime); color:var(--ink)}
+/* ---------- lista de plantillas con búsqueda en vivo ---------- */
+#tplResults{margin-top:6px; border:1.5px solid var(--border); border-radius:10px; max-height:190px; overflow-y:auto; background:#fff}
+#tplResults .tplRow{display:flex; align-items:center; gap:7px; width:100%; padding:8px 10px; border:none; border-bottom:1px solid var(--border); background:none; font:inherit; font-size:12px; font-weight:600; color:var(--ink); text-align:left; cursor:pointer}
+#tplResults .tplRow:last-child{border-bottom:none}
+#tplResults .tplRow:hover{background:var(--sunken)}
+#tplResults .tplRow .src{flex:none; font-size:11px; opacity:.75}
+#tplResults .tplRow .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+#tplResults .tplRow[aria-selected="true"]{background:#F1F7FF; box-shadow:inset 3px 0 0 var(--navy); color:var(--navy)}
+#tplResults .tplRow mark{background:var(--lime); color:var(--navy); border-radius:3px; padding:0 1px}
+#tplResults .tplEmpty{padding:10px; font-size:11.5px; color:var(--muted); text-align:center}
 .tplBtns{display:flex; gap:6px; margin-top:8px}
 .tplBtns button{flex:1; padding:8px; border-radius:8px; font:inherit; font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid var(--border); background:#fff; color:var(--ink)}
 .tplBtns #tplLoad{background:var(--navy); border-color:var(--navy); color:#fff}
@@ -515,8 +525,9 @@ html,body{margin:0;padding:0;background:#EDEDF2}
 
     <fieldset>
       <legend>Plantillas</legend>
-      <input type="text" id="tplSearch" placeholder="🔎 Buscar plantilla…" autocomplete="off" style="margin-bottom:6px">
-      <select id="tplSelect"><option value="">Elegí una plantilla guardada…</option></select>
+      <input type="text" id="tplSearch" placeholder="🔎 Buscar plantilla…" autocomplete="off">
+      <select id="tplSelect" hidden><option value="">Elegí una plantilla guardada…</option></select>
+      <div id="tplResults"></div>
       <div class="tplBtns">
         <button type="button" id="tplLoad">Cargar</button>
         <button type="button" id="tplSave">Guardar actual</button>
@@ -1690,23 +1701,89 @@ $('preview').addEventListener('load', attachBarDrag);
 const TPL_KEY = 'boceto-formas-plantillas';
 function tplAll(){ try{ return JSON.parse(localStorage.getItem(TPL_KEY)||'{}'); }catch(e){ return {}; } }
 const normTxt = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+/* Búsqueda en vivo: cada palabra que escribís tiene que aparecer en el nombre
+   (en cualquier orden, sin importar tildes ni mayúsculas). El <select> queda
+   oculto y sigue siendo el que guarda la plantilla elegida. */
+function tplItems(){
+  const items = [];
+  gdFiles.slice().sort((a,b)=>a.name.localeCompare(b.name,'es'))
+    .forEach(f => items.push({ val:'gd:'+f.id, name:f.name, src:'☁', srcTitle:'En tu Google Drive' }));
+  Object.keys(tplAll()).sort((a,b)=>a.localeCompare(b,'es'))
+    .forEach(n => items.push({ val:'lc:'+n, name:n, src:'💾', srcTitle:'Guardada en este navegador' }));
+  return items;
+}
+function tplMatches(items, q){
+  const terms = normTxt(q).split(/\s+/).filter(Boolean);
+  if(!terms.length) return items;
+  return items.filter(it => { const n = normTxt(it.name); return terms.every(t => n.includes(t)); });
+}
+/* resalta en el nombre los pedazos que coinciden con lo buscado */
+function tplHighlight(name, q){
+  const terms = normTxt(q).split(/\s+/).filter(Boolean);
+  const norm = normTxt(name);
+  const hit = new Array(name.length).fill(false);
+  terms.forEach(t => {
+    let i = norm.indexOf(t);
+    while(i >= 0){ for(let k = i; k < i + t.length && k < hit.length; k++) hit[k] = true; i = norm.indexOf(t, i + 1); }
+  });
+  let out = '', open = false;
+  for(let i = 0; i < name.length; i++){
+    if(hit[i] && !open){ out += '<mark>'; open = true; }
+    if(!hit[i] && open){ out += '</mark>'; open = false; }
+    out += esc(name[i]);
+  }
+  return out + (open ? '</mark>' : '');
+}
 function tplRefresh(){
   const sel = $('tplSelect');
-  const cur0 = sel.value;
-  const filtro = normTxt($('tplSearch').value.trim());
-  sel.innerHTML = '<option value="">Elegí una plantilla guardada…</option>';
-  const add = (val, label) => {
-    if(filtro && !normTxt(label).includes(filtro)) return;
+  const elegida = sel.value;
+  const q = $('tplSearch').value.trim();
+  const items = tplItems();
+  /* el select oculto guarda TODAS: así "Cargar" y 🗑 siguen funcionando
+     aunque la búsqueda cambie */
+  sel.innerHTML = '<option value=""></option>';
+  items.forEach(it => {
     const o = document.createElement('option');
-    o.value = val; o.textContent = label;
+    o.value = it.val; o.textContent = it.src + ' ' + it.name;
     sel.appendChild(o);
-  };
-  gdFiles.slice().sort((a,b)=>a.name.localeCompare(b.name,'es')).forEach(f => add('gd:'+f.id, '☁ '+f.name));
-  Object.keys(tplAll()).sort((a,b)=>a.localeCompare(b,'es')).forEach(n => add('lc:'+n, (gdOn() ? '💾 ' : '')+n));
-  sel.value = cur0;
-  if(sel.value !== cur0) sel.value = '';
+  });
+  sel.value = elegida;
+  if(sel.value !== elegida) sel.value = '';
+
+  const box = $('tplResults');
+  box.innerHTML = '';
+  const found = tplMatches(items, q);
+  if(!items.length){
+    box.innerHTML = '<div class="tplEmpty">Todavía no guardaste plantillas.</div>';
+    return;
+  }
+  if(!found.length){
+    box.innerHTML = '<div class="tplEmpty">Ninguna plantilla coincide con “' + esc(q) + '”.</div>';
+    return;
+  }
+  found.forEach(it => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'tplRow'; b.dataset.val = it.val;
+    b.setAttribute('aria-selected', it.val === sel.value);
+    b.title = it.name + ' — ' + it.srcTitle + ' · doble clic para cargarla';
+    b.innerHTML = '<span class="src" aria-hidden="true">' + it.src + '</span><span class="nm">' + tplHighlight(it.name, q) + '</span>';
+    b.onclick = () => { sel.value = it.val; tplRefresh(); };
+    b.ondblclick = () => { sel.value = it.val; $('tplLoad').click(); };
+    box.appendChild(b);
+  });
 }
 $('tplSearch').addEventListener('input', tplRefresh);
+/* Enter en el buscador: si hay una sola coincidencia, la carga directo */
+$('tplSearch').addEventListener('keydown', e => {
+  if(e.key !== 'Enter') return;
+  e.preventDefault();
+  const found = tplMatches(tplItems(), $('tplSearch').value.trim());
+  const elegir = found.length === 1 ? found[0].val : ($('tplSelect').value || null);
+  if(!elegir) return;
+  $('tplSelect').value = elegir;
+  tplRefresh();
+  $('tplLoad').click();
+});
 function snapshot(){
   capturePage();
   const d = {accent, codeMode, pages: JSON.parse(JSON.stringify(pages)), cur};
@@ -1739,9 +1816,20 @@ function applySnapshot(d){
   loadPage(cur);
   if(window.__bocetoRestore) window.__bocetoRestore(d.boceto || null);
 }
+/* nombre sugerido: PDV - Cliente - Producto - Color - Cantidad (los que estén cargados) */
+function tplSuggestedName(){
+  const clean = s => (s||'').replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,' ').trim();
+  const parts = [
+    clean($('f_pdv').value),
+    clean($('f_cliente').value),
+    clean($('f_producto').value.split('\n').join(' ')),
+    clean($('f_colorprod_nom').value),
+    clean($('f_cantidad').value),
+  ].filter(Boolean);
+  return parts.join(' - ');
+}
 $('tplSave').onclick = async () => {
-  const sug = ($('f_cliente').value.trim() + ' — ' + $('f_producto').value.split('\n')[0].trim()).replace(/^ — | — $/g,'').trim();
-  const name = prompt('Nombre de la plantilla:', sug || 'Mi plantilla');
+  const name = prompt('Nombre de la plantilla:', tplSuggestedName() || 'Mi plantilla');
   if(!name) return;
   if(gdOn()){
     if(gdFiles.some(f => f.name === name) && !confirm('Ya existe una plantilla "'+name+'" en tu Drive. ¿Reemplazarla?')) return;
@@ -1805,10 +1893,33 @@ $('tplDel').onclick = async () => {
 const GD_DEFAULT_CLIENT_ID = '97488306744-u8ohslm5tq4sjrjn0bvitqpfc1c271cp.apps.googleusercontent.com';
 const GD_CID_KEY = 'boceto-gdrive-client-id';
 const GD_ON_KEY = 'boceto-gdrive-on';
+const GD_TOK_KEY = 'boceto-gdrive-token';
+const GD_FOLD_KEY = 'boceto-gdrive-folder';
 const GD_FOLDER = 'Plantillas Boceteador Formas';
 let gdToken = null, gdTokenClient = null, gdFolderId = null, gdFiles = [];
 const gdClientId = () => (localStorage.getItem(GD_CID_KEY) || GD_DEFAULT_CLIENT_ID || '').trim();
 const gdOn = () => !!gdToken;
+
+/* El permiso que da Google al navegador dura ~1 hora y no se puede renovar sin
+   un servidor. Lo guardamos mientras siga válido para no volver a pedirlo en
+   cada recarga (alcance mínimo: solo los archivos que crea esta app). */
+function gdStoreToken(tok, expiresIn){
+  gdToken = tok;
+  try{
+    localStorage.setItem(GD_TOK_KEY, JSON.stringify({ t: tok, exp: Date.now() + (Number(expiresIn) || 3600) * 1000 }));
+  }catch(e){}
+}
+function gdReadToken(){
+  try{
+    const d = JSON.parse(localStorage.getItem(GD_TOK_KEY) || 'null');
+    if(d && d.t && d.exp - Date.now() > 120000) return d.t; // con 2 min de margen
+  }catch(e){}
+  return null;
+}
+function gdForgetToken(){
+  gdToken = null;
+  try{ localStorage.removeItem(GD_TOK_KEY); }catch(e){}
+}
 
 let gsiPromise = null;
 function ensureGsi(){
@@ -1840,6 +1951,8 @@ function gdExplain(err){
 }
 async function gdEnsureToken(interactive){
   if(gdToken) return true;
+  const guardado = gdReadToken(); // permiso vigente de una sesión anterior
+  if(guardado){ gdToken = guardado; return true; }
   if(location.protocol === 'file:'){
     if(interactive) alert('Para conectar Google Drive, hay que usar la app publicada en la web:\n\nhttps://formas-bocetos-con-logo.netlify.app\n\nGoogle no permite la conexión desde un archivo abierto con doble clic. Las plantillas guardadas en este navegador siguen funcionando igual.');
     return false;
@@ -1866,7 +1979,10 @@ async function gdEnsureToken(interactive){
     });
   }
   const attempt = silent => new Promise(res => {
-    gdTokenClient.callback = t => res(!!(t && t.access_token) && !!(gdToken = t.access_token));
+    gdTokenClient.callback = t => {
+      if(t && t.access_token){ gdStoreToken(t.access_token, t.expires_in); res(true); }
+      else res(false);
+    };
     gdTokenClient.error_callback = err => res(err || false);
     try{ gdTokenClient.requestAccessToken(silent ? { prompt: '' } : {}); }
     catch(err){ res(err || false); }
@@ -1881,7 +1997,7 @@ async function gdEnsureToken(interactive){
 async function gdFetch(url, opts, retry = true){
   const r = await fetch(url, { ...(opts||{}), headers: { ...((opts||{}).headers||{}), Authorization: 'Bearer ' + gdToken } });
   if(r.status === 401 && retry){
-    gdToken = null;
+    gdForgetToken(); // venció: pedimos uno nuevo (en silencio si Google lo permite)
     if(await gdEnsureToken(false)) return gdFetch(url, opts, false);
   }
   if(!r.ok) throw new Error('drive ' + r.status);
@@ -1891,9 +2007,13 @@ async function gdFolder(){
   if(gdFolderId) return gdFolderId;
   const q = encodeURIComponent(`name='${GD_FOLDER}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
   const j = await (await gdFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`)).json();
-  if(j.files && j.files.length) return gdFolderId = j.files[0].id;
+  if(j.files && j.files.length) return gdFolderId = gdRememberFolder(j.files[0].id);
   const c = await (await gdFetch('https://www.googleapis.com/drive/v3/files', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: GD_FOLDER, mimeType: 'application/vnd.google-apps.folder' }) })).json();
-  return gdFolderId = c.id;
+  return gdFolderId = gdRememberFolder(c.id);
+}
+function gdRememberFolder(id){
+  try{ localStorage.setItem(GD_FOLD_KEY, id); }catch(e){}
+  return id;
 }
 async function gdList(){
   const fid = await gdFolder();
@@ -1953,8 +2073,9 @@ $('gdDisconnect').onclick = () => {
   $('gdMenu').hidden = true;
   if(!confirm('¿Desconectar Google Drive?\n\nTus plantillas siguen guardadas en tu cuenta de Google: solo dejan de verse en esta lista hasta que vuelvas a conectar.')) return;
   try{ if(window.google) google.accounts.oauth2.revoke(gdToken, ()=>{}); }catch(e){}
-  gdToken = null; gdFiles = []; gdFolderId = null;
+  gdForgetToken(); gdFiles = []; gdFolderId = null;
   localStorage.removeItem(GD_ON_KEY);
+  try{ localStorage.removeItem(GD_FOLD_KEY); }catch(e){}
   gdSyncUI(); tplRefresh();
 };
 $('gdChangeCid').onclick = () => {
@@ -1981,11 +2102,22 @@ $('gdChangeCid').onclick = () => {
   gdSyncUI();
   alert('ID guardado. Ahora tocá "Conectar Google Drive".');
 };
-/* reconexión silenciosa si ya estaba conectado en este navegador */
+/* Reconexión automática. Al cargar la página el navegador suele bloquear la
+   ventanita que Google necesita, así que si el intento silencioso falla se
+   repite una vez en el primer clic del usuario, cuando sí está permitido. */
+async function gdAutoConnect(){
+  if(gdOn()) return true;
+  const okTok = await gdEnsureToken(false);
+  if(okTok){ try{ await gdList(); }catch(e){} }
+  gdSyncUI(); tplRefresh();
+  return okTok;
+}
 if(localStorage.getItem(GD_ON_KEY) === '1' && location.protocol !== 'file:' && gdClientId()){
-  gdEnsureToken(false).then(async okTok => {
-    if(okTok){ try{ await gdList(); }catch(e){} }
-    gdSyncUI(); tplRefresh();
+  gdFolderId = localStorage.getItem(GD_FOLD_KEY) || null; // el atajo 📂 sirve desde el arranque
+  gdAutoConnect().then(okTok => {
+    if(okTok) return;
+    const retry = () => { document.removeEventListener('pointerdown', retry, true); gdAutoConnect(); };
+    document.addEventListener('pointerdown', retry, true);
   });
 }
 gdSyncUI();
