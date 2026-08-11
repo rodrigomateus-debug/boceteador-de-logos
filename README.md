@@ -21,12 +21,24 @@ Netlify Drop, o mejor, conectar el sitio al repo de GitHub (Netlify →
 Site configuration → Build & deploy → Link repository, rama `main`) para que
 cada cambio se publique solo.
 
-## Plantillas en Google Drive (configuración inicial, una sola vez)
+## Plantillas en Google Drive
 
-Las plantillas se guardan por defecto en el navegador. Conectando Google Drive,
-cada usuario las guarda en su propia cuenta: no se pierden al limpiar el caché
-y no tienen límite de cantidad. Requiere dos cosas, que se configuran una única
-vez para toda la empresa:
+**Ya está configurado.** Cada usuario entra a la app publicada, toca
+**☁ Conectar Google Drive**, autoriza con su cuenta de `formas.ar` y sus
+plantillas quedan en una carpeta "Plantillas Boceteador Formas" de su propio
+Drive: sin límite de cantidad y a prueba de limpiezas de caché. En la lista,
+☁ son las de Drive y 💾 las de este navegador.
+
+La app pide únicamente el permiso `drive.file`, que da acceso solo a los
+archivos que ella misma crea — no puede ver el resto del Drive del usuario.
+
+Si alguna vez hay que rehacer la credencial (cambio de dominio, otro proyecto
+de Google Cloud), el procedimiento original quedó documentado abajo.
+
+<details>
+<summary>Configuración de la credencial (ya hecha — referencia)</summary>
+
+Requiere dos cosas, que se configuran una única vez para toda la empresa:
 
 ### 1. Publicar la app en una URL web
 
@@ -60,9 +72,15 @@ Google no permite la conexión con Drive desde un archivo abierto con doble clic
    una vez cuando la app se lo pide al tocar "Conectar Google Drive".)
 
 Después de eso, cada usuario toca **☁ Conectar Google Drive** en el panel de
-plantillas, autoriza con su cuenta, y listo: sus plantillas se guardan en una
-carpeta "Plantillas Boceteador Formas" de su Drive (☁ en la lista; las del
-navegador aparecen con 💾).
+plantillas, autoriza con su cuenta, y listo.
+
+El Client ID vigente está en la constante `GD_DEFAULT_CLIENT_ID` de
+`generador-bocetos.html`. Es público por diseño (va en el código del navegador,
+como en cualquier web): lo que autoriza el acceso es la lista de orígenes de la
+credencial en Google Cloud. Cada usuario también puede pegar otro con el botón
+**⚙ Cambiar ID de Drive**.
+
+</details>
 
 ## Estado
 

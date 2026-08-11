@@ -1776,7 +1776,10 @@ $('tplDel').onclick = async () => {
 /* --- Google Drive del usuario: plantillas sin límite y a prueba de caché ---
    Requiere la app publicada en la web (no file://) y un Client ID OAuth de
    Google creado una sola vez para la empresa — instructivo en el README. */
-const GD_DEFAULT_CLIENT_ID = ''; // ← pegá acá el Client ID para que todo el equipo lo tenga ya configurado
+/* Client ID OAuth de Formas (público por diseño: lo que autoriza el acceso es
+   la lista de orígenes de la credencial en Google Cloud, no este dato).
+   Origen autorizado: https://formas-bocetos-con-logo.netlify.app */
+const GD_DEFAULT_CLIENT_ID = '97488306744-u8ohslm5tq4sjrjn0bvitqpfc1c271cp.apps.googleusercontent.com';
 const GD_CID_KEY = 'boceto-gdrive-client-id';
 const GD_ON_KEY = 'boceto-gdrive-on';
 const GD_FOLDER = 'Plantillas Boceteador Formas';
