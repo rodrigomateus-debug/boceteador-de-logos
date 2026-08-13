@@ -13,6 +13,26 @@ se abren directo en el navegador, sin instalación.
 | `cotizador-formas.html` | Maqueta funcional del cotizador (fase 3 del roadmap): técnica, cantidades, desglose de precio y markup. |
 | `DESIGN.md` | Documento de diseño: flujos, modelo de datos, sistema de diseño Formas, roadmap. |
 
+## PDF editable para CorelDRAW
+
+El botón **"PDF editable (Corel)"** genera un PDF clásico donde cada texto,
+recuadro e imagen es una pieza suelta y movible.
+
+Ese PDF lleva **las tipografías de marca incrustadas adentro** (Poppins Regular,
+SemiBold y Bold, y Montserrat ExtraBold, subseteadas al set latino). Es
+importante que siga siendo así: si el PDF sólo *nombra* las fuentes en vez de
+incluirlas, Corel las sustituye por otras, cambian los anchos de cada letra y
+los textos se corren y se desbordan de los recuadros.
+
+Dos detalles a no romper si se toca `corelSheet()`:
+
+- Cada cara se registra con **su propio nombre PostScript** y estilo `normal`.
+  Si se las registrara como estilos de una misma familia, jsPDF les pone el
+  mismo `/BaseFont` a todas y Corel termina aplicando una sola cara a todo.
+- Todo texto de largo variable (cliente, producto, técnica, posición…) va con
+  `maxW` y pasa por `fit()`, que achica el cuerpo hasta que entra. Sin eso, un
+  nombre de cliente largo se monta sobre la columna de al lado.
+
 ## App publicada
 
 **https://formas-bocetos-con-logo.netlify.app/** (Netlify). `index.html`
