@@ -1462,7 +1462,9 @@ async function corelSheet(doc, p, num, total){
     // jsPDF interlinea con fontSize * lineHeightFactor (1.15 por defecto). Si no lo
     // igualamos al 'lh' que reserva el layout, los párrafos de 2+ líneas se desbordan.
     doc.setLineHeightFactor(lh / size);
-    doc.text(lines, X(x), X(y), { align: o.align || 'left', baseline: 'top' });
+    const opt = { align: o.align || 'left', baseline: o.baseline || 'top' };
+    if(o.angle) opt.angle = o.angle;
+    doc.text(lines, X(x), X(y), opt);
     doc.setLineHeightFactor(1.15);
     if(doc.setCharSpace) doc.setCharSpace(0);
     return lines.length * lh;
@@ -1572,12 +1574,49 @@ async function corelSheet(doc, p, num, total){
   ry += 34 + 16;
   text('LOGO A IMPRIMIR', rightX, ry, { size: 9, bold: true, color: GRAY, ls: 1 });
   ry += 16;
-  const slotH = 120;
-  rrect(rightX, ry, rightW, slotH, 16, p.logoBg === 'dark' ? [11,11,35] : [241,241,246], BORDER, 1);
-  if(p.imgLogo) await img(p.imgLogo, rightX + 12, ry + 12, rightW - 24, slotH - 24);
+  // el recuadro deja libre a su derecha la columna de la regla de alto, igual que la ficha
+  const slotH = 120, ruleCol = 40, slotW = rightW - ruleCol;
+  rrect(rightX, ry, slotW, slotH, 16, p.logoBg === 'dark' ? [11,11,35] : [241,241,246], BORDER, 1);
+  if(p.imgLogo) await img(p.imgLogo, rightX + 12, ry + 12, slotW - 24, slotH - 24);
+
+  /* ---- reglas de medida del logo ----
+     Largo y corrimiento son proporcionales, como en la ficha: representan el tamaño
+     del logo y su centrado dentro del área de impresión (p.barW/barH en % del
+     recuadro, p.barWOff/barHOff en % de corrimiento desde el centro). */
+  const rule = (x1, y1, x2, y2) => {
+    doc.setDrawColor(...NAVY); doc.setLineWidth(X(1.5));
+    doc.line(X(x1), X(y1), X(x2), X(y2));
+  };
+  const medW = F('f_medida_w'), medH = F('f_medida_h');
+  const med = [medW, medH].filter(Boolean).join(' × ');
+  // vertical (alto), a la derecha del recuadro
+  const hLen = Math.max(slotH * (p.barH || 100) / 100, 22);
+  const hTop = ry + (slotH - hLen) / 2 + slotH * (p.barHOff || 0) / 100;
+  const hX = rightX + slotW + 14;
+  rule(hX, hTop, hX, hTop + hLen);
+  rule(hX - 6, hTop, hX + 6, hTop);
+  rule(hX - 6, hTop + hLen, hX + 6, hTop + hLen);
+  // jsPDF no centra bien el texto rotado, así que se centra a mano sobre la barra.
+  // Con un logo chico la etiqueta es más larga que su barra: se la limita a la banda
+  // del recuadro para que no choque con el título de arriba ni con la regla de abajo.
+  if(medH){
+    const lw = tW(medH, 11, { font: 'display' });
+    const ly = Math.min(Math.max(hTop + hLen / 2 - lw / 2, ry), ry + Math.max(slotH - lw, 0));
+    text(medH, hX + 5, ly, { size: 11, font: 'display', color: NAVY, angle: -90 });
+  }
+  // horizontal (ancho), debajo del recuadro
   ry += slotH + 10;
-  const med = [F('f_medida_w'), F('f_medida_h')].filter(Boolean).join(' × ');
-  if(med){ text(med, rightX + rightW/2, ry, { size: fit(med, rightW, 12, { font: 'display' }, 8), font: 'display', color: NAVY, align: 'center' }); ry += 20; }
+  const wLen = Math.max(slotW * (p.barW || 100) / 100, 22);
+  const wLeft = rightX + (slotW - wLen) / 2 + slotW * (p.barWOff || 0) / 100;
+  rule(wLeft, ry + 6, wLeft + wLen, ry + 6);
+  rule(wLeft, ry, wLeft, ry + 12);
+  rule(wLeft + wLen, ry, wLeft + wLen, ry + 12);
+  if(medW){
+    const lw = tW(medW, 13, { font: 'display' });
+    const lx = Math.min(Math.max(wLeft + wLen / 2, rightX + lw / 2), rightX + slotW - lw / 2);
+    text(medW, lx, ry + 16, { size: 13, font: 'display', color: NAVY, align: 'center' });
+  }
+  ry += 40;
   const obsLH = obsBox(rightX, ry + 6, rightW, 'OBSERVACIONES DEL LOGO', F('f_obslogo'));
   const rightBottom = ry + 6 + obsLH;
 
