@@ -41,9 +41,8 @@ select{appearance:none; -webkit-appearance:none; padding-right:30px; font-weight
 .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
 .colorRow{display:flex; align-items:center; gap:8px}
 .colorRow input[type=color]{width:38px; height:34px; border:1px solid var(--border); border-radius:8px; padding:2px; background:#fff; flex:none}
-.swatches{display:flex; gap:8px; margin-top:6px}
-.swatches button{width:26px; height:26px; border-radius:8px; border:2px solid transparent; cursor:pointer}
-.swatches button.sel{border-color:var(--ink)}
+.colorRow .c2del{border:none; background:#fff; border-radius:6px; box-shadow:0 0 0 1px var(--border); cursor:pointer; color:var(--muted); font-size:11px; padding:8px 9px; flex:none}
+.colorRow .c2del:hover{background:#EF7958; color:#fff}
 .fileBox{margin-top:6px; border:1.5px dashed var(--border); border-radius:10px; padding:10px; text-align:center; font-size:12px; color:var(--muted); cursor:pointer; position:relative}
 .fileBox:hover{border-color:var(--lime)}
 .fileBox input{position:absolute; inset:0; opacity:0; cursor:pointer}
@@ -431,9 +430,9 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           <span style="font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted,#6E6E85);">Cantidad</span>
           <span style="font-size:16px; font-weight:700; color:var(--text-strong,#0B0B23);">{{CANTIDAD}}</span>
         </div>
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 0; border-bottom:1px solid var(--border-subtle,#E4E4ED);">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:13px 0; border-bottom:1px solid var(--border-subtle,#E4E4ED);">
           <span style="font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted,#6E6E85);">Color producto</span>
-          <span style="display:inline-flex; align-items:center; gap:9px; font-size:16px; font-weight:700; color:var(--text-strong,#0B0B23);"><span style="width:16px; height:16px; border-radius:5px; background:var(--sheet-swatch,#0037B4); border:1px solid rgba(0,0,0,.12);"></span>{{COLOR_PRODUCTO_NOMBRE}}</span>
+          <span style="display:inline-flex; align-items:center; gap:14px; font-size:16px; font-weight:700; color:var(--text-strong,#0B0B23); flex-wrap:wrap; justify-content:flex-end;">{{COLORES_PRODUCTO}}</span>
         </div>
       </div>
 
@@ -549,11 +548,11 @@ html,body{margin:0;padding:0;background:#EDEDF2}
     <fieldset>
       <legend>Pedido</legend>
       <div class="row">
-        <div><label>Número de PDV</label><input type="text" id="f_pdv" placeholder="PDV-0001"></div>
-        <div><label>Fecha</label><input type="date" id="f_fecha"></div>
+        <div><label>Número de PDV</label><input type="text" id="f_pdv" placeholder="Número de PDV"></div>
+        <div><label>Fecha</label><input type="text" id="f_fecha" placeholder="dd/mm/aaaa"></div>
       </div>
       <div class="row">
-        <div><label>Cliente</label><input type="text" id="f_cliente" placeholder="Nombre del cliente"></div>
+        <div><label>Cliente</label><input type="text" id="f_cliente" placeholder="Cliente"></div>
         <div><label>Ejecutivo</label><select id="f_ejecutivo">
           <option value="">Elegí el ejecutivo…</option>
           <option>Alejandra Noms</option>
@@ -574,13 +573,19 @@ html,body{margin:0;padding:0;background:#EDEDF2}
     <fieldset>
       <legend>Producto</legend>
       <label>Nombre del producto <span style="font-weight:400">(Enter = salto de línea)</span></label>
-      <textarea id="f_producto" placeholder="Pelota&#10;Anti-Stress"></textarea>
-      <label>Cantidad</label><input type="text" id="f_cantidad" placeholder="100 unidades">
+      <textarea id="f_producto" placeholder="Producto"></textarea>
+      <label>Cantidad</label><input type="text" id="f_cantidad" placeholder="Cantidad">
       <label>Color del producto</label>
       <div class="colorRow">
         <input type="color" id="f_colorprod_hex" value="#0037B4">
-        <input type="text" id="f_colorprod_nom" placeholder="Azul">
+        <input type="text" id="f_colorprod_nom" placeholder="Color">
       </div>
+      <div class="colorRow" id="color2Row" hidden style="margin-top:6px">
+        <input type="color" id="f_colorprod2_hex" value="#FFFFFF">
+        <input type="text" id="f_colorprod2_nom" placeholder="Color secundario">
+        <button type="button" class="c2del" id="delColor2" title="Quitar el color secundario">✕</button>
+      </div>
+      <button type="button" class="addColor" id="addColor2" style="margin-top:6px">＋ Agregar color secundario</button>
       <label>Observaciones del producto</label>
       <textarea id="f_obsprod" placeholder="Material, medidas y color del producto."></textarea>
       <label>Foto del producto</label>
@@ -607,13 +612,13 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       </div>
       <label>Fondo del recuadro del logo</label>
       <div class="bgToggle">
-        <button type="button" id="bgLight" aria-pressed="true">Logo oscuro<br>→ fondo claro</button>
-        <button type="button" id="bgDark" aria-pressed="false">Logo claro<br>→ fondo oscuro</button>
+        <button type="button" id="bgProduct" aria-pressed="true" title="El recuadro toma el color principal del producto">Fondo color<br>del producto</button>
+        <button type="button" id="bgLight" aria-pressed="false" title="Cuadrícula de transparencia, como un logo PNG sin fondo">Fondo claro<br>(transparencia)</button>
       </div>
       <label>Medidas del logo <span style="font-weight:400">(se completan desde el boceto)</span></label>
       <div class="row">
-        <div><label>Ancho</label><input type="text" id="f_medida_w" placeholder="2,5 cm"></div>
-        <div><label>Alto</label><input type="text" id="f_medida_h" placeholder="1,8 cm"></div>
+        <div><label>Ancho</label><input type="text" id="f_medida_w" placeholder="Ancho"></div>
+        <div><label>Alto</label><input type="text" id="f_medida_h" placeholder="Alto"></div>
       </div>
       <label>Observaciones del logo</label>
       <textarea id="f_obslogo" placeholder="Técnica, cantidad de colores y ubicación de la marca."></textarea>
@@ -622,8 +627,8 @@ html,body{margin:0;padding:0;background:#EDEDF2}
     <fieldset>
       <legend>Impresión</legend>
       <div class="row">
-        <div><label>Técnica</label><input type="text" id="f_tecnica" placeholder="Tampografía"></div>
-        <div><label>Posición</label><input type="text" id="f_posicion"></div>
+        <div><label>Técnica</label><input type="text" id="f_tecnica" placeholder="Técnica"></div>
+        <div><label>Posición</label><input type="text" id="f_posicion" placeholder="Posición"></div>
       </div>
       <label>Colores de impresión</label>
       <label class="fullColorRow"><input type="checkbox" id="fullColor"> Full color (impresión a todo color)</label>
@@ -634,12 +639,6 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       </div>
       <div id="printColors"></div>
       <button type="button" class="addColor" id="addColor">＋ Agregar color</button>
-    </fieldset>
-
-    <fieldset>
-      <legend>Marca</legend>
-      <label>Color de acento de la ficha</label>
-      <div class="swatches" id="swatches"></div>
     </fieldset>
 
     <div class="actions">
@@ -771,7 +770,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           <span class="label" style="letter-spacing:.08em">Escala real · regla</span>
           <div class="field-row" style="margin-top:0">
             <div class="field" style="margin-top:0;flex:1.2">
-              <div class="suffix-wrap"><input type="number" id="rulerCm" placeholder="ej. 15" min="0.5" max="500" step="0.1"><span class="suffix">cm</span></div>
+              <div class="suffix-wrap"><input type="number" id="rulerCm" placeholder="Centímetros" min="0.5" max="500" step="0.1"><span class="suffix">cm</span></div>
             </div>
             <div class="field" style="margin-top:0">
               <button class="btn btn-secondary" type="button" id="rulerToggle" style="padding:9px 12px" disabled>Ocultar regla</button>
@@ -810,12 +809,12 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <div class="field-row" id="logoCmFields" hidden>
           <div class="field">
             <span class="label" style="letter-spacing:.08em">Ancho del logo</span>
-            <div class="suffix-wrap"><input type="number" id="logoWcm" placeholder="ej. 5" min="0.1" max="200" step="0.1"><span class="suffix">cm</span></div>
+            <div class="suffix-wrap"><input type="number" id="logoWcm" placeholder="Ancho" min="0.1" max="200" step="0.1"><span class="suffix">cm</span></div>
           </div>
           <button type="button" class="lockBtn" id="lockAspectBtn" aria-pressed="false" title="Proporción desanclada — clic para anclar">🔗</button>
           <div class="field">
             <span class="label" style="letter-spacing:.08em">Alto del logo</span>
-            <div class="suffix-wrap"><input type="number" id="logoHcm" placeholder="ej. 3" min="0.1" max="200" step="0.1"><span class="suffix">cm</span></div>
+            <div class="suffix-wrap"><input type="number" id="logoHcm" placeholder="Alto" min="0.1" max="200" step="0.1"><span class="suffix">cm</span></div>
           </div>
         </div>
         <button class="btn btn-secondary" type="button" id="removeWhiteBtn" style="margin-top:10px" hidden>Quitar fondo blanco</button>
@@ -874,13 +873,13 @@ html,body{margin:0;padding:0;background:#EDEDF2}
 
 <script>
 const TPL = document.getElementById('tpl').innerHTML;
-const ACCENTS = ['#8EE021','#000085','#EF7958','#089AE1','#E20389','#F9CE32'];
-let accent = '#8EE021';                // compartido entre hojas
+const accent = '#8EE021';              // acento oficial de la ficha (fijo)
 let codeMode = 'hex';                  // compartido: cómo se muestran los códigos de color
+let color2 = false;                    // compartido: si el producto lleva color secundario
 
 /* ---- estado de la hoja activa (se captura en pages[cur]) ---- */
 let imgFoto = null, imgLogo = null;
-let logoBg = 'light';
+let logoBg = 'product';                // fondo del recuadro del logo: color del producto (default) o claro
 let printColors = [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
 let barW = 100, barH = 100;
 let barWOff = 0, barHOff = 0;
@@ -893,13 +892,13 @@ const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g
 const clampNum = (v,min,max) => Math.min(Math.max(v,min),max);
 
 /* compartidos entre hojas / propios de cada hoja */
-const SHARED_FIELDS = ['f_pdv','f_fecha','f_cliente','f_ejecutivo','f_producto','f_cantidad','f_colorprod_hex','f_colorprod_nom','f_obsprod'];
+const SHARED_FIELDS = ['f_pdv','f_fecha','f_cliente','f_ejecutivo','f_producto','f_cantidad','f_colorprod_hex','f_colorprod_nom','f_colorprod2_hex','f_colorprod2_nom','f_obsprod'];
 const PAGE_FIELDS = ['f_medida_w','f_medida_h','f_obslogo','f_tecnica','f_posicion'];
 const FIELDS = SHARED_FIELDS.concat(PAGE_FIELDS);
 
 /* ---- hojas ---- */
 function newPage(){
-  return { imgFoto:null, imgLogo:null, logoBg:'light',
+  return { imgFoto:null, imgLogo:null, logoBg:'product',
     printColors:[{hex:'#FFFFFF', nom:'Blanco', pant:''}],
     barW:100, barH:100, barWOff:0, barHOff:0, fullColor:false, engraved:false, fotoFit:'cover',
     fields:{ f_medida_w:'', f_medida_h:'', f_obslogo:'', f_tecnica:'', f_posicion:'' } };
@@ -920,7 +919,7 @@ function loadPage(i){
   cur = clampNum(i, 0, pages.length-1);
   const p = pages[cur];
   imgFoto = p.imgFoto; imgLogo = p.imgLogo;
-  logoBg = p.logoBg || 'light';
+  logoBg = p.logoBg === 'light' ? 'light' : 'product'; // lo guardado como "dark" pasa al color del producto
   printColors = (Array.isArray(p.printColors) && p.printColors.length) ? p.printColors : [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
   barW = p.barW || 100; barH = p.barH || 100;
   barWOff = p.barWOff || 0; barHOff = p.barHOff || 0;
@@ -994,9 +993,16 @@ function refreshLogoBox(){
 
 function fechaDDMM(v){
   if(!v) return '';
-  const [y,m,d] = v.split('-');
-  return d + '/' + m + '/' + y;
+  const m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/); // formato viejo del input de fecha
+  return m ? m[3] + '/' + m[2] + '/' + m[1] : v;  // lo nuevo ya viene dd/mm/aaaa
 }
+/* normaliza fechas guardadas con el formato viejo (aaaa-mm-dd) al argentino */
+function normFecha(){ $('f_fecha').value = fechaDDMM($('f_fecha').value); }
+/* luminancia aproximada para decidir texto claro u oscuro sobre un color */
+const lumHex = hex => {
+  const n = parseInt(String(hex||'#000').replace('#',''), 16) || 0;
+  return 0.299*((n>>16)&255) + 0.587*((n>>8)&255) + 0.114*(n&255);
+};
 
 const PH_FOTO = '<div style="font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; line-height:1.7; color:#000085; opacity:.55; padding:20px;">[ muestra del producto ]<br>foto con el logo aplicado</div>';
 const PH_LOGO = '<div style="font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; line-height:1.6; color:#000085; opacity:.55;">[ logo del cliente ]<br>vector / alta resolución</div>';
@@ -1042,7 +1048,13 @@ function buildPage(p, num, total){
     PRODUCTO: esc($('f_producto').value).replace(/\n/g,'<br>'),
     CANTIDAD: esc($('f_cantidad').value),
     COLOR_PRODUCTO_HEX: $('f_colorprod_hex').value,
-    COLOR_PRODUCTO_NOMBRE: esc($('f_colorprod_nom').value),
+    COLORES_PRODUCTO: (() => {
+      const chip = (hex, nom) => '<span style="display:inline-flex; align-items:center; gap:9px;">'
+        + '<span style="width:16px; height:16px; border-radius:5px; background:' + hex + '; border:1px solid rgba(0,0,0,.12);"></span>' + esc(nom) + '</span>';
+      let h = chip($('f_colorprod_hex').value, $('f_colorprod_nom').value);
+      if(color2) h += chip($('f_colorprod2_hex').value, $('f_colorprod2_nom').value);
+      return h;
+    })(),
     OBS_PRODUCTO: esc($('f_obsprod').value),
     OBS_LOGO: f('f_obslogo'),
     MEDIDA_ANCHO: mw,
@@ -1052,7 +1064,9 @@ function buildPage(p, num, total){
     POSICION: f('f_posicion'),
     COLOR_IMPRESION_HEX: ((p.printColors||[])[0]||{}).hex || '#FFFFFF',
     COLORES_IMPRESION: coloresHtml(p.printColors || [], !!p.fullColor, !!p.engraved),
-    LOGO_SLOT_STYLE: p.logoBg === 'dark' ? 'background-color:#0B0B23; background-image:none;' : '',
+    LOGO_SLOT_STYLE: p.logoBg === 'light'
+      ? 'background:repeating-conic-gradient(#ECECF2 0 25%, #FFFFFF 0 50%) 0 0/16px 16px;'
+      : 'background-color:' + $('f_colorprod_hex').value + '; background-image:none;',
     FOTO_FIT: p.fotoFit === 'contain' ? 'contain' : 'cover',
     FOTO_SLOT_STYLE: (p.imgFoto && p.fotoFit === 'contain') ? 'background-color:#FFFFFF; background-image:none;' : '',
     BAR_W_PCT: String(Math.round(p.barW || 100)),
@@ -1062,7 +1076,8 @@ function buildPage(p, num, total){
     HOJA_BADGE: hojaBadge,
     COLOR_ACENTO_HEX: accent,
     FOTO_PRODUCTO: p.imgFoto ? '<img src="'+p.imgFoto+'" alt="Producto">' : PH_FOTO,
-    LOGO_CLIENTE: p.imgLogo ? '<img src="'+p.imgLogo+'" alt="Logo cliente" style="max-height:100px">' : (p.logoBg === 'dark' ? PH_LOGO_DARK : PH_LOGO)
+    LOGO_CLIENTE: p.imgLogo ? '<img src="'+p.imgLogo+'" alt="Logo cliente" style="max-height:100px">'
+      : ((p.logoBg !== 'light' && lumHex($('f_colorprod_hex').value) < 140) ? PH_LOGO_DARK : PH_LOGO)
   };
   let html = TPL;
   for(const k in vals) html = html.split('{{'+k+'}}').join(vals[k]);
@@ -1112,7 +1127,7 @@ function render(){
 /* --- persistencia local --- */
 function save(){
   try{
-    const data = {accent, codeMode, pages, cur};
+    const data = {codeMode, color2, pages, cur};
     SHARED_FIELDS.forEach(id => data[id] = $(id).value);
     localStorage.setItem('boceto-formas', JSON.stringify(data));
   }catch(e){}
@@ -1122,8 +1137,8 @@ function restore(){
   try{
     const data = JSON.parse(localStorage.getItem('boceto-formas')||'{}');
     SHARED_FIELDS.forEach(id => { if(data[id]!==undefined) $(id).value = data[id]; });
-    if(data.accent) accent = data.accent;
     if(data.codeMode) codeMode = data.codeMode;
+    color2 = !!data.color2;
     if(Array.isArray(data.pages) && data.pages.length){
       pages = data.pages;
       cur = clampNum(data.cur || 0, 0, pages.length-1);
@@ -1143,26 +1158,24 @@ function restore(){
   }catch(e){}
 }
 
-/* --- swatches de acento --- */
-function drawSwatches(){
-  const box = $('swatches'); box.innerHTML='';
-  ACCENTS.forEach(c=>{
-    const b = document.createElement('button');
-    b.style.background = c;
-    b.className = (c===accent)?'sel':'';
-    b.title = c;
-    b.onclick = ()=>{ accent=c; drawSwatches(); render(); };
-    box.appendChild(b);
-  });
-}
-
 /* --- toggles --- */
 function syncToggles(){
+  $('bgProduct').setAttribute('aria-pressed', logoBg==='product');
   $('bgLight').setAttribute('aria-pressed', logoBg==='light');
-  $('bgDark').setAttribute('aria-pressed', logoBg==='dark');
   $('codeHex').setAttribute('aria-pressed', codeMode==='hex');
   $('codePant').setAttribute('aria-pressed', codeMode==='pantone');
-  $('box_logo').classList.toggle('darkbg', logoBg==='dark');
+  /* la cajita del logo del panel anticipa el fondo elegido */
+  const boxL = $('box_logo');
+  if(logoBg === 'product'){
+    const c = $('f_colorprod_hex').value;
+    boxL.style.background = c;
+    boxL.classList.toggle('darkbg', lumHex(c) < 140);
+  } else {
+    boxL.style.background = '';
+    boxL.classList.remove('darkbg');
+  }
+  $('color2Row').hidden = !color2;
+  $('addColor2').hidden = color2;
   $('fitCover').setAttribute('aria-pressed', fotoFit==='cover');
   $('fitContain').setAttribute('aria-pressed', fotoFit==='contain');
   $('fullColor').checked = fullColor;
@@ -1172,8 +1185,11 @@ function syncToggles(){
   $('addColor').hidden = sinColores;
   $('codeToggleRow').hidden = sinColores;
 }
-$('bgLight').onclick = ()=>{ logoBg='light'; syncToggles(); render(); };
-$('bgDark').onclick  = ()=>{ logoBg='dark';  syncToggles(); render(); };
+$('bgProduct').onclick = ()=>{ logoBg='product'; syncToggles(); render(); };
+$('bgLight').onclick   = ()=>{ logoBg='light';   syncToggles(); render(); };
+$('addColor2').onclick = ()=>{ color2 = true; syncToggles(); render(); };
+$('delColor2').onclick = ()=>{ color2 = false; syncToggles(); render(); };
+$('f_colorprod_hex').addEventListener('input', syncToggles);
 $('codeHex').onclick  = ()=>{ codeMode='hex';     syncToggles(); drawPrintColors(); render(); };
 $('codePant').onclick = ()=>{ codeMode='pantone'; syncToggles(); drawPrintColors(); render(); };
 $('fullColor').addEventListener('change', ()=>{ fullColor = $('fullColor').checked; if(fullColor) engraved = false; syncToggles(); render(); });
@@ -1507,17 +1523,24 @@ async function corelSheet(doc, p, num, total){
   text('CANTIDAD', rightX, ry + 12, { size: 9, bold: true, color: GRAY, ls: 1 });
   text($('f_cantidad').value || '—', rightX + rightW, ry + 9, { size: 14, bold: true, color: INK, align: 'right' });
   ry += 34;
-  hline(rightX, ry + 34, rightX + rightW, BORDER, 1);
+  hline(rightX, ry + (color2 ? 52 : 34), rightX + rightW, BORDER, 1);
   text('COLOR PRODUCTO', rightX, ry + 12, { size: 9, bold: true, color: GRAY, ls: 1 });
   const cpNom = $('f_colorprod_nom').value || '—';
   const cpW = tW(cpNom, 14, true);
   rrect(rightX + rightW - cpW - 24, ry + 9, 15, 15, 4, hex2rgb($('f_colorprod_hex').value), [210,210,218], .5);
   text(cpNom, rightX + rightW, ry + 9, { size: 14, bold: true, color: INK, align: 'right' });
+  if(color2){
+    const cp2Nom = $('f_colorprod2_nom').value || '—';
+    const cp2W = tW(cp2Nom, 12, true);
+    rrect(rightX + rightW - cp2W - 22, ry + 30, 13, 13, 4, hex2rgb($('f_colorprod2_hex').value), [210,210,218], .5);
+    text(cp2Nom, rightX + rightW, ry + 29, { size: 12, bold: true, color: INK, align: 'right' });
+    ry += 18;
+  }
   ry += 34 + 16;
   text('LOGO A IMPRIMIR', rightX, ry, { size: 9, bold: true, color: GRAY, ls: 1 });
   ry += 16;
   const slotH = 120;
-  rrect(rightX, ry, rightW, slotH, 16, p.logoBg === 'dark' ? [11,11,35] : [241,241,246], BORDER, 1);
+  rrect(rightX, ry, rightW, slotH, 16, p.logoBg === 'light' ? [241,241,246] : hex2rgb($('f_colorprod_hex').value), BORDER, 1);
   if(p.imgLogo) await img(p.imgLogo, rightX + 12, ry + 12, rightW - 24, slotH - 24);
   ry += slotH + 10;
   const med = [F('f_medida_w'), F('f_medida_h')].filter(Boolean).join(' × ');
@@ -1786,15 +1809,15 @@ $('tplSearch').addEventListener('keydown', e => {
 });
 function snapshot(){
   capturePage();
-  const d = {accent, codeMode, pages: JSON.parse(JSON.stringify(pages)), cur};
+  const d = {codeMode, color2, pages: JSON.parse(JSON.stringify(pages)), cur};
   SHARED_FIELDS.forEach(id => d[id] = $(id).value);
   d.boceto = (window.__bocetoSnapshot && window.__bocetoSnapshot()) || null; // la edición del boceteador viaja con la plantilla
   return d;
 }
 function applySnapshot(d){
   SHARED_FIELDS.forEach(id => { if(d[id]!==undefined) $(id).value = d[id]; });
-  accent = d.accent || accent;
   codeMode = d.codeMode || 'hex';
+  color2 = !!d.color2;
   if(Array.isArray(d.pages) && d.pages.length){
     pages = JSON.parse(JSON.stringify(d.pages));
     cur = clampNum(d.cur || 0, 0, pages.length-1);
@@ -1812,7 +1835,7 @@ function applySnapshot(d){
     PAGE_FIELDS.forEach(id => { if(d[id] !== undefined) p.fields[id] = d[id]; });
     pages = [p]; cur = 0;
   }
-  drawSwatches();
+  normFecha();
   loadPage(cur);
   if(window.__bocetoRestore) window.__bocetoRestore(d.boceto || null);
 }
@@ -2134,12 +2157,12 @@ $('btn_limpiar').onclick = () => {
 
 /* --- init --- */
 restore();
+normFecha(); // lo guardado con el formato viejo (aaaa-mm-dd) pasa a dd/mm/aaaa
 if(!$('f_fecha').value){
   const t = new Date();
-  $('f_fecha').value = t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0');
+  $('f_fecha').value = String(t.getDate()).padStart(2,'0') + '/' + String(t.getMonth()+1).padStart(2,'0') + '/' + t.getFullYear();
 }
 FIELDS.forEach(id => $(id).addEventListener('input', render));
-drawSwatches();
 loadPage(cur);
 rescale();
 
@@ -2432,8 +2455,9 @@ function loadPhotoSrc(url, name){
     $('alignCtrls').hidden = false;
     state.zoom = 1; state.pan = {x:0, y:0};
     applyView();
-    // en modo producto no se dibuja el área hasta calibrar la regla
-    if(state.mode !== 'product' || cmPerPx()) enterDrawMode();
+    /* en modo producto el dibujo no arranca solo: el botón "Marcar área sobre
+       la foto" queda a la vista para que el clic sea el paso evidente */
+    if(state.mode !== 'product') enterDrawMode();
     syncLogoUI(); setStepStates(); render();
   };
   const probe = new Image();
@@ -2446,11 +2470,9 @@ function syncRulerBtn(){
   $('rulerToggle').textContent = state.rulerVisible ? 'Ocultar regla' : 'Medir de nuevo';
 }
 $('rulerCm').addEventListener('input', () => {
-  /* la medida habilita/inhabilita el dibujo del área en modo producto */
-  if(state.mode === 'product' && !frame.hidden){
-    if(cmPerPx() && !state.zone && !state.drawMode) enterDrawMode();
-    if(!cmPerPx() && state.drawMode) exitDrawMode();
-  }
+  /* si se borra la medida en pleno dibujo, el modo dibujo se cancela;
+     al cargarla, el paso 2 se desbloquea y el botón invita al clic */
+  if(state.mode === 'product' && !frame.hidden && !cmPerPx() && state.drawMode) exitDrawMode();
   render();
 });
 $('rulerToggle').addEventListener('click', () => {
@@ -2469,9 +2491,8 @@ function setMode(m){
   $('unitField').hidden = !state.logos.length;
   $('lockAspectBtn').hidden = m === 'product';
   if(!frame.hidden){
-    const scaleOk = m !== 'product' || cmPerPx();
-    if(!scaleOk && state.drawMode) exitDrawMode();
-    if(scaleOk && !state.zone && !state.drawMode) enterDrawMode();
+    if(m === 'product' && !cmPerPx() && state.drawMode) exitDrawMode();
+    if(m !== 'product' && !state.zone && !state.drawMode) enterDrawMode();
   }
   render();
 }
@@ -2499,8 +2520,6 @@ function setUnit(u){
   $('unitCm').setAttribute('aria-pressed', u === 'cm');
   $('unitMm').setAttribute('aria-pressed', u === 'mm');
   document.querySelectorAll('#logoCmFields .suffix').forEach(s => s.textContent = u);
-  $('logoWcm').placeholder = u === 'mm' ? 'ej. 50' : 'ej. 5';
-  $('logoHcm').placeholder = u === 'mm' ? 'ej. 30' : 'ej. 3';
   [$('logoWcm'), $('logoHcm')].forEach(i => { i.min = u === 'mm' ? 1 : 0.1; i.max = u === 'mm' ? 2000 : 200; });
   syncLogoUI(); render();
 }
@@ -2556,6 +2575,31 @@ $('addLogoBtn').addEventListener('click', () => {
   $('logoInput').click();
 });
 
+/* Muchos SVG vienen sin width/height (solo viewBox): el navegador les da
+   tamaño 0 y rompen el recorte y las medidas. Se les fija un tamaño real
+   tomado del viewBox antes de usarlos. */
+function esSvg(file){
+  const n = (file.name||'').toLowerCase();
+  return file.type === 'image/svg+xml' || n.endsWith('.svg');
+}
+async function normalizeSvg(file){
+  const text = await file.text();
+  const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+  const svg = doc.documentElement;
+  if(!svg || svg.nodeName.toLowerCase() !== 'svg' || doc.querySelector('parsererror')) throw new Error('svg');
+  let w = parseFloat(svg.getAttribute('width')), h = parseFloat(svg.getAttribute('height'));
+  const vb = (svg.getAttribute('viewBox')||'').trim().split(/[\s,]+/).map(Number);
+  if(!(w > 0) || !(h > 0)){
+    if(vb.length === 4 && vb[2] > 0 && vb[3] > 0){ w = vb[2]; h = vb[3]; }
+    else { w = 1000; h = 1000; }
+  }
+  if(vb.length !== 4) svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  const k = Math.max(1, Math.min(6, 1600 / Math.max(w, h))); // nitidez para recorte y ficha
+  svg.setAttribute('width', Math.round(w * k));
+  svg.setAttribute('height', Math.round(h * k));
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(svg));
+}
+
 function loadLogo(file){
   if(esEps(file)){ alert(MSG_EPS); $('logoInput').value = ''; pendingAdd = false; return; }
   if(esVector(file)){
@@ -2567,6 +2611,16 @@ function loadLogo(file){
         pendingAdd = false;
         syncLogoUI();
         $('logoInput').value = '';
+      });
+    return;
+  }
+  if(esSvg(file)){
+    normalizeSvg(file)
+      .then(data => loadLogoSrc(data, file.name, false))
+      .catch(() => { // SVG ilegible: se intenta igual como archivo crudo
+        const r = new FileReader();
+        r.onload = ev => loadLogoSrc(ev.target.result, file.name, false);
+        r.readAsDataURL(file);
       });
     return;
   }
@@ -2644,6 +2698,11 @@ function computeTrim(img){
 function loadLogoSrc(url, name, isJpg){
   const probe = new Image();
   probe.onload = () => {
+    if(!(probe.naturalWidth > 0 && probe.naturalHeight > 0)){
+      alert('No se pudo leer el tamaño de "' + (name||'ese archivo') + '".\nProbá exportarlo como PNG o volver a guardar el SVG desde el editor.');
+      pendingAdd = false; $('logoInput').value = ''; syncLogoUI();
+      return;
+    }
     const crop = computeTrim(probe);
     const aspect = crop.w / crop.h;
     let logo;
@@ -3023,6 +3082,11 @@ frame.addEventListener('pointerdown', e => {
   if(state.drawMode){
     active = { mode:'draw', startPx:px };
     state.zone = { x:px.x/FW, y:px.y/FH, w:0, h:0 };
+    /* la regla ya cumplió: se retira apenas empieza el trazo del área */
+    if(state.mode === 'product' && cmPerPx() && state.rulerVisible){
+      state.rulerVisible = false;
+      syncRulerBtn();
+    }
     frame.setPointerCapture(e.pointerId);
     render(); return;
   }
@@ -3106,14 +3170,7 @@ frame.addEventListener('pointermove', e => {
   if(active.mode === 'draw'){
     const {w:FW,h:FH} = frameRect();
     if(state.zone.w*FW < 24 || state.zone.h*FH < 24){ state.zone = null; }
-    else {
-      exitDrawMode();
-      // área lista: la regla ya cumplió su función, se retira sola (vuelve con "Medir de nuevo")
-      if(state.mode === 'product' && cmPerPx() && state.rulerVisible){
-        state.rulerVisible = false;
-        syncRulerBtn();
-      }
-    }
+    else exitDrawMode();
     setStepStates();
   }
   active = null; render();
