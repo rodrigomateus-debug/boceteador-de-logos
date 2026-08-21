@@ -33,6 +33,25 @@ Dos detalles a no romper si se toca `corelSheet()`:
   `maxW` y pasa por `fit()`, que achica el cuerpo hasta que entra. Sin eso, un
   nombre de cliente largo se monta sobre la columna de al lado.
 
+## Ramas y entornos de prueba
+
+El sitio de Netlify publica **cada rama en su propia URL** (Branch deploys),
+con las mismas funciones serverless y variables de entorno que producción,
+así que la IA funciona igual en todas:
+
+| Rama | Para qué | URL |
+|---|---|---|
+| `main` | **Producción.** Solo recibe merges desde `dev` ya validados | https://formas-bocetos-con-logo.netlify.app |
+| `dev` | Preproducción: acá se junta y se prueba lo que va a salir | https://dev--formas-bocetos-con-logo.netlify.app |
+| `jp-code` | Arenero de Juan Pedro: pruebas jugadas, sin compromiso | https://jp-code--formas-bocetos-con-logo.netlify.app |
+
+El flujo: se trabaja en `jp-code` (o en ramas propias), lo que sobrevive se
+mergea a `dev`, se valida en la URL de `dev`, y recién entonces `dev` se
+mergea a `main`. **Nada sube solo de una rama a la otra.** Cada push a una
+rama actualiza su URL en segundos; si se usan pull requests, Netlify además
+publica una URL temporal por PR (Deploy Previews) para revisar antes de
+mergear.
+
 ## App publicada
 
 **https://formas-bocetos-con-logo.netlify.app/** (Netlify). `index.html`
