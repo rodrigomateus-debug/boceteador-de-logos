@@ -91,11 +91,12 @@ export default async (req) => {
     });
 
     const quality = process.env.OPENAI_IMAGE_QUALITY || 'medium';
-    let r = await crear({ type: 'image_generation', action: 'edit', size: 'auto', quality, input_fidelity: 'high' }, true);
+    // siempre 1:1: las fotos cuadradas entran parejas en la ficha y en el catálogo
+    let r = await crear({ type: 'image_generation', action: 'edit', size: '1024x1024', quality, input_fidelity: 'high' }, true);
     if (r.status === 400) {
       // los parámetros opcionales varían según la versión del modelo de imagen
       // (p. ej. gpt-image-2 rechaza input_fidelity): reintento con lo mínimo
-      r = await crear({ type: 'image_generation' }, false);
+      r = await crear({ type: 'image_generation', size: '1024x1024' }, false);
     }
     if (!r.ok) {
       const detalle = (await r.text()).slice(0, 600);
