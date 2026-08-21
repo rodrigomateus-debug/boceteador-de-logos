@@ -81,6 +81,18 @@ La imagen generada es **orientativa**: la IA puede alterar detalles del
 producto o del logo, por eso el comparador obliga a revisar antes de aceptar.
 La ficha técnica y el PDF de Corel siguen usando la foto que elijas vos.
 
+Alrededor de la mejora hay tres comodidades más:
+
+- **⬇ Descargar** en el comparador baja la imagen generada sola (PNG con el
+  nombre del boceto), lista para mandarle al cliente por WhatsApp o mail.
+- **⬇ Descargar esta foto**, debajo del recuadro de la foto, baja en cualquier
+  momento la imagen que esté en uso (también sirve para el boceto compuesto).
+- Al aceptar una mejora aparece el selector **Foto IA / Foto anterior** para
+  intercambiar entre las dos versiones y ver cómo queda cada una en la ficha.
+  El par se recuerda por hoja mientras trabajás (no viaja en las plantillas,
+  para no duplicar su peso), y se descarta al subir una foto nueva o rehacer
+  el boceto.
+
 ## Plantillas en Google Drive
 
 **Ya está configurado.** Cada usuario entra a la app publicada, toca

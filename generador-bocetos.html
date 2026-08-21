@@ -352,6 +352,9 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #iaModal .iaBtns{display:flex; gap:8px; justify-content:flex-end; margin-top:14px}
 #iaModal .iaBtns .usar{padding:10px 16px; border:none; border-radius:10px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
 #iaModal .iaBtns .descartar{padding:10px 16px; border:1px solid var(--formas-gray-200,#E4E4ED); border-radius:10px; background:#fff; color:var(--text-body); font:inherit; font-size:13px; font-weight:600; cursor:pointer}
+#iaModal .iaBtns .dl{margin-right:auto; border-color:var(--navy); color:var(--navy); font-weight:700}
+.btn-dlfoto{display:block; width:100%; margin-top:6px; padding:8px 10px; border:1px dashed var(--formas-gray-200,#E4E4ED); border-radius:10px; background:#fff; color:var(--text-body); font:inherit; font-size:12px; font-weight:600; cursor:pointer}
+.btn-dlfoto:hover{border-color:var(--navy); color:var(--navy)}
 @media (max-width:640px){ #iaModal .iaCompare{grid-template-columns:1fr} }
 .or-sep{text-align:center; font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:8px 0 2px}
 
@@ -615,6 +618,11 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <button class="clear" id="clear_foto" style="display:none" title="Quitar imagen">✕</button>
         <input type="file" id="f_foto" accept="image/*">
         <span id="txt_foto">Subir foto ya lista (con el logo aplicado)</span>
+      </div>
+      <button type="button" class="btn-dlfoto" id="foto_dl" hidden title="Descarga la imagen sola, lista para mandarle al cliente">⬇ Descargar esta foto</button>
+      <div class="codeToggle" id="fotoSwap" hidden style="margin-top:6px">
+        <button type="button" id="fotoIaBtn" aria-pressed="true" title="Usar la versión mejorada con IA">Foto IA</button>
+        <button type="button" id="fotoOrigBtn" aria-pressed="false" title="Volver a la foto anterior">Foto anterior</button>
       </div>
       <label>Mejorar la foto con IA</label>
       <div class="iaRow">
@@ -905,6 +913,8 @@ let color2 = false;                    // compartido: si el producto lleva color
 
 /* ---- estado de la hoja activa (se captura en pages[cur]) ---- */
 let imgFoto = null, imgLogo = null;
+let fotoAlt = null;                    // la otra versión de la foto (original ↔ IA) para intercambiar
+let fotoActiva = 'ia';                 // cuál se está mostrando cuando hay dos: 'ia' u 'orig'
 let logoBg = 'product';                // fondo del recuadro del logo: color del producto (default) o claro
 let printColors = [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
 let barW = 100, barH = 100;
@@ -924,7 +934,7 @@ const FIELDS = SHARED_FIELDS.concat(PAGE_FIELDS);
 
 /* ---- hojas ---- */
 function newPage(){
-  return { imgFoto:null, imgLogo:null, logoBg:'product',
+  return { imgFoto:null, imgLogo:null, fotoAlt:null, fotoActiva:'ia', logoBg:'product',
     printColors:[{hex:'#FFFFFF', nom:'Blanco', pant:''}],
     barW:100, barH:100, barWOff:0, barHOff:0, fullColor:false, engraved:false, fotoFit:'cover',
     fields:{ f_medida_w:'', f_medida_h:'', f_obslogo:'', f_tecnica:'', f_posicion:'' } };
@@ -935,6 +945,7 @@ let cur = 0;
 function capturePage(){
   const p = pages[cur];
   p.imgFoto = imgFoto; p.imgLogo = imgLogo;
+  p.fotoAlt = fotoAlt; p.fotoActiva = fotoActiva;
   p.logoBg = logoBg; p.printColors = printColors;
   p.barW = barW; p.barH = barH; p.barWOff = barWOff; p.barHOff = barHOff;
   p.fullColor = fullColor; p.engraved = engraved; p.fotoFit = fotoFit;
@@ -945,6 +956,8 @@ function loadPage(i){
   cur = clampNum(i, 0, pages.length-1);
   const p = pages[cur];
   imgFoto = p.imgFoto; imgLogo = p.imgLogo;
+  fotoAlt = p.fotoAlt || null;
+  fotoActiva = p.fotoActiva === 'orig' ? 'orig' : 'ia';
   logoBg = p.logoBg === 'light' ? 'light' : 'product'; // lo guardado como "dark" pasa al color del producto
   printColors = (Array.isArray(p.printColors) && p.printColors.length) ? p.printColors : [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
   barW = p.barW || 100; barH = p.barH || 100;
@@ -1006,6 +1019,10 @@ function refreshFotoBox(){
     $('clear_foto').style.display = 'none';
   }
   $('openBoceto').textContent = imgFoto ? '✎ Editar el boceto' : '✦ Creá el boceto con tu logo';
+  $('foto_dl').hidden = !imgFoto;
+  $('fotoSwap').hidden = !fotoAlt;
+  $('fotoIaBtn').setAttribute('aria-pressed', fotoActiva === 'ia');
+  $('fotoOrigBtn').setAttribute('aria-pressed', fotoActiva === 'orig');
   syncIaButtons();
 }
 function refreshLogoBox(){
@@ -1369,7 +1386,7 @@ function hookFile(inputId, boxId, txtId, clearId, setter){
     render();
   });
 }
-hookFile('f_foto','box_foto','txt_foto','clear_foto', v=>{ imgFoto=v; refreshFotoBox(); });
+hookFile('f_foto','box_foto','txt_foto','clear_foto', v=>{ imgFoto=v; fotoAlt=null; fotoActiva='ia'; refreshFotoBox(); });
 hookFile('f_logo','box_logo','txt_logo','clear_logo', v=>{ imgLogo=v; });
 
 /* ---------- mejorar la foto con IA (OpenAI vía Netlify Function) ----------
@@ -1469,13 +1486,44 @@ function iaPreview(antes, despues, mode){
   $('iaAfter').src = despues;
   $('iaModal').hidden = false;
   $('iaUse').onclick = () => {
+    fotoAlt = antes; fotoActiva = 'ia'; // la anterior queda a mano para intercambiar
     imgFoto = despues;
     refreshFotoBox(); render();
     $('iaModal').hidden = true;
   };
   $('iaCancel').onclick = () => { $('iaModal').hidden = true; };
+  $('iaDownload').onclick = () => {
+    descargarImagen(despues, docName() + (mode === 'fondo-blanco' ? ' - IA fondo blanco' : ' - IA en situación'));
+  };
 }
 
+/* descarga un data URL como archivo, con la extensión que corresponda */
+function descargarImagen(dataUrl, nombre){
+  const m = /^data:image\/(png|jpe?g|webp)/.exec(dataUrl);
+  const ext = m ? (m[1] === 'jpeg' ? 'jpg' : m[1]) : 'png';
+  // Chromium descarta el nombre si tiene caracteres fuera de ASCII al bajar
+  // un data URL (quedaría "download"): se quitan acentos y eñes primero
+  const ascii = nombre.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7E]/g, '').replace(/\s+/g, ' ').trim() || 'imagen';
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = ascii + '.' + ext;
+  a.click();
+}
+
+$('foto_dl').addEventListener('click', () => { if(imgFoto) descargarImagen(imgFoto, docName() + ' - foto'); });
+
+/* intercambiar entre la foto original y la mejorada con IA */
+function usarFoto(cual){
+  if(!fotoAlt || fotoActiva === cual) return;
+  const otra = fotoAlt;
+  fotoAlt = imgFoto;
+  imgFoto = otra;
+  fotoActiva = cual;
+  refreshFotoBox(); render();
+}
+$('fotoIaBtn').addEventListener('click', () => usarFoto('ia'));
+$('fotoOrigBtn').addEventListener('click', () => usarFoto('orig'));
 $('ia_blanco').addEventListener('click', () => mejorarConIA('fondo-blanco'));
 $('ia_situacion').addEventListener('click', () => mejorarConIA('situacion'));
 
@@ -2045,6 +2093,7 @@ $('tplSearch').addEventListener('keydown', e => {
 function snapshot(){
   capturePage();
   const d = {codeMode, color2, pages: JSON.parse(JSON.stringify(pages)), cur};
+  d.pages.forEach(p => { delete p.fotoAlt; delete p.fotoActiva; }); // la foto alternativa de IA no viaja en plantillas: duplicaría su peso
   SHARED_FIELDS.forEach(id => d[id] = $(id).value);
   d.boceto = (window.__bocetoSnapshot && window.__bocetoSnapshot()) || null; // la edición del boceteador viaja con la plantilla
   return d;
@@ -2419,6 +2468,7 @@ document.addEventListener('keydown', e => { if(e.key === 'Escape' && !bocetoModa
 
 window.__applyBoceto = res => {
   imgFoto = res.foto;
+  fotoAlt = null; fotoActiva = 'ia'; // el boceto recién compuesto reemplaza cualquier par original/IA
   fotoFit = 'contain'; // el boceto compuesto se muestra entero, sin recortes
   refreshFotoBox();
   if(res.logo){
@@ -3639,6 +3689,7 @@ setStepStates(); render();
       <figure><figcaption>Después (IA)</figcaption><img id="iaAfter" alt="Foto mejorada con IA"></figure>
     </div>
     <div class="iaBtns">
+      <button type="button" class="descartar dl" id="iaDownload" title="Descarga la imagen generada, lista para mandarle al cliente">⬇ Descargar</button>
       <button type="button" class="descartar" id="iaCancel">Descartar</button>
       <button type="button" class="usar" id="iaUse">Usar esta foto</button>
     </div>
