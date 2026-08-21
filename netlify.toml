@@ -2,3 +2,9 @@
 # Se publica la raíz del repo tal cual; index.html redirige al generador.
 [build]
   publish = "."
+
+# Funciones serverless (proxy de IA: netlify/functions/ia-imagen.mjs).
+# Las claves van en variables de entorno del sitio, nunca en el código:
+#   OPENAI_API_KEY, FORMAS_IA_CLAVE (+ opcionales OPENAI_MODEL, OPENAI_IMAGE_QUALITY)
+[functions]
+  directory = "netlify/functions"

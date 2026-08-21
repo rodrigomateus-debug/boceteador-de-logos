@@ -41,6 +41,46 @@ Netlify Drop, o mejor, conectar el sitio al repo de GitHub (Netlify →
 Site configuration → Build & deploy → Link repository, rama `main`) para que
 cada cambio se publique solo.
 
+## Mejorar la foto con IA (OpenAI)
+
+En el generador, debajo de "Foto del producto", hay dos botones que mandan la
+foto a la IA de OpenAI y devuelven una versión mejorada para comparar
+antes/después y decidir si se usa:
+
+- **✨ Fondo blanco** — recorta el producto y lo presenta estilo e-commerce:
+  fondo blanco puro, centrado, sombra de contacto suave.
+- **✨ En situación** — muestra el producto en una escena de uso real (oficina,
+  evento, cafetería…), nítido en primer plano con el fondo desenfocado.
+
+El "estilo Formas" (reglas de marca: no tocar el producto ni su logo, look
+luminoso y profesional, sin texto agregado) vive en el servidor, en
+`netlify/functions/ia-imagen.mjs`, junto con el prompt de cada modo. Para
+ajustar el estilo se edita ese archivo, no el HTML.
+
+**Cómo funciona por dentro:** el navegador nunca ve la API key. Le pega a la
+función de Netlify con una clave compartida (header `x-formas-clave`, se pide
+una sola vez y queda en el navegador); la función crea el trabajo en la
+Responses API de OpenAI en modo *background* y el navegador consulta el estado
+cada 4 segundos. Así ninguna llamada supera el límite de 26 s de las funciones
+sincrónicas de Netlify aunque la imagen tarde minutos.
+
+**Puesta en marcha** (Netlify → Site configuration → Environment variables):
+
+| Variable | Qué es |
+|---|---|
+| `OPENAI_API_KEY` | Obligatoria. Key de https://platform.openai.com |
+| `FORMAS_IA_CLAVE` | Obligatoria. Clave compartida que la app le pide al usuario |
+| `OPENAI_MODEL` | Opcional. Modelo conductor (default `gpt-5-mini`) |
+| `OPENAI_IMAGE_QUALITY` | Opcional. `low` / `medium` / `high` (default `medium`) |
+
+Después de setearlas hay que redesplegar el sitio. Costo orientativo: unos
+centavos de dólar por imagen en calidad media. Para probar en local:
+`npx netlify dev` (levanta la app con las funciones incluidas).
+
+La imagen generada es **orientativa**: la IA puede alterar detalles del
+producto o del logo, por eso el comparador obliga a revisar antes de aceptar.
+La ficha técnica y el PDF de Corel siguen usando la foto que elijas vos.
+
 ## Plantillas en Google Drive
 
 **Ya está configurado.** Cada usuario entra a la app publicada, toca

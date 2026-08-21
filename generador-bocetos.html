@@ -333,6 +333,26 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 /* botón del generador para abrir el boceteador */
 .btn-boceto{display:block; width:100%; margin-top:6px; padding:11px 12px; border:none; border-radius:10px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
 .btn-boceto:hover{filter:brightness(1.05)}
+
+/* mejora de foto con IA */
+.iaRow{display:flex; gap:8px; margin-top:6px}
+.btn-ia{flex:1; padding:9px 10px; border:1px solid var(--navy); border-radius:10px; background:#fff; color:var(--navy); font:inherit; font-size:12.5px; font-weight:700; cursor:pointer}
+.btn-ia:hover:not(:disabled){background:var(--navy); color:#fff}
+.btn-ia:disabled{opacity:.45; cursor:default}
+.iaStatus{margin-top:7px; font-size:12px; color:var(--text-body); background:var(--formas-gray-50,#F8F8FB); border:1px solid var(--formas-gray-200,#E4E4ED); border-radius:10px; padding:8px 10px}
+#iaModal{position:fixed; inset:0; z-index:80; background:rgba(11,11,35,.55); display:flex; align-items:center; justify-content:center; padding:20px}
+#iaModal[hidden]{display:none}
+#iaModal .iaCard{background:#fff; border-radius:16px; width:min(880px,100%); max-height:92vh; overflow:auto; padding:18px 20px}
+#iaModal h3{margin:0 0 4px; color:var(--navy); font-size:17px}
+#iaModal .iaHint{font-size:12px; color:var(--text-muted); margin:0 0 12px}
+#iaModal .iaCompare{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+#iaModal .iaCompare figure{margin:0}
+#iaModal .iaCompare figcaption{font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted); margin-bottom:6px}
+#iaModal .iaCompare img{width:100%; border:1px solid var(--formas-gray-200,#E4E4ED); border-radius:12px; background:#fff}
+#iaModal .iaBtns{display:flex; gap:8px; justify-content:flex-end; margin-top:14px}
+#iaModal .iaBtns .usar{padding:10px 16px; border:none; border-radius:10px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
+#iaModal .iaBtns .descartar{padding:10px 16px; border:1px solid var(--formas-gray-200,#E4E4ED); border-radius:10px; background:#fff; color:var(--text-body); font:inherit; font-size:13px; font-weight:600; cursor:pointer}
+@media (max-width:640px){ #iaModal .iaCompare{grid-template-columns:1fr} }
 .or-sep{text-align:center; font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:8px 0 2px}
 
 </style>
@@ -596,6 +616,12 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <input type="file" id="f_foto" accept="image/*">
         <span id="txt_foto">Subir foto ya lista (con el logo aplicado)</span>
       </div>
+      <label>Mejorar la foto con IA</label>
+      <div class="iaRow">
+        <button type="button" class="btn-ia" id="ia_blanco" disabled title="Recorta el producto y lo pone sobre fondo blanco de estudio">✨ Fondo blanco</button>
+        <button type="button" class="btn-ia" id="ia_situacion" disabled title="Muestra el producto en una escena de uso real">✨ En situación</button>
+      </div>
+      <div class="iaStatus" id="iaStatus" hidden></div>
       <label>Ajuste de la foto en la ficha</label>
       <div class="codeToggle">
         <button type="button" id="fitCover" aria-pressed="true" title="La foto llena el recuadro y se recorta lo que sobra">Llenar</button>
@@ -980,6 +1006,7 @@ function refreshFotoBox(){
     $('clear_foto').style.display = 'none';
   }
   $('openBoceto').textContent = imgFoto ? '✎ Editar el boceto' : '✦ Creá el boceto con tu logo';
+  syncIaButtons();
 }
 function refreshLogoBox(){
   if(imgLogo){
@@ -1344,6 +1371,113 @@ function hookFile(inputId, boxId, txtId, clearId, setter){
 }
 hookFile('f_foto','box_foto','txt_foto','clear_foto', v=>{ imgFoto=v; refreshFotoBox(); });
 hookFile('f_logo','box_logo','txt_logo','clear_logo', v=>{ imgLogo=v; });
+
+/* ---------- mejorar la foto con IA (OpenAI vía Netlify Function) ----------
+   El estilo Formas vive en el servidor (netlify/functions/ia-imagen.mjs);
+   acá solo se manda la foto, se espera el resultado y se compara. */
+const IA_ENDPOINT = '/.netlify/functions/ia-imagen';
+let iaBusy = false;
+
+function syncIaButtons(){
+  const off = !imgFoto || iaBusy;
+  $('ia_blanco').disabled = off;
+  $('ia_situacion').disabled = off;
+}
+
+function iaClave(){
+  let k = (localStorage.getItem('formasIaClave') || '').trim();
+  if(!k){
+    k = (prompt('Clave de las funciones de IA de Formas:') || '').trim();
+    if(k) localStorage.setItem('formasIaClave', k);
+  }
+  return k;
+}
+
+/* la foto puede venir del celular en 12 MP: se achica antes de mandarla */
+function iaDownscale(dataUrl, maxPx){
+  return new Promise((res, rej) => {
+    const im = new Image();
+    im.onload = () => {
+      const s = Math.min(1, maxPx / Math.max(im.naturalWidth, im.naturalHeight));
+      const w = Math.max(1, Math.round(im.naturalWidth * s)), h = Math.max(1, Math.round(im.naturalHeight * s));
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const x = c.getContext('2d');
+      x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, w, h);
+      x.drawImage(im, 0, 0, w, h);
+      res(c.toDataURL('image/jpeg', .92));
+    };
+    im.onerror = () => rej(new Error('No pude leer la foto.'));
+    im.src = dataUrl;
+  });
+}
+
+async function iaFetch(payload, clave){
+  let r;
+  try{
+    r = await fetch(IA_ENDPOINT, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-formas-clave': clave },
+      body: JSON.stringify(payload)
+    });
+  }catch(e){
+    throw new Error('No pude conectar con la función de IA. ¿Estás en la app publicada en Netlify?');
+  }
+  const d = await r.json().catch(() => ({}));
+  if(r.status === 401){
+    localStorage.removeItem('formasIaClave');
+    throw new Error('Clave incorrecta. Tocá el botón de nuevo para reintentar.');
+  }
+  if(!r.ok) throw new Error(d.error || ('Error ' + r.status));
+  return d;
+}
+
+async function mejorarConIA(mode){
+  if(iaBusy || !imgFoto) return;
+  const clave = iaClave();
+  if(!clave) return;
+  const original = imgFoto;
+  const status = $('iaStatus');
+  const setS = t => { status.hidden = false; status.textContent = t; };
+  iaBusy = true; syncIaButtons();
+  try{
+    setS('Preparando la foto…');
+    const img = await iaDownscale(original, 1536);
+    setS('Enviando a la IA…');
+    const start = await iaFetch({ action:'start', mode, image: img, producto: $('f_producto').value.trim() }, clave);
+    const t0 = Date.now();
+    let estado;
+    while(true){
+      await new Promise(r => setTimeout(r, 4000));
+      if(Date.now() - t0 > 5 * 60 * 1000) throw new Error('La IA tardó más de 5 minutos. Probá de nuevo en un rato.');
+      estado = await iaFetch({ action:'estado', id: start.id }, clave);
+      if(estado.status === 'completed') break;
+      if(estado.status === 'failed') throw new Error(estado.error || 'La generación falló.');
+      setS('La IA está trabajando… (' + Math.round((Date.now() - t0) / 1000) + ' s)');
+    }
+    status.hidden = true;
+    iaPreview(original, estado.image, mode);
+  }catch(err){
+    setS('⚠ ' + (err && err.message ? err.message : err));
+  }finally{
+    iaBusy = false; syncIaButtons();
+  }
+}
+
+function iaPreview(antes, despues, mode){
+  $('iaModalTitle').textContent = mode === 'fondo-blanco' ? 'Mejora con IA — fondo blanco' : 'Mejora con IA — en situación';
+  $('iaBefore').src = antes;
+  $('iaAfter').src = despues;
+  $('iaModal').hidden = false;
+  $('iaUse').onclick = () => {
+    imgFoto = despues;
+    refreshFotoBox(); render();
+    $('iaModal').hidden = true;
+  };
+  $('iaCancel').onclick = () => { $('iaModal').hidden = true; };
+}
+
+$('ia_blanco').addEventListener('click', () => mejorarConIA('fondo-blanco'));
+$('ia_situacion').addEventListener('click', () => mejorarConIA('situacion'));
 
 /* --- acciones --- */
 $('btn_print').onclick = ()=>{
@@ -3494,5 +3628,21 @@ setStepStates(); render();
 })();
 
 </script>
+
+<!-- comparador antes/después de la mejora con IA -->
+<div id="iaModal" hidden>
+  <div class="iaCard">
+    <h3 id="iaModalTitle">Mejora con IA</h3>
+    <p class="iaHint">La imagen generada es orientativa: revisá que el producto y el logo se vean fieles antes de usarla.</p>
+    <div class="iaCompare">
+      <figure><figcaption>Antes</figcaption><img id="iaBefore" alt="Foto original"></figure>
+      <figure><figcaption>Después (IA)</figcaption><img id="iaAfter" alt="Foto mejorada con IA"></figure>
+    </div>
+    <div class="iaBtns">
+      <button type="button" class="descartar" id="iaCancel">Descartar</button>
+      <button type="button" class="usar" id="iaUse">Usar esta foto</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
