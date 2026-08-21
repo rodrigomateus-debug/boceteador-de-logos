@@ -65,9 +65,11 @@ export default async (req) => {
       return json({ error: 'image debe ser un data URL de imagen de hasta ~6 MB' }, 400);
     }
     const producto = String(body.producto || '').slice(0, 200).trim();
+    const tecnica = String(body.tecnica || '').slice(0, 120).trim();
 
     const prompt = ESTILO_FORMAS + '\n\nTarea: ' + modo
-      + (producto ? `\n\nEl producto de la foto es: ${producto}.` : '');
+      + (producto ? `\n\nEl producto de la foto es: ${producto}.` : '')
+      + (tecnica ? `\n\nSi el producto tiene un logo aplicado, la técnica de aplicación elegida es: ${tecnica}. Hacé que el logo se vea aplicado con esa técnica de forma realista y coherente con el material — por ejemplo: bordado = relieve de hilos y puntadas visibles; grabado láser = hundido en el material, sin tinta, en el tono del propio material; serigrafía o tampografía = capa de tinta plana y pareja adherida a la superficie; vinilo = recorte aplicado con un leve brillo; sublimación = tinta integrada a la tela sin relieve. El acabado debe seguir la curvatura y la luz del producto, y el logo debe conservar exactamente su forma, colores, posición y tamaño.` : '');
 
     const crear = (tool, forzarTool) => fetch(`${OPENAI}/responses`, {
       method: 'POST',

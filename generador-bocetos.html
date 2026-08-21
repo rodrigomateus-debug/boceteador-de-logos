@@ -1460,7 +1460,7 @@ async function mejorarConIA(mode){
     setS('Preparando la foto…');
     const img = await iaDownscale(original, 1536);
     setS('Enviando a la IA…');
-    const start = await iaFetch({ action:'start', mode, image: img, producto: $('f_producto').value.trim() }, clave);
+    const start = await iaFetch({ action:'start', mode, image: img, producto: $('f_producto').value.trim(), tecnica: $('f_tecnica').value.trim() }, clave);
     const t0 = Date.now();
     let estado;
     while(true){
