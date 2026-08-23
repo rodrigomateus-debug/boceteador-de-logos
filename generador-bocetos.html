@@ -340,18 +340,26 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 .btn-ia:hover:not(:disabled){background:var(--navy); color:#fff}
 .btn-ia:disabled{opacity:.45; cursor:default}
 .iaStatus{margin-top:7px; font-size:12px; color:var(--text-body); background:var(--formas-gray-50,#F8F8FB); border:1px solid var(--formas-gray-200,#E4E4ED); border-radius:10px; padding:8px 10px}
-#iaModal{position:fixed; inset:0; z-index:80; background:rgba(11,11,35,.55); display:flex; align-items:center; justify-content:center; padding:20px}
-#iaModal[hidden]{display:none}
-#iaModal .iaCard{background:#fff; border-radius:16px; width:min(880px,100%); max-height:92vh; overflow:auto; padding:18px 20px}
-#iaModal h3{margin:0 0 4px; color:var(--navy); font-size:17px}
-#iaModal .iaHint{font-size:12px; color:var(--text-muted); margin:0 0 12px}
+#iaModal,#iaOptsModal{position:fixed; inset:0; z-index:80; background:rgba(11,11,35,.55); display:flex; align-items:center; justify-content:center; padding:20px}
+#iaModal[hidden],#iaOptsModal[hidden]{display:none}
+#iaModal .iaCard,#iaOptsModal .iaCard{background:#fff; border-radius:16px; width:min(880px,100%); max-height:92vh; overflow:auto; padding:18px 20px}
+#iaModal h3,#iaOptsModal h3{margin:0 0 4px; color:var(--navy); font-size:17px}
+#iaModal .iaHint,#iaOptsModal .iaHint{font-size:12px; color:var(--text-muted); margin:0 0 12px}
+#iaOptsModal .iaCard{width:min(520px,100%)}
+#iaOptsModal label{display:block; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); margin:12px 0 4px}
+#iaOptsModal input[type="text"]{width:100%; padding:9px 10px; border:1.5px solid var(--border); border-radius:8px; font:inherit; font-size:13px}
+#iaOptsModal .persRow{display:flex; gap:6px}
+#iaOptsModal .persRow button{flex:1; padding:7px 4px; border:1.5px solid var(--border); border-radius:8px; background:#fff; font:inherit; font-size:11px; font-weight:700; color:var(--ink); cursor:pointer}
+#iaOptsModal .persRow button[aria-pressed="true"]{border-color:var(--navy); background:var(--sunken); box-shadow:0 0 0 2px rgba(142,224,33,.45)}
+#iaOptsModal .marcaRow{display:flex; gap:8px; align-items:center; margin-top:12px; font-size:13px; color:var(--text-body); cursor:pointer}
+#iaOptsModal .marcaRow input{width:16px; height:16px; accent-color:var(--navy)}
 #iaModal .iaCompare{display:grid; grid-template-columns:1fr 1fr; gap:12px}
 #iaModal .iaCompare figure{margin:0}
 #iaModal .iaCompare figcaption{font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted); margin-bottom:6px}
 #iaModal .iaCompare img{width:100%; border:1px solid var(--formas-gray-200,#E4E4ED); border-radius:12px; background:#fff}
-#iaModal .iaBtns{display:flex; gap:8px; justify-content:flex-end; margin-top:14px}
-#iaModal .iaBtns .usar{padding:10px 16px; border:none; border-radius:10px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
-#iaModal .iaBtns .descartar{padding:10px 16px; border:1px solid var(--formas-gray-200,#E4E4ED); border-radius:10px; background:#fff; color:var(--text-body); font:inherit; font-size:13px; font-weight:600; cursor:pointer}
+#iaModal .iaBtns,#iaOptsModal .iaBtns{display:flex; gap:8px; justify-content:flex-end; margin-top:14px}
+#iaModal .iaBtns .usar,#iaOptsModal .iaBtns .usar{padding:10px 16px; border:none; border-radius:10px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
+#iaModal .iaBtns .descartar,#iaOptsModal .iaBtns .descartar{padding:10px 16px; border:1px solid var(--formas-gray-200,#E4E4ED); border-radius:10px; background:#fff; color:var(--text-body); font:inherit; font-size:13px; font-weight:600; cursor:pointer}
 #iaModal .iaBtns .dl{margin-right:auto; border-color:var(--navy); color:var(--navy); font-weight:700}
 .btn-dlfoto{display:block; width:100%; margin-top:6px; padding:8px 10px; border:1px dashed var(--formas-gray-200,#E4E4ED); border-radius:10px; background:#fff; color:var(--text-body); font:inherit; font-size:12px; font-weight:600; cursor:pointer}
 .btn-dlfoto:hover{border-color:var(--navy); color:var(--navy)}
@@ -905,6 +913,59 @@ html,body{margin:0;padding:0;background:#EDEDF2}
   </div>
 </div>
 
+<!-- opciones del modo "En situación" -->
+<div id="iaOptsModal" hidden>
+  <div class="iaCard">
+    <h3>✨ En situación</h3>
+    <p class="iaHint">Todo es opcional: si no tocás nada, la IA elige una escena acorde al producto.</p>
+    <label for="iaEscena">Lugar o contexto</label>
+    <input type="text" id="iaEscena" list="iaEscenas" placeholder="Ej: oficina moderna, stand de feria, cafetería…" maxlength="120">
+    <datalist id="iaEscenas">
+      <option value="Oficina moderna"></option>
+      <option value="Evento corporativo"></option>
+      <option value="Stand de feria"></option>
+      <option value="Cafetería"></option>
+      <option value="Exterior urbano"></option>
+      <option value="Escritorio en casa"></option>
+      <option value="Gimnasio"></option>
+      <option value="Aula de capacitación"></option>
+    </datalist>
+    <label>Personas</label>
+    <div class="persRow">
+      <button type="button" id="iaPers_auto" aria-pressed="true" title="El modelo decide qué queda mejor">Automático</button>
+      <button type="button" id="iaPers_no" aria-pressed="false" title="Solo el producto en la escena">Sin personas</button>
+      <button type="button" id="iaPers_persona" aria-pressed="false" title="Una persona genérica usando el producto">Con persona</button>
+      <button type="button" id="iaPers_manos" aria-pressed="false" title="Primer plano de manos interactuando con el producto">Solo manos</button>
+    </div>
+    <label for="iaDetalles">Detalles extra</label>
+    <input type="text" id="iaDetalles" placeholder="Ej: luz cálida, sobre una mesa de madera, de noche…" maxlength="300">
+    <label class="marcaRow" style="text-transform:none; letter-spacing:0; font-weight:600">
+      <input type="checkbox" id="iaMarca"> <span>Ambientar la escena con el color del cliente <span id="iaMarcaColor" style="color:var(--text-muted)"></span></span>
+    </label>
+    <div class="iaBtns">
+      <button type="button" class="descartar" id="iaOptsCancel">Cancelar</button>
+      <button type="button" class="usar" id="iaOptsGo">✨ Generar</button>
+    </div>
+  </div>
+</div>
+
+<!-- comparador antes/después de la mejora con IA -->
+<div id="iaModal" hidden>
+  <div class="iaCard">
+    <h3 id="iaModalTitle">Mejora con IA</h3>
+    <p class="iaHint">La imagen generada es orientativa: revisá que el producto y el logo se vean fieles antes de usarla.</p>
+    <div class="iaCompare">
+      <figure><figcaption>Antes</figcaption><img id="iaBefore" alt="Foto original"></figure>
+      <figure><figcaption>Después (IA)</figcaption><img id="iaAfter" alt="Foto mejorada con IA"></figure>
+    </div>
+    <div class="iaBtns">
+      <button type="button" class="descartar dl" id="iaDownload" title="Descarga la imagen generada, lista para mandarle al cliente">⬇ Descargar</button>
+      <button type="button" class="descartar" id="iaCancel">Descartar</button>
+      <button type="button" class="usar" id="iaUse">Usar esta foto</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const TPL = document.getElementById('tpl').innerHTML;
 const accent = '#8EE021';              // acento oficial de la ficha (fijo)
@@ -1448,7 +1509,7 @@ async function iaFetch(payload, clave){
   return d;
 }
 
-async function mejorarConIA(mode){
+async function mejorarConIA(mode, opts){
   if(iaBusy || !imgFoto) return;
   const clave = iaClave();
   if(!clave) return;
@@ -1460,7 +1521,10 @@ async function mejorarConIA(mode){
     setS('Preparando la foto…');
     const img = await iaDownscale(original, 1536);
     setS('Enviando a la IA…');
-    const start = await iaFetch({ action:'start', mode, image: img, producto: $('f_producto').value.trim(), tecnica: $('f_tecnica').value.trim() }, clave);
+    const start = await iaFetch(Object.assign(
+      { action:'start', mode, image: img, producto: $('f_producto').value.trim(), tecnica: $('f_tecnica').value.trim() },
+      opts || {}
+    ), clave);
     const t0 = Date.now();
     let estado;
     while(true){
@@ -1525,7 +1589,44 @@ function usarFoto(cual){
 $('fotoIaBtn').addEventListener('click', () => usarFoto('ia'));
 $('fotoOrigBtn').addEventListener('click', () => usarFoto('orig'));
 $('ia_blanco').addEventListener('click', () => mejorarConIA('fondo-blanco'));
-$('ia_situacion').addEventListener('click', () => mejorarConIA('situacion'));
+
+/* ---- opciones del modo "En situación" (se recuerdan para la próxima) ---- */
+const IA_OPTS_KEY = 'formasIaSituOpts';
+let iaPersona = 'auto';
+function setIaPersona(v){
+  iaPersona = ['no','persona','manos'].includes(v) ? v : 'auto';
+  ['auto','no','persona','manos'].forEach(k => $('iaPers_'+k).setAttribute('aria-pressed', k === iaPersona));
+}
+['auto','no','persona','manos'].forEach(k => $('iaPers_'+k).addEventListener('click', () => setIaPersona(k)));
+
+$('ia_situacion').addEventListener('click', () => {
+  if(iaBusy || !imgFoto) return;
+  let s = {};
+  try{ s = JSON.parse(localStorage.getItem(IA_OPTS_KEY) || '{}') || {}; }catch(e){}
+  $('iaEscena').value = s.escena || '';
+  $('iaDetalles').value = s.detalles || '';
+  $('iaMarca').checked = !!s.marca;
+  setIaPersona(s.persona || 'auto');
+  const cNom = $('f_colorprod_nom').value.trim(), cHex = $('f_colorprod_hex').value;
+  $('iaMarcaColor').textContent = '(' + (cNom ? cNom + ' · ' : '') + cHex + ')';
+  $('iaOptsModal').hidden = false;
+  $('iaEscena').focus();
+});
+$('iaOptsCancel').addEventListener('click', () => { $('iaOptsModal').hidden = true; });
+$('iaOptsGo').addEventListener('click', () => {
+  const escena = $('iaEscena').value.trim();
+  const detalles = $('iaDetalles').value.trim();
+  const marca = $('iaMarca').checked;
+  try{ localStorage.setItem(IA_OPTS_KEY, JSON.stringify({ escena, detalles, marca, persona: iaPersona })); }catch(e){}
+  const cNom = $('f_colorprod_nom').value.trim(), cHex = $('f_colorprod_hex').value;
+  $('iaOptsModal').hidden = true;
+  mejorarConIA('situacion', {
+    escena,
+    detalles,
+    persona: iaPersona,
+    marcaColor: marca ? ((cNom ? cNom + ' ' : '') + cHex) : ''
+  });
+});
 
 /* --- acciones --- */
 $('btn_print').onclick = ()=>{
@@ -3679,21 +3780,5 @@ setStepStates(); render();
 
 </script>
 
-<!-- comparador antes/después de la mejora con IA -->
-<div id="iaModal" hidden>
-  <div class="iaCard">
-    <h3 id="iaModalTitle">Mejora con IA</h3>
-    <p class="iaHint">La imagen generada es orientativa: revisá que el producto y el logo se vean fieles antes de usarla.</p>
-    <div class="iaCompare">
-      <figure><figcaption>Antes</figcaption><img id="iaBefore" alt="Foto original"></figure>
-      <figure><figcaption>Después (IA)</figcaption><img id="iaAfter" alt="Foto mejorada con IA"></figure>
-    </div>
-    <div class="iaBtns">
-      <button type="button" class="descartar dl" id="iaDownload" title="Descarga la imagen generada, lista para mandarle al cliente">⬇ Descargar</button>
-      <button type="button" class="descartar" id="iaCancel">Descartar</button>
-      <button type="button" class="usar" id="iaUse">Usar esta foto</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>

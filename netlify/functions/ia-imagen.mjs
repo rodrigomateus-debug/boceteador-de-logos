@@ -31,10 +31,30 @@ const ESTILO_FORMAS = `Sos el retocador fotográfico de Formas Publicitarias, un
 - No agregues texto, marcas de agua, personas reconocibles ni productos que no estén en la foto original.
 - El resultado debe verse como una fotografía real, nunca como ilustración ni render 3D.`;
 
-const MODOS = {
-  'fondo-blanco': `Convertí la foto en una toma de producto estilo e-commerce: aislá el producto y presentalo sobre un fondo blanco puro y uniforme, centrado y completo en el encuadre, con una sombra de contacto suave y realista debajo. Corregí iluminación y nitidez si la foto original es floja.`,
-  'situacion': `Mostrá el mismo producto en una situación de uso real y creíble acorde a su tipo (una oficina, un evento corporativo, una cafetería, un exterior urbano...). El producto es el protagonista: nítido, en primer plano y bien iluminado; el entorno acompaña detrás con un desenfoque suave. Ambiente luminoso, actual y aspiracional.`,
-};
+const MODO_FONDO_BLANCO = `Convertí la foto en una toma de producto estilo e-commerce: aislá el producto y presentalo sobre un fondo blanco puro y uniforme, centrado y completo en el encuadre, con una sombra de contacto suave y realista debajo. Corregí iluminación y nitidez si la foto original es floja.`;
+
+/* "En situación" se arma según las opciones que eligió el vendedor */
+function promptSituacion(o) {
+  const partes = [];
+  partes.push(o.escena
+    ? `Mostrá el mismo producto en una situación real y creíble en este lugar o contexto: ${o.escena}.`
+    : `Mostrá el mismo producto en una situación de uso real y creíble acorde a su tipo (una oficina, un evento corporativo, una cafetería, un exterior urbano...).`);
+  if (o.persona === 'persona') {
+    partes.push(`El producto está siendo usado o sostenido de forma natural por una persona adulta genérica (que no se parezca a ninguna persona real).`);
+  } else if (o.persona === 'manos') {
+    partes.push(`Se ven solamente las manos de una persona interactuando con el producto, en primer plano; no se ve el resto del cuerpo.`);
+  } else if (o.persona === 'no') {
+    partes.push(`Sin personas en la escena.`);
+  } // 'auto' u omitido: el modelo decide
+  partes.push(`El producto es el protagonista: nítido, en primer plano y bien iluminado; el entorno acompaña detrás con un desenfoque suave. Ambiente luminoso, actual y aspiracional.`);
+  if (o.marcaColor) {
+    partes.push(`Ambientá la escena con acentos sutiles del color de marca del cliente (${o.marcaColor}) en objetos del entorno o el fondo, sin alterar los colores del producto ni de su logo.`);
+  }
+  if (o.detalles) {
+    partes.push(`Indicaciones adicionales del vendedor sobre la escena: ${o.detalles}.`);
+  }
+  return partes.join(' ');
+}
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), { status, headers: { 'content-type': 'application/json' } });
@@ -58,7 +78,14 @@ export default async (req) => {
 
   /* ---- iniciar un trabajo ---- */
   if (body.action === 'start') {
-    const modo = MODOS[body.mode];
+    let modo = null;
+    if (body.mode === 'fondo-blanco') modo = MODO_FONDO_BLANCO;
+    if (body.mode === 'situacion') modo = promptSituacion({
+      escena: String(body.escena || '').slice(0, 120).trim(),
+      persona: ['no', 'persona', 'manos'].includes(body.persona) ? body.persona : 'auto',
+      marcaColor: String(body.marcaColor || '').slice(0, 60).trim(),
+      detalles: String(body.detalles || '').slice(0, 300).trim(),
+    });
     if (!modo) return json({ error: 'mode debe ser "fondo-blanco" o "situacion"' }, 400);
     const image = typeof body.image === 'string' ? body.image : '';
     if (!image.startsWith('data:image/') || image.length > 8_000_000) {
