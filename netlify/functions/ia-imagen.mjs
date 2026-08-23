@@ -47,8 +47,8 @@ function promptSituacion(o) {
     partes.push(`Sin personas en la escena.`);
   } // 'auto' u omitido: el modelo decide
   partes.push(`El producto es el protagonista: nítido, en primer plano y bien iluminado; el entorno acompaña detrás con un desenfoque suave. Ambiente luminoso, actual y aspiracional.`);
-  if (o.marcaColor) {
-    partes.push(`Ambientá la escena con acentos sutiles del color de marca del cliente (${o.marcaColor}) en objetos del entorno o el fondo, sin alterar los colores del producto ni de su logo.`);
+  if (o.datos) {
+    partes.push(`Datos del producto cargados por el vendedor (material, medidas y color): ${o.datos}. Respetá esas medidas: el tamaño del producto en la escena debe ser proporcional y realista respecto de las manos, personas y objetos que aparezcan.`);
   }
   if (o.detalles) {
     partes.push(`Indicaciones adicionales del vendedor sobre la escena: ${o.detalles}.`);
@@ -83,7 +83,7 @@ export default async (req) => {
     if (body.mode === 'situacion') modo = promptSituacion({
       escena: String(body.escena || '').slice(0, 120).trim(),
       persona: ['no', 'persona', 'manos'].includes(body.persona) ? body.persona : 'auto',
-      marcaColor: String(body.marcaColor || '').slice(0, 60).trim(),
+      datos: String(body.datos || '').slice(0, 300).trim(),
       detalles: String(body.detalles || '').slice(0, 300).trim(),
     });
     if (!modo) return json({ error: 'mode debe ser "fondo-blanco" o "situacion"' }, 400);

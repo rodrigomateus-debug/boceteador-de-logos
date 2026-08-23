@@ -351,8 +351,6 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #iaOptsModal .persRow{display:flex; gap:6px}
 #iaOptsModal .persRow button{flex:1; padding:7px 4px; border:1.5px solid var(--border); border-radius:8px; background:#fff; font:inherit; font-size:11px; font-weight:700; color:var(--ink); cursor:pointer}
 #iaOptsModal .persRow button[aria-pressed="true"]{border-color:var(--navy); background:var(--sunken); box-shadow:0 0 0 2px rgba(142,224,33,.45)}
-#iaOptsModal .marcaRow{display:flex; gap:8px; align-items:center; margin-top:12px; font-size:13px; color:var(--text-body); cursor:pointer}
-#iaOptsModal .marcaRow input{width:16px; height:16px; accent-color:var(--navy)}
 #iaModal .iaCompare{display:grid; grid-template-columns:1fr 1fr; gap:12px}
 #iaModal .iaCompare figure{margin:0}
 #iaModal .iaCompare figcaption{font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted); margin-bottom:6px}
@@ -939,9 +937,6 @@ html,body{margin:0;padding:0;background:#EDEDF2}
     </div>
     <label for="iaDetalles">Detalles extra</label>
     <input type="text" id="iaDetalles" placeholder="Ej: luz cálida, sobre una mesa de madera, de noche…" maxlength="300">
-    <label class="marcaRow" style="text-transform:none; letter-spacing:0; font-weight:600">
-      <input type="checkbox" id="iaMarca"> <span>Ambientar la escena con el color del cliente <span id="iaMarcaColor" style="color:var(--text-muted)"></span></span>
-    </label>
     <div class="iaBtns">
       <button type="button" class="descartar" id="iaOptsCancel">Cancelar</button>
       <button type="button" class="usar" id="iaOptsGo">✨ Generar</button>
@@ -1605,10 +1600,7 @@ $('ia_situacion').addEventListener('click', () => {
   try{ s = JSON.parse(localStorage.getItem(IA_OPTS_KEY) || '{}') || {}; }catch(e){}
   $('iaEscena').value = s.escena || '';
   $('iaDetalles').value = s.detalles || '';
-  $('iaMarca').checked = !!s.marca;
   setIaPersona(s.persona || 'auto');
-  const cNom = $('f_colorprod_nom').value.trim(), cHex = $('f_colorprod_hex').value;
-  $('iaMarcaColor').textContent = '(' + (cNom ? cNom + ' · ' : '') + cHex + ')';
   $('iaOptsModal').hidden = false;
   $('iaEscena').focus();
 });
@@ -1616,15 +1608,13 @@ $('iaOptsCancel').addEventListener('click', () => { $('iaOptsModal').hidden = tr
 $('iaOptsGo').addEventListener('click', () => {
   const escena = $('iaEscena').value.trim();
   const detalles = $('iaDetalles').value.trim();
-  const marca = $('iaMarca').checked;
-  try{ localStorage.setItem(IA_OPTS_KEY, JSON.stringify({ escena, detalles, marca, persona: iaPersona })); }catch(e){}
-  const cNom = $('f_colorprod_nom').value.trim(), cHex = $('f_colorprod_hex').value;
+  try{ localStorage.setItem(IA_OPTS_KEY, JSON.stringify({ escena, detalles, persona: iaPersona })); }catch(e){}
   $('iaOptsModal').hidden = true;
   mejorarConIA('situacion', {
     escena,
     detalles,
     persona: iaPersona,
-    marcaColor: marca ? ((cNom ? cNom + ' ' : '') + cHex) : ''
+    datos: $('f_obsprod').value.trim() // material, medidas y color → para que la escala sea real
   });
 });
 
