@@ -935,6 +935,9 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <button type="button" id="iaPers_persona" aria-pressed="false" title="Una persona genérica usando el producto">Con persona</button>
       <button type="button" id="iaPers_manos" aria-pressed="false" title="Primer plano de manos interactuando con el producto">Solo manos</button>
     </div>
+    <label for="iaMedidas">Medidas del producto</label>
+    <input type="text" id="iaMedidas" placeholder="Ej: 30 cm de alto, 1 litro" maxlength="120">
+    <p class="iaHint" id="iaEscalaHint" style="margin:5px 0 0" hidden></p>
     <label for="iaDetalles">Detalles extra</label>
     <input type="text" id="iaDetalles" placeholder="Ej: luz cálida, sobre una mesa de madera, de noche…" maxlength="300">
     <div class="iaBtns">
@@ -971,6 +974,7 @@ let color2 = false;                    // compartido: si el producto lleva color
 let imgFoto = null, imgLogo = null;
 let fotoAlt = null;                    // la otra versión de la foto (original ↔ IA) para intercambiar
 let fotoActiva = 'ia';                 // cuál se está mostrando cuando hay dos: 'ia' u 'orig'
+let fotoEscala = '';                   // cuánto abarca la foto en cm reales (sale de la regla del boceteador)
 let logoBg = 'product';                // fondo del recuadro del logo: color del producto (default) o claro
 let printColors = [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
 let barW = 100, barH = 100;
@@ -990,7 +994,7 @@ const FIELDS = SHARED_FIELDS.concat(PAGE_FIELDS);
 
 /* ---- hojas ---- */
 function newPage(){
-  return { imgFoto:null, imgLogo:null, fotoAlt:null, fotoActiva:'ia', logoBg:'product',
+  return { imgFoto:null, imgLogo:null, fotoAlt:null, fotoActiva:'ia', fotoEscala:'', logoBg:'product',
     printColors:[{hex:'#FFFFFF', nom:'Blanco', pant:''}],
     barW:100, barH:100, barWOff:0, barHOff:0, fullColor:false, engraved:false, fotoFit:'cover',
     fields:{ f_medida_w:'', f_medida_h:'', f_obslogo:'', f_tecnica:'', f_posicion:'' } };
@@ -1001,7 +1005,7 @@ let cur = 0;
 function capturePage(){
   const p = pages[cur];
   p.imgFoto = imgFoto; p.imgLogo = imgLogo;
-  p.fotoAlt = fotoAlt; p.fotoActiva = fotoActiva;
+  p.fotoAlt = fotoAlt; p.fotoActiva = fotoActiva; p.fotoEscala = fotoEscala;
   p.logoBg = logoBg; p.printColors = printColors;
   p.barW = barW; p.barH = barH; p.barWOff = barWOff; p.barHOff = barHOff;
   p.fullColor = fullColor; p.engraved = engraved; p.fotoFit = fotoFit;
@@ -1014,6 +1018,7 @@ function loadPage(i){
   imgFoto = p.imgFoto; imgLogo = p.imgLogo;
   fotoAlt = p.fotoAlt || null;
   fotoActiva = p.fotoActiva === 'orig' ? 'orig' : 'ia';
+  fotoEscala = p.fotoEscala || '';
   logoBg = p.logoBg === 'light' ? 'light' : 'product'; // lo guardado como "dark" pasa al color del producto
   printColors = (Array.isArray(p.printColors) && p.printColors.length) ? p.printColors : [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
   barW = p.barW || 100; barH = p.barH || 100;
@@ -1442,7 +1447,7 @@ function hookFile(inputId, boxId, txtId, clearId, setter){
     render();
   });
 }
-hookFile('f_foto','box_foto','txt_foto','clear_foto', v=>{ imgFoto=v; fotoAlt=null; fotoActiva='ia'; refreshFotoBox(); });
+hookFile('f_foto','box_foto','txt_foto','clear_foto', v=>{ imgFoto=v; fotoAlt=null; fotoActiva='ia'; fotoEscala=''; refreshFotoBox(); });
 hookFile('f_logo','box_logo','txt_logo','clear_logo', v=>{ imgLogo=v; });
 
 /* ---------- mejorar la foto con IA (OpenAI vía Netlify Function) ----------
@@ -1601,6 +1606,17 @@ $('ia_situacion').addEventListener('click', () => {
   $('iaEscena').value = s.escena || '';
   $('iaDetalles').value = s.detalles || '';
   setIaPersona(s.persona || 'auto');
+  // medidas: se precargan de "Observaciones del producto" si ahí hay números
+  const obs = $('f_obsprod').value.trim();
+  $('iaMedidas').value = /\d/.test(obs) ? obs.slice(0, 120) : '';
+  const hint = $('iaEscalaHint');
+  if(fotoEscala){
+    hint.hidden = false;
+    hint.textContent = '📐 El boceto ya aporta la escala real: la foto abarca ' + fotoEscala + '.';
+  } else if(!$('iaMedidas').value){
+    hint.hidden = false;
+    hint.textContent = '⚠ Sin medidas, la IA adivina el tamaño del producto en la escena.';
+  } else hint.hidden = true;
   $('iaOptsModal').hidden = false;
   $('iaEscena').focus();
 });
@@ -1614,7 +1630,9 @@ $('iaOptsGo').addEventListener('click', () => {
     escena,
     detalles,
     persona: iaPersona,
-    datos: $('f_obsprod').value.trim() // material, medidas y color → para que la escala sea real
+    medidas: $('iaMedidas').value.trim(),   // lo que confirmó/escribió el vendedor
+    escalaFoto: fotoEscala,                 // escala real medida con la regla del boceteador
+    datos: $('f_obsprod').value.trim()      // material y color, contexto extra
   });
 });
 
@@ -2560,6 +2578,8 @@ document.addEventListener('keydown', e => { if(e.key === 'Escape' && !bocetoModa
 window.__applyBoceto = res => {
   imgFoto = res.foto;
   fotoAlt = null; fotoActiva = 'ia'; // el boceto recién compuesto reemplaza cualquier par original/IA
+  const f1 = v => String(Math.round(v*10)/10).replace('.', ',');
+  fotoEscala = (res.fotoCmW > 0 && res.fotoCmH > 0) ? f1(res.fotoCmW) + ' × ' + f1(res.fotoCmH) + ' cm' : '';
   fotoFit = 'contain'; // el boceto compuesto se muestra entero, sin recortes
   refreshFotoBox();
   if(res.logo){
@@ -3656,6 +3676,8 @@ $('applyBtn').addEventListener('click', () => {
     const m = medidaWH(principal);
     if(m){ mW = fmtCm(m.w*unitK()) + ' ' + state.unit; mH = fmtCm(m.h*unitK()) + ' ' + state.unit; }
   }
+  // si hay regla en cm, la foto entera tiene medida real conocida: viaja a la IA como referencia de escala
+  const kEsc = cmPerPx(), frEsc = frameRect();
   window.__applyBoceto({
     foto: composeFoto(),
     logo: logoDataUrl(principal),
@@ -3663,6 +3685,8 @@ $('applyBtn').addEventListener('click', () => {
     medidaH: mH,
     tecnica: techValue(),
     grabado: principal.tint === 'engrave',
+    fotoCmW: kEsc ? frEsc.w * kEsc : 0,
+    fotoCmH: kEsc ? frEsc.h * kEsc : 0,
   });
 });
 

@@ -40,15 +40,21 @@ function promptSituacion(o) {
     ? `Mostrá el mismo producto en una situación real y creíble en este lugar o contexto: ${o.escena}.`
     : `Mostrá el mismo producto en una situación de uso real y creíble acorde a su tipo (una oficina, un evento corporativo, una cafetería, un exterior urbano...).`);
   if (o.persona === 'persona') {
-    partes.push(`El producto está siendo usado o sostenido de forma natural por una persona adulta genérica (que no se parezca a ninguna persona real).`);
+    partes.push(`El producto está siendo usado por una persona adulta genérica (que no se parezca a ninguna persona real), de la forma en que el producto se usa de verdad: si es indumentaria o un accesorio que se lleva puesto (gorra, remera, buzo, chomba, delantal, mochila, riñonera...), la persona lo tiene PUESTO como corresponde — la gorra en la cabeza, la remera puesta — y nunca lo sostiene en la mano; si es un objeto de uso, lo está usando con naturalidad (tomando del mate, escribiendo con la birome, bebiendo del termo).`);
   } else if (o.persona === 'manos') {
     partes.push(`Se ven solamente las manos de una persona interactuando con el producto, en primer plano; no se ve el resto del cuerpo.`);
   } else if (o.persona === 'no') {
     partes.push(`Sin personas en la escena.`);
   } // 'auto' u omitido: el modelo decide
   partes.push(`El producto es el protagonista: nítido, en primer plano y bien iluminado; el entorno acompaña detrás con un desenfoque suave. Ambiente luminoso, actual y aspiracional.`);
-  if (o.datos) {
-    partes.push(`Datos del producto cargados por el vendedor (material, medidas y color): ${o.datos}. Respetá esas medidas: el tamaño del producto en la escena debe ser proporcional y realista respecto de las manos, personas y objetos que aparezcan.`);
+  if (o.medidas) {
+    partes.push(`Medidas reales del producto: ${o.medidas}. Respetá esa escala: el tamaño del producto en la escena debe ser proporcional y realista respecto de las manos, personas y objetos que aparezcan.`);
+  }
+  if (o.escalaFoto) {
+    partes.push(`Referencia adicional de escala tomada del boceto: la foto original completa abarca ${o.escalaFoto} reales; deducí de ahí el tamaño real del producto y respetalo en la escena.`);
+  }
+  if (o.datos && o.datos !== o.medidas) {
+    partes.push(`Datos del producto cargados por el vendedor (material, medidas y color): ${o.datos}.`);
   }
   if (o.detalles) {
     partes.push(`Indicaciones adicionales del vendedor sobre la escena: ${o.detalles}.`);
@@ -83,6 +89,8 @@ export default async (req) => {
     if (body.mode === 'situacion') modo = promptSituacion({
       escena: String(body.escena || '').slice(0, 120).trim(),
       persona: ['no', 'persona', 'manos'].includes(body.persona) ? body.persona : 'auto',
+      medidas: String(body.medidas || '').slice(0, 120).trim(),
+      escalaFoto: String(body.escalaFoto || '').slice(0, 60).trim(),
       datos: String(body.datos || '').slice(0, 300).trim(),
       detalles: String(body.detalles || '').slice(0, 300).trim(),
     });
