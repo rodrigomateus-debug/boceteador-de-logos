@@ -73,7 +73,7 @@ select{appearance:none; -webkit-appearance:none; padding-right:30px; font-weight
 .pcRow .pms:hover{background:var(--navy); color:#fff}
 .pcRow input.pcMiss{border-color:#EF7958}
 /* buscador de Pantone */
-#pantonePop{position:fixed; z-index:90; background:#fff; border:1px solid var(--formas-gray-200,#E4E4ED); border-radius:10px; box-shadow:0 10px 28px rgba(11,11,35,.16); max-height:264px; overflow:auto; padding:4px 0}
+#pantonePop{position:fixed; z-index:130; background:#fff; border:1px solid var(--formas-gray-200,#E4E4ED); border-radius:10px; box-shadow:0 10px 28px rgba(11,11,35,.16); max-height:264px; overflow:auto; padding:4px 0}
 #pantonePop .ph{font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); padding:7px 12px 3px}
 #pantonePop .pi{display:flex; align-items:center; gap:9px; padding:7px 12px; cursor:pointer; font-size:12.5px}
 #pantonePop .pi:hover,#pantonePop .pi.act{background:var(--formas-gray-50,#F8F8FB)}
@@ -893,6 +893,15 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <!-- Paso 4: técnica + descarga -->
       <div class="card step locked" id="step4">
         <div class="step-head"><span class="step-num">4</span><h2>Técnica y aplicación</h2></div>
+        <div class="field" style="margin-top:0; margin-bottom:14px">
+          <span class="label" style="letter-spacing:.08em">Colores de impresión</span>
+          <div class="codeToggle" style="margin-top:6px">
+            <button type="button" id="bcCodeHex" aria-pressed="true">Código HEX</button>
+            <button type="button" id="bcCodePant" aria-pressed="false">Pantone</button>
+          </div>
+          <div id="bocetoColors"></div>
+          <button type="button" class="addColor" id="bcAddColor" style="margin-top:6px">＋ Agregar color</button>
+        </div>
         <div class="field" style="margin-top:0">
           <span class="label" style="letter-spacing:.08em">Técnica de aplicación</span>
           <select id="technique">
@@ -1304,8 +1313,8 @@ $('bgLight').onclick   = ()=>{ logoBg='light';   syncToggles(); render(); };
 $('addColor2').onclick = ()=>{ color2 = true; syncToggles(); render(); };
 $('delColor2').onclick = ()=>{ color2 = false; syncToggles(); render(); };
 $('f_colorprod_hex').addEventListener('input', syncToggles);
-$('codeHex').onclick  = ()=>{ codeMode='hex';     syncToggles(); drawPrintColors(); render(); };
-$('codePant').onclick = ()=>{ codeMode='pantone'; syncToggles(); drawPrintColors(); render(); };
+$('codeHex').onclick  = ()=> setCodeMode('hex');
+$('codePant').onclick = ()=> setCodeMode('pantone');
 $('fullColor').addEventListener('change', ()=>{ fullColor = $('fullColor').checked; if(fullColor) engraved = false; syncToggles(); render(); });
 $('engraved').addEventListener('change', ()=>{ engraved = $('engraved').checked; if(engraved) fullColor = false; syncToggles(); render(); });
 $('fitCover').onclick   = ()=>{ fotoFit='cover';   syncToggles(); render(); };
@@ -1419,19 +1428,35 @@ document.addEventListener('mousedown', e => {
 window.addEventListener('scroll', e => { if(panPop && !panPop.contains(e.target)) cerrarPantonePop(); }, true);
 window.addEventListener('resize', cerrarPantonePop);
 
-/* --- lista de colores de impresión (de la hoja activa) --- */
-function drawPrintColors(){
+/* --- filas de color: la ficha y el editor de bocetos comparten este componente --- */
+function drawColorRows(box, colors, opts){
   cerrarPantonePop();
-  const box = $('printColors'); box.innerHTML='';
-  printColors.forEach((c,i)=>{
+  box.innerHTML = '';
+  colors.forEach((c,i)=>{
     const row = document.createElement('div'); row.className='pcRow';
     row.innerHTML = '<input type="color" value="'+c.hex+'">'
       + '<input type="text" class="pcNom" placeholder="Nombre" value="'+esc(c.nom)+'">'
+      + (codeMode==='hex' ? '<input type="text" class="pcHexTxt" placeholder="#HEX" autocomplete="off" spellcheck="false" value="'+c.hex.toUpperCase()+'" style="max-width:92px; font-family:ui-monospace,SFMono-Regular,monospace; font-size:12px">' : '')
       + (codeMode==='pantone' ? '<input type="text" class="pcPant" placeholder="Pantone" autocomplete="off" value="'+esc(c.pant)+'" style="max-width:92px">' : '')
       + (codeMode==='pantone' ? '<button type="button" class="pms" title="Buscar el Pantone más cercano al color elegido">◎</button>' : '')
-      + (printColors.length>1 ? '<button type="button" class="del" title="Quitar color">✕</button>' : '');
-    row.querySelector('input[type=color]').addEventListener('input', e=>{ c.hex=e.target.value; render(); });
-    row.querySelector('.pcNom').addEventListener('input', e=>{ c.nom=e.target.value; render(); });
+      + (colors.length>1 ? '<button type="button" class="del" title="Quitar color">✕</button>' : '');
+    const sw = row.querySelector('input[type=color]');
+    const hxTxt = row.querySelector('.pcHexTxt');
+    sw.addEventListener('input', e=>{
+      c.hex = e.target.value;
+      if(hxTxt){ hxTxt.value = c.hex.toUpperCase(); hxTxt.classList.remove('pcMiss'); }
+      opts.onChange();
+    });
+    row.querySelector('.pcNom').addEventListener('input', e=>{ c.nom=e.target.value; opts.onChange(); });
+    if(hxTxt){
+      hxTxt.addEventListener('input', e=>{
+        const v = '#' + e.target.value.trim().replace(/^#/,'');
+        const ok = /^#[0-9a-fA-F]{6}$/.test(v);
+        hxTxt.classList.toggle('pcMiss', !ok && e.target.value.trim() !== '');
+        if(ok){ c.hex = v.toLowerCase(); sw.value = c.hex; opts.onChange(); }
+      });
+      hxTxt.addEventListener('change', ()=>{ hxTxt.value = c.hex.toUpperCase(); hxTxt.classList.remove('pcMiss'); });
+    }
     const p = row.querySelector('.pcPant');
     if(p){
       p.addEventListener('input', e=>{
@@ -1439,13 +1464,13 @@ function drawPrintColors(){
         const hx = pantoneHex(c.pant);
         p.classList.toggle('pcMiss', /\d/.test(c.pant) && !hx);
         if(hx){
-          c.hex = hx; row.querySelector('input[type=color]').value = hx;
+          c.hex = hx; sw.value = hx;
           // el nombre del color pasa a ser el nombre oficial del Pantone
           c.nom = pantoneNombre(c.pant);
           row.querySelector('.pcNom').value = c.nom;
         }
         if(!panPicking) abrirPantonePop(p);
-        render();
+        opts.onChange();
       });
       p.addEventListener('focus', ()=> abrirPantonePop(p));
       p.addEventListener('keydown', e=>{
@@ -1463,13 +1488,37 @@ function drawPrintColors(){
       c.pant = near.code + ' C';
       c.hex = near.hex;
       c.nom = pantoneNombre(c.pant);
-      drawPrintColors(); render();
+      opts.redraw(); opts.onChange();
     };
-    const d = row.querySelector('.del'); if(d) d.onclick = ()=>{ printColors.splice(i,1); drawPrintColors(); render(); };
+    const d = row.querySelector('.del'); if(d) d.onclick = ()=>{ colors.splice(i,1); opts.redraw(); opts.onChange(); };
     box.appendChild(row);
   });
 }
+
+/* lista de la ficha (hoja activa) */
+function drawPrintColors(){
+  drawColorRows($('printColors'), printColors, { redraw: drawPrintColors, onChange: render });
+}
 $('addColor').onclick = ()=>{ printColors.push({hex:'#000085', nom:'', pant:''}); drawPrintColors(); render(); };
+
+/* lista del editor de bocetos: arranca de la ficha al abrir y vuelve a ella al aplicar */
+let bocetoColors = [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
+function drawBocetoColors(){
+  drawColorRows($('bocetoColors'), bocetoColors, { redraw: drawBocetoColors, onChange: ()=>{} });
+}
+function syncBcToggles(){
+  $('bcCodeHex').setAttribute('aria-pressed', codeMode==='hex');
+  $('bcCodePant').setAttribute('aria-pressed', codeMode==='pantone');
+}
+function setCodeMode(m){
+  codeMode = m;
+  syncToggles(); syncBcToggles();
+  drawPrintColors(); drawBocetoColors();
+  render();
+}
+$('bcCodeHex').onclick = ()=> setCodeMode('hex');
+$('bcCodePant').onclick = ()=> setCodeMode('pantone');
+$('bcAddColor').onclick = ()=>{ bocetoColors.push({hex:'#000085', nom:'', pant:''}); drawBocetoColors(); };
 
 /* --- logos vectoriales (PDF / AI) rasterizados con pdf.js --- */
 const PDFJS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
@@ -2661,6 +2710,8 @@ const bocetoModal = document.getElementById('bocetoModal');
 function openBocetoModal(){
   bocetoModal.hidden = false;
   document.body.style.overflow = 'hidden';
+  bocetoColors = JSON.parse(JSON.stringify(printColors)); // el editor arranca con los colores de la ficha
+  drawBocetoColors(); syncBcToggles();
   if(window.__bocetoRender) window.__bocetoRender();
 }
 function closeBocetoModal(){
@@ -2686,6 +2737,10 @@ window.__applyBoceto = res => {
   if(res.medidaW) $('f_medida_w').value = res.medidaW;
   if(res.medidaH) $('f_medida_h').value = res.medidaH;
   if(res.tecnica) $('f_tecnica').value = res.tecnica;
+  if(Array.isArray(res.colores) && res.colores.length){
+    printColors = JSON.parse(JSON.stringify(res.colores)); // la ficha hereda los colores del editor (editables después)
+    drawPrintColors();
+  }
   if(res.grabado){ engraved = true; fullColor = false; }
   /* la posición se completa a mano: arranca vacía a propósito */
   closeBocetoModal();
@@ -3782,6 +3837,7 @@ $('applyBtn').addEventListener('click', () => {
     medidaH: mH,
     tecnica: techValue(),
     grabado: principal.tint === 'engrave',
+    colores: JSON.parse(JSON.stringify(bocetoColors)),
     fotoCmW: kEsc ? frEsc.w * kEsc : 0,
     fotoCmH: kEsc ? frEsc.h * kEsc : 0,
   });
