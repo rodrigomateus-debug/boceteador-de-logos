@@ -271,6 +271,7 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #trimUndo:hover, #bocetoModal #undoDeleteBtn:hover{color:#EF7958}
 /* zoom y paneo del canvas */
 #bocetoModal #frameWrap{overflow:hidden; position:relative; border-radius:14px}
+#bocetoModal{--Z:1} /* default para todo lo que está fuera del lienzo con zoom (p. ej. manijas del recorte); sin esto sus calc(--Z) quedan inválidos y las manijas colapsan */
 #bocetoModal #frame{transform-origin:0 0; --Z:1}
 /* con zoom, los controles compensan la escala (--Z) y mantienen su tamaño visual */
 #bocetoModal .handle{width:calc(14px/var(--Z)); height:calc(14px/var(--Z)); border-width:calc(2.5px/var(--Z))}
@@ -308,7 +309,10 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .cm-head h3{font-family:var(--font-display); font-weight:800; color:var(--formas-navy); font-size:17px; margin:0}
 #bocetoModal .cm-hint{font-size:12.5px; color:var(--formas-gray-500); margin:6px 0 12px}
 #bocetoModal #cropStageWrap{display:flex; justify-content:center}
-#bocetoModal #cropStage{position:relative; display:inline-block; max-width:100%; touch-action:none; user-select:none; -webkit-user-select:none; background:repeating-conic-gradient(#ECECF2 0 25%, #fff 0 50%) 0 0/16px 16px; border-radius:8px; overflow:hidden}
+/* el padding deja lugar para las manijas cuando el rectángulo ocupa toda la imagen
+   (sin él, overflow:hidden se las comía y no se podía redimensionar) */
+#bocetoModal #cropStage{position:relative; display:inline-block; max-width:100%; padding:16px; touch-action:none; user-select:none; -webkit-user-select:none; background:repeating-conic-gradient(#ECECF2 0 25%, #fff 0 50%) 0 0/16px 16px; border-radius:8px; overflow:hidden}
+#bocetoModal #cropArea{position:relative; display:inline-block; max-width:100%}
 #bocetoModal #cropImg{display:block; max-width:100%; max-height:52vh}
 #bocetoModal #cropRect{position:absolute; border:2px dashed var(--formas-navy); box-shadow:0 0 0 9999px rgba(255,255,255,.6); cursor:move}
 #bocetoModal #cropRect .handle{background:#fff; border:2.5px solid var(--formas-navy)}
@@ -727,10 +731,12 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <p class="cm-hint">Ajustá el rectángulo al logo real: lo de afuera se descarta para la medida y el boceto. Arrastrá el cuadro para moverlo y las esquinas para cambiar el tamaño.</p>
         <div id="cropStageWrap">
           <div id="cropStage">
-            <img id="cropImg" alt="Logo original">
-            <div id="cropRect">
-              <span class="handle tl" data-corner="tl"></span><span class="handle tr" data-corner="tr"></span>
-              <span class="handle bl" data-corner="bl"></span><span class="handle br" data-corner="br"></span>
+            <div id="cropArea">
+              <img id="cropImg" alt="Logo original">
+              <div id="cropRect">
+                <span class="handle tl" data-corner="tl"></span><span class="handle tr" data-corner="tr"></span>
+                <span class="handle bl" data-corner="bl"></span><span class="handle br" data-corner="br"></span>
+              </div>
             </div>
           </div>
         </div>
@@ -893,7 +899,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <!-- Paso 4: técnica + descarga -->
       <div class="card step locked" id="step4">
         <div class="step-head"><span class="step-num">4</span><h2>Técnica y aplicación</h2></div>
-        <div class="field" style="margin-top:0; margin-bottom:14px">
+        <div class="field" id="bcColoresField" style="margin-top:0; margin-bottom:14px">
           <span class="label" style="letter-spacing:.08em">Colores de impresión</span>
           <div class="codeToggle" style="margin-top:6px">
             <button type="button" id="bcCodeHex" aria-pressed="true">Código HEX</button>
@@ -2737,7 +2743,7 @@ window.__applyBoceto = res => {
   if(res.medidaW) $('f_medida_w').value = res.medidaW;
   if(res.medidaH) $('f_medida_h').value = res.medidaH;
   if(res.tecnica) $('f_tecnica').value = res.tecnica;
-  if(Array.isArray(res.colores) && res.colores.length){
+  if(!res.grabado && Array.isArray(res.colores) && res.colores.length){
     printColors = JSON.parse(JSON.stringify(res.colores)); // la ficha hereda los colores del editor (editables después)
     drawPrintColors();
   }
@@ -3417,6 +3423,8 @@ function syncLogoUI(){
     $('opacityVal').textContent = Math.round(L.opacity*100) + '%';
     document.querySelectorAll('#tintSeg button').forEach(b =>
       b.setAttribute('aria-pressed', b.dataset.tint === L.tint));
+    // grabado no lleva color específico: se oculta el selector de colores del paso 4
+    document.getElementById('bcColoresField').hidden = (state.logos[0] || {}).tint === 'engrave';
     if(state.mode === 'logo'){
       $('logoWcm').value = L.cmW > 0 ? +(L.cmW*unitK()).toFixed(2) : '';
       $('logoHcm').value = L.cmH > 0 ? +(L.cmH*unitK()).toFixed(2) : '';
@@ -3457,8 +3465,8 @@ let cropActive = null;
 $('cropStage').addEventListener('pointerdown', e => {
   if(!cropState) return;
   const stage = $('cropStage');
-  const r = stage.getBoundingClientRect();
-  const px = { x: (e.clientX - r.left)/r.width, y: (e.clientY - r.top)/r.height };
+  const r = $('cropArea').getBoundingClientRect(); // el rectángulo vive sobre la imagen, no sobre el padding del stage
+  const px = { x: clamp((e.clientX - r.left)/r.width, 0, 1), y: clamp((e.clientY - r.top)/r.height, 0, 1) };
   if(e.target.dataset && e.target.dataset.corner){
     cropActive = { mode:'resize', corner:e.target.dataset.corner, startPx:px, start:{...cropState} };
   } else if(e.target.id === 'cropRect'){
@@ -3473,7 +3481,7 @@ $('cropStage').addEventListener('pointerdown', e => {
 });
 $('cropStage').addEventListener('pointermove', e => {
   if(!cropActive) return;
-  const r = $('cropStage').getBoundingClientRect();
+  const r = $('cropArea').getBoundingClientRect();
   const px = { x: clamp((e.clientX - r.left)/r.width, 0, 1), y: clamp((e.clientY - r.top)/r.height, 0, 1) };
   const dx = px.x - cropActive.startPx.x, dy = px.y - cropActive.startPx.y;
   if(cropActive.mode === 'move'){
