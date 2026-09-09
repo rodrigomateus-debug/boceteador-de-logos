@@ -90,15 +90,15 @@ sincrónicas de Netlify aunque la imagen tarde minutos.
 | `OPENAI_API_KEY` | Obligatoria. Key de https://platform.openai.com |
 | `FORMAS_IA_CLAVE` | Obligatoria. Clave compartida que la app le pide al usuario |
 | `OPENAI_MODEL` | Opcional. Modelo conductor (default `gpt-5-mini`) |
-| `OPENAI_IMAGE_MODEL` | Opcional. Modelo de imagen (default `gpt-image-2.5-flare`) |
+| `OPENAI_IMAGE_MODEL` | Opcional. Modelo de imagen (default `gpt-image-2.5-sunburst`) |
 | `OPENAI_IMAGE_QUALITY` | Opcional. `low` / `medium` / `high` / `xhigh` / `max` (default `medium`) |
 
-Las imágenes las genera **GPT Image 2.5**, en su variante `flare` (rápida, para
-uso diario). Si en algún producto se necesita más precisión de edición —
-logos finos, texto chico sobre el producto— se puede cambiar
-`OPENAI_IMAGE_MODEL` a `gpt-image-2.5-sunburst`: edita con más fidelidad a
-cambio de tardar más. Es solo cambiar la variable y redesplegar, sin tocar
-código.
+Las imágenes las genera **GPT Image 2.5**, en su variante `sunburst`: es la de
+mayor precisión al editar, la que mejor conserva el producto y el logo tal cual
+son. Tarda más que la alternativa rápida, y esa es la decisión tomada acá — en
+un boceto que se le muestra al cliente, la fidelidad vale más que unos segundos.
+Si en algún momento se prefiere velocidad, se cambia `OPENAI_IMAGE_MODEL` a
+`gpt-image-2.5-flare` y se redespliega, sin tocar código.
 
 Después de setearlas hay que redesplegar el sitio. Costo orientativo: unos
 centavos de dólar por imagen en calidad media. Para probar en local:

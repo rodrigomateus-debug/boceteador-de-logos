@@ -18,8 +18,8 @@
  *   OPENAI_API_KEY        obligatoria
  *   FORMAS_IA_CLAVE       obligatoria — clave compartida que pide la app
  *   OPENAI_MODEL          opcional — modelo "conductor" (default gpt-5-mini)
- *   OPENAI_IMAGE_MODEL    opcional — modelo de imagen (default gpt-image-2.5-flare;
- *                         gpt-image-2.5-sunburst = más preciso al editar, más lento)
+ *   OPENAI_IMAGE_MODEL    opcional — modelo de imagen (default gpt-image-2.5-sunburst,
+ *                         el más fiel editando; gpt-image-2.5-flare = más rápido)
  *   OPENAI_IMAGE_QUALITY  opcional — low | medium | high | xhigh | max (default medium)
  */
 
@@ -128,10 +128,11 @@ export default async (req) => {
     });
 
     const quality = process.env.OPENAI_IMAGE_QUALITY || 'medium';
-    // GPT Image 2.5 (sept 2026): 'flare' es el rápido de uso diario y 'sunburst'
-    // el de máxima precisión de edición. Ya trabaja siempre en alta fidelidad,
+    // GPT Image 2.5 (sept 2026): 'sunburst' es el de máxima precisión de edición
+    // — la prioridad acá es que el producto y el logo salgan fieles, aunque tarde
+    // más; 'flare' es la alternativa rápida. Ya trabaja siempre en alta fidelidad,
     // así que input_fidelity no va: si se pasa, la request falla.
-    const imgModel = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2.5-flare';
+    const imgModel = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2.5-sunburst';
     // siempre 1:1: las fotos cuadradas entran parejas en la ficha y en el catálogo
     let r = await crear({ type: 'image_generation', model: imgModel, action: 'edit', size: '1024x1024', quality }, true);
     if (r.status === 400) {
