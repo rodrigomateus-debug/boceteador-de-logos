@@ -18,7 +18,9 @@
  *   OPENAI_API_KEY        obligatoria
  *   FORMAS_IA_CLAVE       obligatoria — clave compartida que pide la app
  *   OPENAI_MODEL          opcional — modelo "conductor" (default gpt-5-mini)
- *   OPENAI_IMAGE_QUALITY  opcional — low | medium | high (default medium)
+ *   OPENAI_IMAGE_MODEL    opcional — modelo de imagen (default gpt-image-2.5-flare;
+ *                         gpt-image-2.5-sunburst = más preciso al editar, más lento)
+ *   OPENAI_IMAGE_QUALITY  opcional — low | medium | high | xhigh | max (default medium)
  */
 
 const OPENAI = 'https://api.openai.com/v1';
@@ -126,12 +128,16 @@ export default async (req) => {
     });
 
     const quality = process.env.OPENAI_IMAGE_QUALITY || 'medium';
+    // GPT Image 2.5 (sept 2026): 'flare' es el rápido de uso diario y 'sunburst'
+    // el de máxima precisión de edición. Ya trabaja siempre en alta fidelidad,
+    // así que input_fidelity no va: si se pasa, la request falla.
+    const imgModel = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2.5-flare';
     // siempre 1:1: las fotos cuadradas entran parejas en la ficha y en el catálogo
-    let r = await crear({ type: 'image_generation', action: 'edit', size: '1024x1024', quality, input_fidelity: 'high' }, true);
+    let r = await crear({ type: 'image_generation', model: imgModel, action: 'edit', size: '1024x1024', quality }, true);
     if (r.status === 400) {
-      // los parámetros opcionales varían según la versión del modelo de imagen
-      // (p. ej. gpt-image-2 rechaza input_fidelity): reintento con lo mínimo
-      r = await crear({ type: 'image_generation', size: '1024x1024' }, false);
+      // los parámetros opcionales varían según la versión del modelo de imagen:
+      // si alguno deja de aceptarse, se reintenta con lo mínimo indispensable
+      r = await crear({ type: 'image_generation', model: imgModel, size: '1024x1024' }, false);
     }
     if (!r.ok) {
       const detalle = (await r.text()).slice(0, 600);
