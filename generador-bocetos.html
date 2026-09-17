@@ -881,6 +881,15 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             <button type="button" data-tint="white" aria-pressed="false">Blanco</button>
             <button type="button" data-tint="black" aria-pressed="false">Negro</button>
             <button type="button" data-tint="engrave" aria-pressed="false" title="Efecto de grabado metálico">Grabado</button>
+            <button type="button" data-tint="custom" aria-pressed="false" title="Pintar el logo de un solo color a elección: HEX o Pantone">Un color</button>
+          </div>
+          <div id="tintCustom" hidden>
+            <div class="codeToggle">
+              <button type="button" id="tintCodeHex" aria-pressed="true">Código HEX</button>
+              <button type="button" id="tintCodePant" aria-pressed="false">Pantone</button>
+            </div>
+            <div id="tintColorRow"></div>
+            <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11px">El logo se pinta entero de este color y pasa a «Colores de impresión» del paso 4. Con ◎ se busca el Pantone más cercano.</small>
           </div>
           <div class="field">
             <span class="label" style="letter-spacing:.08em">Opacidad · <span id="opacityVal">100%</span></span>
@@ -1436,7 +1445,9 @@ window.addEventListener('resize', cerrarPantonePop);
 
 /* --- filas de color: la ficha y el editor de bocetos comparten este componente --- */
 function drawColorRows(box, colors, opts){
-  cerrarPantonePop();
+  // solo se cierra el buscador si su campo vive en la lista que se redibuja:
+  // redibujar otra lista (p. ej. el paso 4 al sincronizar el tinte) no debe cerrar el que se está usando
+  if(panPopInput && box.contains(panPopInput)) cerrarPantonePop();
   box.innerHTML = '';
   colors.forEach((c,i)=>{
     const row = document.createElement('div'); row.className='pcRow';
@@ -1520,6 +1531,7 @@ function setCodeMode(m){
   codeMode = m;
   syncToggles(); syncBcToggles();
   drawPrintColors(); drawBocetoColors();
+  if(window.__bocetoTintRedraw) window.__bocetoTintRedraw();
   render();
 }
 $('bcCodeHex').onclick = ()=> setCodeMode('hex');
@@ -2801,8 +2813,10 @@ window.__applyBoceto = res => {
   if(!res.grabado && Array.isArray(res.colores) && res.colores.length){
     printColors = JSON.parse(JSON.stringify(res.colores)); // la ficha hereda los colores del editor (editables después)
     drawPrintColors();
+    engraved = false;
   }
   if(res.grabado){ engraved = true; fullColor = false; }
+  if(res.unColor) fullColor = false; // logo tintado (blanco, negro o un color elegido): la ficha muestra los colores, no "Full color"
   /* la posición se completa a mano: arranca vacía a propósito */
   closeBocetoModal();
   syncToggles();
@@ -3372,6 +3386,30 @@ function engraveEffect(c){
   return out;
 }
 
+/* color predominante de la tinta de un logo (ignora transparencia y blanco).
+   Se mide sobre una miniatura para que no pese; devuelve #rrggbb o null si no hay tinta. */
+function colorDominante(c){
+  try{
+    const S = 48, s = document.createElement('canvas'); s.width = S; s.height = S;
+    const sc = s.getContext('2d');
+    sc.drawImage(c, 0, 0, S, S);
+    const d = sc.getImageData(0, 0, S, S).data, buckets = {};
+    let best = null;
+    for(let i = 0; i < d.length; i += 4){
+      if(d[i+3] < 200) continue;
+      const r = d[i], g = d[i+1], b = d[i+2];
+      if(r > 235 && g > 235 && b > 235) continue;
+      const k = ((r>>5)<<6) | ((g>>5)<<3) | (b>>5);
+      const bk = buckets[k] || (buckets[k] = { n:0, r:0, g:0, b:0 });
+      bk.n++; bk.r += r; bk.g += g; bk.b += b;
+      if(!best || bk.n > best.n) best = bk;
+    }
+    if(!best) return null;
+    const h = v => Math.round(v / best.n).toString(16).padStart(2, '0');
+    return '#' + h(best.r) + h(best.g) + h(best.b);
+  }catch(e){ return null; }
+}
+
 /* pipeline de imagen: original → sin fondo blanco → tinte / grabado */
 function rebuildLogo(logo, done){
   const img = new Image();
@@ -3388,11 +3426,14 @@ function rebuildLogo(logo, done){
       }
       ctx.putImageData(d,0,0);
     }
+    logo.domHex = colorDominante(c); // color predominante del archivo: punto de partida de "Un color"
     if(logo.tint === 'engrave'){
       c = engraveEffect(c);
     } else if(logo.tint !== 'original'){
       ctx.globalCompositeOperation = 'source-in';
-      ctx.fillStyle = logo.tint === 'white' ? '#FFFFFF' : '#0B0B23';
+      ctx.fillStyle = logo.tint === 'white' ? '#FFFFFF'
+        : logo.tint === 'custom' ? ((logo.tintColor && logo.tintColor.hex) || '#000085')
+        : '#0B0B23';
       ctx.fillRect(0,0,c.width,c.height);
       ctx.globalCompositeOperation = 'source-over';
     }
@@ -3485,6 +3526,8 @@ function syncLogoUI(){
     $('opacityVal').textContent = Math.round(L.opacity*100) + '%';
     document.querySelectorAll('#tintSeg button').forEach(b =>
       b.setAttribute('aria-pressed', b.dataset.tint === L.tint));
+    $('tintCustom').hidden = L.tint !== 'custom';
+    if(L.tint === 'custom') drawTintColor(L);
     // grabado no lleva color específico: se oculta el selector de colores del paso 4
     document.getElementById('bcColoresField').hidden = (state.logos[0] || {}).tint === 'engrave';
     if(state.mode === 'logo'){
@@ -3492,6 +3535,7 @@ function syncLogoUI(){
       $('logoHcm').value = L.cmH > 0 ? +(L.cmH*unitK()).toFixed(2) : '';
     }
   } else {
+    $('tintCustom').hidden = true;
     $('logoThumb').innerHTML = '◐';
     $('logoTxt').innerHTML = 'Elegir logo<small>PNG sin fondo recomendado · también SVG, JPG, PDF o AI</small>';
     $('jpgNote').hidden = true;
@@ -3629,8 +3673,69 @@ document.querySelectorAll('#tintSeg button').forEach(b => b.addEventListener('cl
   L.tint = b.dataset.tint;
   // grabado: si aún no eligieron técnica, se propone "Grabado láser" sola
   if(L.tint === 'engrave' && !techValue()) $('technique').value = 'Grabado láser';
+  // un color: arranca del color predominante del archivo (o navy Formas) y se recuerda al cambiar de tinte
+  if(L.tint === 'custom' && !L.tintColor) L.tintColor = { hex: L.domHex || '#000085', nom: '', pant: '' };
+  syncBocetoColorsFromTints();
   rebuildLogo(L, () => { syncLogoUI(); render(); });
 }));
+
+/* ---------- "Un color": el logo pintado de un color a elección (HEX o Pantone) ---------- */
+const TINT_FIJOS = { white: { hex:'#ffffff', nom:'Blanco', pant:'' }, black: { hex:'#0b0b23', nom:'Negro', pant:'' } };
+/* mientras algún logo esté en "Un color", la lista de colores de impresión del paso 4
+   refleja los tintes de los logos (un color por logo, sin repetir) */
+function syncBocetoColorsFromTints(){
+  if(!state.logos.some(l => l.tint === 'custom' && l.tintColor)) return;
+  const cols = [];
+  state.logos.forEach(l => {
+    const c = l.tint === 'custom' ? l.tintColor : TINT_FIJOS[l.tint];
+    if(!c || !c.hex) return;
+    if(!cols.some(x => x.hex.toLowerCase() === c.hex.toLowerCase())) cols.push({ hex:c.hex, nom:c.nom || '', pant:c.pant || '' });
+  });
+  if(!cols.length) return;
+  bocetoColors = cols;
+  drawBocetoColors();
+}
+/* repintar en vivo mientras se arrastra el picker: una reconstrucción a la vez */
+let tintBusy = false, tintDirty = false;
+function tintRebuild(L){
+  if(tintBusy){ tintDirty = true; return; }
+  tintBusy = true;
+  rebuildLogo(L, () => {
+    tintBusy = false;
+    syncLogoUI(); render();
+    if(tintDirty){ tintDirty = false; tintRebuild(L); }
+  });
+}
+function syncTintCodeToggles(){
+  $('tintCodeHex').setAttribute('aria-pressed', codeMode==='hex');
+  $('tintCodePant').setAttribute('aria-pressed', codeMode==='pantone');
+}
+/* la fila reutiliza el componente de colores de la ficha (picker, nombre, HEX o Pantone con buscador).
+   Solo se redibuja al cambiar de logo o de modo: si se redibujara en cada repintado,
+   el campo perdería el foco y el buscador de Pantone se cerraría mientras se escribe. */
+let tintRowLogo = null, tintRowMode = '';
+function drawTintColor(L, force){
+  if(!L || !L.tintColor) return;
+  const box = $('tintColorRow');
+  if(!force && tintRowLogo === L && tintRowMode === codeMode && box.firstChild){
+    const sw = box.querySelector('input[type=color]');
+    if(sw && document.activeElement !== sw) sw.value = L.tintColor.hex;
+    return;
+  }
+  tintRowLogo = L; tintRowMode = codeMode;
+  drawColorRows(box, [L.tintColor], {
+    redraw: () => drawTintColor(L, true),
+    onChange: () => { syncBocetoColorsFromTints(); tintRebuild(L); },
+  });
+  syncTintCodeToggles();
+}
+$('tintCodeHex').onclick = () => setCodeMode('hex');
+$('tintCodePant').onclick = () => setCodeMode('pantone');
+window.__bocetoTintRedraw = () => {
+  const L = selLogo();
+  if(L && L.tint === 'custom') drawTintColor(L, true);
+  syncTintCodeToggles();
+};
 
 /* opacidad del logo seleccionado */
 $('logoOpacity').addEventListener('input', () => {
@@ -3907,6 +4012,7 @@ $('applyBtn').addEventListener('click', () => {
     medidaH: mH,
     tecnica: techValue(),
     grabado: principal.tint === 'engrave',
+    unColor: state.logos.some(l => l.tint === 'white' || l.tint === 'black' || l.tint === 'custom'),
     colores: JSON.parse(JSON.stringify(bocetoColors)),
     fotoCmW: kEsc ? frEsc.w * kEsc : 0,
     fotoCmH: kEsc ? frEsc.h * kEsc : 0,
@@ -3945,7 +4051,7 @@ window.__bocetoSnapshot = () => {
     sel: state.sel,
     logos: state.logos.map(l => ({ src:l.src, name:l.name, isJpg:l.isJpg, aspect:l.aspect,
       crop:l.crop, useTrim:l.useTrim, fullW:l.fullW, fullH:l.fullH,
-      whiteRemoved:l.whiteRemoved, tint:l.tint, opacity:l.opacity,
+      whiteRemoved:l.whiteRemoved, tint:l.tint, tintColor: l.tintColor ? { ...l.tintColor } : undefined, opacity:l.opacity,
       cmW:l.cmW, cmH:l.cmH, rot:l.rot, x:l.x, y:l.y, w:l.w, h:l.h })),
   };
 };

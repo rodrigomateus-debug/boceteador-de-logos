@@ -8,7 +8,7 @@ se abren directo en el navegador, sin instalación.
 
 | Archivo | Qué es |
 |---|---|
-| **`generador-bocetos.html`** | ⭐ **La app principal.** Generador de bocetos (formulario + ficha A4 de producción en vivo) con el boceteador "Cargá tu logo" integrado como modal: subís la foto del producto, marcás el área, aplicás el logo (tinte, opacidad, rotación, quita de fondo) y la ficha se completa sola (foto compuesta, logo, medidas, técnica, posición). Imprime a PDF y descarga HTML. |
+| **`generador-bocetos.html`** | ⭐ **La app principal.** Generador de bocetos (formulario + ficha A4 de producción en vivo) con el boceteador "Cargá tu logo" integrado como modal: subís la foto del producto, marcás el área, aplicás el logo (tinte —blanco, negro, grabado o **un color a elección**, con código HEX o Pantone del mismo buscador de la ficha—, opacidad, rotación, quita de fondo) y la ficha se completa sola (foto compuesta, logo, medidas, técnica, posición). Imprime a PDF y descarga HTML. |
 | `boceteador.html` | El boceteador standalone (versión previa a la integración; el modal del generador es su evolución). |
 | `cotizador-formas.html` | Maqueta funcional del cotizador (fase 3 del roadmap): técnica, cantidades, desglose de precio y markup. |
 | `DESIGN.md` | Documento de diseño: flujos, modelo de datos, sistema de diseño Formas, roadmap. |
