@@ -129,8 +129,18 @@ select{appearance:none; -webkit-appearance:none; padding-right:30px; font-weight
 .fileBox.darkbg span{color:#C9C9DC}
 .fileBox.darkbg .clear{background:#1E1E40; color:#C9C9DC; box-shadow:0 0 0 1px #3A3A55}
 /* ---------- Preview ---------- */
-.previewWrap{padding:26px; display:flex; justify-content:center; align-items:flex-start; overflow:auto}
-.sheetScaler{transform-origin:top center; box-shadow:0 10px 40px rgba(11,11,35,.18); border-radius:4px}
+.previewWrap{padding:26px; display:flex; justify-content:flex-start; align-items:flex-start; overflow:auto; min-width:0}
+/* el sizer ocupa en el flujo el tamaño real de la hoja escalada: así el zoom
+   genera scroll en vez de recortar la hoja; margin:auto la centra cuando entra */
+.sheetSizer{flex:none; margin:0 auto; position:relative}
+.sheetScaler{transform-origin:top left; box-shadow:0 10px 40px rgba(11,11,35,.18); border-radius:4px}
+/* zoom de la vista previa: para revisar la calidad de la foto con el logo puesto */
+.previewZoom{position:fixed; top:18px; right:22px; z-index:30; display:flex; align-items:center; gap:2px; padding:4px 6px; border-radius:999px; border:1.5px solid var(--border); background:#fff; box-shadow:0 2px 8px rgba(11,11,35,.18)}
+.previewZoom button{height:26px; min-width:26px; padding:0 6px; border:none; background:none; border-radius:999px; font:inherit; font-size:14px; font-weight:700; color:var(--navy); cursor:pointer; display:grid; place-items:center}
+.previewZoom button:hover{background:var(--sunken)}
+.previewZoom button.small{font-size:10.5px; letter-spacing:.04em}
+.previewZoom #pvZoomLabel{font-family:'Montserrat',sans-serif; font-size:11px; font-weight:800; color:var(--navy); min-width:42px; text-align:center; font-variant-numeric:tabular-nums}
+@media (max-width:900px){.previewZoom{top:auto; bottom:18px}}
 iframe#preview{width:794px; height:1123px; border:none; display:block; background:#fff}
 @media (max-width:900px){.app{grid-template-columns:1fr}.panel{height:auto; position:static}}
 /* ===== Design system Formas Publicitarias ===== */
@@ -164,9 +174,16 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .col{display:flex;flex-direction:column;gap:16px}
 /* ---- escenario ---- */
 #bocetoModal .stage-card{padding:16px}
-#bocetoModal #frameWrap{display:flex;justify-content:center}
+#bocetoModal #frameWrap{display:flex;justify-content:center;align-items:center}
 #bocetoModal #frame{position:relative;display:inline-block;border-radius:14px;overflow:hidden;max-width:100%;touch-action:none;user-select:none;-webkit-user-select:none}
 #bocetoModal #photo{display:block;max-width:100%;max-height:580px;width:auto;height:auto}
+/* lienzo adaptativo: en dos columnas el escenario ocupa toda la altura visible del
+   modal (--stageH la calcula fitStage) y la foto se ajusta a lo que entre, sin
+   dejar espacio muerto abajo. En una columna vuelve al alto natural. */
+#bocetoModal #stageCol.fill .stage-card{flex:1;min-height:0;display:flex;flex-direction:column}
+#bocetoModal #frameWrap.fill{flex:1;min-height:0;height:var(--stageH)}
+#bocetoModal #frameWrap.fill #photo{max-height:var(--stageH)}
+#bocetoModal #frameWrap.fill #emptyState{width:100%;height:100%;aspect-ratio:auto}
 #bocetoModal #emptyState{aspect-ratio:4/3.4;width:640px;max-width:100%;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;cursor:pointer;border:1.5px dashed var(--border-subtle)}
 #bocetoModal #emptyState .big{font-family:var(--font-display);font-weight:800;font-size:19px;color:var(--formas-navy)}
 #bocetoModal #emptyState p{margin:0;color:var(--text-muted);font-size:13px;max-width:38ch}
@@ -267,8 +284,8 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .suffix-wrap input{padding-right:38px}
 #bocetoModal input.need{border-color:#F9CE32; box-shadow:0 0 0 2.5px rgba(249,206,50,.35)}
 #bocetoModal select{padding-right:32px}
-#bocetoModal #trimUndo, #bocetoModal #undoDeleteBtn{border:none; background:none; color:var(--formas-navy); font-family:var(--font-primary); font-size:12px; font-weight:700; text-decoration:underline; cursor:pointer; padding:0; flex:none; white-space:nowrap}
-#bocetoModal #trimUndo:hover, #bocetoModal #undoDeleteBtn:hover{color:#EF7958}
+#bocetoModal #trimUndo, #bocetoModal #undoDeleteBtn, #bocetoModal #photoIaUndo{border:none; background:none; color:var(--formas-navy); font-family:var(--font-primary); font-size:12px; font-weight:700; text-decoration:underline; cursor:pointer; padding:0; flex:none; white-space:nowrap}
+#bocetoModal #trimUndo:hover, #bocetoModal #undoDeleteBtn:hover, #bocetoModal #photoIaUndo:hover{color:#EF7958}
 /* zoom y paneo del canvas */
 #bocetoModal #frameWrap{overflow:hidden; position:relative; border-radius:14px}
 #bocetoModal{--Z:1} /* default para todo lo que está fuera del lienzo con zoom (p. ej. manijas del recorte); sin esto sus calc(--Z) quedan inválidos y las manijas colapsan */
@@ -375,6 +392,16 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 .btn-dlfoto{display:block; width:100%; margin-top:6px; padding:8px 10px; border:1px dashed var(--formas-gray-200,#E4E4ED); border-radius:10px; background:#fff; color:var(--text-body); font:inherit; font-size:12px; font-weight:600; cursor:pointer}
 .btn-dlfoto:hover{border-color:var(--navy); color:var(--navy)}
 @media (max-width:640px){ #iaModal .iaCompare{grid-template-columns:1fr} }
+/* aviso de baja resolución: vive por encima del modal del boceteador (z 100) */
+#lowResModal{position:fixed; inset:0; z-index:120; background:rgba(11,11,35,.55); display:flex; align-items:center; justify-content:center; padding:20px}
+#lowResModal[hidden]{display:none}
+#lowResModal .iaCard{background:#fff; border-radius:16px; width:min(560px,100%); max-height:92vh; overflow:auto; padding:18px 20px}
+#lowResModal h3{margin:0 0 6px; color:var(--navy); font-size:17px}
+#lowResModal .iaHint{font-size:13px; line-height:1.5; color:var(--text-body,#3D3D55); margin:0 0 14px}
+#lowResModal .lowResBtns{display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end}
+#lowResModal .usar{padding:10px 16px; border:none; border-radius:10px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
+#lowResModal .descartar{padding:10px 16px; border:1px solid var(--border); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:13px; font-weight:600; cursor:pointer}
+#lowResModal button:disabled{opacity:.55; cursor:default}
 .or-sep{text-align:center; font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:8px 0 2px}
 
 </style>
@@ -647,6 +674,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <div class="iaRow">
         <button type="button" class="btn-ia" id="ia_blanco" disabled title="Recorta el producto y lo pone sobre fondo blanco de estudio">✨ Fondo blanco</button>
         <button type="button" class="btn-ia" id="ia_situacion" disabled title="Muestra el producto en una escena de uso real">✨ En situación</button>
+        <button type="button" class="btn-ia" id="ia_resolucion" disabled title="Agranda la foto con IA manteniendo el producto, el encuadre y los colores exactamente iguales">✨ Más resolución</button>
       </div>
       <div class="iaStatus" id="iaStatus" hidden></div>
       <label>Ajuste de la foto en la ficha</label>
@@ -705,7 +733,14 @@ html,body{margin:0;padding:0;background:#EDEDF2}
   </div>
 
   <div class="previewWrap">
-    <div class="sheetScaler" id="scaler"><iframe id="preview"></iframe></div>
+    <div class="sheetSizer" id="sizer"><div class="sheetScaler" id="scaler"><iframe id="preview"></iframe></div></div>
+  </div>
+  <div class="previewZoom" id="previewZoom" title="Zoom de la vista previa · también Ctrl + rueda del mouse sobre la hoja">
+    <button type="button" id="pvZoomOut" title="Alejar">−</button>
+    <span id="pvZoomLabel">100%</span>
+    <button type="button" id="pvZoomIn" title="Acercar">＋</button>
+    <button type="button" class="small" id="pvZoomFit" title="Ajustar la hoja al ancho disponible">Ajustar</button>
+    <button type="button" class="small" id="pvZoom100" title="Tamaño real de impresión (100%): para ver la calidad de la foto tal cual va a salir">1:1</button>
   </div>
   <iframe id="printFrame" style="position:fixed; left:-3000px; top:0; width:794px; height:1123px; border:0;" aria-hidden="true"></iframe>
 </div>
@@ -821,6 +856,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           <span class="txt" id="photoTxt">Elegir foto del producto<small>JPG o PNG · se recomienda recortada al producto</small></span>
         </label>
         <input type="file" id="photoInput" accept="image/png,image/jpeg,image/webp" hidden>
+        <div class="note" id="photoIaNote" hidden>✨ <span id="photoIaNoteTxt"></span> <button type="button" id="photoIaUndo">Volver a la original</button></div>
         <div class="field" id="rulerField">
           <span class="label" style="letter-spacing:.08em">Escala real · regla</span>
           <div class="field-row" style="margin-top:0">
@@ -977,6 +1013,20 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <button type="button" class="descartar" id="iaOptsCancel">Cancelar</button>
       <button type="button" class="usar" id="iaOptsGo">✨ Generar</button>
     </div>
+  </div>
+</div>
+
+<!-- aviso de foto en baja resolución (boceteador) -->
+<div id="lowResModal" hidden>
+  <div class="iaCard">
+    <h3>⚠ La foto es de baja resolución</h3>
+    <p class="iaHint" id="lowResTxt"></p>
+    <div class="lowResBtns">
+      <button type="button" class="descartar" id="lowResChange">Cambiar la foto</button>
+      <button type="button" class="descartar" id="lowResKeep">Mantenerla así</button>
+      <button type="button" class="usar" id="lowResIa">✨ Mejorar la resolución con IA</button>
+    </div>
+    <div class="iaStatus" id="lowResStatus" hidden></div>
   </div>
 </div>
 
@@ -1561,7 +1611,16 @@ function esVector(file){
 }
 function esEps(file){
   const n = (file.name||'').toLowerCase();
+  // Windows suele etiquetar los .ai como application/postscript: no son EPS, se
+  // abren como PDF (Illustrator los guarda con compatibilidad PDF por defecto)
+  if(n.endsWith('.ai') || n.endsWith('.pdf')) return false;
   return n.endsWith('.eps') || file.type === 'application/postscript';
+}
+/* un .ai viejo (sin "Crear archivo compatible con PDF") es PostScript puro:
+   el navegador no lo puede abrir y el mensaje tiene que decir qué hacer */
+function esAiSinPdf(buf){
+  const head = new TextDecoder('latin1').decode(new Uint8Array(buf.slice(0, 4096)));
+  return head.indexOf('%PDF') < 0 && /^%!PS-Adobe/.test(head.trimStart());
 }
 /* Resolución objetivo del logo YA SIN los márgenes del archivo.
    Antes se apuntaba a 1600 px por página completa: si el cliente mandaba el
@@ -1609,8 +1668,9 @@ function renderPagina(page, k, x, y, w, h){
 }
 
 async function rasterizeVectorFile(file){
-  await ensurePdfJs();
   const buf = await file.arrayBuffer();
+  if(esAiSinPdf(buf)) throw new Error('AI_SIN_PDF');
+  await ensurePdfJs();
   const pdf = await window.pdfjsLib.getDocument({data: buf}).promise;
   const page = await pdf.getPage(1);
   const base = page.getViewport({scale: 1});
@@ -1633,6 +1693,8 @@ async function rasterizeVectorFile(file){
 }
 const MSG_EPS = 'Los archivos EPS no se pueden abrir en el navegador.\nConvertilo a PDF, SVG o PNG (desde Illustrator: Archivo → Guardar como → PDF) y volvé a cargarlo.';
 const MSG_VEC_ERR = 'No se pudo procesar el archivo.\nSi es un .ai viejo (guardado sin compatibilidad PDF), convertilo a PDF o PNG. También verificá la conexión a internet: el conversor se descarga la primera vez.';
+const MSG_AI_VIEJO = 'Este .ai está guardado sin compatibilidad PDF, así que el navegador no lo puede abrir.\nEn Illustrator: Archivo → Guardar como → Illustrator (.ai) → marcá "Crear archivo compatible con PDF" y volvé a cargarlo. También sirve exportarlo a PDF o SVG.';
+const msgVector = err => (err && err.message === 'AI_SIN_PDF') ? MSG_AI_VIEJO : MSG_VEC_ERR;
 
 /* --- imágenes --- */
 function hookFile(inputId, boxId, txtId, clearId, setter){
@@ -1650,7 +1712,7 @@ function hookFile(inputId, boxId, txtId, clearId, setter){
     if(esVector(file)){
       $(txtId).textContent = 'Procesando ' + file.name + '…';
       try{ done(await rasterizeVectorFile(file)); }
-      catch(err){ alert(MSG_VEC_ERR); $(txtId).textContent = defaultTxt(); e.target.value=''; }
+      catch(err){ alert(msgVector(err)); $(txtId).textContent = defaultTxt(); e.target.value=''; }
       return;
     }
     const r = new FileReader();
@@ -1666,7 +1728,7 @@ function hookFile(inputId, boxId, txtId, clearId, setter){
     render();
   });
 }
-hookFile('f_foto','box_foto','txt_foto','clear_foto', v=>{ imgFoto=v; fotoAlt=null; fotoActiva='ia'; fotoEscala=''; refreshFotoBox(); });
+hookFile('f_foto','box_foto','txt_foto','clear_foto', v=>{ imgFoto=v; fotoAlt=null; fotoActiva='ia'; fotoEscala=''; refreshFotoBox(); avisarResFicha(v); });
 hookFile('f_logo','box_logo','txt_logo','clear_logo', v=>{ imgLogo=v; });
 
 /* ---------- mejorar la foto con IA (OpenAI vía Netlify Function) ----------
@@ -1679,6 +1741,7 @@ function syncIaButtons(){
   const off = !imgFoto || iaBusy;
   $('ia_blanco').disabled = off;
   $('ia_situacion').disabled = off;
+  $('ia_resolucion').disabled = off;
 }
 
 function iaClave(){
@@ -1728,34 +1791,57 @@ async function iaFetch(payload, clave){
   return d;
 }
 
+/* manda una foto a la IA y devuelve la imagen resultante (data URL), o null si
+   no hay clave. setS recibe los mensajes de progreso. La usan la ficha y el
+   boceteador (aviso de baja resolución). */
+async function iaGenerarImagen(original, mode, opts, setS){
+  const clave = iaClave();
+  if(!clave) return null;
+  setS('Preparando la foto…');
+  const img = await iaDownscale(original, 1536);
+  setS('Enviando a la IA…');
+  const start = await iaFetch(Object.assign({ action:'start', mode, image: img }, opts || {}), clave);
+  const t0 = Date.now();
+  let estado;
+  while(true){
+    await new Promise(r => setTimeout(r, 4000));
+    if(Date.now() - t0 > 5 * 60 * 1000) throw new Error('La IA tardó más de 5 minutos. Probá de nuevo en un rato.');
+    estado = await iaFetch({ action:'estado', id: start.id }, clave);
+    if(estado.status === 'completed') break;
+    if(estado.status === 'failed') throw new Error(estado.error || 'La generación falló.');
+    setS('La IA está trabajando… (' + Math.round((Date.now() - t0) / 1000) + ' s)');
+  }
+  return estado.image;
+}
+
+/* medidas en píxeles de una imagen (data URL) */
+function medirImagen(dataUrl){
+  return new Promise(res => {
+    const im = new Image();
+    im.onload = () => res({ w: im.naturalWidth, h: im.naturalHeight });
+    im.onerror = () => res(null);
+    im.src = dataUrl;
+  });
+}
+/* por debajo de esto la foto se ve borrosa en la ficha A4 impresa y en el PDF */
+const FOTO_MIN_PX = 1000;
+const esBajaRes = (w, h) => Math.max(w, h) < FOTO_MIN_PX || Math.min(w, h) < FOTO_MIN_PX / 2;
+
 async function mejorarConIA(mode, opts){
   if(iaBusy || !imgFoto) return;
-  const clave = iaClave();
-  if(!clave) return;
   const original = imgFoto;
   const status = $('iaStatus');
   const setS = t => { status.hidden = false; status.textContent = t; };
   iaBusy = true; syncIaButtons();
   try{
-    setS('Preparando la foto…');
-    const img = await iaDownscale(original, 1536);
-    setS('Enviando a la IA…');
-    const start = await iaFetch(Object.assign(
-      { action:'start', mode, image: img, producto: $('f_producto').value.trim(), tecnica: $('f_tecnica').value.trim() },
-      opts || {}
-    ), clave);
-    const t0 = Date.now();
-    let estado;
-    while(true){
-      await new Promise(r => setTimeout(r, 4000));
-      if(Date.now() - t0 > 5 * 60 * 1000) throw new Error('La IA tardó más de 5 minutos. Probá de nuevo en un rato.');
-      estado = await iaFetch({ action:'estado', id: start.id }, clave);
-      if(estado.status === 'completed') break;
-      if(estado.status === 'failed') throw new Error(estado.error || 'La generación falló.');
-      setS('La IA está trabajando… (' + Math.round((Date.now() - t0) / 1000) + ' s)');
+    const extra = Object.assign({ producto: $('f_producto').value.trim(), tecnica: $('f_tecnica').value.trim() }, opts || {});
+    if(mode === 'resolucion'){
+      const m = await medirImagen(original);
+      if(m){ extra.ancho = m.w; extra.alto = m.h; }
     }
+    const image = await iaGenerarImagen(original, mode, extra, setS);
     status.hidden = true;
-    iaPreview(original, estado.image, mode);
+    if(image) iaPreview(original, image, mode);
   }catch(err){
     setS('⚠ ' + (err && err.message ? err.message : err));
   }finally{
@@ -1763,8 +1849,9 @@ async function mejorarConIA(mode, opts){
   }
 }
 
+const IA_MODO_NOMBRE = { 'fondo-blanco': 'fondo blanco', 'situacion': 'en situación', 'resolucion': 'más resolución' };
 function iaPreview(antes, despues, mode){
-  $('iaModalTitle').textContent = mode === 'fondo-blanco' ? 'Mejora con IA — fondo blanco' : 'Mejora con IA — en situación';
+  $('iaModalTitle').textContent = 'Mejora con IA — ' + (IA_MODO_NOMBRE[mode] || mode);
   $('iaBefore').src = antes;
   $('iaAfter').src = despues;
   $('iaModal').hidden = false;
@@ -1776,7 +1863,7 @@ function iaPreview(antes, despues, mode){
   };
   $('iaCancel').onclick = () => { $('iaModal').hidden = true; };
   $('iaDownload').onclick = () => {
-    descargarImagen(despues, docName() + (mode === 'fondo-blanco' ? ' - IA fondo blanco' : ' - IA en situación'));
+    descargarImagen(despues, docName() + ' - IA ' + (IA_MODO_NOMBRE[mode] || mode));
   };
 }
 
@@ -1808,6 +1895,17 @@ function usarFoto(cual){
 $('fotoIaBtn').addEventListener('click', () => usarFoto('ia'));
 $('fotoOrigBtn').addEventListener('click', () => usarFoto('orig'));
 $('ia_blanco').addEventListener('click', () => mejorarConIA('fondo-blanco'));
+$('ia_resolucion').addEventListener('click', () => mejorarConIA('resolucion'));
+
+/* aviso de baja resolución en la foto cargada directo en la ficha */
+async function avisarResFicha(dataUrl){
+  const status = $('iaStatus');
+  if(!dataUrl){ if(status.dataset.res){ status.hidden = true; delete status.dataset.res; } return; }
+  const m = await medirImagen(dataUrl);
+  if(!m || !esBajaRes(m.w, m.h)){ if(status.dataset.res){ status.hidden = true; delete status.dataset.res; } return; }
+  status.hidden = false; status.dataset.res = '1';
+  status.textContent = '⚠ La foto tiene ' + m.w + ' × ' + m.h + ' px: es de baja resolución y va a verse borrosa en la ficha impresa y en el PDF. Conviene cambiarla por una más grande o usar «✨ Más resolución».';
+}
 
 /* ---- opciones del modo "En situación" (se recuerdan para la próxima) ---- */
 const IA_OPTS_KEY = 'formasIaSituOpts';
@@ -2228,19 +2326,59 @@ $('btn_corel').onclick = async () => {
 };
 
 /* --- escala del preview --- */
-function rescale(){
+/* zoom de la vista previa: 1 = hoja ajustada al ancho; por encima se agranda
+   (hasta 4× el ajuste) y la hoja pasa a scrollear, para revisar la calidad de
+   la foto con el logo puesto tal cual va a imprimirse */
+let previewZoom = 1;
+function previewFitK(){
   const wrap = document.querySelector('.previewWrap');
-  const k = Math.min(1, (wrap.clientWidth - 52) / 794);
-  const sc = $('scaler');
-  sc.style.transform = 'scale(' + k + ')';
-  sc.style.marginBottom = (-(1123*(1-k))) + 'px';
+  return Math.min(1, (wrap.clientWidth - 52) / 794);
 }
+function rescale(){
+  const k = previewFitK() * previewZoom;
+  $('sizer').style.width = (794*k) + 'px';
+  $('sizer').style.height = (1123*k) + 'px';
+  $('scaler').style.transform = 'scale(' + k + ')';
+  $('pvZoomLabel').textContent = Math.round(k*100) + '%';
+  $('pvZoomFit').disabled = previewZoom === 1;
+}
+/* cambia el zoom manteniendo lo que se está mirando en el centro de la vista */
+function setPreviewZoom(z){
+  z = clampNum(z, 0.5, 4);
+  if(z === previewZoom) return;
+  const wrap = document.querySelector('.previewWrap');
+  const oldK = previewFitK() * previewZoom;
+  const sizerTop = $('sizer').getBoundingClientRect().top + window.scrollY; // posición de la hoja en la página
+  const cx = wrap.scrollLeft + wrap.clientWidth/2;
+  const cy = window.scrollY + window.innerHeight/2 - sizerTop;
+  previewZoom = z;
+  rescale();
+  const r = (previewFitK() * previewZoom) / oldK;
+  wrap.scrollLeft = cx*r - wrap.clientWidth/2;
+  window.scrollTo({ top: Math.max(0, sizerTop + cy*r - window.innerHeight/2) });
+}
+$('pvZoomIn').addEventListener('click', () => setPreviewZoom(previewZoom * 1.25));
+$('pvZoomOut').addEventListener('click', () => setPreviewZoom(previewZoom / 1.25));
+$('pvZoomFit').addEventListener('click', () => setPreviewZoom(1));
+$('pvZoom100').addEventListener('click', () => setPreviewZoom(1 / previewFitK()));
+/* Ctrl + rueda sobre la vista previa (fuera de la hoja; adentro lo engancha attachBarDrag) */
+document.querySelector('.previewWrap').addEventListener('wheel', e => {
+  if(!e.ctrlKey) return;
+  e.preventDefault();
+  setPreviewZoom(previewZoom * (e.deltaY < 0 ? 1.1 : 1/1.1));
+}, { passive:false });
 window.addEventListener('resize', rescale);
 
 /* --- líneas de medida arrastrables dentro de la ficha --- */
 function attachBarDrag(){
   const doc = $('preview').contentDocument;
   if(!doc) return;
+  // el iframe se recrea en cada render, así que el listener no se duplica
+  doc.addEventListener('wheel', e => {
+    if(!e.ctrlKey) return;
+    e.preventDefault();
+    setPreviewZoom(previewZoom * (e.deltaY < 0 ? 1.1 : 1/1.1));
+  }, { passive:false });
   hookBar('bcpBarW', 'w');
   hookBar('bcpBarH', 'h');
   /* Puntas: agrandan/achican simétricamente alrededor del centro actual.
@@ -2783,6 +2921,7 @@ const bocetoModal = document.getElementById('bocetoModal');
 function openBocetoModal(){
   bocetoModal.hidden = false;
   document.body.style.overflow = 'hidden';
+  if(window.__bocetoFit) window.__bocetoFit();
   bocetoColors = JSON.parse(JSON.stringify(printColors)); // el editor arranca con los colores de la ficha
   drawBocetoColors(); syncBcToggles();
   if(window.__bocetoRender) window.__bocetoRender();
@@ -2848,6 +2987,28 @@ const state = {
 const unitK = () => state.unit === 'mm' ? 10 : 1;
 const fmtPair = (wCm, hCm) => `${fmtCm(wCm*unitK())} × ${fmtCm(hCm*unitK())} ${state.unit}`;
 let pendingAdd = false; // el próximo archivo agrega un logo en vez de reemplazar el seleccionado
+
+/* ---------- lienzo adaptativo ---------- */
+/* el escenario toma la altura visible del cuerpo del modal (menos paddings) para
+   aprovechar la pantalla de la notebook; en una sola columna no se fuerza */
+function fitStage(){
+  const wrap = $('frameWrap'), col = $('stageCol');
+  const body = bocetoModal.querySelector('.bm-body');
+  const dosCols = window.matchMedia('(min-width: 901px)').matches;
+  if(!dosCols || !body || bocetoModal.hidden){
+    wrap.classList.remove('fill'); col.classList.remove('fill');
+    wrap.style.removeProperty('--stageH'); col.style.height = '';
+    return;
+  }
+  const colH = body.clientHeight - 44;   // padding 22px arriba y abajo del cuerpo
+  const stageH = Math.max(260, colH - 32); // padding 16px de la tarjeta del escenario
+  col.classList.add('fill'); wrap.classList.add('fill');
+  col.style.height = colH + 'px';
+  wrap.style.setProperty('--stageH', stageH + 'px');
+  if(!frame.hidden) applyView(); // el paneo se reacomoda al nuevo tamaño
+}
+window.__bocetoFit = fitStage;
+window.addEventListener('resize', () => { if(!bocetoModal.hidden) fitStage(); });
 
 /* ---------- zoom y paneo del canvas ---------- */
 function clampPan(){
@@ -3054,9 +3215,12 @@ function loadPhoto(file){
   r.onload = ev => loadPhotoSrc(ev.target.result, file.name);
   r.readAsDataURL(file); // dataURL: sobrevive en plantillas guardadas
 }
-function loadPhotoSrc(url, name){
+function loadPhotoSrc(url, name, opts){
+  opts = opts || {};
   photoName = name || '';
   photo.onload = () => {
+    $('photoIaNote').hidden = !opts.iaNote;
+    if(opts.iaNote) $('photoIaNoteTxt').textContent = opts.iaNote;
     $('emptyState').hidden = true;
     frame.hidden = false;
     $('photoThumb').innerHTML = `<img src="${url}" alt="">`;
@@ -3084,10 +3248,56 @@ function loadPhotoSrc(url, name){
     syncLogoUI(); setStepStates(); render();
   };
   const probe = new Image();
-  probe.onload = () => { photo.src = padNarrowPhoto(probe) || url; };
+  probe.onload = () => {
+    if(!opts.sinAvisoRes && esBajaRes(probe.naturalWidth, probe.naturalHeight)){
+      avisarBajaRes(url, name, probe.naturalWidth, probe.naturalHeight);
+      return;
+    }
+    photo.src = padNarrowPhoto(probe) || url;
+  };
   probe.onerror = () => { photo.src = url; };
   probe.src = url;
 }
+
+/* ---------- foto en baja resolución: cambiar, mantener o agrandar con IA ---------- */
+let fotoOriginalBajaRes = null; // para volver atrás después de agrandar con IA
+function avisarBajaRes(url, name, w, h){
+  const modal = document.getElementById('lowResModal');
+  const status = $('lowResStatus');
+  const btns = ['lowResChange', 'lowResKeep', 'lowResIa'].map(id => $(id));
+  $('lowResTxt').textContent = 'La imagen tiene ' + w + ' × ' + h + ' px. En la ficha A4 y en el PDF que va a producción se va a ver borrosa o pixelada, sobre todo al acercar el zoom. '
+    + 'Podés cambiarla por otra de mayor resolución, dejarla como está, o pedirle a la IA que la agrande manteniendo el producto, el encuadre y los colores exactamente iguales (tarda alrededor de un minuto).';
+  status.hidden = true; status.textContent = '';
+  btns.forEach(b => b.disabled = false);
+  modal.hidden = false;
+  const cerrar = () => { modal.hidden = true; };
+  $('lowResChange').onclick = () => { cerrar(); $('photoInput').value = ''; $('photoInput').click(); };
+  $('lowResKeep').onclick = () => { cerrar(); loadPhotoSrc(url, name, { sinAvisoRes:true }); };
+  $('lowResIa').onclick = async () => {
+    btns.forEach(b => b.disabled = true);
+    const setS = t => { status.hidden = false; status.textContent = t; };
+    try{
+      const image = await iaGenerarImagen(url, 'resolucion', { ancho:w, alto:h }, setS);
+      if(!image){ btns.forEach(b => b.disabled = false); status.hidden = true; return; } // sin clave: se canceló
+      const m = await medirImagen(image);
+      fotoOriginalBajaRes = { url, name };
+      cerrar();
+      const base = (name || 'foto').replace(/\.[^.]+$/, '');
+      loadPhotoSrc(image, base + ' (IA)', {
+        sinAvisoRes: true,
+        iaNote: 'La foto se agrandó con IA' + (m ? ' a ' + m.w + ' × ' + m.h + ' px' : '') + '. Revisá que el producto siga idéntico antes de seguir.',
+      });
+    }catch(err){
+      setS('⚠ ' + (err && err.message ? err.message : err));
+      btns.forEach(b => b.disabled = false);
+    }
+  };
+}
+$('photoIaUndo').addEventListener('click', () => {
+  if(!fotoOriginalBajaRes) return;
+  const o = fotoOriginalBajaRes; fotoOriginalBajaRes = null;
+  loadPhotoSrc(o.url, o.name, { sinAvisoRes:true });
+});
 
 function syncRulerBtn(){
   $('rulerToggle').textContent = state.rulerVisible ? 'Ocultar regla' : 'Medir de nuevo';
@@ -3258,8 +3468,8 @@ function loadLogo(file){
     $('logoTxt').innerHTML = `Procesando ${file.name}…<small>convirtiendo el vector a imagen</small>`;
     rasterizeVectorFile(file)
       .then(data => loadLogoSrc(data, file.name, false))
-      .catch(() => {
-        alert(MSG_VEC_ERR);
+      .catch(err => {
+        alert(msgVector(err));
         pendingAdd = false;
         syncLogoUI();
         $('logoInput').value = '';

@@ -9,7 +9,7 @@
  * OpenAI encola el trabajo y el navegador consulta el estado cada unos
  * segundos. Cada llamada a esta función responde en milisegundos.
  *
- *   POST {action:'start', mode:'fondo-blanco'|'situacion', image:<dataURL>, producto?}
+ *   POST {action:'start', mode:'fondo-blanco'|'situacion'|'resolucion', image:<dataURL>, producto?, ancho?, alto?}
  *     → {id, status}
  *   POST {action:'estado', id}
  *     → {status:'queued'|'in_progress'|'completed'|'failed', image?, error?}
@@ -34,6 +34,11 @@ const ESTILO_FORMAS = `Sos el retocador fotográfico de Formas Publicitarias, un
 - El resultado debe verse como una fotografía real, nunca como ilustración ni render 3D.`;
 
 const MODO_FONDO_BLANCO = `Convertí la foto en una toma de producto estilo e-commerce: aislá el producto y presentalo sobre un fondo blanco puro y uniforme, centrado y completo en el encuadre, con una sombra de contacto suave y realista debajo. Corregí iluminación y nitidez si la foto original es floja.`;
+
+/* "Más resolución": la foto llegó chica (celular viejo, captura de un catálogo web)
+   y hay que agrandarla sin tocar nada más. Pisa a propósito la parte "estética"
+   del estilo Formas: acá no se corrige luz ni color, solo se recupera detalle. */
+const MODO_RESOLUCION = `Esta tarea es ÚNICAMENTE de resolución: la foto original es chica y hay que entregarla más grande y nítida. Reproducí exactamente la misma imagen — mismo encuadre y recorte, mismo fondo, misma posición y tamaño del producto, mismos colores, misma iluminación y sombras, mismos logos y textos — recuperando detalle fino, bordes limpios y texturas realistas, como un ampliado fotográfico de alta calidad. No apliques la estética Formas ni corrijas luz, balance de blancos o color; no agregues, quites, muevas ni "mejores" ningún elemento; no cambies el fondo ni lo limpies. Si alguna zona es ambigua por la baja resolución, resolvela de la forma más fiel y neutra posible, nunca inventando elementos nuevos.`;
 
 /* "En situación" se arma según las opciones que eligió el vendedor */
 function promptSituacion(o) {
@@ -96,7 +101,8 @@ export default async (req) => {
       datos: String(body.datos || '').slice(0, 300).trim(),
       detalles: String(body.detalles || '').slice(0, 300).trim(),
     });
-    if (!modo) return json({ error: 'mode debe ser "fondo-blanco" o "situacion"' }, 400);
+    if (body.mode === 'resolucion') modo = MODO_RESOLUCION;
+    if (!modo) return json({ error: 'mode debe ser "fondo-blanco", "situacion" o "resolucion"' }, 400);
     const image = typeof body.image === 'string' ? body.image : '';
     if (!image.startsWith('data:image/') || image.length > 8_000_000) {
       return json({ error: 'image debe ser un data URL de imagen de hasta ~6 MB' }, 400);
@@ -133,12 +139,23 @@ export default async (req) => {
     // más; 'flare' es la alternativa rápida. Ya trabaja siempre en alta fidelidad,
     // así que input_fidelity no va: si se pasa, la request falla.
     const imgModel = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2.5-sunburst';
-    // siempre 1:1: las fotos cuadradas entran parejas en la ficha y en el catálogo
-    let r = await crear({ type: 'image_generation', model: imgModel, action: 'edit', size: '1024x1024', quality }, true);
+    // fondo blanco y situación salen siempre 1:1: las fotos cuadradas entran
+    // parejas en la ficha y en el catálogo. "Más resolución" conserva la
+    // proporción de la foto original (apaisada, vertical o cuadrada) para que
+    // el boceto que ya se armó no cambie de encuadre.
+    let size = '1024x1024';
+    if (body.mode === 'resolucion') {
+      const w = Number(body.ancho) || 0, h = Number(body.alto) || 0;
+      if (w > 0 && h > 0) {
+        const ratio = w / h;
+        size = ratio > 1.2 ? '1536x1024' : ratio < 1 / 1.2 ? '1024x1536' : '1024x1024';
+      }
+    }
+    let r = await crear({ type: 'image_generation', model: imgModel, action: 'edit', size, quality }, true);
     if (r.status === 400) {
       // los parámetros opcionales varían según la versión del modelo de imagen:
       // si alguno deja de aceptarse, se reintenta con lo mínimo indispensable
-      r = await crear({ type: 'image_generation', model: imgModel, size: '1024x1024' }, false);
+      r = await crear({ type: 'image_generation', model: imgModel, size }, false);
     }
     if (!r.ok) {
       const detalle = (await r.text()).slice(0, 600);

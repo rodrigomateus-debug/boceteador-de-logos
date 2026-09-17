@@ -8,7 +8,7 @@ se abren directo en el navegador, sin instalación.
 
 | Archivo | Qué es |
 |---|---|
-| **`generador-bocetos.html`** | ⭐ **La app principal.** Generador de bocetos (formulario + ficha A4 de producción en vivo) con el boceteador "Cargá tu logo" integrado como modal: subís la foto del producto, marcás el área, aplicás el logo (tinte —blanco, negro, grabado o **un color a elección**, con código HEX o Pantone del mismo buscador de la ficha—, opacidad, rotación, quita de fondo) y la ficha se completa sola (foto compuesta, logo, medidas, técnica, posición). Imprime a PDF y descarga HTML. |
+| **`generador-bocetos.html`** | ⭐ **La app principal.** Generador de bocetos (formulario + ficha A4 de producción en vivo) con el boceteador "Cargá tu logo" integrado como modal: subís la foto del producto, marcás el área, aplicás el logo (tinte —blanco, negro, grabado o **un color a elección**, con código HEX o Pantone del mismo buscador de la ficha—, opacidad, rotación, quita de fondo) y la ficha se completa sola (foto compuesta, logo, medidas, técnica, posición). El lienzo del boceteador ocupa toda la altura de la pantalla. La vista previa de la ficha tiene zoom (botones arriba a la derecha o Ctrl + rueda; «1:1» muestra el tamaño real de impresión para revisar la calidad de la foto). Acepta logos en PNG, JPG, SVG, PDF y .ai de Illustrator (guardados con compatibilidad PDF, que es el default). Imprime a PDF y descarga HTML. |
 | `boceteador.html` | El boceteador standalone (versión previa a la integración; el modal del generador es su evolución). |
 | `cotizador-formas.html` | Maqueta funcional del cotizador (fase 3 del roadmap): técnica, cantidades, desglose de precio y markup. |
 | `DESIGN.md` | Documento de diseño: flujos, modelo de datos, sistema de diseño Formas, roadmap. |
@@ -70,6 +70,12 @@ antes/después y decidir si se usa:
   fondo blanco puro, centrado, sombra de contacto suave.
 - **✨ En situación** — muestra el producto en una escena de uso real (oficina,
   evento, cafetería…), nítido en primer plano con el fondo desenfocado.
+- **✨ Más resolución** — agranda una foto chica manteniendo el producto, el
+  encuadre, los colores y la luz exactamente iguales (conserva la proporción de
+  la foto original). Si la foto cargada tiene menos de 1000 px de lado, la ficha
+  lo avisa debajo de los botones; en el boceteador aparece un diálogo con tres
+  salidas: cambiar la foto, mantenerla o mejorarla con IA (con «Volver a la
+  original» después).
 
 El "estilo Formas" (reglas de marca: no tocar el producto ni su logo, look
 luminoso y profesional, sin texto agregado) vive en el servidor, en
