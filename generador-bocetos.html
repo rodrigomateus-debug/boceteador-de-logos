@@ -2969,6 +2969,21 @@ window.__applyBoceto = res => {
   const extras = Array.isArray(res.logos) ? res.logos.slice(1) : [];
   capturePage();
   const base = pages[cur];
+  const clon = x => JSON.parse(JSON.stringify(x));
+  /* colores de impresión de la hoja de un logo: si el logo está pintado de un
+     color, ese color; si es full color, la lista del editor sin los tintes de
+     los otros logos (que son de sus propias hojas) */
+  const coloresDeHoja = idx => {
+    const L = res.logos[idx];
+    if(L.colorTinte) return [clon(L.colorTinte)];
+    const ajenos = res.logos.filter((x, j) => j !== idx && x.colorTinte).map(x => x.colorTinte.hex.toLowerCase());
+    const propios = (res.colores || []).filter(c => !ajenos.includes(String(c.hex).toLowerCase()));
+    return propios.length ? clon(propios) : null;
+  };
+  if(extras.length && !res.grabado){
+    const c0 = coloresDeHoja(0);
+    if(c0) base.printColors = c0;
+  }
   if(extras.length || base.grupoBoceto){
     const grupo = base.grupoBoceto || ('b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
     base.grupoBoceto = grupo; base.logoIdx = 0;
@@ -2992,7 +3007,11 @@ window.__applyBoceto = res => {
       q.fields = Object.assign({}, q.fields, { f_medida_w: L.medidaW || '', f_medida_h: L.medidaH || '' });
       if(res.tecnica) q.fields.f_tecnica = res.tecnica;
       if(L.grabado){ q.engraved = true; q.fullColor = false; }
-      else if(Array.isArray(res.colores) && res.colores.length) q.printColors = JSON.parse(JSON.stringify(res.colores));
+      else {
+        const cq = coloresDeHoja(idx);
+        if(cq) q.printColors = cq;
+        if(L.colorTinte) q.fullColor = false;
+      }
       ultimo = pages.indexOf(q);
     });
     cur = pages.indexOf(base);
@@ -4275,11 +4294,14 @@ $('applyBtn').addEventListener('click', () => {
     medidaH: mH,
     tecnica: techValue(),
     grabado: principal.tint === 'engrave',
-    unColor: state.logos.some(l => l.tint === 'white' || l.tint === 'black' || l.tint === 'custom'),
+    // con una hoja por logo, "sin full color" depende del logo de esa hoja (con uno solo es lo mismo que antes)
+    unColor: ['white', 'black', 'custom'].includes(principal.tint),
     colores: JSON.parse(JSON.stringify(bocetoColors)),
     logos: state.logos.map(l => {
       const m = medidasDe(l);
-      return { logo: logoDataUrl(l), medidaW: m.w, medidaH: m.h, grabado: l.tint === 'engrave' };
+      const c = l.tint === 'custom' ? l.tintColor : TINT_FIJOS[l.tint];
+      return { logo: logoDataUrl(l), medidaW: m.w, medidaH: m.h, grabado: l.tint === 'engrave',
+        colorTinte: (c && c.hex) ? { hex: c.hex, nom: c.nom || '', pant: c.pant || '' } : null };
     }),
     fotoCmW: kEsc ? frEsc.w * kEsc : 0,
     fotoCmH: kEsc ? frEsc.h * kEsc : 0,
