@@ -400,7 +400,10 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #lowResModal .iaCard{background:#fff; border-radius:16px; width:min(560px,100%); max-height:92vh; overflow:auto; padding:18px 20px}
 #lowResModal h3{margin:0 0 6px; color:var(--navy); font-size:17px}
 #lowResModal .iaHint{font-size:13px; line-height:1.5; color:var(--text-body,#3D3D55); margin:0 0 14px}
-#lowResModal .lowResBtns{display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end}
+#lowResModal .lowResBtns{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+#lowResModal .lowResBtns .usar{grid-column:1 / -1; order:-1; padding:12px 16px; font-size:14px}
+#lowResModal .lowResBtns .usar small{display:block; font-weight:500; font-size:11.5px; opacity:.8; margin-top:2px}
+#lowResModal .lowResBtns .descartar{width:100%}
 #lowResModal .usar{padding:10px 16px; border:none; border-radius:10px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
 #lowResModal .descartar{padding:10px 16px; border:1px solid var(--border); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:13px; font-weight:600; cursor:pointer}
 #lowResModal button:disabled{opacity:.55; cursor:default}
@@ -1056,7 +1059,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
     <div class="lowResBtns">
       <button type="button" class="descartar" id="lowResChange">Cambiar la foto</button>
       <button type="button" class="descartar" id="lowResKeep">Mantenerla así</button>
-      <button type="button" class="usar" id="lowResIa">✨ Mejorar la resolución con IA</button>
+      <button type="button" class="usar" id="lowResIa">✨ Mejorar la resolución con IA<small>Agranda la foto sin cambiar el producto · tarda alrededor de un minuto</small></button>
     </div>
     <div class="iaStatus" id="lowResStatus" hidden></div>
   </div>
@@ -3374,7 +3377,7 @@ function avisarBajaRes(url, name, w, h){
   const status = $('lowResStatus');
   const btns = ['lowResChange', 'lowResKeep', 'lowResIa'].map(id => $(id));
   $('lowResTxt').textContent = 'La imagen tiene ' + w + ' × ' + h + ' px. En la ficha A4 y en el PDF que va a producción se va a ver borrosa o pixelada, sobre todo al acercar el zoom. '
-    + 'Podés cambiarla por otra de mayor resolución, dejarla como está, o pedirle a la IA que la agrande manteniendo el producto, el encuadre y los colores exactamente iguales (tarda alrededor de un minuto).';
+    + 'Podés cambiarla por otra de mayor resolución, dejarla como está, o pedirle a la IA que la agrande manteniendo el producto, el encuadre y los colores exactamente iguales.';
   status.hidden = true; status.textContent = '';
   btns.forEach(b => b.disabled = false);
   modal.hidden = false;
@@ -4091,6 +4094,22 @@ frame.addEventListener('pointerdown', e => {
   const Z = state.zoom;
   const px = { x: (e.clientX - r.left)/Z, y: (e.clientY - r.top)/Z };
 
+  /* con "Marcar área" activo, arrastrar SIEMPRE dibuja el área: antes se
+     evaluaba después de la regla y los logos, así que un trazo que arrancaba
+     sobre la regla (que cruza el medio de la foto) la movía en vez de dibujar */
+  if(state.drawMode){
+    active = { mode:'draw', startPx:px };
+    state.zone = { x:px.x/FW, y:px.y/FH, w:0, h:0 };
+    /* la regla ya cumplió: se retira apenas empieza el trazo del área */
+    if(state.mode === 'product' && cmPerPx() && state.rulerVisible){
+      state.rulerVisible = false;
+      syncRulerBtn();
+    }
+    frame.setPointerCapture(e.pointerId);
+    e.preventDefault();
+    render(); return;
+  }
+
   if(e.target.id === 'rh1' || e.target.id === 'rh2'){
     active = { mode:'ruler-end', end:e.target.id, startPx:px, start:{...state.ruler} };
     frame.setPointerCapture(e.pointerId); e.preventDefault(); return;
@@ -4120,17 +4139,6 @@ frame.addEventListener('pointerdown', e => {
   }
   zoneEl.classList.remove('faded');
 
-  if(state.drawMode){
-    active = { mode:'draw', startPx:px };
-    state.zone = { x:px.x/FW, y:px.y/FH, w:0, h:0 };
-    /* la regla ya cumplió: se retira apenas empieza el trazo del área */
-    if(state.mode === 'product' && cmPerPx() && state.rulerVisible){
-      state.rulerVisible = false;
-      syncRulerBtn();
-    }
-    frame.setPointerCapture(e.pointerId);
-    render(); return;
-  }
   const corner = e.target.dataset && e.target.dataset.corner;
   if(corner && e.target.parentElement === zoneEl && state.zone){
     active = { mode:'zone-resize', corner, startPx:px, start:{...state.zone} };
