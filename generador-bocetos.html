@@ -321,6 +321,8 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #zone.faded{opacity:.15; box-shadow:none !important}
 /* recorte manual */
 #bocetoModal #cropModal{position:absolute; inset:0; z-index:50; background:rgba(11,11,35,.5); display:flex; align-items:center; justify-content:center; padding:20px}
+#bocetoModal #unirModal{position:absolute; inset:0; z-index:50; background:rgba(11,11,35,.5); display:flex; align-items:center; justify-content:center; padding:20px}
+#bocetoModal #unirModal[hidden]{display:none}
 #bocetoModal .cm-card{background:#fff; border-radius:16px; padding:18px; width:min(700px,100%); max-height:100%; overflow:auto; box-shadow:0 20px 60px rgba(11,11,35,.4)}
 #bocetoModal .cm-head{display:flex; justify-content:space-between; align-items:center; gap:12px}
 #bocetoModal .cm-head h3{font-family:var(--font-display); font-weight:800; color:var(--formas-navy); font-size:17px; margin:0}
@@ -780,6 +782,35 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           <button type="button" class="btn btn-secondary" id="cropAuto">Detectar automático</button>
           <button type="button" class="btn btn-primary" id="cropApply">Aplicar recorte</button>
         </div>
+      </div>
+    </div>
+    <div id="unirModal" hidden>
+      <div class="cm-card">
+        <div class="cm-head">
+          <h3 id="unirTitle">¿Cómo se imprimen estos logos?</h3>
+          <button type="button" class="bm-close" id="unirClose" aria-label="Cancelar">×</button>
+        </div>
+        <p class="cm-hint">Elegí según cómo lo va a producir el taller: la ficha se arma distinto en cada caso.</p>
+        <div class="mode-row">
+          <button type="button" class="mode-opt" id="unirSi" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2.5" y="4.5" width="19" height="15" rx="2" stroke-dasharray="3 2.2"/>
+              <circle cx="8.5" cy="12" r="3.2"/>
+              <path d="M13.5 9.5h5M13.5 12h5M13.5 14.5h3.5"/>
+            </svg>
+            <span class="t">Una sola impresión<small id="unirSiTxt">Van juntos en un mismo shablón o película: queda una hoja con la medida del recuadro que los contiene a todos.</small></span>
+          </button>
+          <button type="button" class="mode-opt" id="unirNo" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2.5" y="5" width="8.5" height="14" rx="1.5"/>
+              <rect x="13" y="5" width="8.5" height="14" rx="1.5"/>
+              <circle cx="6.75" cy="11" r="2"/>
+              <path d="M15.5 10h3.5M15.5 12.5h3.5"/>
+            </svg>
+            <span class="t">Una hoja por logo<small>Se imprimen por separado (distinta técnica, posición o película): cada hoja lleva su logo y su medida.</small></span>
+          </button>
+        </div>
+        <div class="note" id="unirEscalaNote" hidden>⚠ <span>En pantalla los logos no guardan la proporción de las medidas que cargaste, así que la medida total se calcula con la escala del primer logo. Para que sea exacta, ajustá el tamaño de los demás en pantalla o usá la regla («Sé la medida del producto»).</span></div>
       </div>
     </div>
     <div class="bm-body">
@@ -2949,8 +2980,9 @@ window.__applyBoceto = res => {
     imgLogo = res.logo;
     refreshLogoBox();
   }
-  if(res.medidaW) $('f_medida_w').value = res.medidaW;
-  if(res.medidaH) $('f_medida_h').value = res.medidaH;
+  // al unir logos la medida es la del conjunto: si no se pudo calcular, no debe quedar la de un logo suelto
+  if(res.medidaW || res.unidos) $('f_medida_w').value = res.medidaW || '';
+  if(res.medidaH || res.unidos) $('f_medida_h').value = res.medidaH || '';
   if(res.tecnica) $('f_tecnica').value = res.tecnica;
   if(!res.grabado && Array.isArray(res.colores) && res.colores.length){
     printColors = JSON.parse(JSON.stringify(res.colores)); // la ficha hereda los colores del editor (editables después)
@@ -3024,6 +3056,14 @@ window.__applyBoceto = res => {
       note.hidden = false;
       clearTimeout(note._t); note._t = setTimeout(() => { note.hidden = true; }, 12000);
     }
+  }
+  if(res.unidos > 1){
+    const note = $('hojasNote');
+    note.textContent = '✓ Los ' + res.unidos + ' logos se aplicaron como una sola impresión'
+      + (res.medidaW && res.medidaH ? ', de ' + res.medidaW + ' × ' + res.medidaH + ' en total' : '')
+      + ': en la ficha figuran como un único logo, igual que en el shablón o la película.';
+    note.hidden = false;
+    clearTimeout(note._t); note._t = setTimeout(() => { note.hidden = true; }, 12000);
   }
   closeBocetoModal();
   syncToggles();
@@ -4272,41 +4312,152 @@ $('techniqueOther').addEventListener('input', () => {
 
 $('applyBtn').addEventListener('click', () => {
   if(!state.logos.length) return;
-  const principal = state.logos[0]; // el primero va a la hoja actual; el resto, a hojas propias
-  const medidasDe = l => {
-    let w = '', h = '';
-    if(state.mode === 'logo'){
-      if(l.cmW > 0) w = fmtCm(l.cmW*unitK()) + ' ' + state.unit;
-      if(l.cmH > 0) h = fmtCm(l.cmH*unitK()) + ' ' + state.unit;
-    } else {
-      const m = medidaWH(l);
-      if(m){ w = fmtCm(m.w*unitK()) + ' ' + state.unit; h = fmtCm(m.h*unitK()) + ' ' + state.unit; }
+  // con varios logos la ficha se arma distinto según cómo los produzca el taller: se pregunta
+  if(state.logos.length > 1) abrirUnirModal();
+  else aplicarBoceto(false);
+});
+
+function medidasDe(l){
+  let w = '', h = '';
+  if(state.mode === 'logo'){
+    if(l.cmW > 0) w = fmtCm(l.cmW*unitK()) + ' ' + state.unit;
+    if(l.cmH > 0) h = fmtCm(l.cmH*unitK()) + ' ' + state.unit;
+  } else {
+    const m = medidaWH(l);
+    if(m){ w = fmtCm(m.w*unitK()) + ' ' + state.unit; h = fmtCm(m.h*unitK()) + ' ' + state.unit; }
+  }
+  return { w, h };
+}
+
+/* ---------- "una sola impresión": los logos como una única película ---------- */
+// recuadro que ocupan todos los logos juntos, en px del lienzo, contemplando la rotación
+function bboxUnion(){
+  const {w:FW, h:FH} = frameRect();
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  state.logos.forEach(l => {
+    const cx = (l.x + l.w/2)*FW, cy = (l.y + l.h/2)*FH, hw = l.w*FW/2, hh = l.h*FH/2;
+    const t = (l.rot||0) * Math.PI/180, co = Math.abs(Math.cos(t)), si = Math.abs(Math.sin(t));
+    const ex = hw*co + hh*si, ey = hw*si + hh*co;
+    x0 = Math.min(x0, cx - ex); x1 = Math.max(x1, cx + ex);
+    y0 = Math.min(y0, cy - ey); y1 = Math.max(y1, cy + ey);
+  });
+  return { x:x0, y:y0, w:x1 - x0, h:y1 - y0 };
+}
+// escala común (cm por px del lienzo): con regla, la de la regla; en "medida del logo",
+// la del primer logo medido. Si los demás están a otra escala en pantalla, se avisa.
+function escalaUnion(){
+  if(state.mode !== 'logo') return { k: cmPerPx(), dispar: false };
+  const {w:FW} = frameRect();
+  const ks = state.logos.filter(l => l.cmW > 0 && l.w > 0).map(l => l.cmW / (l.w*FW));
+  if(!ks.length) return { k: null, dispar: false };
+  return { k: ks[0], dispar: ks.some(x => Math.abs(x - ks[0]) / ks[0] > 0.05) };
+}
+// recuadro de lo no transparente: acá el blanco cuenta, porque un logo blanco es tinta
+function bboxAlfa(c){
+  const W = c.width, H = c.height, d = c.getContext('2d').getImageData(0, 0, W, H).data;
+  let x0 = W, y0 = H, x1 = -1, y1 = -1;
+  for(let y = 0; y < H; y++){
+    const row = y * W * 4;
+    for(let x = 0; x < W; x++){
+      if(d[row + x*4 + 3] > 12){
+        if(x < x0) x0 = x;
+        if(x > x1) x1 = x;
+        if(y < y0) y0 = y;
+        if(y > y1) y1 = y;
+      }
     }
-    return { w, h };
-  };
-  const { w: mW, h: mH } = medidasDe(principal);
-  // si hay regla en cm, la foto entera tiene medida real conocida: viaja a la IA como referencia de escala
-  const kEsc = cmPerPx(), frEsc = frameRect();
-  window.__applyBoceto({
-    foto: composeFoto(),
-    logo: logoDataUrl(principal),
-    medidaW: mW,
-    medidaH: mH,
-    tecnica: techValue(),
-    grabado: principal.tint === 'engrave',
-    // con una hoja por logo, "sin full color" depende del logo de esa hoja (con uno solo es lo mismo que antes)
-    unColor: ['white', 'black', 'custom'].includes(principal.tint),
-    colores: JSON.parse(JSON.stringify(bocetoColors)),
-    logos: state.logos.map(l => {
+  }
+  return x1 < 0 ? { x:0, y:0, w:W, h:H } : { x:x0, y:y0, w:x1 - x0 + 1, h:y1 - y0 + 1 };
+}
+// la película: todos los logos tal cual están acomodados, recortados a lo que ocupan,
+// a la resolución del logo más nítido
+function composeUnion(){
+  const {w:FW, h:FH} = frameRect();
+  const bb = bboxUnion();
+  let S = 1;
+  state.logos.forEach(l => { if(l.img && l.img.naturalWidth && l.w > 0) S = Math.max(S, l.img.naturalWidth / (l.w*FW)); });
+  S = Math.min(S, 4000 / Math.max(bb.w, bb.h, 1));
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(bb.w*S)); c.height = Math.max(1, Math.round(bb.h*S));
+  const ctx = c.getContext('2d');
+  state.logos.forEach(l => {
+    ctx.save();
+    ctx.globalAlpha = l.opacity;
+    ctx.translate(((l.x + l.w/2)*FW - bb.x)*S, ((l.y + l.h/2)*FH - bb.y)*S);
+    ctx.rotate((l.rot||0) * Math.PI/180);
+    ctx.drawImage(l.img, -l.w*FW*S/2, -l.h*FH*S/2, l.w*FW*S, l.h*FH*S);
+    ctx.restore();
+  });
+  const a = bboxAlfa(c); // las esquinas de un logo rotado quedan vacías: se ajusta al contenido
+  let out = c;
+  if(a.w < c.width || a.h < c.height){
+    out = document.createElement('canvas'); out.width = a.w; out.height = a.h;
+    out.getContext('2d').drawImage(c, a.x, a.y, a.w, a.h, 0, 0, a.w, a.h);
+  }
+  const { k, dispar } = escalaUnion();
+  return { url: out.toDataURL('image/png'), wCm: k ? (a.w / S) * k : 0, hCm: k ? (a.h / S) * k : 0, dispar };
+}
+
+let unirCache = null;
+function abrirUnirModal(){
+  unirCache = composeUnion();
+  $('unirTitle').textContent = '¿Cómo se imprimen estos ' + state.logos.length + ' logos?';
+  $('unirSiTxt').textContent = 'Van juntos en un mismo shablón o película: queda una sola hoja'
+    + (unirCache.wCm ? ' de ' + fmtCm(unirCache.wCm*unitK()) + ' × ' + fmtCm(unirCache.hCm*unitK()) + ' ' + state.unit + ' en total.'
+                     : ' con la medida del recuadro que los contiene a todos.');
+  $('unirEscalaNote').hidden = !unirCache.dispar;
+  $('unirSi').setAttribute('aria-pressed', state.unirLogos === true);
+  $('unirNo').setAttribute('aria-pressed', state.unirLogos === false);
+  $('unirModal').hidden = false;
+}
+$('unirSi').addEventListener('click', () => { $('unirModal').hidden = true; aplicarBoceto(true); });
+$('unirNo').addEventListener('click', () => { $('unirModal').hidden = true; aplicarBoceto(false); });
+$('unirClose').addEventListener('click', () => { $('unirModal').hidden = true; unirCache = null; });
+
+function aplicarBoceto(unir){
+  state.unirLogos = !!unir;
+  const principal = state.logos[0];
+  const unColorDe = l => ['white', 'black', 'custom'].includes(l.tint);
+  let logoFicha, mW, mH, grabado, unColor, logos;
+  if(unir){
+    const u = unirCache || composeUnion();
+    logoFicha = u.url;
+    mW = u.wCm ? fmtCm(u.wCm*unitK()) + ' ' + state.unit : '';
+    mH = u.hCm ? fmtCm(u.hCm*unitK()) + ' ' + state.unit : '';
+    grabado = state.logos.every(l => l.tint === 'engrave');
+    unColor = state.logos.some(unColorDe); // una sola película: cuenta el tinte de cualquiera de los logos
+    logos = [{ logo: logoFicha, medidaW: mW, medidaH: mH, grabado, colorTinte: null }];
+  } else {
+    ({ w: mW, h: mH } = medidasDe(principal));
+    logoFicha = logoDataUrl(principal);
+    grabado = principal.tint === 'engrave';
+    // con una hoja por logo, "sin full color" depende del logo de esa hoja
+    unColor = unColorDe(principal);
+    logos = state.logos.map(l => {
       const m = medidasDe(l);
       const c = l.tint === 'custom' ? l.tintColor : TINT_FIJOS[l.tint];
       return { logo: logoDataUrl(l), medidaW: m.w, medidaH: m.h, grabado: l.tint === 'engrave',
         colorTinte: (c && c.hex) ? { hex: c.hex, nom: c.nom || '', pant: c.pant || '' } : null };
-    }),
+    });
+  }
+  unirCache = null;
+  // si hay regla en cm, la foto entera tiene medida real conocida: viaja a la IA como referencia de escala
+  const kEsc = cmPerPx(), frEsc = frameRect();
+  window.__applyBoceto({
+    foto: composeFoto(),
+    logo: logoFicha,
+    medidaW: mW,
+    medidaH: mH,
+    tecnica: techValue(),
+    grabado,
+    unColor,
+    colores: JSON.parse(JSON.stringify(bocetoColors)),
+    logos,
+    unidos: unir ? state.logos.length : 0,
     fotoCmW: kEsc ? frEsc.w * kEsc : 0,
     fotoCmH: kEsc ? frEsc.h * kEsc : 0,
   });
-});
+}
 
 $('downloadBtn').addEventListener('click', () => {
   if(!state.logos.length) return;
@@ -4335,7 +4486,7 @@ window.__bocetoSnapshot = () => {
     photoSrc: photo.src, photoName,
     zone: state.zone, ruler: state.ruler, rulerVisible: state.rulerVisible,
     rulerCm: $('rulerCm').value,
-    mode: state.mode, unit: state.unit, lockAspect: state.lockAspect,
+    mode: state.mode, unit: state.unit, lockAspect: state.lockAspect, unirLogos: state.unirLogos,
     technique: $('technique').value, techniqueOther: $('techniqueOther').value,
     sel: state.sel,
     logos: state.logos.map(l => ({ src:l.src, name:l.name, isJpg:l.isJpg, aspect:l.aspect,
@@ -4385,6 +4536,7 @@ window.__bocetoRestore = data => {
     syncRulerBtn();
     $('rulerCm').value = data.rulerCm || '';
     state.lockAspect = !!data.lockAspect; syncLockUI();
+    state.unirLogos = typeof data.unirLogos === 'boolean' ? data.unirLogos : undefined;
     $('technique').value = data.technique || '';
     $('techniqueOther').value = data.techniqueOther || '';
     $('techniqueOther').hidden = $('technique').value !== '__otra';
