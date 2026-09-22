@@ -563,6 +563,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
     </div>
 
     <div class="pageTabs" id="pageTabs"></div>
+    <div id="hojasNote" hidden style="margin:-4px 0 12px; padding:8px 11px; border-radius:10px; background:#F1FBE4; border:1px solid #C5ED93; color:#2B5A0B; font-size:12px; font-weight:600; line-height:1.4"></div>
 
     <fieldset>
       <legend>Plantillas</legend>
@@ -1089,7 +1090,9 @@ function renderTabs(){
   add.title = 'Agrega una hoja duplicando la actual';
   add.onclick = () => {
     capturePage();
-    pages.splice(cur+1, 0, clonePage(pages[cur]));
+    const copia = clonePage(pages[cur]);
+    delete copia.grupoBoceto; delete copia.logoIdx; // la copia es independiente del boceto
+    pages.splice(cur+1, 0, copia);
     loadPage(cur+1);
   };
   box.appendChild(add);
@@ -2804,6 +2807,52 @@ window.__applyBoceto = res => {
   }
   if(res.grabado){ engraved = true; fullColor = false; }
   /* la posición se completa a mano: arranca vacía a propósito */
+
+  /* varios logos en el boceto → una hoja por logo. La ficha tiene un solo
+     recuadro de logo con sus barritas de medida, y cada aplicación puede
+     llevar su propia técnica y posición. Las hojas extra quedan atadas al
+     boceto (grupoBoceto), así volver a aplicar las actualiza en vez de
+     duplicarlas. */
+  const extras = Array.isArray(res.logos) ? res.logos.slice(1) : [];
+  capturePage();
+  const base = pages[cur];
+  if(extras.length || base.grupoBoceto){
+    const grupo = base.grupoBoceto || ('b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+    base.grupoBoceto = grupo; base.logoIdx = 0;
+    // la hoja de un logo que ya no está en el boceto se descarta: imprimiría un logo que no aparece en la foto
+    pages = pages.filter(q => q === base || q.grupoBoceto !== grupo || (q.logoIdx >= 1 && q.logoIdx <= extras.length));
+    let ultimo = pages.indexOf(base);
+    extras.forEach((L, k) => {
+      const idx = k + 1;
+      let q = pages.find(x => x !== base && x.grupoBoceto === grupo && x.logoIdx === idx);
+      if(!q){
+        q = clonePage(base);
+        q.logoIdx = idx;
+        q.fields = Object.assign({}, q.fields, { f_posicion:'', f_obslogo:'' });
+        q.fotoAlt = null; q.fotoActiva = 'ia';
+        q.engraved = false; // no heredar el grabado del primer logo
+        pages.splice(ultimo + 1, 0, q);
+      }
+      // lo que se hereda del editor en cada aplicación, igual que en la hoja principal
+      q.imgFoto = base.imgFoto; q.fotoFit = base.fotoFit; q.fotoEscala = base.fotoEscala;
+      q.imgLogo = L.logo;
+      q.fields = Object.assign({}, q.fields, { f_medida_w: L.medidaW || '', f_medida_h: L.medidaH || '' });
+      if(res.tecnica) q.fields.f_tecnica = res.tecnica;
+      if(L.grabado){ q.engraved = true; q.fullColor = false; }
+      else if(Array.isArray(res.colores) && res.colores.length) q.printColors = JSON.parse(JSON.stringify(res.colores));
+      ultimo = pages.indexOf(q);
+    });
+    cur = pages.indexOf(base);
+    loadPage(cur);
+    const note = $('hojasNote');
+    note.hidden = true;
+    if(extras.length){
+      const n = extras.length + 1;
+      note.textContent = '✓ El boceto tiene ' + n + ' logos: se armó una hoja por logo (Hoja ' + (cur+1) + ' a ' + (cur+n) + '), cada una con sus medidas. Completá la posición de cada una.';
+      note.hidden = false;
+      clearTimeout(note._t); note._t = setTimeout(() => { note.hidden = true; }, 12000);
+    }
+  }
   closeBocetoModal();
   syncToggles();
   render();
@@ -3889,15 +3938,19 @@ $('techniqueOther').addEventListener('input', () => {
 
 $('applyBtn').addEventListener('click', () => {
   if(!state.logos.length) return;
-  const principal = state.logos[0]; // el primer logo es el principal de la ficha
-  let mW = '', mH = '';
-  if(state.mode === 'logo'){
-    if(principal.cmW > 0) mW = fmtCm(principal.cmW*unitK()) + ' ' + state.unit;
-    if(principal.cmH > 0) mH = fmtCm(principal.cmH*unitK()) + ' ' + state.unit;
-  } else {
-    const m = medidaWH(principal);
-    if(m){ mW = fmtCm(m.w*unitK()) + ' ' + state.unit; mH = fmtCm(m.h*unitK()) + ' ' + state.unit; }
-  }
+  const principal = state.logos[0]; // el primero va a la hoja actual; el resto, a hojas propias
+  const medidasDe = l => {
+    let w = '', h = '';
+    if(state.mode === 'logo'){
+      if(l.cmW > 0) w = fmtCm(l.cmW*unitK()) + ' ' + state.unit;
+      if(l.cmH > 0) h = fmtCm(l.cmH*unitK()) + ' ' + state.unit;
+    } else {
+      const m = medidaWH(l);
+      if(m){ w = fmtCm(m.w*unitK()) + ' ' + state.unit; h = fmtCm(m.h*unitK()) + ' ' + state.unit; }
+    }
+    return { w, h };
+  };
+  const { w: mW, h: mH } = medidasDe(principal);
   // si hay regla en cm, la foto entera tiene medida real conocida: viaja a la IA como referencia de escala
   const kEsc = cmPerPx(), frEsc = frameRect();
   window.__applyBoceto({
@@ -3908,6 +3961,10 @@ $('applyBtn').addEventListener('click', () => {
     tecnica: techValue(),
     grabado: principal.tint === 'engrave',
     colores: JSON.parse(JSON.stringify(bocetoColors)),
+    logos: state.logos.map(l => {
+      const m = medidasDe(l);
+      return { logo: logoDataUrl(l), medidaW: m.w, medidaH: m.h, grabado: l.tint === 'engrave' };
+    }),
     fotoCmW: kEsc ? frEsc.w * kEsc : 0,
     fotoCmH: kEsc ? frEsc.h * kEsc : 0,
   });
