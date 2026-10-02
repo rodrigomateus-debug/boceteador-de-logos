@@ -2694,6 +2694,37 @@ $('tplDel').onclick = async () => {
   tplRefresh();
 };
 
+/* --- Mudanza desde Netlify (oct 2026) ---
+   El navegador guarda plantillas y boceto en curso por dirección: lo que quedó en
+   formas-bocetos-con-logo.netlify.app no se ve acá. mudanza.html (que Netlify sirve en toda
+   la dirección vieja) abre esta página con #mudanza y le pasa esos datos por postMessage.
+   Solo se aceptan de ese origen y de la ventana que nos abrió; las plantillas se suman sin
+   pisar las de acá y el resto se copia solo si acá no había nada. Se puede borrar junto con
+   mudanza.html cuando ya nadie entre por la dirección vieja. */
+if(location.hash === '#mudanza' && window.opener){
+  const VIEJO = 'https://formas-bocetos-con-logo.netlify.app';
+  // se mira antes de restore(): después render() guarda su propio borrador vacío
+  const habiaBorrador = localStorage.getItem('boceto-formas') !== null;
+  addEventListener('message', e => {
+    if(e.origin !== VIEJO || e.source !== window.opener || !e.data || e.data.tipo !== 'mudanza') return;
+    const d = e.data.datos || {};
+    try{
+      const actuales = tplAll(), viejas = JSON.parse(d[TPL_KEY] || '{}');
+      if(Object.keys(viejas).some(k => !(k in actuales)))
+        localStorage.setItem(TPL_KEY, JSON.stringify({ ...viejas, ...actuales }));
+      if(typeof d['boceto-formas'] === 'string' && !habiaBorrador) localStorage.setItem('boceto-formas', d['boceto-formas']);
+      [PANTONE_RECENT_KEY, IA_OPTS_KEY, 'formasIaClave'].forEach(k => {
+        if(typeof d[k] === 'string' && localStorage.getItem(k) === null) localStorage.setItem(k, d[k]);
+      });
+      e.source.postMessage({ tipo: 'mudanza-ok' }, VIEJO);
+      location.replace(location.pathname); // recarga ya con lo copiado, antes de que otro render() lo pise
+    }catch(err){
+      e.source.postMessage({ tipo: 'mudanza-error', error: String((err && err.message) || err) }, VIEJO);
+    }
+  });
+  window.opener.postMessage({ tipo: 'mudanza-lista' }, VIEJO);
+}
+
 /* --- Google Drive del usuario: plantillas sin límite y a prueba de caché ---
    Requiere la app publicada en la web (no file://) y un Client ID OAuth de
    Google creado una sola vez para la empresa — instructivo en el README. */

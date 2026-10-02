@@ -1,10 +1,11 @@
-# La app vive en Cloudflare Pages (ver README, "App publicada"). Netlify solo redirige la
-# dirección vieja a la nueva; Cloudflare ignora este archivo.
+# La app vive en Cloudflare Pages (ver README, "App publicada"). Netlify solo atiende la dirección
+# vieja: muestra mudanza.html, que lleva lo guardado en el navegador a la nueva (o redirige directo
+# si no hay nada). Cloudflare ignora este archivo.
 [build]
   publish = "."
 
 [[redirects]]
   from = "/*"
-  to = "https://formas-bocetos-con-logo.pages.dev/:splat"
-  status = 301
+  to = "/mudanza.html"
+  status = 200
   force = true

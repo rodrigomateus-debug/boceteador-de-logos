@@ -56,8 +56,12 @@ Cloudflare comenta en el PR la URL para revisarlo antes de mergear.
 
 **https://formas-bocetos-con-logo.pages.dev/** (Cloudflare Pages, conectado a
 este repo). `index.html` redirige al generador. Cada push a `main` se publica
-solo, sin build. La dirección vieja de Netlify
-(`formas-bocetos-con-logo.netlify.app`) redirige acá: no se publica más ahí.
+solo, sin build. Netlify no publica más: en la dirección vieja
+(`formas-bocetos-con-logo.netlify.app`) muestra `mudanza.html`, que redirige acá y, si el
+navegador tenía plantillas 💾 o un boceto en curso guardados allá, ofrece un botón para
+traerlos (el navegador guarda esos datos por dirección). La otra mitad está en
+`generador-bocetos.html`, «Mudanza desde Netlify». Las dos se pueden borrar cuando ya
+nadie entre por la dirección vieja.
 
 ## Mejorar la foto con IA (OpenAI)
 

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formas - El generador de bocetos se mudó</title>
+<style>
+  body{margin:0;min-height:100vh;display:grid;place-items:center;padding:16px;box-sizing:border-box;
+       background:#f4f5fa;color:#1B1B4E;font:16px/1.5 Poppins,system-ui,-apple-system,"Segoe UI",sans-serif}
+  main{max-width:460px;background:#fff;border-radius:14px;padding:28px;box-shadow:0 4px 24px rgba(27,27,78,.08)}
+  h1{font-size:1.3rem;margin:0 0 12px}
+  a{color:#399f4a;font-weight:600}
+  button{background:#1B1B4E;color:#fff;border:0;border-radius:10px;padding:12px 18px;font:inherit;font-weight:600;cursor:pointer}
+  button:disabled{opacity:.6;cursor:default}
+  .ok{color:#2e7d32}.error{color:#c62828}
+</style>
+</head>
+<body>
+<main>
+  <h1>El generador de bocetos se mudó</h1>
+  <p>Ahora está en <a id="dir"></a>. Actualizá tus favoritos.</p>
+  <div id="guardado" hidden>
+    <p>En este navegador quedaron <b id="que"></b>. Tocá el botón para llevarlo a la dirección nueva
+       (lo que guardaste en Google Drive ya está allá).</p>
+    <button id="llevar">Llevar lo guardado</button>
+    <p id="estado" role="status"></p>
+  </div>
+</main>
+<script>
+/* Netlify sirve esta página en toda la dirección vieja (netlify.toml). El navegador guarda las
+   plantillas y el boceto en curso por dirección: lo de netlify.app no se ve en pages.dev. Esta
+   página se lo pasa a la app nueva por postMessage (generador-bocetos.html, "Mudanza desde
+   Netlify"). Sin nada guardado, redirige directo. */
+const NUEVO = 'https://formas-bocetos-con-logo.pages.dev';
+const CLAVES = ['boceto-formas-plantillas', 'boceto-formas', 'formasPantonesRecientes', 'formasIaSituOpts', 'formasIaClave'];
+const ruta = location.pathname.startsWith('/mudanza') ? '/' : location.pathname;
+const destino = NUEVO + ruta + location.search;
+const $ = id => document.getElementById(id);
+
+const datos = {};
+try { CLAVES.forEach(k => { const v = localStorage.getItem(k); if (v !== null) datos[k] = v; }); } catch (e) {}
+let plantillas = 0;
+try { plantillas = Object.keys(JSON.parse(datos['boceto-formas-plantillas'] || '{}')).length; } catch (e) {}
+const borrador = 'boceto-formas' in datos;
+
+if (location.origin === NUEVO || (!plantillas && !borrador) || localStorage.getItem('mudanza-hecha')) {
+  location.replace(destino);
+} else {
+  $('dir').href = destino;
+  $('dir').textContent = NUEVO.replace('https://', '');
+  $('que').textContent = [plantillas && (plantillas === 1 ? '1 plantilla' : plantillas + ' plantillas'),
+                          borrador && 'el boceto en curso'].filter(Boolean).join(' y ');
+  $('guardado').hidden = false;
+  const estado = (texto, clase) => { $('estado').textContent = texto; $('estado').className = clase || ''; };
+  $('llevar').onclick = () => {
+    const w = window.open(NUEVO + '/generador-bocetos#mudanza');
+    if (!w) { estado('El navegador bloqueó la ventana nueva: permití las ventanas emergentes para esta página y tocá el botón otra vez.', 'error'); return; }
+    $('llevar').disabled = true;
+    estado('Copiando…');
+    addEventListener('message', e => {
+      if (e.origin !== NUEVO || e.source !== w || !e.data) return;
+      if (e.data.tipo === 'mudanza-lista') w.postMessage({ tipo: 'mudanza', datos }, NUEVO);
+      if (e.data.tipo === 'mudanza-ok') {
+        try { localStorage.setItem('mudanza-hecha', '1'); } catch (err) {}
+        estado('Listo: ya está todo en la dirección nueva, en la otra pestaña. Esta la podés cerrar.', 'ok');
+      }
+      if (e.data.tipo === 'mudanza-error') {
+        $('llevar').disabled = false;
+        estado('No se pudo copiar: ' + e.data.error + '. Conectá Google Drive en la dirección nueva para tener más lugar y probá otra vez.', 'error');
+      }
+    });
+  };
+}
+</script>
+</body>
+</html>
