@@ -1,4 +1,10 @@
-# Netlify ya no publica este sitio: vive en Cloudflare Pages (ver README, "App publicada").
-# Sin build: se publica la raíz del repo tal cual; index.html redirige al generador.
+# La app vive en Cloudflare Pages (ver README, "App publicada"). Netlify solo redirige la
+# dirección vieja a la nueva; Cloudflare ignora este archivo.
 [build]
   publish = "."
+
+[[redirects]]
+  from = "/*"
+  to = "https://formas-bocetos-con-logo.pages.dev/:splat"
+  status = 301
+  force = true
