@@ -1768,10 +1768,10 @@ function hookFile(inputId, boxId, txtId, clearId, setter){
 hookFile('f_foto','box_foto','txt_foto','clear_foto', v=>{ imgFoto=v; fotoAlt=null; fotoActiva='ia'; fotoEscala=''; refreshFotoBox(); avisarResFicha(v); });
 hookFile('f_logo','box_logo','txt_logo','clear_logo', v=>{ imgLogo=v; });
 
-/* ---------- mejorar la foto con IA (OpenAI vía Netlify Function) ----------
-   El estilo Formas vive en el servidor (netlify/functions/ia-imagen.mjs);
+/* ---------- mejorar la foto con IA (OpenAI vía Cloudflare Pages Function) ----------
+   El estilo Formas vive en el servidor (functions/api/ia-imagen.js);
    acá solo se manda la foto, se espera el resultado y se compara. */
-const IA_ENDPOINT = '/.netlify/functions/ia-imagen';
+const IA_ENDPOINT = '/api/ia-imagen';
 let iaBusy = false;
 
 function syncIaButtons(){
@@ -1817,7 +1817,7 @@ async function iaFetch(payload, clave){
       body: JSON.stringify(payload)
     });
   }catch(e){
-    throw new Error('No pude conectar con la función de IA. ¿Estás en la app publicada en Netlify?');
+    throw new Error('No pude conectar con la función de IA. ¿Estás en la app publicada en la web?');
   }
   const d = await r.json().catch(() => ({}));
   if(r.status === 401){
@@ -2699,7 +2699,7 @@ $('tplDel').onclick = async () => {
    Google creado una sola vez para la empresa — instructivo en el README. */
 /* Client ID OAuth de Formas (público por diseño: lo que autoriza el acceso es
    la lista de orígenes de la credencial en Google Cloud, no este dato).
-   Origen autorizado: https://formas-bocetos-con-logo.netlify.app */
+   Origen autorizado: https://formas-bocetos-con-logo.pages.dev */
 const GD_DEFAULT_CLIENT_ID = '97488306744-u8ohslm5tq4sjrjn0bvitqpfc1c271cp.apps.googleusercontent.com';
 const GD_CID_KEY = 'boceto-gdrive-client-id';
 const GD_ON_KEY = 'boceto-gdrive-on';
@@ -2764,7 +2764,7 @@ async function gdEnsureToken(interactive){
   const guardado = gdReadToken(); // permiso vigente de una sesión anterior
   if(guardado){ gdToken = guardado; return true; }
   if(location.protocol === 'file:'){
-    if(interactive) alert('Para conectar Google Drive, hay que usar la app publicada en la web:\n\nhttps://formas-bocetos-con-logo.netlify.app\n\nGoogle no permite la conexión desde un archivo abierto con doble clic. Las plantillas guardadas en este navegador siguen funcionando igual.');
+    if(interactive) alert('Para conectar Google Drive, hay que usar la app publicada en la web:\n\nhttps://formas-bocetos-con-logo.pages.dev\n\nGoogle no permite la conexión desde un archivo abierto con doble clic. Las plantillas guardadas en este navegador siguen funcionando igual.');
     return false;
   }
   let cid = gdClientId();

@@ -1,20 +1,20 @@
 /*
- * Mejora de fotos de producto con IA (OpenAI) — proxy serverless.
+ * Mejora de fotos de producto con IA (OpenAI) — proxy serverless
+ * (Cloudflare Pages Function: POST /api/ia-imagen).
  *
  * El navegador nunca ve la API key: le pega a esta función con la clave
  * compartida de Formas (header x-formas-clave) y la función llama a OpenAI.
  *
- * Como generar una imagen puede tardar más que el límite de 26 s de una
- * función sincrónica de Netlify, se usa la Responses API en modo background:
- * OpenAI encola el trabajo y el navegador consulta el estado cada unos
- * segundos. Cada llamada a esta función responde en milisegundos.
+ * Generar una imagen tarda bastante, así que se usa la Responses API en modo
+ * background: OpenAI encola el trabajo y el navegador consulta el estado cada
+ * unos segundos. Cada llamada a esta función responde en milisegundos.
  *
  *   POST {action:'start', mode:'fondo-blanco'|'situacion'|'resolucion', image:<dataURL>, producto?, ancho?, alto?}
  *     → {id, status}
  *   POST {action:'estado', id}
  *     → {status:'queued'|'in_progress'|'completed'|'failed', image?, error?}
  *
- * Variables de entorno (Netlify → Site configuration → Environment variables):
+ * Variables (Cloudflare → Workers & Pages → este proyecto → Settings → Variables and Secrets):
  *   OPENAI_API_KEY        obligatoria
  *   FORMAS_IA_CLAVE       obligatoria — clave compartida que pide la app
  *   OPENAI_MODEL          opcional — modelo "conductor" (default gpt-5-mini)
@@ -72,20 +72,46 @@ function promptSituacion(o) {
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), { status, headers: { 'content-type': 'application/json' } });
 
-export default async (req) => {
+/* ponytail: el plan Free de Workers corta a los 10 ms de CPU por llamada, y pasar por JSON
+   (parse, stringify y codificar) una foto de 6 MB gasta ~15 ms. Por eso la foto (en start) y
+   la imagen generada (en estado) nunca se convierten a texto: se ubican en los bytes del JSON
+   y se reenvían tal cual. Sirve porque base64 y los data URL no llevan comillas.
+   Con Workers Paid (5 min de CPU) esto se puede volver a req.json() directo.
+   Devuelve el JSON parseado con el campo reemplazado por HUECO, y los bytes del valor. */
+const HUECO = '@@campo-grande@@';
+const enc = new TextEncoder(), dec = new TextDecoder();
+const COMILLA = 0x22, DOS_PUNTOS = 0x3a, ESPACIOS = [0x20, 0x09, 0x0a, 0x0d];
+function sacarCampo(bytes, campo) {
+  const clave = enc.encode(`"${campo}"`);
+  const saltar = (j) => { while (ESPACIOS.includes(bytes[j])) j++; return j; };
+  for (let i = bytes.indexOf(COMILLA); i >= 0; i = bytes.indexOf(COMILLA, i + 1)) {
+    if (!clave.every((b, k) => bytes[i + k] === b)) continue;
+    let j = saltar(i + clave.length);
+    if (bytes[j] !== DOS_PUNTOS) continue;
+    j = saltar(j + 1);
+    if (bytes[j] !== COMILLA) continue;
+    const fin = bytes.indexOf(COMILLA, j + 1);
+    if (fin < 0) break;
+    const resto = dec.decode(bytes.subarray(0, i)) + `"${campo}":"${HUECO}"` + dec.decode(bytes.subarray(fin + 1));
+    return [JSON.parse(resto), bytes.subarray(j + 1, fin)];
+  }
+  return [JSON.parse(dec.decode(bytes)), null];
+}
+
+export async function onRequest({ request: req, env }) {
   if (req.method !== 'POST') return json({ error: 'Método no permitido' }, 405);
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  const clave = process.env.FORMAS_IA_CLAVE;
+  const apiKey = env.OPENAI_API_KEY;
+  const clave = env.FORMAS_IA_CLAVE;
   if (!apiKey || !clave) {
-    return json({ error: 'La IA no está configurada: faltan OPENAI_API_KEY y/o FORMAS_IA_CLAVE en las variables de entorno de Netlify.' }, 503);
+    return json({ error: 'La IA no está configurada: faltan OPENAI_API_KEY y/o FORMAS_IA_CLAVE en las variables de Cloudflare.' }, 503);
   }
   if ((req.headers.get('x-formas-clave') || '') !== clave) {
     return json({ error: 'Clave incorrecta' }, 401);
   }
 
-  let body;
-  try { body = await req.json(); } catch { return json({ error: 'Cuerpo JSON inválido' }, 400); }
+  let body, fotoBytes;
+  try { [body, fotoBytes] = sacarCampo(new Uint8Array(await req.arrayBuffer()), 'image'); } catch { return json({ error: 'Cuerpo JSON inválido' }, 400); }
 
   const auth = { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' };
 
@@ -103,8 +129,8 @@ export default async (req) => {
     });
     if (body.mode === 'resolucion') modo = MODO_RESOLUCION;
     if (!modo) return json({ error: 'mode debe ser "fondo-blanco", "situacion" o "resolucion"' }, 400);
-    const image = typeof body.image === 'string' ? body.image : '';
-    if (!image.startsWith('data:image/') || image.length > 8_000_000) {
+    const foto = body.image === HUECO ? fotoBytes : new Uint8Array(0);
+    if (dec.decode(foto.subarray(0, 11)) !== 'data:image/' || foto.length > 8_000_000) {
       return json({ error: 'image debe ser un data URL de imagen de hasta ~6 MB' }, 400);
     }
     const producto = String(body.producto || '').slice(0, 200).trim();
@@ -114,31 +140,32 @@ export default async (req) => {
       + (producto ? `\n\nEl producto de la foto es: ${producto}.` : '')
       + (tecnica ? `\n\nSi el producto tiene un logo aplicado, la técnica de aplicación elegida es: ${tecnica}. Hacé que el logo se vea aplicado con esa técnica de forma realista y coherente con el material — por ejemplo: bordado = relieve de hilos y puntadas visibles; grabado láser = hundido en el material, sin tinta, en el tono del propio material; serigrafía o tampografía = capa de tinta plana y pareja adherida a la superficie; vinilo = recorte aplicado con un leve brillo; sublimación = tinta integrada a la tela sin relieve. El acabado debe seguir la curvatura y la luz del producto, y el logo debe conservar exactamente su forma, colores, posición y tamaño.` : '');
 
+    // los bytes de la foto van tal cual en el lugar de HUECO (ver sacarCampo)
     const crear = (tool, forzarTool) => fetch(`${OPENAI}/responses`, {
       method: 'POST',
       headers: auth,
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || 'gpt-5-mini',
+      body: new Blob(JSON.stringify({
+        model: env.OPENAI_MODEL || 'gpt-5-mini',
         background: true,
         store: true,
         input: [{
           role: 'user',
           content: [
             { type: 'input_text', text: prompt },
-            { type: 'input_image', image_url: image },
+            { type: 'input_image', image_url: HUECO },
           ],
         }],
         tools: [tool],
         ...(forzarTool ? { tool_choice: { type: 'image_generation' } } : {}),
-      }),
+      }).split(HUECO).flatMap((parte, k) => k ? [foto, parte] : [parte])),
     });
 
-    const quality = process.env.OPENAI_IMAGE_QUALITY || 'medium';
+    const quality = env.OPENAI_IMAGE_QUALITY || 'medium';
     // GPT Image 2.5 (sept 2026): 'sunburst' es el de máxima precisión de edición
     // — la prioridad acá es que el producto y el logo salgan fieles, aunque tarde
     // más; 'flare' es la alternativa rápida. Ya trabaja siempre en alta fidelidad,
     // así que input_fidelity no va: si se pasa, la request falla.
-    const imgModel = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2.5-sunburst';
+    const imgModel = env.OPENAI_IMAGE_MODEL || 'gpt-image-2.5-sunburst';
     // fondo blanco y situación salen siempre 1:1: las fotos cuadradas entran
     // parejas en la ficha y en el catálogo. "Más resolución" conserva la
     // proporción de la foto original (apaisada, vertical o cuadrada) para que
@@ -172,7 +199,7 @@ export default async (req) => {
 
     const r = await fetch(`${OPENAI}/responses/${id}`, { headers: auth });
     if (!r.ok) return json({ error: 'No pude consultar el estado (' + r.status + ')' }, 502);
-    const d = await r.json();
+    const [d, pngBytes] = sacarCampo(new Uint8Array(await r.arrayBuffer()), 'result');
 
     if (d.status === 'completed') {
       const call = (d.output || []).find(o => o.type === 'image_generation_call' && o.result);
@@ -183,7 +210,10 @@ export default async (req) => {
           .map(c => c.text).join(' ').slice(0, 400);
         return json({ status: 'failed', error: 'El modelo no devolvió una imagen.' + (texto ? ' Dijo: ' + texto : '') });
       }
-      return json({ status: 'completed', image: 'data:image/png;base64,' + call.result });
+      // armado a mano para no volver a serializar la imagen (ver sacarCampo)
+      const png = call.result === HUECO ? pngBytes : call.result;
+      return new Response(new Blob(['{"status":"completed","image":"data:image/png;base64,', png, '"}']),
+        { headers: { 'content-type': 'application/json' } });
     }
     if (d.status === 'failed' || d.status === 'cancelled' || d.status === 'incomplete') {
       return json({ status: 'failed', error: (d.error && d.error.message) || 'La generación falló en OpenAI.' });
@@ -192,4 +222,4 @@ export default async (req) => {
   }
 
   return json({ error: 'action debe ser "start" o "estado"' }, 400);
-};
+}

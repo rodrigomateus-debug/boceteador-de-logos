@@ -35,30 +35,29 @@ Dos detalles a no romper si se toca `corelSheet()`:
 
 ## Ramas y entornos de prueba
 
-El sitio de Netlify publica **cada rama en su propia URL** (Branch deploys),
-con las mismas funciones serverless y variables de entorno que producción,
-así que la IA funciona igual en todas:
+Cloudflare Pages publica **cada rama en su propia URL** (preview deployments),
+con la misma función de IA. Las variables de Cloudflare van por separado para
+*Production* y *Preview*: cargadas en las dos, la IA funciona igual en todas:
 
 | Rama | Para qué | URL |
 |---|---|---|
-| `main` | **Producción.** Solo recibe merges desde `dev` ya validados | https://formas-bocetos-con-logo.netlify.app |
-| `dev` | Preproducción: acá se junta y se prueba lo que va a salir | https://dev--formas-bocetos-con-logo.netlify.app |
-| `jp-code` | Arenero de Juan Pedro: pruebas jugadas, sin compromiso | https://jp-code--formas-bocetos-con-logo.netlify.app |
+| `main` | **Producción.** Solo recibe merges desde `dev` ya validados | https://formas-bocetos-con-logo.pages.dev |
+| `dev` | Preproducción: acá se junta y se prueba lo que va a salir | https://dev.formas-bocetos-con-logo.pages.dev |
+| `jp-code` | Arenero de Juan Pedro: pruebas jugadas, sin compromiso | https://jp-code.formas-bocetos-con-logo.pages.dev |
 
 El flujo: se trabaja en `jp-code` (o en ramas propias), lo que sobrevive se
 mergea a `dev`, se valida en la URL de `dev`, y recién entonces `dev` se
 mergea a `main`. **Nada sube solo de una rama a la otra.** Cada push a una
-rama actualiza su URL en segundos; si se usan pull requests, Netlify además
-publica una URL temporal por PR (Deploy Previews) para revisar antes de
-mergear.
+rama actualiza su URL en segundos (cualquier rama nueva también tiene la suya,
+`<rama>.formas-bocetos-con-logo.pages.dev`), y si se usan pull requests
+Cloudflare comenta en el PR la URL para revisarlo antes de mergear.
 
 ## App publicada
 
-**https://formas-bocetos-con-logo.netlify.app/** (Netlify). `index.html`
-redirige al generador. Para actualizarla: volver a arrastrar la carpeta en
-Netlify Drop, o mejor, conectar el sitio al repo de GitHub (Netlify →
-Site configuration → Build & deploy → Link repository, rama `main`) para que
-cada cambio se publique solo.
+**https://formas-bocetos-con-logo.pages.dev/** (Cloudflare Pages, conectado a
+este repo). `index.html` redirige al generador. Cada push a `main` se publica
+solo, sin build. La dirección vieja de Netlify
+(`formas-bocetos-con-logo.netlify.app`) redirige acá: no se publica más ahí.
 
 ## Mejorar la foto con IA (OpenAI)
 
@@ -79,17 +78,20 @@ antes/después y decidir si se usa:
 
 El "estilo Formas" (reglas de marca: no tocar el producto ni su logo, look
 luminoso y profesional, sin texto agregado) vive en el servidor, en
-`netlify/functions/ia-imagen.mjs`, junto con el prompt de cada modo. Para
+`functions/api/ia-imagen.js`, junto con el prompt de cada modo. Para
 ajustar el estilo se edita ese archivo, no el HTML.
 
 **Cómo funciona por dentro:** el navegador nunca ve la API key. Le pega a la
-función de Netlify con una clave compartida (header `x-formas-clave`, se pide
-una sola vez y queda en el navegador); la función crea el trabajo en la
+función (`/api/ia-imagen`) con una clave compartida (header `x-formas-clave`,
+se pide una sola vez y queda en el navegador); la función crea el trabajo en la
 Responses API de OpenAI en modo *background* y el navegador consulta el estado
-cada 4 segundos. Así ninguna llamada supera el límite de 26 s de las funciones
-sincrónicas de Netlify aunque la imagen tarde minutos.
+cada 4 segundos, así que ninguna llamada queda esperando aunque la imagen tarde
+minutos. La foto y la imagen generada pasan por la función sin convertirse a
+texto: el plan gratis de Cloudflare corta a los 10 ms de CPU por llamada (ver
+el comentario `ponytail:` en el archivo). Prueba: `node test_ia_imagen.mjs`.
 
-**Puesta en marcha** (Netlify → Site configuration → Environment variables):
+**Puesta en marcha** (Cloudflare → Workers & Pages → formas-bocetos-con-logo →
+Settings → Variables and Secrets, en *Production* y en *Preview*):
 
 | Variable | Qué es |
 |---|---|
@@ -106,9 +108,10 @@ un boceto que se le muestra al cliente, la fidelidad vale más que unos segundos
 Si en algún momento se prefiere velocidad, se cambia `OPENAI_IMAGE_MODEL` a
 `gpt-image-2.5-flare` y se redespliega, sin tocar código.
 
-Después de setearlas hay que redesplegar el sitio. Costo orientativo: unos
-centavos de dólar por imagen en calidad media. Para probar en local:
-`npx netlify dev` (levanta la app con las funciones incluidas).
+Después de setearlas hay que redesplegar el sitio (Deployments → el último →
+Retry deployment). Costo orientativo: unos centavos de dólar por imagen en
+calidad media. Para probar en local: `npx wrangler pages dev .` (levanta la app
+con la función incluida; las variables van en un archivo `.dev.vars`).
 
 La imagen generada es **orientativa**: la IA puede alterar detalles del
 producto o del logo, por eso el comparador obliga a revisar antes de aceptar.
@@ -169,7 +172,7 @@ Google no permite la conexión con Drive desde un archivo abierto con doble clic
    como usuarios de prueba) → nombre de la app: "Boceteador Formas" → Guardar.
 4. **APIs y servicios → Credenciales → Crear credenciales → ID de cliente de OAuth**
    → tipo **Aplicación web** → en **Orígenes de JavaScript autorizados** agregá
-   exactamente: `https://formas-bocetos-con-logo.netlify.app` → Crear.
+   exactamente: `https://formas-bocetos-con-logo.pages.dev` → Crear.
 5. Copiá el **ID de cliente** (termina en `.apps.googleusercontent.com`).
 6. Pegalo en `generador-bocetos.html`, en la constante `GD_DEFAULT_CLIENT_ID`
    (buscala en el archivo), y subí el cambio. Así todo el equipo lo tiene ya
