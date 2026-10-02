@@ -1,0 +1,4 @@
+# claves locales de wrangler pages dev: nunca al repo
+.dev.vars
+.wrangler/
+node_modules/
