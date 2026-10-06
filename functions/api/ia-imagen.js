@@ -129,12 +129,15 @@ export async function onRequest(ctx) {
 async function atender({ request: req, env }) {
   if (req.method !== 'POST') return json({ error: 'Método no permitido' }, 405);
 
-  const apiKey = env.OPENAI_API_KEY;
-  const clave = env.FORMAS_IA_CLAVE;
+  // las variables se pegan a mano en Cloudflare y a veces traen un salto de línea, espacios,
+  // comillas o un carácter invisible: en la key, eso arma un encabezado Authorization inválido
+  // y fetch falla con "Invalid header value". Una key de OpenAI nunca lleva nada de eso.
+  const apiKey = String(env.OPENAI_API_KEY || '').replace(/[^\x21-\x7E]|["'`]/g, '');
+  const clave = String(env.FORMAS_IA_CLAVE || '').trim();
   if (!apiKey || !clave) {
     return json({ error: 'La IA no está configurada: faltan OPENAI_API_KEY y/o FORMAS_IA_CLAVE en las variables de Cloudflare.' }, 503);
   }
-  if ((req.headers.get('x-formas-clave') || '') !== clave) {
+  if ((req.headers.get('x-formas-clave') || '').trim() !== clave) {
     return json({ error: 'Clave incorrecta' }, 401);
   }
 

@@ -77,6 +77,16 @@ r = await pedir({ action: 'start', mode: 'fondo-blanco', image: foto });
 assert.equal(r.status, 502);
 assert.deepEqual(await r.json(), { error: 'OpenAI rechazó el pedido (403)', detalle: 'Your organization must be verified to use the model.' });
 
+// key pegada con un salto de línea, espacios, comillas y un carácter invisible: se limpia
+// (sin esto, Cloudflare tira "Invalid header value" al armar el encabezado Authorization)
+const envSucio = { OPENAI_API_KEY: ' "sk-proj-abc\ndef​" \n', FORMAS_IA_CLAVE: 'clave-prueba\n' };
+responder(new Response('{"id":"resp_abc123","status":"queued"}'));
+r = await onRequest({ env: envSucio, request: new Request('https://x/api/ia-imagen', {
+  method: 'POST', headers: { 'x-formas-clave': 'clave-prueba' }, body: JSON.stringify({ action: 'start', mode: 'fondo-blanco', image: foto }),
+}) });
+assert.equal(r.status, 200);
+assert.equal(llamadas[0].init.headers.authorization, 'Bearer sk-proj-abcdef');
+
 // si algo explota adentro (acá, la conexión con OpenAI), el motivo vuelve en JSON y no como página de error
 globalThis.fetch = async () => { throw new TypeError('Network connection lost.'); };
 r = await pedir({ action: 'start', mode: 'fondo-blanco', image: foto });
