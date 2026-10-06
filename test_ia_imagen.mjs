@@ -77,6 +77,12 @@ r = await pedir({ action: 'start', mode: 'fondo-blanco', image: foto });
 assert.equal(r.status, 502);
 assert.deepEqual(await r.json(), { error: 'OpenAI rechazó el pedido (403)', detalle: 'Your organization must be verified to use the model.' });
 
+// si algo explota adentro (acá, la conexión con OpenAI), el motivo vuelve en JSON y no como página de error
+globalThis.fetch = async () => { throw new TypeError('Network connection lost.'); };
+r = await pedir({ action: 'start', mode: 'fondo-blanco', image: foto });
+assert.equal(r.status, 500);
+assert.deepEqual(await r.json(), { error: 'La función de IA falló', detalle: 'Network connection lost.' });
+
 // clave incorrecta y foto que no es imagen
 responder();
 assert.equal((await pedir({ action: 'start', mode: 'fondo-blanco', image: foto }, 'otra')).status, 401);

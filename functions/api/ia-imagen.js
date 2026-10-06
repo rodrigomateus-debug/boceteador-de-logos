@@ -114,7 +114,19 @@ function sacarCampo(bytes, campo) {
   return [JSON.parse(dec.decode(bytes)), null];
 }
 
-export async function onRequest({ request: req, env }) {
+/* Si algo se rompe adentro (una conexión con OpenAI que se corta, una respuesta inesperada),
+   Cloudflare contesta una página de error 500 sin explicación (error 1101) y la app no puede
+   decir qué pasó. Así el motivo llega a la app y queda en los logs de la función. */
+export async function onRequest(ctx) {
+  try {
+    return await atender(ctx);
+  } catch (e) {
+    console.error('ia-imagen:', (e && e.stack) || e);
+    return json({ error: 'La función de IA falló', detalle: String((e && e.message) || e).slice(0, 300) }, 500);
+  }
+}
+
+async function atender({ request: req, env }) {
   if (req.method !== 'POST') return json({ error: 'Método no permitido' }, 405);
 
   const apiKey = env.OPENAI_API_KEY;
