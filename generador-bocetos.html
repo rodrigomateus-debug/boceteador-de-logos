@@ -286,8 +286,8 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .suffix-wrap input{padding-right:38px}
 #bocetoModal input.need{border-color:#F9CE32; box-shadow:0 0 0 2.5px rgba(249,206,50,.35)}
 #bocetoModal select{padding-right:32px}
-#bocetoModal #trimUndo, #bocetoModal #undoDeleteBtn, #bocetoModal #photoIaUndo{border:none; background:none; color:var(--formas-navy); font-family:var(--font-primary); font-size:12px; font-weight:700; text-decoration:underline; cursor:pointer; padding:0; flex:none; white-space:nowrap}
-#bocetoModal #trimUndo:hover, #bocetoModal #undoDeleteBtn:hover, #bocetoModal #photoIaUndo:hover{color:#EF7958}
+#bocetoModal #trimUndo, #bocetoModal #undoDeleteBtn, #bocetoModal #photoIaUndo, #bocetoModal #iaLogoUndo{border:none; background:none; color:var(--formas-navy); font-family:var(--font-primary); font-size:12px; font-weight:700; text-decoration:underline; cursor:pointer; padding:0; flex:none; white-space:nowrap}
+#bocetoModal #trimUndo:hover, #bocetoModal #undoDeleteBtn:hover, #bocetoModal #photoIaUndo:hover, #bocetoModal #iaLogoUndo:hover{color:#EF7958}
 /* zoom y paneo del canvas */
 #bocetoModal #frameWrap{overflow:hidden; position:relative; border-radius:14px}
 #bocetoModal{--Z:1} /* default para todo lo que está fuera del lienzo con zoom (p. ej. manijas del recorte); sin esto sus calc(--Z) quedan inválidos y las manijas colapsan */
@@ -325,6 +325,31 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #cropModal{position:absolute; inset:0; z-index:50; background:rgba(11,11,35,.5); display:flex; align-items:center; justify-content:center; padding:20px}
 #bocetoModal #unirModal{position:absolute; inset:0; z-index:50; background:rgba(11,11,35,.5); display:flex; align-items:center; justify-content:center; padding:20px}
 #bocetoModal #unirModal[hidden]{display:none}
+/* quitar fondo o un color del logo */
+#bocetoModal #bgModal{position:absolute; inset:0; z-index:50; background:rgba(11,11,35,.5); display:flex; align-items:center; justify-content:center; padding:20px}
+#bocetoModal #bgStageWrap{display:flex; justify-content:center}
+#bocetoModal #bgStage{position:relative; display:inline-block; max-width:100%; padding:12px; border-radius:8px; background:repeating-conic-gradient(#ECECF2 0 25%, #fff 0 50%) 0 0/16px 16px; cursor:crosshair; touch-action:none}
+#bocetoModal #bgStage.dark{background:repeating-conic-gradient(#3A3A55 0 25%, #23233D 0 50%) 0 0/16px 16px}
+#bocetoModal #bgCanvas{display:block; max-width:100%; max-height:40vh}
+#bocetoModal #bgLoupe{position:absolute; width:30px; height:30px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 1.5px var(--formas-navy), 0 4px 12px rgba(11,11,35,.3); pointer-events:none; translate:-50% -130%}
+#bocetoModal .bgRow{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:12px}
+#bocetoModal .bgRow > .label{flex:none; width:84px}
+#bocetoModal .bgSug, #bocetoModal #bgList{display:flex; gap:6px; flex-wrap:wrap; flex:1}
+#bocetoModal .bgSug button, #bocetoModal .bgPick, #bocetoModal .bgChip{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border:1.5px solid var(--formas-gray-200); border-radius:999px; background:#fff; font-family:var(--font-primary); font-size:12px; font-weight:700; color:var(--formas-ink); cursor:pointer}
+#bocetoModal .bgSug button:hover, #bocetoModal .bgPick:hover{border-color:var(--formas-navy)}
+#bocetoModal .bgSug i, #bocetoModal .bgChip i{width:16px; height:16px; border-radius:50%; box-shadow:inset 0 0 0 1px rgba(11,11,35,.25); flex:none}
+#bocetoModal .bgSug button.on{border-color:var(--formas-navy); background:var(--formas-gray-50)}
+#bocetoModal .bgSug small{font-weight:600; color:var(--formas-green)}
+#bocetoModal .bgPick input{width:18px; height:18px; padding:0; border:none; background:none; cursor:pointer}
+#bocetoModal .bgChip{cursor:default; font-variant-numeric:tabular-nums; text-transform:uppercase}
+#bocetoModal .bgChip button{border:none; background:none; padding:0 0 0 2px; font-size:14px; line-height:1; color:var(--formas-gray-500); cursor:pointer}
+#bocetoModal .bgChip button:hover{color:#C62828}
+#bocetoModal #bgList .vacio{font-size:12px; color:var(--text-muted)}
+#bocetoModal .cm-pill{flex:none; margin-left:auto; padding:7px 12px; border:1.5px solid var(--formas-gray-200); border-radius:999px; background:#fff; font-family:var(--font-primary); font-size:12px; font-weight:700; color:var(--formas-navy); cursor:pointer; white-space:nowrap}
+#bocetoModal .cm-pill:hover{border-color:var(--formas-navy)}
+#bocetoModal .cm-pill[aria-pressed="true"]{background:var(--formas-navy); color:#fff; border-color:var(--formas-navy)}
+#bocetoModal .btn-ia-logo{background:#fff; color:var(--formas-navy); border-color:var(--formas-navy)}
+#bocetoModal .btn-ia-logo:hover{background:var(--formas-navy); color:#fff}
 #bocetoModal .cm-card{background:#fff; border-radius:16px; padding:18px; width:min(700px,100%); max-height:100%; overflow:auto; box-shadow:0 20px 60px rgba(11,11,35,.4)}
 #bocetoModal .cm-head{display:flex; justify-content:space-between; align-items:center; gap:12px}
 #bocetoModal .cm-head h3{font-family:var(--font-display); font-weight:800; color:var(--formas-navy); font-size:17px; margin:0}
@@ -396,6 +421,29 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 .btn-dlfoto{display:block; width:100%; margin-top:6px; padding:8px 10px; border:1px dashed var(--formas-gray-200,#E4E4ED); border-radius:10px; background:#fff; color:var(--text-body); font:inherit; font-size:12px; font-weight:600; cursor:pointer}
 .btn-dlfoto:hover{border-color:var(--navy); color:var(--navy)}
 @media (max-width:640px){ #iaModal .iaCompare{grid-template-columns:1fr} }
+/* modificar logo con IA: va por encima del boceteador */
+#iaLogoModal{position:fixed; inset:0; z-index:120; background:rgba(11,11,35,.55); display:flex; align-items:center; justify-content:center; padding:20px}
+#iaLogoModal[hidden]{display:none}
+#iaLogoModal .iaCard{background:#fff; border-radius:16px; width:min(760px,100%); max-height:92vh; overflow:auto; padding:18px 20px}
+#iaLogoModal h3{margin:0 0 4px; color:var(--navy); font-size:17px}
+#iaLogoModal .iaHint{font-size:12px; color:var(--muted); margin:0 0 12px}
+#iaLogoModal .iaCompare{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+#iaLogoModal figure{margin:0; min-width:0}
+#iaLogoModal figcaption{font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:6px}
+#iaLogoModal .iaLogoImg{height:220px; display:grid; place-items:center; padding:12px; border:1px solid var(--border); border-radius:12px; background:repeating-conic-gradient(#ECECF2 0 25%, #fff 0 50%) 0 0/16px 16px}
+#iaLogoModal .iaLogoImg img{max-width:100%; max-height:196px; object-fit:contain}
+#iaLogoModal #iaLogoVacio{font-size:12px; color:var(--muted); text-align:center; background:#fff; padding:6px 10px; border-radius:8px}
+#iaLogoModal label{display:block; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:14px 0 4px}
+#iaLogoModal textarea{width:100%; padding:9px 10px; border:1.5px solid var(--border); border-radius:8px; font:inherit; font-size:13px; resize:vertical}
+#iaLogoModal .iaLogoSug{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
+#iaLogoModal .iaLogoSug button{padding:5px 10px; border:1px solid var(--border); border-radius:999px; background:#fff; font:inherit; font-size:11.5px; font-weight:600; color:var(--navy); cursor:pointer}
+#iaLogoModal .iaLogoSug button:hover{border-color:var(--navy)}
+#iaLogoModal .iaBtns{display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; margin-top:14px}
+#iaLogoModal .usar{padding:10px 16px; border:none; border-radius:10px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
+#iaLogoModal .descartar{padding:10px 16px; border:1px solid var(--border); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:13px; font-weight:600; cursor:pointer}
+#iaLogoModal .dl{margin-right:auto; border-color:var(--navy); color:var(--navy); font-weight:700}
+#iaLogoModal button:disabled{opacity:.5; cursor:default}
+@media (max-width:640px){ #iaLogoModal .iaCompare{grid-template-columns:1fr} }
 /* aviso de baja resolución: vive por encima del modal del boceteador (z 100) */
 #lowResModal{position:fixed; inset:0; z-index:120; background:rgba(11,11,35,.55); display:flex; align-items:center; justify-content:center; padding:20px}
 #lowResModal[hidden]{display:none}
@@ -699,6 +747,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <input type="file" id="f_logo" accept="image/*,.pdf,.ai,application/pdf">
         <span id="txt_logo">Subir logo (vector / alta resolución)</span>
       </div>
+      <button type="button" class="btn-ia" id="ia_logo" disabled style="width:100%; margin-top:6px" title="Pedile a la IA un cambio en el logo de esta hoja: sacar un texto, cambiar un color, redibujarlo prolijo…">✨ Modificar logo con IA</button>
       <label>Fondo del recuadro del logo</label>
       <div class="bgToggle">
         <button type="button" id="bgProduct" aria-pressed="true" title="El recuadro toma el color principal del producto">Fondo color<br>del producto</button>
@@ -786,6 +835,39 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <div class="cm-actions">
           <button type="button" class="btn btn-secondary" id="cropAuto">Detectar automático</button>
           <button type="button" class="btn btn-primary" id="cropApply">Aplicar recorte</button>
+        </div>
+      </div>
+    </div>
+    <div id="bgModal" hidden>
+      <div class="cm-card">
+        <div class="cm-head">
+          <h3>Quitar fondo o un color del logo</h3>
+          <button type="button" class="cm-pill" id="bgDarkBtn" aria-pressed="false" title="Fondo oscuro para ver logos blancos">🌙 Fondo oscuro</button>
+          <button type="button" class="bm-close" id="bgClose" aria-label="Cerrar sin cambios">×</button>
+        </div>
+        <p class="cm-hint">Elegí el color a borrar entre los sugeridos o con el selector, o <b>tocá el logo</b> para tomarlo directo de la imagen. Se puede borrar más de un color.</p>
+        <div id="bgStageWrap"><div id="bgStage"><canvas id="bgCanvas" aria-label="Vista previa del logo: tocá un color para borrarlo"></canvas><span id="bgLoupe" hidden></span></div></div>
+        <div class="bgRow">
+          <span class="label">Sugeridos</span>
+          <div class="bgSug">
+            <button type="button" data-hex="#ffffff"><i style="background:#ffffff"></i>Blanco</button>
+            <button type="button" data-hex="#000000"><i style="background:#000000"></i>Negro</button>
+            <button type="button" id="bgSugFondo" hidden><i></i>Fondo del archivo</button>
+            <label class="bgPick" title="Elegí un color de la paleta"><input type="color" id="bgPicker" value="#ff0000">Otro color…</label>
+          </div>
+        </div>
+        <div class="bgRow">
+          <span class="label">Se borran</span>
+          <div id="bgList"></div>
+        </div>
+        <div class="field">
+          <span class="label">Tolerancia · <span id="bgTolVal"></span></span>
+          <input type="range" id="bgTol" min="0" max="120" value="16">
+          <small class="cm-hint" style="margin:0">Con más tolerancia se borran también los tonos parecidos: sirve para JPG, sombras o bordes suavizados.</small>
+        </div>
+        <div class="cm-actions">
+          <button type="button" class="btn btn-secondary" id="bgReset">Restaurar original</button>
+          <button type="button" class="btn btn-primary" id="bgApply">Aplicar</button>
         </div>
       </div>
     </div>
@@ -945,8 +1027,9 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             <div class="suffix-wrap"><input type="number" id="logoHcm" placeholder="Alto" min="0.1" max="200" step="0.1"><span class="suffix">cm</span></div>
           </div>
         </div>
-        <button class="btn btn-secondary" type="button" id="removeWhiteBtn" style="margin-top:10px" hidden>Quitar fondo blanco</button>
+        <button class="btn btn-secondary" type="button" id="removeWhiteBtn" style="margin-top:10px" hidden title="Borra el fondo o cualquier color del logo: blanco, negro, uno a elección o tomado directo de la imagen">Quitar fondo</button>
         <button class="btn btn-secondary" type="button" id="cropEditBtn" hidden>✂ Editar recorte</button>
+        <button class="btn btn-ia-logo" type="button" id="iaLogoBtn" hidden title="Pedile a la IA un cambio en este logo: sacar un texto, cambiar un color, redibujarlo prolijo…">✨ Modificar logo con IA</button>
         <div id="logoTools" hidden>
           <div class="label" style="margin-top:12px;letter-spacing:.08em">Color del logo</div>
           <div class="seg" id="tintSeg">
@@ -969,8 +1052,9 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             <input type="range" id="logoOpacity" min="10" max="100" value="100">
           </div>
         </div>
-        <div class="note" id="jpgNote" hidden>⚠ <span>Tu logo no tiene transparencia: sobre productos oscuros se verá con fondo. Probá el botón "Quitar fondo blanco".</span></div>
+        <div class="note" id="jpgNote" hidden>⚠ <span>Tu logo no tiene transparencia: sobre productos oscuros se verá con fondo. Probá el botón "Quitar fondo".</span></div>
         <div class="note" id="undoNote" hidden>🗑 <span id="undoNoteTxt"></span> <button type="button" id="undoDeleteBtn">Deshacer</button></div>
+        <div class="note" id="iaLogoNote" hidden>✨ <span>Logo modificado con IA: revisá que siga fiel al original.</span> <button type="button" id="iaLogoUndo">Volver al original</button></div>
         <div class="note" id="trimNote" hidden>✂ <span id="trimNoteTxt">Se recortaron los márgenes vacíos del logo: la medida corresponde al logo real, no al recuadro del archivo.</span> <button type="button" id="trimUndo">Deshacer recorte</button></div>
         <div class="readout" id="logoReadout" hidden>
           <div class="row"><span class="label">Logo aplicado</span><span class="val num" id="logoSizeOut">—</span></div>
@@ -1064,6 +1148,35 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <button type="button" class="usar" id="lowResIa">✨ Mejorar la resolución con IA<small>Agranda la foto sin cambiar el producto · tarda alrededor de un minuto</small></button>
     </div>
     <div class="iaStatus" id="lowResStatus" hidden></div>
+  </div>
+</div>
+
+<!-- modificar un logo con IA (boceteador y ficha) -->
+<div id="iaLogoModal" hidden>
+  <div class="iaCard">
+    <h3>✨ Modificar logo con IA</h3>
+    <p class="iaHint">Contale a la IA qué querés cambiar. El resultado es orientativo: revisá que el logo siga fiel antes de usarlo.</p>
+    <div class="iaCompare">
+      <figure><figcaption>Logo actual</figcaption><div class="iaLogoImg"><img id="iaLogoAntes" alt="Logo actual"></div></figure>
+      <figure><figcaption>Con IA</figcaption><div class="iaLogoImg"><span id="iaLogoVacio">Acá va a aparecer el logo modificado</span><img id="iaLogoDespues" alt="Logo modificado con IA" hidden></div></figure>
+    </div>
+    <label for="iaLogoPedido">¿Qué querés hacer con el logo?</label>
+    <textarea id="iaLogoPedido" rows="3" maxlength="500" placeholder="Ej: sacale el slogan de abajo, pasalo a una sola línea, cambiá el azul por verde…"></textarea>
+    <div class="iaLogoSug" id="iaLogoSug">
+      <button type="button">Quitale el fondo</button>
+      <button type="button">Pasalo a un solo color</button>
+      <button type="button">Redibujalo prolijo y nítido</button>
+      <button type="button">Sacale el texto de abajo</button>
+      <button type="button">Armá una versión horizontal</button>
+    </div>
+    <div class="iaStatus" id="iaLogoStatus" hidden></div>
+    <div class="iaBtns">
+      <button type="button" class="descartar dl" id="iaLogoDl" hidden title="Descarga el logo modificado (PNG)">⬇ Descargar</button>
+      <button type="button" class="descartar" id="iaLogoSeguir" hidden title="El próximo pedido parte de este resultado en vez del logo actual">↻ Seguir editando este</button>
+      <button type="button" class="descartar" id="iaLogoCerrar">Cancelar</button>
+      <button type="button" class="usar" id="iaLogoGo">✨ Modificar</button>
+      <button type="button" class="usar" id="iaLogoUsar" hidden>Usar este logo</button>
+    </div>
   </div>
 </div>
 
@@ -1346,6 +1459,7 @@ function docName(){
 
 function render(){
   const f = $('preview');
+  $('ia_logo').disabled = !imgLogo;
   f.srcdoc = buildCurrent();
   renderTabs(); // el nombre de la pestaña incluye la posición
   save();
@@ -1789,11 +1903,13 @@ function iaClave(){
     k = (prompt('Clave de las funciones de IA de Formas:') || '').trim();
     if(k) localStorage.setItem('formasIaClave', k);
   }
+  if(!k) throw new Error('Hace falta la clave de las funciones de IA de Formas: tocá el botón de nuevo e ingresala.');
   return k;
 }
 
-/* la foto puede venir del celular en 12 MP: se achica antes de mandarla */
-function iaDownscale(dataUrl, maxPx){
+/* la foto puede venir del celular en 12 MP: se achica antes de mandarla.
+   Las fotos van en JPEG sobre blanco; los logos (png) en PNG, conservando la transparencia. */
+function iaDownscale(dataUrl, maxPx, png){
   return new Promise((res, rej) => {
     const im = new Image();
     im.onload = () => {
@@ -1801,14 +1917,17 @@ function iaDownscale(dataUrl, maxPx){
       const w = Math.max(1, Math.round(im.naturalWidth * s)), h = Math.max(1, Math.round(im.naturalHeight * s));
       const c = document.createElement('canvas'); c.width = w; c.height = h;
       const x = c.getContext('2d');
-      x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, w, h);
+      if(!png){ x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, w, h); }
       x.drawImage(im, 0, 0, w, h);
-      res(c.toDataURL('image/jpeg', .92));
+      res(png ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', .92));
     };
-    im.onerror = () => rej(new Error('No pude leer la foto.'));
+    im.onerror = () => rej(new Error('No pude leer la imagen.'));
     im.src = dataUrl;
   });
 }
+
+/* los errores de red o del servidor se pueden reintentar; los de clave o del pedido, no */
+const iaError = (msg, reintentable) => Object.assign(new Error(msg), { reintentable: !!reintentable });
 
 async function iaFetch(payload, clave){
   let r;
@@ -1819,33 +1938,51 @@ async function iaFetch(payload, clave){
       body: JSON.stringify(payload)
     });
   }catch(e){
-    throw new Error('No pude conectar con la función de IA. ¿Estás en la app publicada en la web?');
+    throw iaError(location.protocol === 'file:'
+      ? 'La IA funciona solo en la app publicada (formas-bocetos-con-logo.pages.dev), no abriendo el archivo con doble clic.'
+      : 'No pude conectar con la función de IA. Revisá la conexión a internet y probá de nuevo.', true);
   }
-  const d = await r.json().catch(() => ({}));
+  let d = null;
+  try{ d = JSON.parse(await r.text()); }catch(e){}
   if(r.status === 401){
     localStorage.removeItem('formasIaClave');
-    throw new Error('Clave incorrecta. Tocá el botón de nuevo para reintentar.');
+    throw iaError('Clave incorrecta. Tocá el botón de nuevo para reintentar.');
   }
-  if(!r.ok) throw new Error(d.error || ('Error ' + r.status));
+  if(!d || typeof d !== 'object'){
+    // no respondió la función sino otra cosa: una página de error de Cloudflare o un sitio sin la función
+    if(r.ok || r.status === 404 || r.status === 405) throw iaError('Esta dirección no tiene la función de IA (respondió ' + r.status + '). Entrá desde formas-bocetos-con-logo.pages.dev.');
+    throw iaError('El servidor de la IA falló (error ' + r.status + '). Probá de nuevo en un rato.', true);
+  }
+  if(!r.ok){
+    const det = d.detalle ? ': ' + String(d.detalle).slice(0, 300) : '';
+    throw iaError((d.error || ('Error ' + r.status)) + det, r.status >= 500 && r.status !== 503);
+  }
   return d;
 }
 
-/* manda una foto a la IA y devuelve la imagen resultante (data URL), o null si
-   no hay clave. setS recibe los mensajes de progreso. La usan la ficha y el
-   boceteador (aviso de baja resolución). */
+/* manda una imagen a la IA y devuelve la resultante (data URL). setS recibe los
+   mensajes de progreso. La usan la ficha, el boceteador (aviso de baja resolución)
+   y el editor de logos con IA (mode 'logo', que viaja en PNG). */
 async function iaGenerarImagen(original, mode, opts, setS){
   const clave = iaClave();
-  if(!clave) return null;
-  setS('Preparando la foto…');
-  const img = await iaDownscale(original, 1536);
+  setS(mode === 'logo' ? 'Preparando el logo…' : 'Preparando la foto…');
+  let img = await iaDownscale(original, 1536, mode === 'logo');
+  if(img.length > 6e6) img = await iaDownscale(original, 1024, mode === 'logo'); // PNG pesado: más chico
   setS('Enviando a la IA…');
   const start = await iaFetch(Object.assign({ action:'start', mode, image: img }, opts || {}), clave);
   const t0 = Date.now();
-  let estado;
+  let estado, fallas = 0;
   while(true){
     await new Promise(r => setTimeout(r, 4000));
     if(Date.now() - t0 > 5 * 60 * 1000) throw new Error('La IA tardó más de 5 minutos. Probá de nuevo en un rato.');
-    estado = await iaFetch({ action:'estado', id: start.id }, clave);
+    try{
+      estado = await iaFetch({ action:'estado', id: start.id }, clave);
+      fallas = 0;
+    }catch(err){
+      // un corte de red o del servidor en una consulta no pierde el trabajo: se vuelve a consultar
+      if(!err.reintentable || ++fallas > 3) throw err;
+      continue;
+    }
     if(estado.status === 'completed') break;
     if(estado.status === 'failed') throw new Error(estado.error || 'La generación falló.');
     setS('La IA está trabajando… (' + Math.round((Date.now() - t0) / 1000) + ' s)');
@@ -1880,7 +2017,7 @@ async function mejorarConIA(mode, opts){
     }
     const image = await iaGenerarImagen(original, mode, extra, setS);
     status.hidden = true;
-    if(image) iaPreview(original, image, mode);
+    iaPreview(original, image, mode);
   }catch(err){
     setS('⚠ ' + (err && err.message ? err.message : err));
   }finally{
@@ -1935,6 +2072,77 @@ $('fotoIaBtn').addEventListener('click', () => usarFoto('ia'));
 $('fotoOrigBtn').addEventListener('click', () => usarFoto('orig'));
 $('ia_blanco').addEventListener('click', () => mejorarConIA('fondo-blanco'));
 $('ia_resolucion').addEventListener('click', () => mejorarConIA('resolucion'));
+
+/* ---------- modificar un logo con IA ----------
+   Lo usan el boceteador (logo seleccionado) y la ficha (logo de la hoja):
+   abrirIaLogo(src, nombre, alUsar) y alUsar(dataUrl) recibe el logo elegido.
+   El pedido se aplica sobre "Logo actual"; «Seguir editando este» pasa el resultado ahí. */
+let iaLogo = null, iaLogoCorrida = 0; // corrida: al cerrar o volver a pedir, la respuesta vieja se ignora
+function abrirIaLogo(src, nombre, alUsar){
+  iaLogo = { base: src, result: null, nombre: nombre || 'logo', alUsar };
+  $('iaLogoAntes').src = src;
+  $('iaLogoStatus').hidden = true;
+  iaLogoVista(false);
+  $('iaLogoModal').hidden = false;
+  $('iaLogoPedido').focus();
+}
+function iaLogoVista(busy){
+  const hay = !!iaLogo.result;
+  $('iaLogoDespues').hidden = !hay; $('iaLogoVacio').hidden = hay;
+  if(hay) $('iaLogoDespues').src = iaLogo.result;
+  else $('iaLogoVacio').textContent = busy ? 'La IA está trabajando…' : 'Acá va a aparecer el logo modificado';
+  ['iaLogoUsar', 'iaLogoDl', 'iaLogoSeguir'].forEach(id => { $(id).hidden = !hay; $(id).disabled = !!busy; });
+  $('iaLogoGo').disabled = !!busy;
+  $('iaLogoGo').className = hay ? 'descartar' : 'usar';
+  $('iaLogoGo').textContent = busy ? 'Modificando…' : hay ? '✨ Probar de nuevo' : '✨ Modificar';
+  document.querySelectorAll('#iaLogoSug button').forEach(b => b.disabled = !!busy);
+}
+function cerrarIaLogo(){ iaLogoCorrida++; iaLogo = null; $('iaLogoModal').hidden = true; }
+$('iaLogoCerrar').addEventListener('click', cerrarIaLogo);
+document.querySelectorAll('#iaLogoSug button').forEach(b => b.addEventListener('click', () => {
+  $('iaLogoPedido').value = b.textContent; $('iaLogoPedido').focus();
+}));
+$('iaLogoGo').addEventListener('click', async () => {
+  if(!iaLogo) return;
+  const pedido = $('iaLogoPedido').value.trim();
+  const status = $('iaLogoStatus');
+  const setS = t => { status.hidden = false; status.textContent = t; };
+  if(!pedido){ setS('Escribí qué querés hacer con el logo.'); $('iaLogoPedido').focus(); return; }
+  const yo = iaLogo, corrida = ++iaLogoCorrida;
+  const vigente = () => corrida === iaLogoCorrida;
+  yo.result = null; iaLogoVista(true);
+  try{
+    const m = await medirImagen(yo.base);
+    const image = await iaGenerarImagen(yo.base, 'logo', { pedido, ancho: m && m.w, alto: m && m.h }, t => { if(vigente()) setS(t); });
+    if(!vigente()) return;
+    yo.result = image;
+    status.hidden = true;
+  }catch(err){
+    if(vigente()) setS('⚠ ' + (err && err.message ? err.message : err));
+  }finally{
+    if(vigente()) iaLogoVista(false);
+  }
+});
+$('iaLogoSeguir').addEventListener('click', () => {
+  if(!iaLogo || !iaLogo.result) return;
+  iaLogo.base = iaLogo.result; iaLogo.result = null;
+  $('iaLogoAntes').src = iaLogo.base;
+  $('iaLogoPedido').value = '';
+  iaLogoVista(false);
+  $('iaLogoPedido').focus();
+});
+$('iaLogoDl').addEventListener('click', () => { if(iaLogo && iaLogo.result) descargarImagen(iaLogo.result, iaLogo.nombre.replace(/\.[^.]+$/, '') + ' - IA'); });
+$('iaLogoUsar').addEventListener('click', () => {
+  if(!iaLogo || !iaLogo.result) return;
+  const { alUsar, result } = iaLogo;
+  cerrarIaLogo();
+  alUsar(result);
+});
+/* en la ficha: el logo de la hoja */
+$('ia_logo').addEventListener('click', () => {
+  if(!imgLogo) return;
+  abrirIaLogo(imgLogo, docName() + ' - logo', url => { imgLogo = url; refreshLogoBox(); render(); });
+});
 
 /* aviso de baja resolución en la foto cargada directo en la ficha */
 async function avisarResFicha(dataUrl){
@@ -3003,7 +3211,13 @@ function closeBocetoModal(){
 document.getElementById('openBoceto').onclick = openBocetoModal;
 document.getElementById('bocetoClose').onclick = closeBocetoModal;
 document.getElementById('bocetoBackdrop').onclick = closeBocetoModal;
-document.addEventListener('keydown', e => { if(e.key === 'Escape' && !bocetoModal.hidden) closeBocetoModal(); });
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Escape') return;
+  // primero lo que está encima: el editor de logo con IA y el de quitar fondo
+  if(!$('iaLogoModal').hidden){ cerrarIaLogo(); return; }
+  if(!$('bgModal').hidden){ $('bgClose').click(); return; }
+  if(!bocetoModal.hidden) closeBocetoModal();
+});
 
 window.__applyBoceto = res => {
   imgFoto = res.foto;
@@ -3117,7 +3331,7 @@ const fmtCm = n => n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFrac
 /* Estado en coordenadas normalizadas (0–1) relativas al frame */
 const state = {
   zone: null,          // {x,y,w,h}
-  logos: [],           // {x,y,w,h,rot, src,name,isJpg, aspect, whiteRemoved, tint, opacity, cmW, cmH, el, img}
+  logos: [],           // {x,y,w,h,rot, src,name,isJpg, aspect, whiteRemoved, bgRemove:{colors,tol}, iaPrev, tint, opacity, cmW, cmH, el, img}
   sel: -1,             // índice del logo seleccionado
   lockAspect: false,
   drawMode: false,
@@ -3422,7 +3636,6 @@ function avisarBajaRes(url, name, w, h){
     const setS = t => { status.hidden = false; status.textContent = t; };
     try{
       const image = await iaGenerarImagen(url, 'resolucion', { ancho:w, alto:h }, setS);
-      if(!image){ btns.forEach(b => b.disabled = false); status.hidden = true; return; } // sin clave: se canceló
       const m = await medirImagen(image);
       fotoOriginalBajaRes = { url, name };
       cerrar();
@@ -3691,7 +3904,7 @@ function loadLogoSrc(url, name, isJpg){
     const aspect = crop.w / crop.h;
     let logo;
     if(pendingAdd || !state.logos.length){
-      logo = { src:url, name, isJpg:!!isJpg, aspect, crop, useTrim:true, fullW:probe.naturalWidth, fullH:probe.naturalHeight, whiteRemoved:false, tint:'original', opacity:1, cmW:0, cmH:0, rot:0, x:0, y:0, w:0, h:0, el:null, img:null };
+      logo = { src:url, name, isJpg:!!isJpg, aspect, crop, useTrim:true, fullW:probe.naturalWidth, fullH:probe.naturalHeight, whiteRemoved:false, bgRemove:null, tint:'original', opacity:1, cmW:0, cmH:0, rot:0, x:0, y:0, w:0, h:0, el:null, img:null };
       makeLogoEl(logo);
       placeInZone(logo, state.logos.length);
       state.logos.push(logo);
@@ -3702,7 +3915,8 @@ function loadLogoSrc(url, name, isJpg){
       logo.src = url; logo.name = name; logo.isJpg = !!isJpg;
       logo.aspect = aspect; logo.crop = crop; logo.useTrim = true;
       logo.fullW = probe.naturalWidth; logo.fullH = probe.naturalHeight;
-      logo.whiteRemoved = false; logo.tint = 'original'; logo.opacity = 1;
+      logo.whiteRemoved = false; logo.bgRemove = null; logo.iaPrev = null;
+      logo.tint = 'original'; logo.opacity = 1;
       const {w:FW,h:FH} = frameRect();
       logo.h = (logo.w*FW / aspect) / FH;
     }
@@ -3764,22 +3978,54 @@ function colorDominante(c){
   }catch(e){ return null; }
 }
 
-/* pipeline de imagen: original → sin fondo blanco → tinte / grabado */
+/* ---------- quitar fondo o colores del logo ---------- */
+const QUITAR_TOL = 16; // la tolerancia de siempre: equivale al viejo "quitar fondo blanco" (canales > 238)
+/* qué colores se borran de este logo: bgRemove, o el whiteRemoved de las plantillas viejas */
+function quitarSpec(L){
+  if(L.bgRemove && L.bgRemove.colors && L.bgRemove.colors.length) return L.bgRemove;
+  return L.whiteRemoved ? { colors:['#ffffff'], tol:QUITAR_TOL } : null;
+}
+/* borra de la imagen los píxeles parecidos a alguno de los colores (dentro de la tolerancia).
+   Pasado ese límite hay una franja en la que el píxel queda semitransparente y se le
+   descuenta el color borrado: así los bordes suavizados no arrastran un halo del fondo. */
+function quitarColores(ctx, w, h, spec){
+  const cols = spec.colors.map(hex2rgb);
+  const tol = spec.tol, suave = Math.max(8, tol);
+  const d = ctx.getImageData(0, 0, w, h), p = d.data;
+  for(let i = 0; i < p.length; i += 4){
+    if(!p[i+3]) continue;
+    let dist = 256, c = null;
+    for(const k of cols){
+      const dk = Math.max(Math.abs(p[i]-k[0]), Math.abs(p[i+1]-k[1]), Math.abs(p[i+2]-k[2]));
+      if(dk < dist){ dist = dk; c = k; }
+    }
+    if(dist <= tol){ p[i+3] = 0; continue; }
+    if(dist < tol + suave){
+      const f = (dist - tol) / suave; // 0: se borra entero · 1: queda igual
+      p[i] = c[0] + (p[i] - c[0]) / f; p[i+1] = c[1] + (p[i+1] - c[1]) / f; p[i+2] = c[2] + (p[i+2] - c[2]) / f;
+      p[i+3] = p[i+3] * f;
+    }
+  }
+  ctx.putImageData(d, 0, 0);
+}
+/* el logo recortado, todavía sin colores borrados ni tinte (maxPx: miniatura para vistas previas) */
+function logoBase(logo, img, maxPx){
+  const crop = (logo.useTrim !== false && logo.crop) ? logo.crop : { x:0, y:0, w:img.naturalWidth, h:img.naturalHeight };
+  const k = maxPx ? Math.min(1, maxPx / Math.max(crop.w, crop.h)) : 1;
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(crop.w * k)); c.height = Math.max(1, Math.round(crop.h * k));
+  c.getContext('2d').drawImage(img, crop.x, crop.y, crop.w, crop.h, 0, 0, c.width, c.height);
+  return c;
+}
+
+/* pipeline de imagen: original → recorte → colores borrados → tinte / grabado */
 function rebuildLogo(logo, done){
   const img = new Image();
   img.onload = () => {
-    const crop = (logo.useTrim !== false && logo.crop) ? logo.crop : { x:0, y:0, w:img.naturalWidth, h:img.naturalHeight };
-    let c = document.createElement('canvas');
-    c.width = crop.w; c.height = crop.h;
+    let c = logoBase(logo, img);
     const ctx = c.getContext('2d');
-    ctx.drawImage(img, crop.x, crop.y, crop.w, crop.h, 0, 0, crop.w, crop.h);
-    if(logo.whiteRemoved){
-      const d = ctx.getImageData(0,0,c.width,c.height), p = d.data;
-      for(let i=0;i<p.length;i+=4){
-        if(p[i]>238 && p[i+1]>238 && p[i+2]>238) p[i+3]=0;
-      }
-      ctx.putImageData(d,0,0);
-    }
+    const spec = quitarSpec(logo);
+    if(spec) quitarColores(ctx, c.width, c.height, spec);
     logo.domHex = colorDominante(c); // color predominante del archivo: punto de partida de "Un color"
     if(logo.tint === 'engrave'){
       c = engraveEffect(c);
@@ -3859,12 +4105,15 @@ function syncLogoUI(){
   $('lockAspectBtn').hidden = state.mode === 'product';
   const btn = $('removeWhiteBtn');
   btn.hidden = !L;
+  $('iaLogoBtn').hidden = !L;
+  $('iaLogoNote').hidden = !(L && L.iaPrev);
   if(L){
     btn.disabled = false;
-    btn.textContent = L.whiteRemoved ? 'Restaurar fondo original' : 'Quitar fondo blanco';
+    const sp = quitarSpec(L), n = sp ? sp.colors.length : 0;
+    btn.textContent = n ? 'Quitar fondo · ' + n + (n === 1 ? ' color borrado' : ' colores borrados') : 'Quitar fondo';
     $('logoThumb').innerHTML = L.img && L.img.src ? `<img src="${L.img.src}" alt="">` : '◐';
     $('logoTxt').innerHTML = `${L.name}<small>clic para reemplazar este logo</small>`;
-    $('jpgNote').hidden = !(L.isJpg && !L.whiteRemoved);
+    $('jpgNote').hidden = !(L.isJpg && !quitarSpec(L));
     $('cropEditBtn').hidden = false;
     $('trimNote').hidden = !(L.crop && L.crop.trimmed);
     if(L.crop && L.crop.trimmed){
@@ -4009,15 +4258,219 @@ $('trimUndo').addEventListener('click', () => {
   rebuildLogo(L, () => { syncLogoUI(); render(); });
 });
 
-/* quitar / restaurar fondo blanco del logo seleccionado */
+/* ---------- quitar fondo / colores del logo seleccionado ----------
+   El modal muestra una miniatura del logo: se elige el color entre los sugeridos, con el
+   selector, o tocando la imagen (cuentagotas). Al aplicar se rehace el recorte automático
+   sobre lo que quedó: si se borró un fondo de color, la medida pasa a ser la del logo. */
+const BG_PREVIEW_PX = 900;
+let bgDraft = null, bgSrc = null, bgLogo = null; // colores en edición, miniatura original y logo
+const hexDe = (r, g, b) => '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+const parecidos = (a, b, t) => { const x = hex2rgb(a), y = hex2rgb(b); return Math.max(Math.abs(x[0]-y[0]), Math.abs(x[1]-y[1]), Math.abs(x[2]-y[2])) <= t; };
+
+/* color de fondo del archivo: el que domina en el borde de la imagen completa (o null) */
+function colorDeBorde(img){
+  try{
+    const S = 120, k = S / Math.max(img.naturalWidth, img.naturalHeight);
+    const w = Math.max(2, Math.round(img.naturalWidth * k)), h = Math.max(2, Math.round(img.naturalHeight * k));
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d'); x.drawImage(img, 0, 0, w, h);
+    const d = x.getImageData(0, 0, w, h).data, cubos = {};
+    let total = 0, best = null;
+    const mirar = (px, py) => {
+      const i = (py * w + px) * 4;
+      total++;
+      if(d[i+3] < 230) return;
+      const key = ((d[i]>>4)<<8) | ((d[i+1]>>4)<<4) | (d[i+2]>>4);
+      const b = cubos[key] || (cubos[key] = { n:0, r:0, g:0, b:0 });
+      b.n++; b.r += d[i]; b.g += d[i+1]; b.b += d[i+2];
+      if(!best || b.n > best.n) best = b;
+    };
+    for(let px = 0; px < w; px++){ mirar(px, 0); mirar(px, h-1); }
+    for(let py = 1; py < h-1; py++){ mirar(0, py); mirar(w-1, py); }
+    if(!best || best.n < total * .4) return null; // borde transparente o sin un color que mande
+    return hexDe(Math.round(best.r/best.n), Math.round(best.g/best.n), Math.round(best.b/best.n));
+  }catch(e){ return null; }
+}
+
+function bgRender(){
+  if(!bgSrc) return;
+  const cv = $('bgCanvas');
+  cv.width = bgSrc.width; cv.height = bgSrc.height;
+  const x = cv.getContext('2d');
+  x.drawImage(bgSrc, 0, 0);
+  if(bgDraft.colors.length) quitarColores(x, cv.width, cv.height, bgDraft);
+  $('bgTolVal').textContent = bgDraft.tol;
+  const list = $('bgList');
+  list.innerHTML = bgDraft.colors.length ? '' : '<span class="vacio">Ningún color todavía: el logo queda como está.</span>';
+  bgDraft.colors.forEach((hex, i) => {
+    const chip = document.createElement('span');
+    chip.className = 'bgChip';
+    chip.innerHTML = '<i style="background:' + hex + '"></i>' + hex + ' <button type="button" aria-label="Dejar de borrar este color" title="Dejar de borrar este color">×</button>';
+    chip.querySelector('button').onclick = () => { bgDraft.colors.splice(i, 1); bgRender(); };
+    list.appendChild(chip);
+  });
+  document.querySelectorAll('#bgModal .bgSug button').forEach(b =>
+    b.classList.toggle('on', !!b.dataset.hex && bgDraft.colors.includes(b.dataset.hex)));
+}
+let bgRaf = 0;
+const bgRenderPronto = () => { if(!bgRaf) bgRaf = requestAnimationFrame(() => { bgRaf = 0; bgRender(); }); };
+function bgAgregar(hex){
+  hex = hex.toLowerCase();
+  if(bgDraft.colors.some(c => parecidos(c, hex, 2))) return; // ya está
+  bgDraft.colors.push(hex);
+  bgRender();
+}
+
 $('removeWhiteBtn').addEventListener('click', () => {
   const L = selLogo();
   if(!L) return;
-  const btn = $('removeWhiteBtn');
-  const quitando = !L.whiteRemoved;
-  btn.disabled = true; btn.textContent = quitando ? 'Quitando fondo…' : 'Restaurando…';
-  L.whiteRemoved = quitando;
-  rebuildLogo(L, () => { syncLogoUI(); render(); });
+  const img = new Image();
+  img.onload = () => {
+    bgLogo = L;
+    bgSrc = logoBase(L, img, BG_PREVIEW_PX);
+    const sp = quitarSpec(L);
+    bgDraft = { colors: sp ? sp.colors.slice() : [], tol: sp ? sp.tol : QUITAR_TOL };
+    $('bgTol').value = bgDraft.tol;
+    // sugerencia: el color del borde del archivo; si es blanco o negro, se marca ese botón
+    const fondo = colorDeBorde(img);
+    document.querySelectorAll('#bgModal .bgSug small').forEach(e => e.remove());
+    const sug = $('bgSugFondo');
+    sug.hidden = true;
+    if(fondo){
+      const fijo = ['#ffffff', '#000000'].find(h => parecidos(h, fondo, 24));
+      if(fijo) document.querySelector('#bgModal .bgSug button[data-hex="' + fijo + '"]').insertAdjacentHTML('beforeend', '<small>· fondo</small>');
+      else {
+        sug.hidden = false;
+        sug.dataset.hex = fondo;
+        sug.querySelector('i').style.background = fondo;
+        sug.title = 'Color del fondo del archivo (' + fondo + ')';
+      }
+    }
+    bgRender();
+    $('bgModal').hidden = false;
+  };
+  img.src = L.src;
+});
+document.querySelectorAll('#bgModal .bgSug button').forEach(b => b.addEventListener('click', () => {
+  if(!bgDraft || !b.dataset.hex) return;
+  const i = bgDraft.colors.indexOf(b.dataset.hex);
+  if(i >= 0){ bgDraft.colors.splice(i, 1); bgRender(); } // tocarlo de nuevo lo deja de borrar
+  else bgAgregar(b.dataset.hex);
+}));
+$('bgPicker').addEventListener('change', () => { if(bgDraft) bgAgregar($('bgPicker').value); });
+$('bgTol').addEventListener('input', () => { if(!bgDraft) return; bgDraft.tol = +$('bgTol').value; bgRenderPronto(); });
+/* cuentagotas: el color se toma de la miniatura original, aunque en la vista ya esté borrado */
+function bgPixel(e){
+  const cv = $('bgCanvas'), r = cv.getBoundingClientRect();
+  if(!bgSrc || e.clientX < r.left || e.clientX >= r.right || e.clientY < r.top || e.clientY >= r.bottom) return null;
+  const px = Math.floor((e.clientX - r.left) / r.width * bgSrc.width);
+  const py = Math.floor((e.clientY - r.top) / r.height * bgSrc.height);
+  const d = bgSrc.getContext('2d').getImageData(px, py, 1, 1).data;
+  return d[3] < 128 ? null : hexDe(d[0], d[1], d[2]);
+}
+$('bgStage').addEventListener('pointermove', e => {
+  const hex = bgPixel(e), lupa = $('bgLoupe');
+  lupa.hidden = !hex;
+  if(!hex) return;
+  const r = $('bgStage').getBoundingClientRect();
+  Object.assign(lupa.style, { left: (e.clientX - r.left) + 'px', top: (e.clientY - r.top) + 'px', background: hex });
+});
+$('bgStage').addEventListener('pointerleave', () => { $('bgLoupe').hidden = true; });
+$('bgStage').addEventListener('click', e => { const hex = bgPixel(e); if(hex) bgAgregar(hex); });
+$('bgDarkBtn').addEventListener('click', () => {
+  const on = $('bgStage').classList.toggle('dark');
+  $('bgDarkBtn').setAttribute('aria-pressed', on);
+  $('bgDarkBtn').textContent = on ? '☀ Fondo claro' : '🌙 Fondo oscuro';
+});
+const bgCerrar = () => { $('bgModal').hidden = true; bgSrc = null; bgDraft = null; bgLogo = null; };
+$('bgClose').addEventListener('click', bgCerrar);
+
+/* aplica los colores a borrar y rehace el recorte automático (el manual se respeta) */
+function aplicarQuitar(L, colors, tol){
+  L.bgRemove = colors.length ? { colors: colors.slice(), tol } : null;
+  L.whiteRemoved = false; // reemplazado por bgRemove
+  const listo = () => rebuildLogo(L, () => { syncLogoUI(); render(); });
+  if(L.crop && L.crop.manual) return listo();
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0);
+    let crop;
+    if(L.bgRemove){
+      // lo que quedó sin borrar es el logo, también lo blanco
+      quitarColores(ctx, c.width, c.height, L.bgRemove);
+      const b = bboxAlfa(c);
+      crop = { ...b, trimmed: (c.width - b.w)/c.width > .02 || (c.height - b.h)/c.height > .02 };
+    } else crop = bboxTinta(c);
+    L.crop = crop;
+    if(L.useTrim !== false) L.aspect = crop.w / crop.h;
+    const {w:FW, h:FH} = frameRect();
+    L.h = (L.w*FW / L.aspect) / FH; // conserva el ancho en pantalla
+    if(state.mode === 'logo' && state.lockAspect && L.cmW > 0) L.cmH = L.cmW / L.aspect;
+    listo();
+  };
+  img.src = L.src;
+}
+$('bgApply').addEventListener('click', () => {
+  if(!bgLogo || !bgDraft) return bgCerrar();
+  const L = bgLogo, { colors, tol } = bgDraft;
+  bgCerrar();
+  aplicarQuitar(L, colors, tol);
+});
+$('bgReset').addEventListener('click', () => {
+  if(!bgLogo) return bgCerrar();
+  const L = bgLogo;
+  bgCerrar();
+  aplicarQuitar(L, [], QUITAR_TOL);
+});
+
+/* ---------- modificar el logo seleccionado con IA ----------
+   Va el logo tal como se ve en "Full color" (recortado y con los colores borrados). El
+   resultado reemplaza la imagen manteniendo posición, ancho y color de impresión; el
+   original queda guardado para «Volver al original». */
+$('iaLogoBtn').addEventListener('click', () => {
+  const L = selLogo();
+  if(!L) return;
+  const img = new Image();
+  img.onload = () => {
+    const c = logoBase(L, img, 1536);
+    const spec = quitarSpec(L);
+    if(spec) quitarColores(c.getContext('2d'), c.width, c.height, spec);
+    abrirIaLogo(c.toDataURL('image/png'), L.name, url => usarLogoIa(L, url));
+  };
+  img.src = L.src;
+});
+const LOGO_IMAGEN = ['src', 'name', 'isJpg', 'crop', 'useTrim', 'fullW', 'fullH', 'aspect', 'whiteRemoved', 'bgRemove'];
+/* cambia la imagen de un logo (campos de LOGO_IMAGEN) sin moverlo: conserva el ancho en pantalla */
+function cambiarImagenLogo(L, datos){
+  Object.assign(L, datos);
+  const {w:FW, h:FH} = frameRect();
+  L.h = (L.w*FW / L.aspect) / FH;
+  if(state.mode === 'logo' && state.lockAspect && L.cmW > 0) L.cmH = L.cmW / L.aspect;
+  rebuildLogo(L, () => { syncLogoUI(); setStepStates(); render(); });
+}
+function usarLogoIa(L, url){
+  if(state.logos.indexOf(L) < 0) return; // el logo se borró mientras tanto
+  const probe = new Image();
+  probe.onload = () => {
+    const previo = {};
+    LOGO_IMAGEN.forEach(k => previo[k] = L[k]);
+    if(!L.iaPrev) L.iaPrev = previo; // «Volver al original» vuelve al de antes de la primera edición
+    const crop = computeTrim(probe);
+    cambiarImagenLogo(L, {
+      src: url, name: (L.iaPrev.name || 'logo').replace(/\.[^.]+$/, '') + ' (IA)', isJpg: false,
+      crop, useTrim: true, fullW: probe.naturalWidth, fullH: probe.naturalHeight,
+      aspect: crop.w / crop.h, whiteRemoved: false, bgRemove: null,
+    });
+  };
+  probe.src = url;
+}
+$('iaLogoUndo').addEventListener('click', () => {
+  const L = selLogo();
+  if(!L || !L.iaPrev) return;
+  const previo = L.iaPrev;
+  L.iaPrev = null;
+  cambiarImagenLogo(L, previo);
 });
 
 /* tinte del logo seleccionado */
@@ -4532,7 +4985,7 @@ window.__bocetoSnapshot = () => {
     sel: state.sel,
     logos: state.logos.map(l => ({ src:l.src, name:l.name, isJpg:l.isJpg, aspect:l.aspect,
       crop:l.crop, useTrim:l.useTrim, fullW:l.fullW, fullH:l.fullH,
-      whiteRemoved:l.whiteRemoved, tint:l.tint, tintColor: l.tintColor ? { ...l.tintColor } : undefined, opacity:l.opacity,
+      whiteRemoved:l.whiteRemoved, bgRemove: l.bgRemove ? { colors:l.bgRemove.colors.slice(), tol:l.bgRemove.tol } : undefined, tint:l.tint, tintColor: l.tintColor ? { ...l.tintColor } : undefined, opacity:l.opacity,
       cmW:l.cmW, cmH:l.cmH, rot:l.rot, x:l.x, y:l.y, w:l.w, h:l.h })),
   };
 };

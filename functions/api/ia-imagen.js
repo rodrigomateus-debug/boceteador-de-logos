@@ -10,6 +10,7 @@
  * unos segundos. Cada llamada a esta función responde en milisegundos.
  *
  *   POST {action:'start', mode:'fondo-blanco'|'situacion'|'resolucion', image:<dataURL>, producto?, ancho?, alto?}
+ *   POST {action:'start', mode:'logo', image:<dataURL png>, pedido, ancho?, alto?}
  *     → {id, status}
  *   POST {action:'estado', id}
  *     → {status:'queued'|'in_progress'|'completed'|'failed', image?, error?}
@@ -39,6 +40,14 @@ const MODO_FONDO_BLANCO = `Convertí la foto en una toma de producto estilo e-co
    y hay que agrandarla sin tocar nada más. Pisa a propósito la parte "estética"
    del estilo Formas: acá no se corrige luz ni color, solo se recupera detalle. */
 const MODO_RESOLUCION = `Esta tarea es ÚNICAMENTE de resolución: la foto original es chica y hay que entregarla más grande y nítida. Reproducí exactamente la misma imagen — mismo encuadre y recorte, mismo fondo, misma posición y tamaño del producto, mismos colores, misma iluminación y sombras, mismos logos y textos — recuperando detalle fino, bordes limpios y texturas realistas, como un ampliado fotográfico de alta calidad. No apliques la estética Formas ni corrijas luz, balance de blancos o color; no agregues, quites, muevas ni "mejores" ningún elemento; no cambies el fondo ni lo limpies. Si alguna zona es ambigua por la baja resolución, resolvela de la forma más fiel y neutra posible, nunca inventando elementos nuevos.`;
+
+/* "Modificar logo con IA": el vendedor escribe qué quiere cambiar. No lleva el estilo
+   Formas de las fotos: el logo es un archivo de diseño para imprimir, no una foto de producto. */
+const ESTILO_LOGO = `Sos el diseñador gráfico de Formas Publicitarias, una empresa de merchandising corporativo. Recibís el logo de un cliente y lo editás haciendo ÚNICAMENTE el cambio que pide el vendedor:
+- Todo lo que el pedido no menciona queda idéntico: forma, tipografía, proporciones, colores, textos y disposición.
+- Si el pedido incluye un texto, escribilo exactamente como está pedido, letra por letra.
+- Es un logo para imprimir: gráfico plano y prolijo, con bordes nítidos y colores planos; nunca una foto, un mockup ni un render 3D, salvo que el pedido lo diga.
+- Entregá el logo completo y centrado, con un poco de aire alrededor, sobre fondo transparente salvo que el pedido pida un fondo.`;
 
 /* "En situación" se arma según las opciones que eligió el vendedor */
 function promptSituacion(o) {
@@ -71,6 +80,13 @@ function promptSituacion(o) {
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), { status, headers: { 'content-type': 'application/json' } });
+
+/* el motivo de un rechazo de OpenAI, legible: viene en {error:{message}} (clave sin crédito,
+   organización sin verificar, modelo inexistente…). Es lo que la app le muestra al vendedor. */
+async function motivo(r) {
+  const texto = await r.text();
+  try { return String(JSON.parse(texto).error.message || texto).slice(0, 600); } catch { return texto.slice(0, 600); }
+}
 
 /* ponytail: el plan Free de Workers corta a los 10 ms de CPU por llamada, y pasar por JSON
    (parse, stringify y codificar) una foto de 6 MB gasta ~15 ms. Por eso la foto (en start) y
@@ -128,7 +144,12 @@ export async function onRequest({ request: req, env }) {
       detalles: String(body.detalles || '').slice(0, 300).trim(),
     });
     if (body.mode === 'resolucion') modo = MODO_RESOLUCION;
-    if (!modo) return json({ error: 'mode debe ser "fondo-blanco", "situacion" o "resolucion"' }, 400);
+    const pedido = String(body.pedido || '').slice(0, 500).trim();
+    if (body.mode === 'logo') {
+      if (!pedido) return json({ error: 'Falta decir qué hacer con el logo' }, 400);
+      modo = pedido;
+    }
+    if (!modo) return json({ error: 'mode debe ser "fondo-blanco", "situacion", "resolucion" o "logo"' }, 400);
     const foto = body.image === HUECO ? fotoBytes : new Uint8Array(0);
     if (dec.decode(foto.subarray(0, 11)) !== 'data:image/' || foto.length > 8_000_000) {
       return json({ error: 'image debe ser un data URL de imagen de hasta ~6 MB' }, 400);
@@ -136,9 +157,10 @@ export async function onRequest({ request: req, env }) {
     const producto = String(body.producto || '').slice(0, 200).trim();
     const tecnica = String(body.tecnica || '').slice(0, 120).trim();
 
-    const prompt = ESTILO_FORMAS + '\n\nTarea: ' + modo
+    // el logo lleva solo sus reglas y el pedido; las fotos, el estilo Formas + producto + técnica
+    const prompt = body.mode === 'logo' ? ESTILO_LOGO + '\n\nPedido del vendedor: ' + pedido : (ESTILO_FORMAS + '\n\nTarea: ' + modo
       + (producto ? `\n\nEl producto de la foto es: ${producto}.` : '')
-      + (tecnica ? `\n\nSi el producto tiene un logo aplicado, la técnica de aplicación elegida es: ${tecnica}. Hacé que el logo se vea aplicado con esa técnica de forma realista y coherente con el material — por ejemplo: bordado = relieve de hilos y puntadas visibles; grabado láser = hundido en el material, sin tinta, en el tono del propio material; serigrafía o tampografía = capa de tinta plana y pareja adherida a la superficie; vinilo = recorte aplicado con un leve brillo; sublimación = tinta integrada a la tela sin relieve. El acabado debe seguir la curvatura y la luz del producto, y el logo debe conservar exactamente su forma, colores, posición y tamaño.` : '');
+      + (tecnica ? `\n\nSi el producto tiene un logo aplicado, la técnica de aplicación elegida es: ${tecnica}. Hacé que el logo se vea aplicado con esa técnica de forma realista y coherente con el material — por ejemplo: bordado = relieve de hilos y puntadas visibles; grabado láser = hundido en el material, sin tinta, en el tono del propio material; serigrafía o tampografía = capa de tinta plana y pareja adherida a la superficie; vinilo = recorte aplicado con un leve brillo; sublimación = tinta integrada a la tela sin relieve. El acabado debe seguir la curvatura y la luz del producto, y el logo debe conservar exactamente su forma, colores, posición y tamaño.` : ''));
 
     // los bytes de la foto van tal cual en el lugar de HUECO (ver sacarCampo)
     const crear = (tool, forzarTool) => fetch(`${OPENAI}/responses`, {
@@ -169,25 +191,24 @@ export async function onRequest({ request: req, env }) {
     // fondo blanco y situación salen siempre 1:1: las fotos cuadradas entran
     // parejas en la ficha y en el catálogo. "Más resolución" conserva la
     // proporción de la foto original (apaisada, vertical o cuadrada) para que
-    // el boceto que ya se armó no cambie de encuadre.
+    // el boceto que ya se armó no cambie de encuadre; el logo, la suya.
     let size = '1024x1024';
-    if (body.mode === 'resolucion') {
+    if (body.mode === 'resolucion' || body.mode === 'logo') {
       const w = Number(body.ancho) || 0, h = Number(body.alto) || 0;
       if (w > 0 && h > 0) {
         const ratio = w / h;
         size = ratio > 1.2 ? '1536x1024' : ratio < 1 / 1.2 ? '1024x1536' : '1024x1024';
       }
     }
-    let r = await crear({ type: 'image_generation', model: imgModel, action: 'edit', size, quality }, true);
+    // el logo vuelve sin fondo, listo para apoyarlo sobre el producto
+    const fondo = body.mode === 'logo' ? { background: 'transparent' } : {};
+    let r = await crear({ type: 'image_generation', model: imgModel, action: 'edit', size, quality, ...fondo }, true);
     if (r.status === 400) {
       // los parámetros opcionales varían según la versión del modelo de imagen:
       // si alguno deja de aceptarse, se reintenta con lo mínimo indispensable
       r = await crear({ type: 'image_generation', model: imgModel, size }, false);
     }
-    if (!r.ok) {
-      const detalle = (await r.text()).slice(0, 600);
-      return json({ error: 'OpenAI rechazó el pedido (' + r.status + ')', detalle }, 502);
-    }
+    if (!r.ok) return json({ error: 'OpenAI rechazó el pedido (' + r.status + ')', detalle: await motivo(r) }, 502);
     const d = await r.json();
     return json({ id: d.id, status: d.status });
   }
@@ -198,7 +219,7 @@ export async function onRequest({ request: req, env }) {
     if (!/^resp_[A-Za-z0-9_-]{6,}$/.test(id)) return json({ error: 'id inválido' }, 400);
 
     const r = await fetch(`${OPENAI}/responses/${id}`, { headers: auth });
-    if (!r.ok) return json({ error: 'No pude consultar el estado (' + r.status + ')' }, 502);
+    if (!r.ok) return json({ error: 'No pude consultar el estado (' + r.status + ')', detalle: await motivo(r) }, 502);
     const [d, pngBytes] = sacarCampo(new Uint8Array(await r.arrayBuffer()), 'result');
 
     if (d.status === 'completed') {

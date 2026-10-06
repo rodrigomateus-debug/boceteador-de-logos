@@ -8,7 +8,7 @@ se abren directo en el navegador, sin instalación.
 
 | Archivo | Qué es |
 |---|---|
-| **`generador-bocetos.html`** | ⭐ **La app principal.** Generador de bocetos (formulario + ficha A4 de producción en vivo) con el boceteador "Cargá tu logo" integrado como modal: subís la foto del producto, marcás el área, aplicás el logo (tinte —blanco, negro, grabado o **un color a elección**, con código HEX o Pantone del mismo buscador de la ficha—, opacidad, rotación, quita de fondo) y la ficha se completa sola (foto compuesta, logo, medidas, técnica, posición). El lienzo del boceteador ocupa toda la altura de la pantalla. La vista previa de la ficha tiene zoom (botones arriba a la derecha o Ctrl + rueda; «1:1» muestra el tamaño real de impresión para revisar la calidad de la foto). Acepta logos en PNG, JPG, SVG, PDF y .ai de Illustrator (guardados con compatibilidad PDF, que es el default). Imprime a PDF y descarga HTML. |
+| **`generador-bocetos.html`** | ⭐ **La app principal.** Generador de bocetos (formulario + ficha A4 de producción en vivo) con el boceteador "Cargá tu logo" integrado como modal: subís la foto del producto, marcás el área, aplicás el logo (tinte —blanco, negro, grabado o **un color a elección**, con código HEX o Pantone del mismo buscador de la ficha—, opacidad, rotación, **quitar el fondo o cualquier color** —blanco, negro, uno del selector o tomado con el cuentagotas tocando el logo— y **✨ Modificar logo con IA**) y la ficha se completa sola (foto compuesta, logo, medidas, técnica, posición). El lienzo del boceteador ocupa toda la altura de la pantalla. La vista previa de la ficha tiene zoom (botones arriba a la derecha o Ctrl + rueda; «1:1» muestra el tamaño real de impresión para revisar la calidad de la foto). Acepta logos en PNG, JPG, SVG, PDF y .ai de Illustrator (guardados con compatibilidad PDF, que es el default). Imprime a PDF y descarga HTML. |
 | `boceteador.html` | El boceteador standalone (versión previa a la integración; el modal del generador es su evolución). |
 | `cotizador-formas.html` | Maqueta funcional del cotizador (fase 3 del roadmap): técnica, cantidades, desglose de precio y markup. |
 | `DESIGN.md` | Documento de diseño: flujos, modelo de datos, sistema de diseño Formas, roadmap. |
@@ -132,6 +132,34 @@ Alrededor de la mejora hay tres comodidades más:
   El par se recuerda por hoja mientras trabajás (no viaja en las plantillas,
   para no duplicar su peso), y se descarta al subir una foto nueva o rehacer
   el boceto.
+
+### Modificar logo con IA
+
+En el paso 3 del boceteador (para el logo seleccionado) y debajo de "Logo del
+cliente" en la ficha (para el logo de la hoja) está **✨ Modificar logo con IA**:
+se abre un modal con el logo, se escribe qué cambiarle («sacale el slogan»,
+«pasalo a un solo color», «redibujalo prolijo»…) y la IA devuelve una versión
+para comparar con la actual. «↻ Seguir editando este» encadena otro pedido sobre
+el resultado; «Usar este logo» lo reemplaza manteniendo posición, ancho y color
+de impresión, y en el boceteador queda «Volver al original». El logo viaja en
+PNG (con su transparencia) y vuelve sin fondo; las reglas de cómo se edita un
+logo (cambiar solo lo pedido, gráfico plano para imprimir) están en
+`ESTILO_LOGO`, en la misma función.
+
+### Si la IA no anda
+
+Cuando algo falla, el mensaje debajo del botón dice el motivo real. Los más
+comunes y qué hacer:
+
+| Mensaje | Qué hacer |
+|---|---|
+| «La IA no está configurada: faltan OPENAI_API_KEY y/o FORMAS_IA_CLAVE…» | Cargar las variables en Cloudflare (en *Production* **y** en *Preview*) y redesplegar |
+| «Clave incorrecta» | La clave que se tipeó no coincide con `FORMAS_IA_CLAVE`: tocar el botón de nuevo y escribirla bien |
+| «OpenAI rechazó el pedido (401)…» | La `OPENAI_API_KEY` es inválida o se revocó |
+| «OpenAI rechazó el pedido (403): …organization must be verified…» | Verificar la organización en platform.openai.com → Settings → Organization (los modelos de imagen lo exigen) |
+| «OpenAI rechazó el pedido (429)…» | Sin crédito o límite de uso: revisar Billing en platform.openai.com |
+| «Esta dirección no tiene la función de IA» | Se está usando otra dirección (la vieja de Netlify o el archivo local): entrar por formas-bocetos-con-logo.pages.dev |
+| «El servidor de la IA falló (error 5xx)» | Error de Cloudflare: si se repite, revisar los logs de la función en Cloudflare |
 
 ## Plantillas en Google Drive
 

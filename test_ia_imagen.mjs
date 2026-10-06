@@ -56,6 +56,27 @@ responder(new Response(JSON.stringify({
 r = await pedir({ action: 'estado', id: 'resp_abc123' });
 assert.deepEqual(await r.json(), { status: 'failed', error: 'El modelo no devolvió una imagen. Dijo: No puedo.' });
 
+// modificar logo: va el pedido del vendedor (sin el estilo de fotos), fondo transparente y la proporción del logo
+const logo = 'data:image/png;base64,' + Buffer.alloc(30_000, 5).toString('base64');
+responder(new Response('{"id":"resp_logo01","status":"queued"}'));
+r = await pedir({ action: 'start', mode: 'logo', image: logo, pedido: 'Sacale el slogan de abajo', ancho: 1600, alto: 500 });
+assert.equal(r.status, 200);
+const pedidoLogo = JSON.parse(await llamadas[0].init.body.text());
+assert.equal(pedidoLogo.input[0].content[1].image_url, logo);
+assert.match(pedidoLogo.input[0].content[0].text, /diseñador gráfico[\s\S]*Pedido del vendedor: Sacale el slogan de abajo/);
+assert.doesNotMatch(pedidoLogo.input[0].content[0].text, /retocador/);
+assert.equal(pedidoLogo.tools[0].background, 'transparent');
+assert.equal(pedidoLogo.tools[0].size, '1536x1024');
+responder();
+assert.equal((await pedir({ action: 'start', mode: 'logo', image: logo, pedido: '  ' })).status, 400);
+assert.equal(llamadas.length, 0);
+
+// si OpenAI rechaza el pedido, el motivo llega legible para mostrarlo en la app
+responder(new Response(JSON.stringify({ error: { message: 'Your organization must be verified to use the model.', code: null } }), { status: 403 }));
+r = await pedir({ action: 'start', mode: 'fondo-blanco', image: foto });
+assert.equal(r.status, 502);
+assert.deepEqual(await r.json(), { error: 'OpenAI rechazó el pedido (403)', detalle: 'Your organization must be verified to use the model.' });
+
 // clave incorrecta y foto que no es imagen
 responder();
 assert.equal((await pedir({ action: 'start', mode: 'fondo-blanco', image: foto }, 'otra')).status, 401);
