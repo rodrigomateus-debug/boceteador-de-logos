@@ -457,6 +457,27 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #lowResModal .usar{padding:10px 16px; border:none; border-radius:10px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
 #lowResModal .descartar{padding:10px 16px; border:1px solid var(--border); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:13px; font-weight:600; cursor:pointer}
 #lowResModal button:disabled{opacity:.55; cursor:default}
+#paqModal{position:fixed; inset:0; z-index:120; background:rgba(11,11,35,.55); display:flex; align-items:center; justify-content:center; padding:20px}
+#paqModal[hidden]{display:none}
+#paqModal .iaCard{background:#fff; border-radius:16px; width:min(660px,100%); max-height:92vh; overflow:auto; padding:18px 20px}
+#paqModal h3{margin:0 0 6px; color:var(--navy); font-size:17px}
+#paqModal .iaHint{font-size:12.5px; line-height:1.5; color:var(--text-body,#3D3D55); margin:0 0 12px}
+#paqModal .paqHoja{border:1px solid var(--formas-gray-200,#E4E4ED); border-radius:12px; padding:10px 12px; margin-bottom:10px}
+#paqModal .paqTit{font-weight:700; color:var(--navy); font-size:13px; margin-bottom:4px}
+#paqModal .paqL{font-size:12px; line-height:1.45; padding:6px 9px; border-radius:8px; margin-top:5px}
+#paqModal .paqL.bloq{background:#FDECEA; color:#8A1C12; font-weight:600}
+#paqModal .paqL.aviso{display:flex; gap:8px; align-items:flex-start; background:#FFF6DB; color:#5C4300; cursor:pointer}
+#paqModal .paqL.aviso input{margin-top:2px; flex:none; accent-color:var(--navy)}
+#paqModal .paqL.aviso small{display:block; margin-top:2px; font-size:11px; font-weight:700; color:#8A6A00}
+#paqModal .paqL.info{color:var(--text-muted,#6E6E85); padding-left:0; padding-right:0}
+#paqModal .paqOpt{display:flex; gap:8px; align-items:center; font-size:12.5px; margin:8px 0 2px; cursor:pointer}
+#paqModal .iaBtns{display:flex; gap:8px; justify-content:flex-end; margin-top:14px}
+#paqModal .usar{padding:10px 16px; border:none; border-radius:10px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
+#paqModal .usar:disabled{opacity:.5; cursor:default}
+#paqModal .descartar{padding:10px 16px; border:1px solid var(--border); border-radius:10px; background:#fff; color:var(--ink); font:inherit; font-size:13px; font-weight:600; cursor:pointer}
+#bocetoModal #adjList{margin-top:6px; font-size:12px}
+#bocetoModal .adjRow{display:flex; align-items:center; gap:6px; padding:3px 0; color:var(--formas-gray-700)}
+#bocetoModal .adjRow button{border:none; background:none; color:#EF7958; font-weight:700; cursor:pointer; font-size:15px; line-height:1; padding:0 4px}
 .or-sep{text-align:center; font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:8px 0 2px}
 
 </style>
@@ -786,6 +807,9 @@ html,body{margin:0;padding:0;background:#EDEDF2}
     <div class="actions" style="margin-top:10px">
       <button class="btn" id="btn_corel" style="background:#fff; box-shadow:inset 0 0 0 1.5px var(--border); color:var(--ink)" title="PDF en formato clásico: se abre en CorelDRAW y cada texto e imagen es una pieza suelta">PDF editable (Corel) — piezas movibles</button>
     </div>
+    <div class="actions" style="margin-top:10px">
+      <button class="btn" id="btn_paquete" style="background:var(--navy); color:#fff" title="Arma un .zip para mandarle al taller según la técnica: arte a tamaño real, originales del cliente, mockup, boceto y ficha técnica">📦 Paquete para el taller (.zip)</button>
+    </div>
     <p class="hint">Al imprimir: destino "Guardar como PDF", tamaño A4, márgenes "Ninguno". Los datos quedan guardados en este navegador para la próxima vez.</p>
   </div>
 
@@ -1029,6 +1053,9 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         </div>
         <button class="btn btn-secondary" type="button" id="removeWhiteBtn" style="margin-top:10px" hidden title="Borra el fondo o cualquier color del logo: blanco, negro, uno a elección o tomado directo de la imagen">Quitar fondo</button>
         <button class="btn btn-secondary" type="button" id="cropEditBtn" hidden>✂ Editar recorte</button>
+        <button class="btn btn-secondary" type="button" id="adjBtn" hidden title="Adjuntá el archivo original que mandó el cliente (EPS, CDR, AI, PDF…): no se ve en el boceto, pero va tal cual en el paquete para el taller">📎 Adjuntar original del cliente</button>
+        <input type="file" id="adjInput" hidden>
+        <div id="adjList" hidden></div>
         <button class="btn btn-ia-logo" type="button" id="iaLogoBtn" hidden title="Pedile a la IA un cambio en este logo: sacar un texto, cambiar un color, redibujarlo prolijo…">✨ Modificar logo con IA</button>
         <div id="logoTools" hidden>
           <div class="label" style="margin-top:12px;letter-spacing:.08em">Color del logo</div>
@@ -1138,6 +1165,21 @@ html,body{margin:0;padding:0;background:#EDEDF2}
 </div>
 
 <!-- aviso de foto en baja resolución (boceteador) -->
+<div id="paqModal" hidden>
+  <div class="iaCard">
+    <h3>📦 Paquete para el taller</h3>
+    <p class="iaHint">Un .zip con lo que necesita cada técnica: arte a tamaño real, los originales del cliente, el mockup, el boceto aprobado y una ficha técnica. Lo que falta no deja armarlo; lo dudoso se confirma y queda escrito en la ficha del paquete.</p>
+    <div id="paqHojas"></div>
+    <label class="paqOpt"><input type="checkbox" id="paqOriginales" checked> Incluir los archivos originales del cliente<span id="paqPesoOrig"></span></label>
+    <div class="iaStatus" id="paqStatus" hidden></div>
+    <div class="iaStatus" id="paqResultado" hidden></div>
+    <div class="iaBtns">
+      <button type="button" class="descartar" id="paqCancel">Cerrar</button>
+      <button type="button" class="usar" id="paqGo" disabled>⬇ Descargar paquete (.zip)</button>
+    </div>
+  </div>
+</div>
+
 <div id="lowResModal" hidden>
   <div class="iaCard">
     <h3>⚠ La foto es de baja resolución</h3>
@@ -1207,7 +1249,8 @@ let color2 = false;                    // compartido: si el producto lleva color
 let imgFoto = null, imgLogo = null;
 let fotoAlt = null;                    // la otra versión de la foto (original ↔ IA) para intercambiar
 let fotoActiva = 'ia';                 // cuál se está mostrando cuando hay dos: 'ia' u 'orig'
-let fotoEscala = '';                   // cuánto abarca la foto en cm reales (sale de la regla del boceteador)
+let fotoEscala = '';
+let arteHoja = null;                    // paquete del taller: originales del cliente y arte de producción (ids en IndexedDB)                   // cuánto abarca la foto en cm reales (sale de la regla del boceteador)
 let logoBg = 'product';                // fondo del recuadro del logo: color del producto (default) o claro
 let printColors = [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
 let barW = 100, barH = 100;
@@ -1227,7 +1270,7 @@ const FIELDS = SHARED_FIELDS.concat(PAGE_FIELDS);
 
 /* ---- hojas ---- */
 function newPage(){
-  return { imgFoto:null, imgLogo:null, fotoAlt:null, fotoActiva:'ia', fotoEscala:'', logoBg:'product',
+  return { imgFoto:null, imgLogo:null, fotoAlt:null, fotoActiva:'ia', fotoEscala:'', arte:null, logoBg:'product',
     printColors:[{hex:'#FFFFFF', nom:'Blanco', pant:''}],
     barW:100, barH:100, barWOff:0, barHOff:0, fullColor:false, engraved:false, fotoFit:'cover',
     fields:{ f_medida_w:'', f_medida_h:'', f_obslogo:'', f_tecnica:'', f_posicion:'' } };
@@ -1238,7 +1281,7 @@ let cur = 0;
 function capturePage(){
   const p = pages[cur];
   p.imgFoto = imgFoto; p.imgLogo = imgLogo;
-  p.fotoAlt = fotoAlt; p.fotoActiva = fotoActiva; p.fotoEscala = fotoEscala;
+  p.fotoAlt = fotoAlt; p.fotoActiva = fotoActiva; p.fotoEscala = fotoEscala; p.arte = arteHoja;
   p.logoBg = logoBg; p.printColors = printColors;
   p.barW = barW; p.barH = barH; p.barWOff = barWOff; p.barHOff = barHOff;
   p.fullColor = fullColor; p.engraved = engraved; p.fotoFit = fotoFit;
@@ -1252,6 +1295,7 @@ function loadPage(i){
   fotoAlt = p.fotoAlt || null;
   fotoActiva = p.fotoActiva === 'orig' ? 'orig' : 'ia';
   fotoEscala = p.fotoEscala || '';
+  arteHoja = p.arte || null;
   logoBg = p.logoBg === 'light' ? 'light' : 'product'; // lo guardado como "dark" pasa al color del producto
   printColors = (Array.isArray(p.printColors) && p.printColors.length) ? p.printColors : [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
   barW = p.barW || 100; barH = p.barH || 100;
@@ -1844,13 +1888,548 @@ async function rasterizeVectorFile(file){
   const c = await renderPagina(page, k, x, y, w, h);
   return c.toDataURL('image/png');
 }
-const MSG_EPS = 'Los archivos EPS no se pueden abrir en el navegador.\nConvertilo a PDF, SVG o PNG (desde Illustrator: Archivo → Guardar como → PDF) y volvé a cargarlo.';
+const MSG_EPS = 'Los archivos EPS no se pueden mostrar en el navegador.\nPara armar el boceto, cargá el logo en PDF, SVG o PNG (desde Illustrator: Archivo → Guardar como → PDF).\nDespués, con «📎 Adjuntar original del cliente», sumá este EPS: va tal cual en el paquete para el taller.';
 const MSG_VEC_ERR = 'No se pudo procesar el archivo.\nSi es un .ai viejo (guardado sin compatibilidad PDF), convertilo a PDF o PNG. También verificá la conexión a internet: el conversor se descarga la primera vez.';
 const MSG_AI_VIEJO = 'Este .ai está guardado sin compatibilidad PDF, así que el navegador no lo puede abrir.\nEn Illustrator: Archivo → Guardar como → Illustrator (.ai) → marcá "Crear archivo compatible con PDF" y volvé a cargarlo. También sirve exportarlo a PDF o SVG.';
 const msgVector = err => (err && err.message === 'AI_SIN_PDF') ? MSG_AI_VIEJO : MSG_VEC_ERR;
 
 /* --- imágenes --- */
-function hookFile(inputId, boxId, txtId, clearId, setter){
+/* ================= Paquete para el taller =================
+   Un .zip por pedido con lo que necesita cada técnica: arte a tamaño real, los archivos
+   originales del cliente, el mockup, el boceto aprobado y una ficha técnica que deja
+   escrito todo lo que el taller necesita saber (y los avisos que el vendedor confirmó).
+
+   Los originales del cliente (PDF, AI, SVG, EPS, CDR…) y el arte de producción de cada hoja
+   se guardan en IndexedDB, NO en localStorage: localStorage tiene ~5 MB y, si se pasa, el
+   autoguardado del boceto falla en silencio. Las hojas solo guardan la referencia (id). */
+const ARCH_DB = 'formas-archivos';
+let archDbP = null;
+function archDb(){
+  if(!archDbP) archDbP = new Promise((res, rej) => {
+    const r = indexedDB.open(ARCH_DB, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('f');
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => { archDbP = null; rej(r.error); };
+  });
+  return archDbP;
+}
+async function archPut(id, rec){
+  const db = await archDb();
+  await new Promise((res, rej) => {
+    const tx = db.transaction('f', 'readwrite');
+    tx.objectStore('f').put(rec, id);
+    tx.oncomplete = () => res();
+    tx.onerror = tx.onabort = () => rej(tx.error);
+  });
+}
+async function archGet(id){
+  if(!id) return null;
+  try{
+    const db = await archDb();
+    return await new Promise((res, rej) => {
+      const rq = db.transaction('f').objectStore('f').get(id);
+      rq.onsuccess = () => res(rq.result || null);
+      rq.onerror = () => rej(rq.error);
+    });
+  }catch(e){ return null; }
+}
+const nuevoIdArch = () => 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+function dataUrlABlob(u){
+  const s = String(u || ''), coma = s.indexOf(',');
+  const cab = s.slice(0, coma), cuerpo = s.slice(coma + 1);
+  const mime = (cab.match(/^data:([^;,]+)/) || [])[1] || 'application/octet-stream';
+  if(/;base64/i.test(cab)){
+    const bin = atob(cuerpo), a = new Uint8Array(bin.length);
+    for(let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
+    return new Blob([a], { type: mime });
+  }
+  return new Blob([decodeURIComponent(cuerpo)], { type: mime });
+}
+const blobADataUrl = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsDataURL(b); });
+const fmtPeso = b => b >= 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+
+/* qué hay adentro del archivo original: ¿está de verdad en curvas? */
+async function analizarArchivo(file){
+  const n = (file.name || '').toLowerCase();
+  const tipo = (file.type === 'application/pdf' || n.endsWith('.pdf')) ? 'pdf'
+    : n.endsWith('.ai') ? 'ai'
+    : (file.type === 'image/svg+xml' || n.endsWith('.svg')) ? 'svg'
+    : (/\.(eps|ps)$/.test(n) || file.type === 'application/postscript') ? 'eps'
+    : n.endsWith('.cdr') ? 'cdr'
+    : (/^image\//.test(file.type) || /\.(png|jpe?g|webp|gif|bmp|tiff?)$/.test(n)) ? 'imagen' : 'otro';
+  const a = { tipo, vector: ['pdf', 'ai', 'svg', 'eps', 'cdr'].includes(tipo), textoVivo: 0, imagenes: 0, trazos: 0, degrade: false, revisado: false };
+  try{
+    if(tipo === 'pdf' || tipo === 'ai'){
+      await ensurePdfJs();
+      const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+      const page = await pdf.getPage(1);
+      const tc = await page.getTextContent();
+      a.textoVivo = tc.items.filter(it => (it.str || '').trim()).length;
+      const O = window.pdfjsLib.OPS, ops = await page.getOperatorList();
+      const IMG = [O.paintImageXObject, O.paintInlineImageXObject, O.paintImageMaskXObject, O.paintImageXObjectRepeat, O.paintInlineImageXObjectGroup];
+      const TRAZO = [O.constructPath, O.fill, O.eoFill, O.stroke, O.fillStroke, O.eoFillStroke];
+      ops.fnArray.forEach(f => {
+        if(IMG.includes(f)) a.imagenes++;
+        else if(TRAZO.includes(f)) a.trazos++;
+        else if(f === O.shadingFill) a.degrade = true;
+      });
+      a.revisado = true;
+    } else if(tipo === 'svg'){
+      const t = await file.text();
+      a.textoVivo = (t.match(/<text[\s>]/gi) || []).length;
+      a.imagenes = (t.match(/<image[\s>]/gi) || []).length;
+      a.trazos = (t.match(/<(path|rect|circle|ellipse|polygon|polyline|line)[\s>/]/gi) || []).length;
+      a.degrade = /<(linear|radial)Gradient[\s>]/i.test(t);
+      a.revisado = true;
+    }
+  }catch(e){}
+  // un PDF/AI/SVG que adentro es solo una imagen no está en curvas: es la trampa más común
+  if(a.revisado && a.imagenes > 0 && a.trazos < 4) a.soloImagen = true;
+  return a;
+}
+/* guarda el archivo tal cual lo mandó el cliente; devuelve {id, info} o null si el navegador no deja */
+async function registrarArchivo(file){
+  const analisis = await analizarArchivo(file);
+  const info = { name: file.name || 'archivo', type: file.type || '', size: file.size || 0, analisis };
+  const id = nuevoIdArch();
+  try{ await archPut(id, { blob: file, info }); }
+  catch(e){ return null; }
+  return { id, info };
+}
+function esOpaca(src){
+  try{
+    const c = document.createElement('canvas'); c.width = 48; c.height = 48;
+    const x = c.getContext('2d'); x.drawImage(src, 0, 0, 48, 48);
+    const d = x.getImageData(0, 0, 48, 48).data;
+    for(let i = 3; i < d.length; i += 4) if(d[i] < 250) return false;
+    return true;
+  }catch(e){ return false; }
+}
+const cargarImagen = src => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error('imagen')); im.src = src; });
+
+/* ---- qué necesita cada técnica ---- */
+const PERFILES = [
+  { re: /serigraf/i, id: 'serigrafia', nombre: 'Serigrafía', vector: true, pantone: true, plena: true,
+    indic: 'Una película por color, con los Pantone indicados. Tinta plena: sin degradés ni semitransparencias.' },
+  { re: /tampograf/i, id: 'tampografia', nombre: 'Tampografía', vector: true, pantone: true, plena: true,
+    indic: 'Un cliché por color, con los Pantone indicados. En piezas chicas, revisar que los detalles finos se puedan grabar en el cliché.' },
+  { re: /bordad/i, id: 'bordado', nombre: 'Bordado', vector: true, plena: true,
+    indic: 'Armar el ponchado desde el original, a la medida indicada. Detalle mínimo de referencia: letras de 5 mm de alto y líneas de 1 mm; lo más fino conviene simplificarlo y consultarlo antes de bordar.' },
+  { re: /l[aá]ser|grabad/i, id: 'laser', nombre: 'Grabado láser', vector: true, plena: true,
+    indic: 'Grabar a la medida indicada, con el original en curvas o el arte en negro de la carpeta. Se graba en el tono del material: el color del arte no se imprime.' },
+  { re: /vinil/i, id: 'vinilo', nombre: 'Vinilo', vector: true, plena: true,
+    indic: 'Cortar desde el original en curvas, a la medida indicada.' },
+  { re: /dtf/i, id: 'dtf', nombre: 'DTF', raster: true, fondo: true,
+    indic: 'Imprimir el PNG de la carpeta: ya está a tamaño real, a 300 dpi y con fondo transparente.' },
+  { re: /sublim/i, id: 'sublimacion', nombre: 'Sublimación', raster: true,
+    indic: 'Imprimir el PNG de la carpeta a tamaño real (300 dpi).' },
+  { re: /digital|dtp|full ?color|\buv\b|impres/i, id: 'digital', nombre: 'Impresión digital', raster: true, fondo: true,
+    indic: 'Imprimir el PNG de la carpeta a tamaño real (300 dpi).' },
+];
+function perfilTecnica(t){
+  const p = PERFILES.find(x => x.re.test(t || ''));
+  return p || { id: 'otra', nombre: (t || 'Sin técnica').trim(), indic: 'Usar el original a la medida indicada; el PNG va a tamaño real como referencia.' };
+}
+
+/* ---- utilidades del zip ---- */
+// nombres sin acentos ni símbolos: el descompresor de Windows viejo rompe los nombres con tildes
+const asciiNombre = (s, max) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .replace(/[^\x20-\x7E]/g, '').replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim().slice(0, max || 80) || 'archivo';
+function medidaCm(s){
+  const m = String(s || '').replace(/\s+/g, '').match(/^(\d+(?:[.,]\d+)?)(mm|cm)?$/i);
+  if(!m) return null;
+  const v = parseFloat(m[1].replace(',', '.'));
+  if(!(v > 0)) return null;
+  return (m[2] || 'cm').toLowerCase() === 'mm' ? v / 10 : v;
+}
+const fmtCmTxt = v => (Math.round(v * 100) / 100).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtCmCorto = v => String(Math.round(v * 10) / 10).replace('.', ',');
+const CRC_T = (() => { const t = new Uint32Array(256); for(let n = 0; n < 256; n++){ let c = n; for(let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b){ let c = 0xFFFFFFFF; for(let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+/* el PNG lleva su resolución adentro (chunk pHYs): así Photoshop, Illustrator o Corel lo
+   abren a tamaño real en cm, y no a 72 dpi como cualquier PNG del navegador */
+function pngConDpi(bytes, dpi){
+  const ppm = Math.round(dpi / 0.0254);
+  const phys = new Uint8Array(21), dv = new DataView(phys.buffer);
+  dv.setUint32(0, 9); phys.set([112, 72, 89, 115], 4); dv.setUint32(8, ppm); dv.setUint32(12, ppm); phys[16] = 1;
+  dv.setUint32(17, crc32(phys.subarray(4, 17)));
+  const rd = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const partes = [bytes.subarray(0, 8)];
+  let pos = 8;
+  while(pos + 8 <= bytes.length){
+    const len = rd.getUint32(pos), tipo = String.fromCharCode(bytes[pos + 4], bytes[pos + 5], bytes[pos + 6], bytes[pos + 7]);
+    const fin = pos + 12 + len;
+    if(tipo !== 'pHYs') partes.push(bytes.subarray(pos, fin));
+    if(tipo === 'IHDR') partes.push(phys);
+    pos = fin;
+  }
+  const out = new Uint8Array(partes.reduce((s, p) => s + p.length, 0));
+  let o = 0; partes.forEach(p => { out.set(p, o); o += p.length; });
+  return out;
+}
+/* arte a tamaño real a 300 dpi; "negro" = silueta en negro puro (grabado láser) */
+async function artePngTamanoReal(src, wCm, hCm, negro){
+  const im = await cargarImagen(src);
+  const DPI = 300, MAX = 12000; // una lona de 1 m a 300 dpi no entra en memoria: ahí baja la resolución
+  let W = Math.max(1, Math.round(wCm / 2.54 * DPI)), H = Math.max(1, Math.round(hCm / 2.54 * DPI)), dpi = DPI;
+  if(Math.max(W, H) > MAX){ const k = MAX / Math.max(W, H); W = Math.round(W * k); H = Math.round(H * k); dpi = Math.round(DPI * k); }
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(im, 0, 0, W, H);
+  if(negro){ ctx.globalCompositeOperation = 'source-in'; ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, W, H); }
+  const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+  return { bytes: pngConDpi(new Uint8Array(await blob.arrayBuffer()), dpi), dpi, W, H };
+}
+const JSZIP_URLS = [
+  'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+  'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js', // respaldo si la primera no responde
+];
+let jszipPromise = null;
+function ensureJsZip(){
+  if(window.JSZip) return Promise.resolve();
+  if(!jszipPromise){
+    jszipPromise = (async () => {
+      for(const u of JSZIP_URLS){
+        try{
+          await new Promise((res, rej) => { const s = document.createElement('script'); s.src = u; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+          if(window.JSZip) return;
+        }catch(e){}
+      }
+      jszipPromise = null;
+      throw new Error('cdn');
+    })();
+  }
+  return jszipPromise;
+}
+/* el arte de producción de la hoja: el guardado al aplicar (silueta limpia, sin opacidad,
+   logos unidos) o, si no hay, el logo de la ficha */
+async function fuenteArte(p){
+  const rec = p.arte && p.arte.imgId ? await archGet(p.arte.imgId) : null;
+  if(rec && rec.blob) return { url: URL.createObjectURL(rec.blob), revocar: true };
+  return { url: p.imgLogo, revocar: false };
+}
+
+/* ---- revisión antes de mandar: lo que falta bloquea, lo dudoso se confirma ---- */
+async function revisarPaquete(){
+  capturePage();
+  const reps = [];
+  for(let i = 0; i < pages.length; i++){
+    const p = pages[i], F = id => (((p.fields || {})[id]) || '').trim();
+    const tecnica = F('f_tecnica'), perfil = perfilTecnica(tecnica), posicion = F('f_posicion');
+    const r = { n: i + 1, p, tecnica, perfil, posicion, bloqueos: [], avisos: [], info: [], logos: [] };
+    const aviso = (clave, txt) => r.avisos.push({ id: 'h' + r.n + '-' + clave, txt });
+    reps.push(r);
+    if(!p.imgLogo){ r.bloqueos.push('La hoja no tiene logo.'); continue; }
+    if(!tecnica) r.bloqueos.push('Falta la técnica de impresión.');
+    if(!posicion) r.bloqueos.push('Falta la posición: dónde va el logo en el producto.');
+    const w = medidaCm(F('f_medida_w')), h = medidaCm(F('f_medida_h'));
+    if(!w || !h) r.bloqueos.push('Falta la medida del logo (ancho y alto) o no se entiende: escribila como "10,5 cm".');
+    r.fuente = await fuenteArte(p);
+    let im = null;
+    try{ im = await cargarImagen(r.fuente.url); }catch(e){ r.bloqueos.push('No se pudo leer el logo de la hoja.'); continue; }
+    if(w && h){
+      const aImg = im.naturalWidth / im.naturalHeight, aMed = w / h;
+      if(Math.abs(aImg - aMed) / aMed > 0.03){
+        // nunca se deforma el logo: manda el lado que entra en la medida cargada
+        const fit = aImg > aMed ? { w, h: w / aImg } : { w: h * aImg, h };
+        aviso('proporcion', 'La medida cargada (' + fmtCmTxt(w) + ' × ' + fmtCmTxt(h) + ' cm) no respeta la proporción del logo: para no deformarlo, el arte va a ' + fmtCmTxt(fit.w) + ' × ' + fmtCmTxt(fit.h) + ' cm.');
+        r.artW = fit.w; r.artH = fit.h;
+      } else { r.artW = w; r.artH = h; }
+      r.dpiArte = Math.round(im.naturalWidth / (r.artW / 2.54));
+    }
+    const arte = p.arte || null, logos = (arte && arte.logos) || [];
+    if(!logos.length) aviso('sinorig', 'Este logo se cargó antes de que la app guardara los originales (o vino en una foto ya armada): el paquete va sin el archivo original del cliente. Para incluirlo, volvé a cargar el logo en el boceteador.');
+    let dpiAvisado = false, hayVector = false, todosUnColor = logos.length > 0;
+    for(const L of logos){
+      const rec = L.origId ? await archGet(L.origId) : null;
+      const info = (rec && rec.info) || L.origInfo || null, an = (info && info.analisis) || null;
+      const nom = (info && info.name) || L.nombre || 'logo';
+      const vector = !!(an && an.vector && !an.soloImagen);
+      if(vector) hayVector = true;
+      if(L.tinte === 'original') todosUnColor = false;
+      const adjuntos = [];
+      for(const x of (L.adjuntos || [])){ const ra = await archGet(x.id); if(ra) adjuntos.push({ x, rec: ra }); }
+      r.logos.push({ L, rec, info, an, nom, vector, adjuntos });
+      if(L.origId && !rec) aviso('falta-' + nom, 'El original de "' + nom + '" no está guardado en esta computadora (la plantilla se armó en otra o se borraron los datos del navegador): el paquete va sin él.');
+      if(an && an.soloImagen) aviso('trucho-' + nom, '"' + nom + '" es un ' + an.tipo.toUpperCase() + ', pero adentro es una imagen: NO está en curvas.');
+      else if(info && !vector && perfil.vector && !adjuntos.length) aviso('raster-' + nom, '"' + nom + '" es una imagen, no está en curvas: para ' + perfil.nombre + ' el taller va a tener que vectorizarlo o redibujarlo. Lo ideal es pedirle el vector al cliente.');
+      if(info && !vector && L.px && L.cm){
+        const d = Math.round(L.px / (L.cm / 2.54));
+        if(d < 300){ aviso('dpi-' + nom, '"' + nom + '" queda a ' + d + ' dpi a tamaño real (lo ideal son 300): se puede ver pixelado.'); dpiAvisado = true; }
+      }
+      if(an && an.textoVivo) aviso('texto-' + nom, '"' + nom + '" tiene textos sin convertir a curvas: si el taller no tiene esa tipografía, la letra puede cambiar.');
+      if(an && an.degrade && perfil.plena) aviso('degrade-' + nom, '"' + nom + '" tiene degradés: en ' + perfil.nombre + ' no se pueden reproducir tal cual.');
+      if(L.ia) aviso('ia-' + nom, '"' + nom + '" se modificó con IA en el boceteador: el original del cliente no coincide con lo que se ve en el boceto. Confirmá con el cliente cuál se imprime.');
+      if(L.fondoQuitado) r.info.push('A "' + nom + '" se le quitó el fondo en el boceteador: el arte va sin fondo; el original lo conserva.');
+      if(L.opacidad < 1 && (perfil.plena || perfil.raster)) aviso('opac-' + nom, '"' + nom + '" está al ' + Math.round(L.opacidad * 100) + '% de opacidad en el boceto: ' + (perfil.plena ? 'en ' + perfil.nombre + ' la tinta va plena' : 'en ' + perfil.nombre + ' la semitransparencia puede dejar un halo') + '. El arte va al 100%.');
+      if(L.sinTransparencia && perfil.fondo) aviso('fondo-' + nom, '"' + nom + '" tiene fondo (no es transparente): en ' + perfil.nombre + ' se va a imprimir el recuadro. Quitale el fondo en el boceteador o pedí un PNG sin fondo.');
+      if(perfil.id === 'laser' && L.tinte === 'original') aviso('lasercolor-' + nom, '"' + nom + '" tiene varios colores: para grabado láser hay que definir qué partes se graban. Lo ideal es pedir la versión a un color.');
+      if(adjuntos.length) r.info.push('"' + nom + '" lleva ' + (adjuntos.length === 1 ? 'un archivo adjunto' : adjuntos.length + ' archivos adjuntos') + ' del cliente: ' + adjuntos.map(a => a.x.name).join(', ') + '.');
+    }
+    r.hayVector = hayVector;
+    r.negro = perfil.id === 'laser' && todosUnColor;
+    if(arte && arte.unido){
+      r.info.push('Son ' + logos.length + ' logos unidos en una sola impresión (un mismo shablón o película).');
+      if(arte.dispar) aviso('dispar', 'Los logos unidos no estaban a la misma escala en el boceteador: la medida total es aproximada.');
+    }
+    if(r.dpiArte && r.dpiArte < 300 && perfil.raster && !dpiAvisado)
+      aviso('dpiarte', 'El arte a tamaño real queda a ' + r.dpiArte + ' dpi (lo ideal son 300).' + (hayVector ? ' Para más calidad, el taller puede usar el original en curvas.' : ''));
+    if(perfil.pantone && !p.fullColor && !p.engraved){
+      const sinP = (p.printColors || []).filter(c => !(c.pant || '').trim());
+      if(sinP.length) aviso('pantone', (sinP.length === 1 ? 'Hay un color' : 'Hay ' + sinP.length + ' colores') + ' sin Pantone: el taller va a igualar a ojo.');
+    }
+    if(p.fullColor && perfil.pantone) aviso('fullcolor', 'Full color en ' + perfil.nombre + ' necesita separación en cuatricromía: confirmalo con el taller.');
+  }
+  if(reps.length && !$('f_cantidad').value.trim()) reps[0].avisos.push({ id: 'cantidad', txt: 'Falta la cantidad del pedido.' });
+  return reps;
+}
+
+/* ---- ficha técnica del paquete (LEEME) ---- */
+async function leemePdf(carpetas, generado){
+  const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4', compress: true });
+  registerPdfFonts(doc);
+  const setF = k => { if(fontsReady) doc.setFont(PDF_FACES[k], 'normal'); else doc.setFont('helvetica', k === 'body' ? 'normal' : 'bold'); };
+  const M = 46, ANCHO = 595 - 2 * M, ALTO = 842;
+  const NAVY = [0, 0, 133], INK = [11, 11, 35], GRIS = [110, 110, 133], LIMA = [142, 224, 33], ROJO = [176, 58, 46];
+  let y = M;
+  const salto = h => { if(y + h > ALTO - M){ doc.addPage(); y = M; } };
+  const txt = (t, o) => {
+    o = o || {};
+    const s = o.s || 9.5, ind = o.ind || 0;
+    setF(o.f || 'body'); doc.setFontSize(s); doc.setTextColor(...(o.c || INK));
+    const lineas = doc.splitTextToSize(String(t), ANCHO - ind);
+    lineas.forEach(l => { salto(s * 1.4); doc.text(l, M + ind, y + s); y += s * 1.4; });
+    y += (o.gap == null ? 3 : o.gap);
+  };
+  const fila = (k, v) => {
+    setF('semi'); doc.setFontSize(8); doc.setTextColor(...GRIS);
+    salto(14); doc.text(k.toUpperCase(), M, y + 8);
+    const off = 112;
+    setF('body'); doc.setFontSize(9.5); doc.setTextColor(...INK);
+    const lineas = doc.splitTextToSize(String(v || '-'), ANCHO - off);
+    lineas.forEach((l, i) => { if(i) salto(13); doc.text(l, M + off, y + 8); y += 13; });
+    y += 2;
+  };
+  const S = id => $(id).value.trim();
+  setF('display'); doc.setFontSize(20); doc.setTextColor(...NAVY);
+  doc.text('Paquete para producción', M, y + 20); y += 30;
+  doc.setFillColor(...LIMA); doc.rect(M, y, 56, 4, 'F'); y += 14;
+  txt('Formas Publicitarias · ' + generado.fecha + ' · versión ' + generado.version, { s: 8.5, c: GRIS, gap: 10 });
+  fila('Pedido / PDV', S('f_pdv'));
+  fila('Cliente', S('f_cliente'));
+  fila('Ejecutivo', S('f_ejecutivo'));
+  fila('Producto', S('f_producto').replace(/\n+/g, ' '));
+  fila('Cantidad', S('f_cantidad'));
+  fila('Color del producto', [S('f_colorprod_nom'), $('f_colorprod_hex').value.toUpperCase()].filter(Boolean).join(' · '));
+  if(S('f_obsprod')) fila('Obs. del producto', S('f_obsprod'));
+  y += 8;
+  // antes de imprimir
+  const caja = ['1. Verificá que el arte mida exactamente lo que dice cada aplicación.',
+    '2. El arte va AL DERECHO: no está espejado.',
+    '3. Si algo no coincide con el boceto aprobado (Boceto aprobado.pdf), avisá ANTES de imprimir.'];
+  salto(20 + caja.length * 14);
+  doc.setFillColor(241, 251, 228); doc.setDrawColor(...LIMA);
+  doc.roundedRect(M, y, ANCHO, 18 + caja.length * 14, 6, 6, 'FD');
+  setF('bold'); doc.setFontSize(9); doc.setTextColor(43, 90, 11); doc.text('ANTES DE IMPRIMIR', M + 12, y + 14);
+  setF('body'); doc.setFontSize(9); doc.setTextColor(...INK);
+  caja.forEach((l, i) => doc.text(l, M + 12, y + 28 + i * 14));
+  y += 26 + caja.length * 14;
+  for(const k of carpetas){
+    const r = k.r, p = r.p, F = id => (((p.fields || {})[id]) || '').trim();
+    y += 6; salto(60);
+    doc.setDrawColor(228, 228, 237); doc.line(M, y, M + ANCHO, y); y += 12;
+    setF('display'); doc.setFontSize(13); doc.setTextColor(...NAVY);
+    doc.text('Aplicación ' + r.n + ' · ' + (r.posicion || 'sin posición'), M, y + 12); y += 22;
+    fila('Técnica', r.perfil.nombre + (r.tecnica && r.tecnica.toLowerCase() !== r.perfil.nombre.toLowerCase() ? ' (' + r.tecnica + ')' : ''));
+    fila('Medida final', fmtCmTxt(r.artW) + ' × ' + fmtCmTxt(r.artH) + ' cm (ancho × alto), sin márgenes');
+    const cols = p.engraved ? 'Grabado: sin tinta, en el tono del material'
+      : p.fullColor ? 'Full color'
+      : (p.printColors || []).map(c => [c.pant ? 'Pantone ' + c.pant : '', c.nom, (c.hex || '').toUpperCase()].filter(Boolean).join(' · ')).join('  |  ')
+        + ' (' + (p.printColors || []).length + (((p.printColors || []).length === 1) ? ' color)' : ' colores)');
+    fila('Colores', cols);
+    fila('Carpeta', k.nombreCarpeta + '/');
+    k.archivos.forEach(a => txt('· ' + a.nombre + ': ' + a.que, { ind: 112, s: 9, gap: 1 }));
+    y += 3;
+    fila('Indicaciones', r.perfil.indic);
+    if(F('f_obslogo')) fila('Observaciones', F('f_obslogo'));
+    r.info.forEach(t => txt('· ' + t, { ind: 112, s: 8.5, c: GRIS, gap: 1 }));
+    if(r.avisos.length){
+      y += 4;
+      txt('Avisos que el vendedor revisó y confirmó al armar el paquete:', { f: 'semi', s: 8.5, c: ROJO, gap: 2 });
+      r.avisos.forEach(a => txt('· ' + a.txt, { ind: 8, s: 8.5, c: INK, gap: 1 }));
+    }
+  }
+  y += 14;
+  txt('Paquete armado con el boceteador de Formas. Ante cualquier duda, consultá antes de imprimir: es más barato preguntar que reimprimir.', { s: 8, c: GRIS });
+  return doc.output('arraybuffer');
+}
+
+/* ---- armado del zip ---- */
+async function armarPaquete(reps, conOriginales){
+  await Promise.all([ensureJsZip(), ensureJsPdf()]);
+  const zip = new window.JSZip();
+  const ahora = new Date();
+  const generado = {
+    fecha: ahora.toLocaleDateString('es-AR') + ' ' + ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
+    version: ahora.getFullYear() + String(ahora.getMonth() + 1).padStart(2, '0') + String(ahora.getDate()).padStart(2, '0') + '-' + String(ahora.getHours()).padStart(2, '0') + String(ahora.getMinutes()).padStart(2, '0'),
+  };
+  // el boceto aprobado: la ficha A4 de siempre, todas las hojas
+  const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4', compress: true });
+  registerPdfFonts(doc);
+  for(let i = 0; i < pages.length; i++){ if(i) doc.addPage(); await corelSheet(doc, pages[i], i + 1, pages.length); }
+  zip.file('Boceto aprobado.pdf', doc.output('arraybuffer'));
+  const carpetas = [];
+  for(const r of reps){
+    const p = r.p;
+    const nombreCarpeta = asciiNombre('Hoja ' + r.n + ' - ' + r.posicion + ' - ' + r.perfil.nombre + ' - ' + fmtCmCorto(r.artW) + 'x' + fmtCmCorto(r.artH) + ' cm', 100);
+    const dir = zip.folder(nombreCarpeta);
+    const archivos = [];
+    // el mockup técnico: si la foto en uso es la escena de IA, va el boceto sin IA
+    const mock = (p.fotoAlt && p.fotoActiva === 'ia') ? p.fotoAlt : p.imgFoto;
+    if(mock){
+      const b = dataUrlABlob(mock), ext = b.type === 'image/jpeg' ? 'jpg' : 'png';
+      dir.file('Mockup.' + ext, b);
+      archivos.push({ nombre: 'Mockup.' + ext, que: 'cómo tiene que quedar en el producto' });
+    }
+    const arte = await artePngTamanoReal(r.fuente.url, r.artW, r.artH, r.negro);
+    const nomArte = (r.negro ? 'Arte en negro' : 'Arte') + ' ' + arte.dpi + 'dpi - medida real.png';
+    dir.file(nomArte, arte.bytes);
+    archivos.push({ nombre: nomArte, que: r.perfil.raster
+      ? 'IMPRIMIR ESTE ARCHIVO: tamaño real (' + fmtCmTxt(r.artW) + ' × ' + fmtCmTxt(r.artH) + ' cm), ' + arte.dpi + ' dpi, fondo transparente'
+      : 'referencia a tamaño real (' + arte.dpi + ' dpi)' + (r.hayVector ? '; para producir, usar el original en curvas' : '') });
+    if(conOriginales){
+      const usados = new Set();
+      const nombreUnico = base => { let n = base, i = 2; while(usados.has(n.toLowerCase())){ n = base.replace(/(\.[^.]*)?$/, m => ' (' + i + ')' + m); i++; } usados.add(n.toLowerCase()); return n; };
+      for(const lg of r.logos){
+        if(lg.rec && lg.rec.blob){
+          const n = nombreUnico('Original - ' + asciiNombre(lg.info.name, 90));
+          dir.file(n, lg.rec.blob);
+          archivos.push({ nombre: n, que: lg.vector
+            ? 'EN CURVAS: archivo del cliente, usarlo escalado a ' + fmtCmTxt(r.artW) + ' × ' + fmtCmTxt(r.artH) + ' cm' + (r.logos.length > 1 ? ' (en el conjunto, ubicado como en el mockup)' : '')
+            : 'archivo original del cliente (imagen, no está en curvas)' });
+        }
+        for(const a of lg.adjuntos){
+          const n = nombreUnico('Original - ' + asciiNombre(a.x.name, 90));
+          dir.file(n, a.rec.blob);
+          archivos.push({ nombre: n, que: 'archivo original que mandó el cliente (adjuntado por el vendedor)' });
+        }
+      }
+    }
+    carpetas.push({ r, nombreCarpeta, archivos });
+  }
+  zip.file('LEEME - Ficha tecnica.pdf', await leemePdf(carpetas, generado));
+  const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+  const nombre = asciiNombre(docName(), 120) + ' - Paquete taller.zip';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  reps.forEach(r => { if(r.fuente && r.fuente.revocar) URL.revokeObjectURL(r.fuente.url); });
+  return { nombre, peso: blob.size };
+}
+
+/* ---- la ventana del paquete ---- */
+let paqReps = null;
+function paqSync(){
+  if(!paqReps) return;
+  const bloqueado = paqReps.some(r => r.bloqueos.length);
+  const faltan = [...document.querySelectorAll('#paqHojas input[type=checkbox]')].filter(c => !c.checked).length;
+  $('paqGo').disabled = bloqueado || faltan > 0;
+  const st = $('paqStatus');
+  st.hidden = false;
+  st.textContent = bloqueado ? '⛔ Completá lo marcado en rojo para poder armar el paquete.'
+    : faltan ? '⚠ Revisá y confirmá ' + (faltan === 1 ? 'el aviso' : 'los ' + faltan + ' avisos') + ': lo que confirmes queda escrito en la ficha del paquete.'
+    : '✓ Todo listo para armar el paquete.';
+}
+function paqRender(){
+  const box = $('paqHojas'); box.innerHTML = '';
+  let pesoOrig = 0;
+  paqReps.forEach(r => {
+    const d = document.createElement('div'); d.className = 'paqHoja';
+    const h = document.createElement('div'); h.className = 'paqTit';
+    h.textContent = 'Hoja ' + r.n + ' · ' + (r.posicion || 'sin posición') + ' · ' + r.perfil.nombre + (r.artW ? ' · ' + fmtCmTxt(r.artW) + ' × ' + fmtCmTxt(r.artH) + ' cm' : '');
+    d.appendChild(h);
+    const linea = (cls, t) => { const e = document.createElement('div'); e.className = 'paqL ' + cls; e.textContent = t; d.appendChild(e); };
+    r.bloqueos.forEach(t => linea('bloq', '⛔ ' + t));
+    r.avisos.forEach(a => {
+      const l = document.createElement('label'); l.className = 'paqL aviso';
+      const c = document.createElement('input'); c.type = 'checkbox'; c.dataset.id = a.id;
+      c.addEventListener('change', paqSync);
+      const s = document.createElement('span'); s.textContent = a.txt;
+      const ok = document.createElement('small'); ok.textContent = 'Entendido, mandarlo igual'; s.appendChild(ok);
+      l.append(c, s); d.appendChild(l);
+    });
+    if(!r.bloqueos.length){
+      const va = ['Mockup', (r.negro ? 'arte en negro' : 'arte') + ' a tamaño real (PNG 300 dpi)'];
+      r.logos.forEach(lg => {
+        if(lg.rec) { va.push('original "' + lg.nom + '"' + (lg.vector ? ' (en curvas)' : '')); pesoOrig += lg.info.size || 0; }
+        lg.adjuntos.forEach(a => { va.push('adjunto "' + a.x.name + '"'); pesoOrig += a.x.size || 0; });
+      });
+      linea('info', 'Va en la carpeta: ' + va.join(' · ') + '.');
+      r.info.forEach(t => linea('info', t));
+    }
+    box.appendChild(d);
+  });
+  $('paqPesoOrig').textContent = pesoOrig ? ' (' + fmtPeso(pesoOrig) + ')' : '';
+  paqSync();
+}
+$('btn_paquete').onclick = async () => {
+  $('paqModal').hidden = false;
+  $('paqHojas').innerHTML = '<div class="paqL info">Revisando el pedido…</div>';
+  $('paqGo').disabled = true; $('paqResultado').hidden = true; $('paqStatus').hidden = true;
+  try{ paqReps = await revisarPaquete(); paqRender(); }
+  catch(e){ $('paqHojas').innerHTML = ''; $('paqStatus').hidden = false; $('paqStatus').textContent = '⚠ No se pudo revisar el pedido: ' + (e && e.message ? e.message : e); }
+};
+$('paqCancel').onclick = () => {
+  $('paqModal').hidden = true;
+  (paqReps || []).forEach(r => { if(r.fuente && r.fuente.revocar) URL.revokeObjectURL(r.fuente.url); });
+  paqReps = null;
+};
+$('paqGo').onclick = async () => {
+  const b = $('paqGo'), t0 = b.textContent;
+  b.disabled = true; b.textContent = 'Armando el paquete…';
+  try{
+    const res = await armarPaquete(paqReps, $('paqOriginales').checked);
+    const out = $('paqResultado');
+    out.hidden = false;
+    out.textContent = '✓ Descargado: ' + res.nombre + ' (' + fmtPeso(res.peso) + ').'
+      + (res.peso > 20 * 1048576 ? ' Pesa más de 20 MB: por mail puede rebotar (el límite suele ser 25 MB). Mandalo por WhatsApp como documento, o armalo de nuevo sin los originales.' : ' Entra por mail y por WhatsApp.');
+    paqReps = null; // las URLs temporales ya se liberaron: para otro paquete se vuelve a revisar
+    b.textContent = t0;
+  }catch(e){
+    b.disabled = false; b.textContent = t0;
+    $('paqStatus').hidden = false;
+    $('paqStatus').textContent = '⚠ No se pudo armar el paquete' + (e && e.message === 'cdn' ? ': verificá la conexión a internet (las herramientas se descargan la primera vez).' : ': ' + (e && e.message ? e.message : e));
+  }
+};
+
+/* ---- las plantillas de Drive llevan adentro los originales, para abrirlas en otra computadora ---- */
+function idsDeArchivos(d){
+  const ids = new Set();
+  const deLogo = l => { if(!l) return; if(l.origId) ids.add(l.origId); (l.adjuntos || []).forEach(x => x && x.id && ids.add(x.id)); };
+  (d.pages || []).forEach(p => { const a = p.arte; if(!a) return; if(a.imgId) ids.add(a.imgId); (a.logos || []).forEach(deLogo); });
+  if(d.boceto && d.boceto.logos) d.boceto.logos.forEach(deLogo);
+  return [...ids];
+}
+async function conArchivos(d){
+  const out = {};
+  for(const id of idsDeArchivos(d)){
+    const r = await archGet(id);
+    if(r && r.blob) out[id] = { info: r.info, data: await blobADataUrl(r.blob) };
+  }
+  if(Object.keys(out).length) d.archivos = out;
+  return d;
+}
+async function guardarArchivosDe(d){
+  if(!d || !d.archivos) return;
+  for(const id in d.archivos){
+    const a = d.archivos[id];
+    try{ await archPut(id, { blob: dataUrlABlob(a.data), info: a.info }); }catch(e){}
+  }
+}
+
+
+function hookFile(inputId, boxId, txtId, clearId, setter, onFile){
   const defaultTxt = () => txtId==='txt_foto' ? 'Subir foto ya lista (con el logo aplicado)' : 'Subir logo (vector / alta resolución)';
   $(inputId).addEventListener('change', async e=>{
     const file = e.target.files[0];
@@ -1864,12 +2443,12 @@ function hookFile(inputId, boxId, txtId, clearId, setter){
     };
     if(esVector(file)){
       $(txtId).textContent = 'Procesando ' + file.name + '…';
-      try{ done(await rasterizeVectorFile(file)); }
+      try{ done(await rasterizeVectorFile(file)); if(onFile) onFile(file); }
       catch(err){ alert(msgVector(err)); $(txtId).textContent = defaultTxt(); e.target.value=''; }
       return;
     }
     const r = new FileReader();
-    r.onload = ev=> done(ev.target.result);
+    r.onload = ev=> { done(ev.target.result); if(onFile) onFile(file); };
     r.readAsDataURL(file);
   });
   $(clearId).addEventListener('click', ev=>{
@@ -1882,7 +2461,16 @@ function hookFile(inputId, boxId, txtId, clearId, setter){
   });
 }
 hookFile('f_foto','box_foto','txt_foto','clear_foto', v=>{ imgFoto=v; fotoAlt=null; fotoActiva='ia'; fotoEscala=''; refreshFotoBox(); avisarResFicha(v); });
-hookFile('f_logo','box_logo','txt_logo','clear_logo', v=>{ imgLogo=v; });
+hookFile('f_logo','box_logo','txt_logo','clear_logo', v=>{ imgLogo=v; if(!v) arteHoja = null; }, async file => {
+  // logo cargado directo en la ficha: el archivo del cliente va tal cual al paquete del taller
+  const reg = await registrarArchivo(file);
+  let opaca = false;
+  try{ opaca = esOpaca(await cargarImagen(imgLogo)); }catch(e){}
+  arteHoja = { logos: [{ nombre: file.name, origId: reg ? reg.id : null, origInfo: reg ? reg.info : null, adjuntos: [],
+    ia: false, fondoQuitado: false, opacidad: 1, tinte: 'original', sinTransparencia: opaca, px: 0, cm: 0, directo: true }],
+    unido: false, imgId: null };
+  render();
+});
 
 /* ---------- mejorar la foto con IA (OpenAI vía Cloudflare Pages Function) ----------
    El estilo Formas vive en el servidor (functions/api/ia-imagen.js);
@@ -2855,7 +3443,7 @@ $('tplSave').onclick = async () => {
     if(gdFiles.some(f => f.name === name) && !confirm('Ya existe una plantilla "'+name+'" en tu Drive. ¿Reemplazarla?')) return;
     const b = $('tplSave'); b.disabled = true; b.textContent = 'Guardando…';
     try{
-      await gdSave(name, snapshot());
+      await gdSave(name, await conArchivos(snapshot()));
       await gdList();
       tplRefresh();
       const f = gdFiles.find(f2 => f2.name === name);
@@ -2880,7 +3468,7 @@ $('tplLoad').onclick = async () => {
   if(!confirm('Se reemplazará lo que tengas cargado por la plantilla "'+label+'". ¿Continuar?')) return;
   if(val.startsWith('gd:')){
     const b = $('tplLoad'); b.disabled = true; b.textContent = 'Cargando…';
-    try{ applySnapshot(await gdLoad(val.slice(3))); }
+    try{ const d = await gdLoad(val.slice(3)); await guardarArchivosDe(d); applySnapshot(d); }
     catch(e){ alert('No se pudo cargar la plantilla desde Drive. Verificá la conexión.'); }
     finally{ b.disabled = false; b.textContent = 'Cargar'; }
     return;
@@ -3228,6 +3816,7 @@ window.__applyBoceto = res => {
   refreshFotoBox();
   if(res.logo){
     imgLogo = res.logo;
+    arteHoja = (res.logos && res.logos[0] && res.logos[0].arte) || null;
     refreshLogoBox();
   }
   // al unir logos la medida es la del conjunto: si no se pudo calcular, no debe quedar la de un logo suelto
@@ -3286,6 +3875,7 @@ window.__applyBoceto = res => {
       // lo que se hereda del editor en cada aplicación, igual que en la hoja principal
       q.imgFoto = base.imgFoto; q.fotoFit = base.fotoFit; q.fotoEscala = base.fotoEscala;
       q.imgLogo = L.logo;
+      q.arte = L.arte || null;
       q.fields = Object.assign({}, q.fields, { f_medida_w: L.medidaW || '', f_medida_h: L.medidaH || '' });
       if(res.tecnica) q.fields.f_tecnica = res.tecnica;
       if(L.grabado){ q.engraved = true; q.fullColor = false; }
@@ -3824,7 +4414,7 @@ function loadLogo(file){
   if(esVector(file)){
     $('logoTxt').innerHTML = `Procesando ${file.name}…<small>convirtiendo el vector a imagen</small>`;
     rasterizeVectorFile(file)
-      .then(data => loadLogoSrc(data, file.name, false))
+      .then(data => loadLogoSrc(data, file.name, false, file))
       .catch(err => {
         alert(msgVector(err));
         pendingAdd = false;
@@ -3835,16 +4425,16 @@ function loadLogo(file){
   }
   if(esSvg(file)){
     normalizeSvg(file)
-      .then(data => loadLogoSrc(data, file.name, false))
+      .then(data => loadLogoSrc(data, file.name, false, file))
       .catch(() => { // SVG ilegible: se intenta igual como archivo crudo
         const r = new FileReader();
-        r.onload = ev => loadLogoSrc(ev.target.result, file.name, false);
+        r.onload = ev => loadLogoSrc(ev.target.result, file.name, false, file);
         r.readAsDataURL(file);
       });
     return;
   }
   const r = new FileReader();
-  r.onload = ev => loadLogoSrc(ev.target.result, file.name, /jpe?g/i.test(file.type));
+  r.onload = ev => loadLogoSrc(ev.target.result, file.name, /jpe?g/i.test(file.type), file);
   r.readAsDataURL(file); // dataURL: sobrevive en plantillas guardadas
 }
 
@@ -3892,7 +4482,38 @@ function computeTrim(img){
   }catch(e){ return { x:0, y:0, w:W, h:H, trimmed:false }; }
 }
 
-function loadLogoSrc(url, name, isJpg){
+/* el archivo tal cual lo mandó el cliente viaja al paquete del taller. Un archivo nuevo
+   reemplaza al original anterior y a sus adjuntos: eran de otro logo */
+function guardarOriginalDelLogo(logo, file){
+  logo.origId = null; logo.origInfo = null; logo.adjuntos = [];
+  logo.origP = registrarArchivo(file).then(r => { if(r){ logo.origId = r.id; logo.origInfo = r.info; } logo.origP = null; });
+}
+
+/* ---------- adjuntar el original del cliente (EPS, CDR…): no se ve, pero viaja al paquete ---------- */
+function syncAdjuntos(){
+  const L = selLogo(), box = $('adjList');
+  $('adjBtn').hidden = !L;
+  const xs = (L && L.adjuntos) || [];
+  box.hidden = !xs.length; box.innerHTML = '';
+  xs.forEach((x, i) => {
+    const row = document.createElement('div'); row.className = 'adjRow';
+    const t = document.createElement('span'); t.textContent = '📎 ' + x.name + ' · ' + fmtPeso(x.size || 0);
+    const b = document.createElement('button'); b.type = 'button'; b.title = 'Quitar'; b.textContent = '×';
+    b.onclick = () => { L.adjuntos.splice(i, 1); syncAdjuntos(); };
+    row.append(t, b); box.appendChild(row);
+  });
+}
+$('adjBtn').addEventListener('click', () => { $('adjInput').value = ''; $('adjInput').click(); });
+$('adjInput').addEventListener('change', async e => {
+  const L = selLogo(), f = e.target.files[0];
+  if(!L || !f) return;
+  const r = await registrarArchivo(f);
+  if(!r){ alert('No se pudo guardar el archivo en este navegador.'); return; }
+  (L.adjuntos = L.adjuntos || []).push({ id: r.id, name: r.info.name, type: r.info.type, size: r.info.size });
+  syncAdjuntos();
+});
+
+function loadLogoSrc(url, name, isJpg, file){
   const probe = new Image();
   probe.onload = () => {
     if(!(probe.naturalWidth > 0 && probe.naturalHeight > 0)){
@@ -3921,6 +4542,7 @@ function loadLogoSrc(url, name, isJpg){
       logo.h = (logo.w*FW / aspect) / FH;
     }
     pendingAdd = false;
+    if(file) guardarOriginalDelLogo(logo, file);
     rebuildLogo(logo, () => { syncLogoUI(); setStepStates(); render(); });
   };
   probe.src = url;
@@ -4115,6 +4737,7 @@ function syncLogoUI(){
     $('logoTxt').innerHTML = `${L.name}<small>clic para reemplazar este logo</small>`;
     $('jpgNote').hidden = !(L.isJpg && !quitarSpec(L));
     $('cropEditBtn').hidden = false;
+    syncAdjuntos();
     $('trimNote').hidden = !(L.crop && L.crop.trimmed);
     if(L.crop && L.crop.trimmed){
       const activo = L.useTrim !== false;
@@ -4144,6 +4767,7 @@ function syncLogoUI(){
     $('jpgNote').hidden = true;
     $('trimNote').hidden = true;
     $('cropEditBtn').hidden = true;
+    syncAdjuntos();
     $('logoWcm').value = ''; $('logoHcm').value = '';
   }
 }
@@ -4865,7 +5489,8 @@ function bboxAlfa(c){
 }
 // la película: todos los logos tal cual están acomodados, recortados a lo que ocupan,
 // a la resolución del logo más nítido
-function composeUnion(){
+function composeUnion(opts){
+  opts = opts || {};
   const {w:FW, h:FH} = frameRect();
   const bb = bboxUnion();
   let S = 1;
@@ -4874,12 +5499,12 @@ function composeUnion(){
   const c = document.createElement('canvas');
   c.width = Math.max(1, Math.round(bb.w*S)); c.height = Math.max(1, Math.round(bb.h*S));
   const ctx = c.getContext('2d');
-  state.logos.forEach(l => {
+  state.logos.forEach((l, i) => {
     ctx.save();
-    ctx.globalAlpha = l.opacity;
+    ctx.globalAlpha = opts.plena ? 1 : l.opacity; // el arte de producción va siempre al 100%
     ctx.translate(((l.x + l.w/2)*FW - bb.x)*S, ((l.y + l.h/2)*FH - bb.y)*S);
     ctx.rotate((l.rot||0) * Math.PI/180);
-    ctx.drawImage(l.img, -l.w*FW*S/2, -l.h*FH*S/2, l.w*FW*S, l.h*FH*S);
+    ctx.drawImage((opts.fuentes && opts.fuentes[i]) || l.img, -l.w*FW*S/2, -l.h*FH*S/2, l.w*FW*S, l.h*FH*S);
     ctx.restore();
   });
   const a = bboxAlfa(c); // las esquinas de un logo rotado quedan vacías: se ajusta al contenido
@@ -4889,7 +5514,7 @@ function composeUnion(){
     out.getContext('2d').drawImage(c, a.x, a.y, a.w, a.h, 0, 0, a.w, a.h);
   }
   const { k, dispar } = escalaUnion();
-  return { url: out.toDataURL('image/png'), wCm: k ? (a.w / S) * k : 0, hCm: k ? (a.h / S) * k : 0, dispar };
+  return { url: opts.sinUrl ? null : out.toDataURL('image/png'), canvas: out, wCm: k ? (a.w / S) * k : 0, hCm: k ? (a.h / S) * k : 0, dispar };
 }
 
 let unirCache = null;
@@ -4906,10 +5531,55 @@ function abrirUnirModal(){
 }
 $('unirSi').addEventListener('click', () => { $('unirModal').hidden = true; aplicarBoceto(true); });
 $('unirNo').addEventListener('click', () => { $('unirModal').hidden = true; aplicarBoceto(false); });
+
+/* ---------- arte de producción para el paquete del taller ----------
+   Lo que ve el cliente en el mockup no siempre es lo que se imprime: el tinte "grabado" es un
+   efecto metálico solo para mirar (sus sombras engrosan el contorno), el negro de pantalla es
+   el azul tinta de Formas, y la opacidad del mockup no existe en la tinta. */
+function fuenteProduccion(l){
+  return new Promise(res => {
+    if(l.tint !== 'engrave' && l.tint !== 'black'){ res(l.img); return; }
+    const img = new Image();
+    img.onload = () => {
+      const c = logoBase(l, img), ctx = c.getContext('2d');
+      const spec = quitarSpec(l);
+      if(spec) quitarColores(ctx, c.width, c.height, spec);
+      ctx.globalCompositeOperation = 'source-in'; ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, c.width, c.height);
+      res(c);
+    };
+    img.onerror = () => res(l.img);
+    img.src = l.src;
+  });
+}
+function lienzoDe(src){
+  const c = document.createElement('canvas');
+  c.width = src.naturalWidth || src.width; c.height = src.naturalHeight || src.height;
+  c.getContext('2d').drawImage(src, 0, 0);
+  return c;
+}
+async function guardarArteImg(canvas){
+  const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+  const id = nuevoIdArch();
+  try{ await archPut(id, { blob, info: { name: 'arte.png', type: 'image/png', size: blob.size } }); return id; }
+  catch(e){ return null; }
+}
+const cmDe = l => state.mode === 'logo' ? (l.cmW || 0) : ((medidaWH(l) || {}).w || 0);
+const fichaArte = l => ({
+  nombre: l.name || 'logo',
+  origId: l.origId || null, origInfo: l.origInfo || null,
+  adjuntos: (l.adjuntos || []).map(x => ({ ...x })),
+  ia: !!(l.iaPrev || l.iaMod), fondoQuitado: !!(l.bgRemove || l.whiteRemoved),
+  opacidad: l.opacity, tinte: l.tint,
+  sinTransparencia: !(l.bgRemove || l.whiteRemoved) && !!l.img && esOpaca(l.img),
+  px: (l.useTrim !== false && l.crop) ? l.crop.w : l.fullW,
+  cm: cmDe(l),
+});
 $('unirClose').addEventListener('click', () => { $('unirModal').hidden = true; unirCache = null; });
 
-function aplicarBoceto(unir){
+async function aplicarBoceto(unir){
   state.unirLogos = !!unir;
+  // los originales se registran en segundo plano al cargar el logo: se espera a que terminen
+  await Promise.all(state.logos.map(l => l.origP).filter(Boolean));
   const principal = state.logos[0];
   const unColorDe = l => ['white', 'black', 'custom'].includes(l.tint);
   let logoFicha, mW, mH, grabado, unColor, logos;
@@ -4920,19 +5590,25 @@ function aplicarBoceto(unir){
     mH = u.hCm ? fmtCm(u.hCm*unitK()) + ' ' + state.unit : '';
     grabado = state.logos.every(l => l.tint === 'engrave');
     unColor = state.logos.some(unColorDe); // una sola película: cuenta el tinte de cualquiera de los logos
-    logos = [{ logo: logoFicha, medidaW: mW, medidaH: mH, grabado, colorTinte: null }];
+    const prod = composeUnion({ fuentes: await Promise.all(state.logos.map(fuenteProduccion)), plena: true, sinUrl: true });
+    const arte = { logos: state.logos.map(fichaArte), unido: true, dispar: !!u.dispar, imgId: await guardarArteImg(prod.canvas) };
+    logos = [{ logo: logoFicha, medidaW: mW, medidaH: mH, grabado, colorTinte: null, arte }];
   } else {
     ({ w: mW, h: mH } = medidasDe(principal));
     logoFicha = logoDataUrl(principal);
     grabado = principal.tint === 'engrave';
     // con una hoja por logo, "sin full color" depende del logo de esa hoja
     unColor = unColorDe(principal);
-    logos = state.logos.map(l => {
+    logos = await Promise.all(state.logos.map(async l => {
       const m = medidasDe(l);
       const c = l.tint === 'custom' ? l.tintColor : TINT_FIJOS[l.tint];
+      // arte propio solo si difiere del logo de la ficha (silueta limpia o sin la opacidad del mockup)
+      const imgId = (l.tint === 'engrave' || l.tint === 'black' || l.opacity < 1)
+        ? await guardarArteImg(lienzoDe(await fuenteProduccion(l))) : null;
       return { logo: logoDataUrl(l), medidaW: m.w, medidaH: m.h, grabado: l.tint === 'engrave',
-        colorTinte: (c && c.hex) ? { hex: c.hex, nom: c.nom || '', pant: c.pant || '' } : null };
-    });
+        colorTinte: (c && c.hex) ? { hex: c.hex, nom: c.nom || '', pant: c.pant || '' } : null,
+        arte: { logos: [fichaArte(l)], unido: false, imgId } };
+    }));
   }
   unirCache = null;
   // si hay regla en cm, la foto entera tiene medida real conocida: viaja a la IA como referencia de escala
@@ -4986,7 +5662,9 @@ window.__bocetoSnapshot = () => {
     logos: state.logos.map(l => ({ src:l.src, name:l.name, isJpg:l.isJpg, aspect:l.aspect,
       crop:l.crop, useTrim:l.useTrim, fullW:l.fullW, fullH:l.fullH,
       whiteRemoved:l.whiteRemoved, bgRemove: l.bgRemove ? { colors:l.bgRemove.colors.slice(), tol:l.bgRemove.tol } : undefined, tint:l.tint, tintColor: l.tintColor ? { ...l.tintColor } : undefined, opacity:l.opacity,
-      cmW:l.cmW, cmH:l.cmH, rot:l.rot, x:l.x, y:l.y, w:l.w, h:l.h })),
+      cmW:l.cmW, cmH:l.cmH, rot:l.rot, x:l.x, y:l.y, w:l.w, h:l.h,
+      origId: l.origId || undefined, origInfo: l.origInfo || undefined, iaMod: (l.iaPrev || l.iaMod) ? true : undefined,
+      adjuntos: (l.adjuntos && l.adjuntos.length) ? l.adjuntos.map(x => ({ ...x })) : undefined })),
   };
 };
 window.__bocetoRestore = data => {

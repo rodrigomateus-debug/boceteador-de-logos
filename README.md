@@ -33,6 +33,41 @@ Dos detalles a no romper si se toca `corelSheet()`:
   `maxW` y pasa por `fit()`, que achica el cuerpo hasta que entra. Sin eso, un
   nombre de cliente largo se monta sobre la columna de al lado.
 
+## Paquete para el taller (.zip)
+
+El botón **"📦 Paquete para el taller (.zip)"** arma lo que se le manda al
+proveedor (por mail o WhatsApp) para que imprima sin preguntar nada:
+
+- `Boceto aprobado.pdf`: el mismo boceto que vio el cliente.
+- Una carpeta por aplicación (`Hoja N - posición - técnica - medida`) con el
+  mockup, el **arte a medida real en 300 dpi** (el PNG lleva los dpi adentro,
+  así abre al tamaño justo en Corel/Illustrator/Photoshop) y los **archivos
+  originales del cliente** tal cual se subieron, más los que se adjuntan con
+  «📎 Adjuntar original del cliente» (EPS, CDR, AI…).
+- `LEEME - Ficha tecnica.pdf`: medida, técnica, colores/Pantone, cantidad y
+  qué archivo usar para producir cada aplicación.
+
+Antes de armarlo se hace un **chequeo según la técnica** (serigrafía y
+tampografía piden Pantone y curvas, DTF y digital piden fondo transparente y
+resolución, láser pide un solo color, etc.). Lo que falta (técnica, posición,
+medida) frena la descarga; lo dudoso (logo que es una foto metida en un PDF,
+textos sin convertir a curvas, degradés en técnicas de tinta plana, baja
+resolución…) hay que tildarlo como revisado y queda escrito en el LEEME.
+
+Detalles para no romper:
+
+- Los originales y el arte **no van al autoguardado** (localStorage tiene ~5 MB):
+  van a IndexedDB (`formas-archivos`) y la hoja sólo guarda el id. Las
+  plantillas de Drive sí los llevan adentro, para abrirse en otra computadora.
+- El arte de producción no es el mockup: sin la opacidad del boceto, el tinte
+  grabado sale como silueta negra limpia y el "negro" de pantalla sale #000.
+- Si se unen varios logos en un mismo lugar, el arte es la combinación en PNG a
+  medida real y van todos los originales sueltos. El PDF vectorial con la
+  combinación en curvas es la próxima etapa.
+- JSZip se carga recién al apretar el botón (cdnjs, con jsdelivr de respaldo).
+  Los nombres dentro del zip van sin tildes porque los descompresores viejos de
+  Windows los rompen.
+
 ## Ramas y entornos de prueba
 
 Cloudflare Pages publica **cada rama en su propia URL** (preview deployments),
