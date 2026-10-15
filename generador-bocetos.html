@@ -470,6 +470,17 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #paqModal .paqL.aviso input{margin-top:2px; flex:none; accent-color:var(--navy)}
 #paqModal .paqL.aviso small{display:block; margin-top:2px; font-size:11px; font-weight:700; color:#8A6A00}
 #paqModal .paqL.info{color:var(--text-muted,#6E6E85); padding-left:0; padding-right:0}
+#paqModal .paqL.falta{display:flex; gap:8px; align-items:flex-start; background:#FDECEA; color:#8A1C12; font-weight:600; cursor:pointer}
+#paqModal .paqL.falta input{margin-top:2px; flex:none; accent-color:#B03A2E}
+#paqModal .paqL.falta small{display:block; margin-top:2px; font-size:11px; font-weight:700; color:#B03A2E}
+#paqModal #paqStatus.rojo{color:#8A1C12}
+#paqModal .paqCurvas{display:flex; gap:12px; align-items:center; margin-top:8px; padding:8px; border-radius:10px; background:var(--formas-gray-50,#F6F6FA)}
+#paqModal .paqPrev{flex:none; width:120px; height:84px; padding:4px; border:1px solid var(--formas-gray-200,#E4E4ED); border-radius:8px; cursor:zoom-in; display:flex; align-items:center; justify-content:center;
+  background:#fff linear-gradient(45deg,#EDEDF3 25%,transparent 25%,transparent 75%,#EDEDF3 75%) 0 0/12px 12px; font-size:11px; color:var(--text-muted,#6E6E85)}
+#paqModal .paqPrev.vacio{cursor:default; background:#fff}
+#paqModal .paqPrev img{max-width:100%; max-height:100%; display:block}
+#paqModal .paqCurvasTxt{font-size:12px; line-height:1.45; color:var(--text-body,#3D3D55)}
+#paqModal .paqCurvasTxt b{display:block; color:var(--navy); font-size:12.5px; margin-bottom:2px}
 #paqModal .paqOpt{display:flex; gap:8px; align-items:center; font-size:12.5px; margin:8px 0 2px; cursor:pointer}
 #paqModal .iaBtns{display:flex; gap:8px; justify-content:flex-end; margin-top:14px}
 #paqModal .usar{padding:10px 16px; border:none; border-radius:10px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
@@ -1164,11 +1175,11 @@ html,body{margin:0;padding:0;background:#EDEDF2}
   </div>
 </div>
 
-<!-- aviso de foto en baja resolución (boceteador) -->
+<!-- paquete para el taller -->
 <div id="paqModal" hidden>
   <div class="iaCard">
     <h3>📦 Paquete para el taller</h3>
-    <p class="iaHint">Un .zip con lo que necesita cada técnica: arte a tamaño real, los originales del cliente, el mockup, el boceto aprobado y una ficha técnica. Lo que falta no deja armarlo; lo dudoso se confirma y queda escrito en la ficha del paquete.</p>
+    <p class="iaHint">Un .zip con lo que necesita cada técnica: el arte a tamaño real (en curvas y en PNG), los originales del cliente, el mockup, el boceto aprobado y una ficha técnica. Lo dudoso se confirma y queda escrito en la ficha; si falta un dato, se puede mandar igual y el paquete sale marcado como INCOMPLETO.</p>
     <div id="paqHojas"></div>
     <label class="paqOpt"><input type="checkbox" id="paqOriginales" checked> Incluir los archivos originales del cliente<span id="paqPesoOrig"></span></label>
     <div class="iaStatus" id="paqStatus" hidden></div>
@@ -1180,6 +1191,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
   </div>
 </div>
 
+<!-- aviso de foto en baja resolución (boceteador) -->
 <div id="lowResModal" hidden>
   <div class="iaCard">
     <h3>⚠ La foto es de baja resolución</h3>
@@ -1861,7 +1873,9 @@ function renderPagina(page, k, x, y, w, h){
   const c = document.createElement('canvas');
   c.width = Math.max(1, Math.ceil(w != null ? w*k : vp.width));
   c.height = Math.max(1, Math.ceil(h != null ? h*k : vp.height));
-  return page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise.then(() => c);
+  // fondo transparente: pdf.js pinta la hoja de blanco por defecto, y un logo en PDF quedaba con
+  // un recuadro blanco en el mockup (y en negro/grabado, como un rectángulo lleno)
+  return page.render({ canvasContext: c.getContext('2d'), viewport: vp, background: 'rgba(0,0,0,0)' }).promise.then(() => c);
 }
 
 async function rasterizeVectorFile(file){
@@ -1870,6 +1884,14 @@ async function rasterizeVectorFile(file){
   await ensurePdfJs();
   const pdf = await window.pdfjsLib.getDocument({data: buf}).promise;
   const page = await pdf.getPage(1);
+  const R = await regionLogoPdf(page);
+  const c = await renderPagina(page, R.k, R.x, R.y, R.w, R.h);
+  return c.toDataURL('image/png');
+}
+/* qué parte de la página es el logo y con cuánto zoom se dibuja. El arte en curvas del paquete
+   vuelve a calcularlo para saber qué pedazo del PDF original corresponde a la imagen del logo:
+   si se cambia algo acá, se cambia para los dos. */
+async function regionLogoPdf(page){
   const base = page.getViewport({scale: 1});
 
   // 1ª pasada: chica y barata, solo para ubicar el logo dentro de la página
@@ -1885,8 +1907,7 @@ async function rasterizeVectorFile(file){
 
   // 2ª pasada: zoom sobre el recuadro hasta la resolución objetivo del logo
   const k = Math.max(1, Math.min(LOGO_MAX_ZOOM, LOGO_TARGET_PX / Math.max(w, h)));
-  const c = await renderPagina(page, k, x, y, w, h);
-  return c.toDataURL('image/png');
+  return { x, y, w, h, k };
 }
 const MSG_EPS = 'Los archivos EPS no se pueden mostrar en el navegador.\nPara armar el boceto, cargá el logo en PDF, SVG o PNG (desde Illustrator: Archivo → Guardar como → PDF).\nDespués, con «📎 Adjuntar original del cliente», sumá este EPS: va tal cual en el paquete para el taller.';
 const MSG_VEC_ERR = 'No se pudo procesar el archivo.\nSi es un .ai viejo (guardado sin compatibilidad PDF), convertilo a PDF o PNG. También verificá la conexión a internet: el conversor se descarga la primera vez.';
@@ -2014,11 +2035,11 @@ const PERFILES = [
   { re: /tampograf/i, id: 'tampografia', nombre: 'Tampografía', vector: true, pantone: true, plena: true,
     indic: 'Un cliché por color, con los Pantone indicados. En piezas chicas, revisar que los detalles finos se puedan grabar en el cliché.' },
   { re: /bordad/i, id: 'bordado', nombre: 'Bordado', vector: true, plena: true,
-    indic: 'Armar el ponchado desde el original, a la medida indicada. Detalle mínimo de referencia: letras de 5 mm de alto y líneas de 1 mm; lo más fino conviene simplificarlo y consultarlo antes de bordar.' },
+    indic: 'Armar el ponchado desde el arte en curvas (o el original del cliente), a la medida indicada. Detalle mínimo de referencia: letras de 5 mm de alto y líneas de 1 mm; lo más fino conviene simplificarlo y consultarlo antes de bordar.' },
   { re: /l[aá]ser|grabad/i, id: 'laser', nombre: 'Grabado láser', vector: true, plena: true,
-    indic: 'Grabar a la medida indicada, con el original en curvas o el arte en negro de la carpeta. Se graba en el tono del material: el color del arte no se imprime.' },
+    indic: 'Grabar a la medida indicada, con el arte en curvas de la carpeta. Se graba en el tono del material: el color del arte no se imprime.' },
   { re: /vinil/i, id: 'vinilo', nombre: 'Vinilo', vector: true, plena: true,
-    indic: 'Cortar desde el original en curvas, a la medida indicada.' },
+    indic: 'Cortar desde el arte en curvas, a la medida indicada.' },
   { re: /dtf/i, id: 'dtf', nombre: 'DTF', raster: true, fondo: true,
     indic: 'Imprimir el PNG de la carpeta: ya está a tamaño real, a 300 dpi y con fondo transparente.' },
   { re: /sublim/i, id: 'sublimacion', nombre: 'Sublimación', raster: true,
@@ -2028,7 +2049,7 @@ const PERFILES = [
 ];
 function perfilTecnica(t){
   const p = PERFILES.find(x => x.re.test(t || ''));
-  return p || { id: 'otra', nombre: (t || 'Sin técnica').trim(), indic: 'Usar el original a la medida indicada; el PNG va a tamaño real como referencia.' };
+  return p || { id: 'otra', nombre: (t || 'Sin técnica').trim(), indic: 'Usar el arte en curvas a la medida indicada; el PNG va a tamaño real como referencia.' };
 }
 
 /* ---- utilidades del zip ---- */
@@ -2084,23 +2105,24 @@ const JSZIP_URLS = [
   'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
   'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js', // respaldo si la primera no responde
 ];
-let jszipPromise = null;
-function ensureJsZip(){
-  if(window.JSZip) return Promise.resolve();
-  if(!jszipPromise){
-    jszipPromise = (async () => {
-      for(const u of JSZIP_URLS){
-        try{
-          await new Promise((res, rej) => { const s = document.createElement('script'); s.src = u; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
-          if(window.JSZip) return;
-        }catch(e){}
-      }
-      jszipPromise = null;
-      throw new Error('cdn');
-    })();
-  }
-  return jszipPromise;
+/* las herramientas del paquete se descargan recién al usarlas, con un CDN de respaldo */
+const libsP = {};
+function cargarLib(urls, listo){
+  if(listo()) return Promise.resolve();
+  const k = urls[0];
+  if(!libsP[k]) libsP[k] = (async () => {
+    for(const u of urls){
+      try{
+        await new Promise((res, rej) => { const s = document.createElement('script'); s.src = u; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+        if(listo()) return;
+      }catch(e){}
+    }
+    libsP[k] = null;
+    throw new Error('cdn');
+  })();
+  return libsP[k];
 }
+const ensureJsZip = () => cargarLib(JSZIP_URLS, () => window.JSZip);
 /* el arte de producción de la hoja: el guardado al aplicar (silueta limpia, sin opacidad,
    logos unidos) o, si no hay, el logo de la ficha */
 async function fuenteArte(p){
@@ -2109,24 +2131,373 @@ async function fuenteArte(p){
   return { url: p.imgLogo, revocar: false };
 }
 
-/* ---- revisión antes de mandar: lo que falta bloquea, lo dudoso se confirma ---- */
+/* ================= Arte en curvas (PDF vectorial a medida real) =================
+   Un PDF por aplicación, del tamaño exacto del arte, con los logos en curvas ubicados como en
+   el boceto (si van varios juntos, es la combinación lista para la película o el shablón).
+   - Original del cliente en curvas (PDF, AI, SVG): se usan SUS curvas, sin redibujar nada. Se
+     recorta el pedazo que se ve en el boceto y se escala a la medida; sus colores (incluso los
+     Pantone que traiga el archivo) quedan como estaban.
+   - Logo a un color en el boceto (negro, grabado, blanco o un color elegido): las mismas curvas
+     se repintan a ese color; si el color tiene Pantone va como tinta directa con ese nombre,
+     así en Corel o Illustrator aparece como "PANTONE 485 C" y sale en su propia película.
+   - Logo que es una imagen (o que se retocó con IA o se le borró un color en el boceteador):
+     se vectoriza automáticamente. Sirve para muchos logos planos, pero hay que mirarlo: por
+     eso la ventana del paquete muestra la vista previa antes de mandar. */
+const PDFLIB_URLS = ['https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js', 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js'];
+const TRACER_URLS = ['https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js', 'https://unpkg.com/imagetracerjs@1.2.6/imagetracer_v1.2.6.js'];
+const SVG2PDF_URLS = ['https://cdn.jsdelivr.net/npm/svg2pdf.js@2.8.1/dist/svg2pdf.umd.min.js', 'https://unpkg.com/svg2pdf.js@2.8.1/dist/svg2pdf.umd.min.js'];
+
+// matrices afines como las de PDF, [a b c d e f]: x' = a·x + c·y + e ; y' = b·x + d·y + f
+const afMul = (m, n) => [ // primero m, después n
+  m[0]*n[0] + m[1]*n[2], m[0]*n[1] + m[1]*n[3],
+  m[2]*n[0] + m[3]*n[2], m[2]*n[1] + m[3]*n[3],
+  m[4]*n[0] + m[5]*n[2] + n[4], m[4]*n[1] + m[5]*n[3] + n[5]];
+const afInv = m => { const det = m[0]*m[3] - m[1]*m[2]; return [m[3]/det, -m[1]/det, -m[2]/det, m[0]/det, (m[2]*m[5] - m[3]*m[4])/det, (m[1]*m[4] - m[0]*m[5])/det]; };
+const afPt = (m, x, y) => [m[0]*x + m[2]*y + m[4], m[1]*x + m[3]*y + m[5]];
+const afTxt = m => m.map(v => +v.toFixed(6)).join(' ');
+/* del cuadrado unidad del logo (0..1, y hacia abajo, como en pantalla) a puntos del arte:
+   escalado a su caja, rotado como en el boceto, ubicado y con la y dada vuelta (PDF) */
+function afUbicar(geo, Wpt, Hpt){
+  const t = (geo.rot || 0) * Math.PI / 180, co = Math.cos(t), si = Math.sin(t);
+  const bw = geo.w * Wpt, bh = geo.h * Hpt;
+  let m = [bw, 0, 0, bh, -bw / 2, -bh / 2];
+  m = afMul(m, [co, si, -si, co, geo.cx * Wpt, geo.cy * Hpt]);
+  return afMul(m, [1, 0, 0, -1, 0, Hpt]);
+}
+const GEO_ENTERO = { cx: 0.5, cy: 0.5, w: 1, h: 1, rot: 0 };
+
+/* ---- colores ---- */
+function hexACmyk(hex){
+  const n = parseInt(String(hex || '#000000').replace('#', '').slice(0, 6), 16) || 0;
+  const r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255, k = 1 - Math.max(r, g, b);
+  if(k >= 1) return [0, 0, 0, 1];
+  return [(1 - r - k) / (1 - k), (1 - g - k) / (1 - k), (1 - b - k) / (1 - k), k].map(v => Math.round(v * 1000) / 1000);
+}
+const rgbACmyk = (r, g, b) => hexACmyk('#' + [r, g, b].map(v => Math.round(v).toString(16).padStart(2, '0')).join(''));
+const nombrePantone = p => /^pantone/i.test(p) ? p.trim().replace(/^pantone\s*/i, 'PANTONE ') : 'PANTONE ' + p.trim();
+/* la tinta con la que sale un logo a un color; null = sus colores originales */
+function pinturaDe(L, negro){
+  const t = L ? L.tinte : 'original';
+  if(negro || t === 'engrave' || t === 'black') return { nombre: 'negro', cmyk: [0, 0, 0, 1] };
+  // el blanco va como tinta directa "BLANCO"; en pantalla se ve gris claro para que se note
+  if(t === 'white') return { nombre: 'blanco', spot: 'BLANCO', cmyk: [0.04, 0.03, 0, 0.18] };
+  if(t === 'custom'){
+    const c = (L && L.tinteColor) || {}, pant = (c.pant || '').trim();
+    return pant ? { nombre: nombrePantone(pant), spot: nombrePantone(pant), cmyk: hexACmyk(c.hex) }
+      : { nombre: c.nom || (c.hex || '').toUpperCase() || 'un color', cmyk: hexACmyk(c.hex) };
+  }
+  return null;
+}
+
+/* ---- repintar las curvas del original a una sola tinta ----
+   Recorre el contenido del PDF y cambia cada operador de color por la tinta elegida; el resto
+   (curvas, textos, recortes) queda igual. Es la misma silueta que muestra el boceto: lo blanco
+   del logo también pasa a ser tinta, como en la vista previa a un color. */
+const OPS_RELLENO = new Set(['g', 'rg', 'k', 'sc', 'scn', 'cs']), OPS_CONTORNO = new Set(['G', 'RG', 'K', 'SC', 'SCN', 'CS']);
+function recolorear(s, relleno, contorno){
+  const n = s.length, partes = [];
+  let i = 0, grupo = 0, copiado = 0;
+  const blanco = c => c === 32 || c === 10 || c === 13 || c === 9 || c === 12 || c === 0;
+  const delim = c => c === 40 || c === 41 || c === 60 || c === 62 || c === 91 || c === 93 || c === 123 || c === 125 || c === 47 || c === 37;
+  while(i < n){
+    const c = s.charCodeAt(i);
+    if(blanco(c)){ i++; continue; }
+    if(c === 37){ while(i < n && s.charCodeAt(i) !== 10 && s.charCodeAt(i) !== 13) i++; continue; }
+    if(c === 40){ // (texto), con paréntesis anidados y escapes
+      let prof = 0;
+      for(; i < n; i++){ const d = s.charCodeAt(i); if(d === 92){ i++; continue; } if(d === 40) prof++; else if(d === 41 && --prof === 0){ i++; break; } }
+      continue;
+    }
+    if(c === 60){ if(s.charCodeAt(i + 1) === 60){ i += 2; continue; } const f = s.indexOf('>', i); i = f < 0 ? n : f + 1; continue; }
+    if(c === 62){ i += s.charCodeAt(i + 1) === 62 ? 2 : 1; continue; }
+    if(c === 91 || c === 93 || c === 123 || c === 125){ i++; continue; }
+    if(c === 47){ i++; while(i < n && !blanco(s.charCodeAt(i)) && !delim(s.charCodeAt(i))) i++; continue; }
+    let j = i; while(j < n && !blanco(s.charCodeAt(j)) && !delim(s.charCodeAt(j))) j++;
+    if(j === i){ i++; continue; }
+    const tok = s.slice(i, j); i = j;
+    if(/^[+\-]?(\d+\.?\d*|\.\d+)$/.test(tok) || tok === 'true' || tok === 'false' || tok === 'null') continue;
+    if(tok === 'BI'){ // imagen en línea: sus datos binarios se saltean sin tocar
+      const reId = /\sID\s/g; reId.lastIndex = i;
+      const m = reId.exec(s);
+      const reEi = /\sEI(?=\s|$)/g; reEi.lastIndex = m ? m.index + m[0].length : n;
+      const e = m ? reEi.exec(s) : null;
+      i = e ? e.index + e[0].length : n;
+      grupo = i; continue;
+    }
+    let rep = null;
+    if(OPS_RELLENO.has(tok)) rep = relleno;
+    else if(OPS_CONTORNO.has(tok)) rep = contorno;
+    else if(tok === 'sh') rep = 'q ' + relleno + ' -99999 -99999 199998 199998 re f Q'; // degradé → tinta plena en su área
+    if(rep !== null){ partes.push(s.slice(copiado, grupo), '\n' + rep + '\n'); copiado = i; }
+    grupo = i;
+  }
+  partes.push(s.slice(copiado));
+  return partes.join('');
+}
+function bytesALatin1(b){ let s = ''; for(let i = 0; i < b.length; i += 8192) s += String.fromCharCode.apply(null, b.subarray(i, i + 8192)); return s; }
+function latin1ABytes(s){ const b = new Uint8Array(s.length); for(let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i) & 255; return b; }
+function opsPintura(P, cs){
+  if(cs) return ['/' + cs.nombre + ' cs 1 scn', '/' + cs.nombre + ' CS 1 SCN'];
+  const c = P.cmyk.map(v => +(+v).toFixed(4)).join(' ');
+  return [c + ' k', c + ' K'];
+}
+function repintarForm(doc, ref, P, cs, resPadre, vistos){
+  const { PDFName, PDFDict, PDFRef, PDFRawStream, decodePDFRawStream } = window.PDFLib;
+  const ctx = doc.context, clave = ref.toString();
+  if(vistos.has(clave)) return; vistos.add(clave);
+  const st = ctx.lookup(ref);
+  if(!st || !st.dict || String(st.dict.get(PDFName.of('Subtype'))) !== '/Form') return; // las imágenes quedan como están
+  let res = st.dict.lookup(PDFName.of('Resources'));
+  if(!(res instanceof PDFDict)){ res = resPadre; if(res) st.dict.set(PDFName.of('Resources'), res); }
+  if(res instanceof PDFDict){
+    if(cs){
+      let esp = res.lookup(PDFName.of('ColorSpace'));
+      if(!(esp instanceof PDFDict)){ esp = ctx.obj({}); res.set(PDFName.of('ColorSpace'), esp); }
+      esp.set(PDFName.of(cs.nombre), cs.ref);
+    }
+    const xo = res.lookup(PDFName.of('XObject'));
+    if(xo instanceof PDFDict) xo.entries().forEach(([, v]) => { if(v instanceof PDFRef) repintarForm(doc, v, P, cs, res, vistos); });
+  }
+  const crudo = st instanceof PDFRawStream ? decodePDFRawStream(st).decode() : st.getUnencodedContents();
+  const [rel, con] = opsPintura(P, cs);
+  const nuevo = ctx.flateStream(latin1ABytes(rel + ' ' + con + '\n' + recolorear(bytesALatin1(crudo), rel, con)));
+  st.dict.entries().forEach(([k, v]) => { if(!['/Length', '/Filter', '/DecodeParms'].includes(String(k))) nuevo.dict.set(k, v); });
+  ctx.assign(ref, nuevo);
+}
+
+/* ---- las curvas del original, recortadas a lo que se ve en el boceto ----
+   Se reconstruye exactamente cómo se convirtió el archivo en imagen al cargarlo (misma región
+   de la página, mismo zoom); si algo no coincide, se avisa con un error y se vectoriza. */
+async function curvasDelOriginal(out, blob, tipo, L){
+  const { PDFDocument } = window.PDFLib;
+  let bytes, V, R;
+  if(tipo === 'svg'){
+    const url = await window.__normalizeSvg(blob);
+    const svgTxt = decodeURIComponent(url.slice(url.indexOf(',') + 1));
+    const el = new DOMParser().parseFromString(svgTxt, 'image/svg+xml').documentElement;
+    const W = parseFloat(el.getAttribute('width')), H = parseFloat(el.getAttribute('height'));
+    if(W !== L.fullW || H !== L.fullH) throw new Error('mapa');
+    await ensureJsPdf();
+    await cargarLib(SVG2PDF_URLS, () => window.svg2pdf && window.svg2pdf.svg2pdf);
+    const doc = new window.jspdf.jsPDF({ unit: 'pt', format: [W, H], orientation: W > H ? 'l' : 'p', compress: true });
+    const host = document.createElement('div'); host.style.cssText = 'position:fixed; left:-99999px; top:0; width:1px; height:1px; overflow:hidden';
+    const vivo = document.importNode(el, true); host.appendChild(vivo); document.body.appendChild(host);
+    try{ await window.svg2pdf.svg2pdf(vivo, doc, { x: 0, y: 0, width: W, height: H }); }
+    finally{ host.remove(); }
+    bytes = new Uint8Array(doc.output('arraybuffer'));
+    V = [1, 0, 0, -1, 0, H]; R = { x: 0, y: 0, k: 1 };
+  } else {
+    bytes = new Uint8Array(await blob.arrayBuffer());
+    await ensurePdfJs();
+    const pdf = await window.pdfjsLib.getDocument({ data: bytes.slice() }).promise;
+    try{
+      const page = await pdf.getPage(1);
+      R = await regionLogoPdf(page);
+      if(Math.max(1, Math.ceil(R.w * R.k)) !== L.fullW || Math.max(1, Math.ceil(R.h * R.k)) !== L.fullH) throw new Error('mapa');
+      V = page.getViewport({ scale: 1 }).transform;
+    } finally { pdf.destroy(); }
+  }
+  // PDF → píxeles de la imagen del logo → cuadrado unidad del recorte que se ve en el boceto
+  const aPx = afMul(V, [R.k, 0, 0, R.k, -R.x * R.k, -R.y * R.k]);
+  const c = L.crop;
+  const aU = afMul(aPx, [1 / c.w, 0, 0, 1 / c.h, -c.x / c.w, -c.y / c.h]);
+  const inv = afInv(aPx), pad = 0.5; // medio píxel de colchón para no comer el borde
+  const esq = [[c.x - pad, c.y - pad], [c.x + c.w + pad, c.y - pad], [c.x - pad, c.y + c.h + pad], [c.x + c.w + pad, c.y + c.h + pad]].map(([x, y]) => afPt(inv, x, y));
+  const xs = esq.map(p => p[0]), ys = esq.map(p => p[1]);
+  const src = await PDFDocument.load(bytes, { ignoreEncryption: true, updateMetadata: false });
+  if(src.isEncrypted) throw new Error('cifrado');
+  const emb = await out.embedPage(src.getPage(0), { left: Math.min(...xs), bottom: Math.min(...ys), right: Math.max(...xs), top: Math.max(...ys) }, [1, 0, 0, 1, 0, 0]);
+  await emb.embed(); // pdf-lib lo copia recién al guardar: se fuerza ahora para poder repintarlo
+  return { ref: emb.ref, aU };
+}
+
+/* ---- vectorizar una imagen ---- */
+function paletaDominante(d, maxCol){
+  const cub = new Map(); let tot = 0;
+  for(let i = 0; i < d.length; i += 4){
+    if(d[i + 3] < 128) continue;
+    tot++;
+    const key = (d[i] >> 4) << 8 | (d[i + 1] >> 4) << 4 | (d[i + 2] >> 4);
+    const e = cub.get(key);
+    if(e){ e.n++; e.r += d[i]; e.g += d[i + 1]; e.b += d[i + 2]; } else cub.set(key, { n: 1, r: d[i], g: d[i + 1], b: d[i + 2] });
+  }
+  const pal = [];
+  [...cub.values()].sort((a, b) => b.n - a.n).some(e => {
+    if(e.n < tot * 0.004 || pal.length >= maxCol) return true;
+    const c = { r: e.r / e.n, g: e.g / e.n, b: e.b / e.n };
+    // los tonos intermedios del borde suavizado se suman al color más cercano
+    if(!pal.some(p => (p.r - c.r) ** 2 + (p.g - c.g) ** 2 + (p.b - c.b) ** 2 < 45 * 45)) pal.push(c);
+    return false;
+  });
+  return pal.map(p => ({ r: Math.round(p.r), g: Math.round(p.g), b: Math.round(p.b), a: 255 }));
+}
+async function vectorizar(src, unColor){
+  await cargarLib(TRACER_URLS, () => window.ImageTracer);
+  const im = src instanceof HTMLImageElement || src instanceof HTMLCanvasElement ? src : await cargarImagen(src);
+  const W0 = im.naturalWidth || im.width, H0 = im.naturalHeight || im.height;
+  // ni tan chico que salga escalonado, ni tan grande que el navegador se cuelgue
+  const k = Math.min(1400 / Math.max(W0, H0), 6, Math.sqrt(1.6e6 / (W0 * H0)));
+  const W = Math.max(1, Math.round(W0 * k)), H = Math.max(1, Math.round(H0 * k));
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(im, 0, 0, W, H);
+  const img = ctx.getImageData(0, 0, W, H), d = img.data;
+  let pal;
+  if(unColor){
+    for(let i = 0; i < d.length; i += 4){ d[i] = d[i + 1] = d[i + 2] = 0; d[i + 3] = d[i + 3] >= 128 ? 255 : 0; }
+    pal = [{ r: 0, g: 0, b: 0, a: 255 }];
+  } else {
+    for(let i = 0; i < d.length; i += 4){ if(d[i + 3] < 128){ d[i] = d[i + 1] = d[i + 2] = d[i + 3] = 0; } else d[i + 3] = 255; }
+    pal = paletaDominante(d, 12);
+  }
+  if(!pal.length) return { W, H, capas: [] };
+  const td = window.ImageTracer.imagedataToTracedata(img, {
+    pal: [{ r: 0, g: 0, b: 0, a: 0 }, ...pal], numberofcolors: pal.length + 1, colorquantcycles: 1,
+    ltres: 1, qtres: 1, pathomit: Math.max(8, Math.round(3 * k)), rightangleenhance: true, linefilter: false, blurradius: 0, layering: 0,
+  });
+  const n2 = v => +v.toFixed(2);
+  const capas = [];
+  td.layers.forEach((capa, li) => {
+    const col = td.palette[li];
+    if(!col || col.a < 128) return; // el fondo transparente no se dibuja
+    let ops = '';
+    const trazo = segs => {
+      let o = n2(segs[0].x1) + ' ' + n2(segs[0].y1) + ' m ';
+      segs.forEach(sg => {
+        if(sg.type === 'Q'){ // cuadrática → cúbica
+          const ax = sg.x1 + 2 / 3 * (sg.x2 - sg.x1), ay = sg.y1 + 2 / 3 * (sg.y2 - sg.y1);
+          const bx = sg.x3 + 2 / 3 * (sg.x2 - sg.x3), by = sg.y3 + 2 / 3 * (sg.y2 - sg.y3);
+          o += n2(ax) + ' ' + n2(ay) + ' ' + n2(bx) + ' ' + n2(by) + ' ' + n2(sg.x3) + ' ' + n2(sg.y3) + ' c ';
+        } else o += n2(sg.x2) + ' ' + n2(sg.y2) + ' l ';
+      });
+      return o + 'h\n';
+    };
+    capa.forEach(p => {
+      if(p.isholepath || !p.segments.length) return;
+      ops += trazo(p.segments);
+      p.holechildren.forEach(h => { if(capa[h] && capa[h].segments.length) ops += trazo(capa[h].segments); });
+      ops += 'f*\n';
+    });
+    if(ops) capas.push({ col, ops });
+  });
+  return { W, H, capas };
+}
+
+/* ---- el PDF del arte en curvas de una hoja ----
+   devuelve { bytes, metodos: [{ nom, metodo: 'original' | 'repintado' | 'vectorizado', tinta }] } */
+async function arteEnCurvas(r){
+  await Promise.all([cargarLib(PDFLIB_URLS, () => window.PDFLib), ensurePdfJs()]);
+  const { PDFDocument, PDFName } = window.PDFLib;
+  const Wpt = r.artW / 2.54 * 72, Hpt = r.artH / 2.54 * 72;
+  const out = await PDFDocument.create();
+  out.setTitle('Arte en curvas - ' + fmtCmTxt(r.artW) + ' x ' + fmtCmTxt(r.artH) + ' cm');
+  out.setCreator('Boceteador Formas Publicitarias'); out.setProducer('Boceteador Formas Publicitarias');
+  const ctx = out.context;
+  const page = out.addPage([Wpt, Hpt]);
+  page.node.set(PDFName.of('TrimBox'), ctx.obj([0, 0, Wpt, Hpt]));
+  const ops = [], tintas = {}, metodos = [];
+  let nx = 0;
+  const tintaDe = P => {
+    if(!P || !P.spot) return null;
+    if(!tintas[P.spot]){
+      const fn = ctx.obj({ FunctionType: 2, Domain: [0, 1], C0: [0, 0, 0, 0], C1: P.cmyk, N: 1 });
+      tintas[P.spot] = { nombre: 'Tinta' + (Object.keys(tintas).length + 1), ref: ctx.register(ctx.obj([PDFName.of('Separation'), PDFName.of(P.spot), PDFName.of('DeviceCMYK'), fn])) };
+    }
+    return tintas[P.spot];
+  };
+  const dibujarVector = async (src, P, G) => {
+    const T = await vectorizar(src, !!P);
+    const cs = tintaDe(P);
+    let s = 'q ' + afTxt(afMul([1 / T.W, 0, 0, 1 / T.H, 0, 0], G)) + ' cm\n';
+    T.capas.forEach(cp => { s += (P ? opsPintura(P, cs)[0] : rgbACmyk(cp.col.r, cp.col.g, cp.col.b).join(' ') + ' k') + '\n' + cp.ops; });
+    ops.push(s + 'Q');
+    return T.capas.length;
+  };
+  const logos = (r.p.arte && r.p.arte.logos) || [];
+  const porLogo = logos.length > 0 && logos.every(L => L.geo && L.crop && L.fullW && (L.prodId || logos.length === 1));
+  if(porLogo){
+    for(let i = 0; i < logos.length; i++){
+      const L = logos[i], lg = r.logos[i] || {}, nom = lg.nom || L.nombre || 'logo';
+      const P = pinturaDe(L, r.negro), G = afUbicar(L.geo, Wpt, Hpt);
+      const m = { nom, tinta: P ? P.nombre : null };
+      if(metodoCurvas(L, lg, P) !== 'vectorizado'){
+        try{
+          const { ref, aU } = await curvasDelOriginal(out, lg.rec.blob, lg.an.tipo, L);
+          const cs = tintaDe(P);
+          if(P) repintarForm(out, ref, P, cs, null, new Set());
+          const nombre = 'Logo' + (++nx);
+          page.node.setXObject(PDFName.of(nombre), ref);
+          ops.push('q ' + afTxt(afMul(aU, G)) + ' cm /' + nombre + ' Do Q');
+          m.metodo = P ? 'repintado' : 'original';
+        }catch(e){ m.metodo = 'vectorizado'; m.fallo = true; }
+      } else m.metodo = 'vectorizado';
+      if(m.metodo === 'vectorizado'){
+        const rec = L.prodId ? await archGet(L.prodId) : null;
+        const url = rec && rec.blob ? URL.createObjectURL(rec.blob) : r.fuente.url;
+        try{ await dibujarVector(url, P, G); } finally { if(rec && rec.blob) URL.revokeObjectURL(url); }
+      }
+      metodos.push(m);
+    }
+  } else {
+    // hojas armadas antes de esta versión: se vectoriza el arte entero
+    const P = r.negro ? pinturaDe(null, true) : null;
+    await dibujarVector(r.fuente.url, P, afUbicar(GEO_ENTERO, Wpt, Hpt));
+    metodos.push({ nom: logos.length === 1 ? (r.logos[0] && r.logos[0].nom) || 'logo' : 'el arte', metodo: 'vectorizado', tinta: P ? P.nombre : null });
+  }
+  const res = page.node.normalizedEntries().Resources;
+  if(Object.keys(tintas).length){
+    const esp = {}; Object.values(tintas).forEach(t => { esp[t.nombre] = t.ref; });
+    res.set(PDFName.of('ColorSpace'), ctx.obj(esp));
+  }
+  page.node.set(PDFName.of('Contents'), ctx.register(ctx.flateStream(ops.join('\n'))));
+  return { bytes: await out.save({ useObjectStreams: false }), metodos };
+}
+/* cómo van a salir las curvas de un logo; lo mismo decide la revisión antes de armar nada */
+function metodoCurvas(L, lg, P){
+  const an = lg && lg.an;
+  if(!L || !lg || !lg.rec || !lg.rec.blob || !lg.vector || !an || !['pdf', 'ai', 'svg'].includes(an.tipo)) return 'vectorizado';
+  if(L.ia || L.fondoQuitado || !L.crop || !L.fullW) return 'vectorizado';
+  if(P && an.imagenes) return 'vectorizado'; // una imagen adentro del vector no se puede repintar
+  return P ? 'repintado' : 'original';
+}
+/* vista previa chica del PDF, para mirarlo antes de mandar */
+async function vistaPreviaPdf(bytes, maxPx){
+  await ensurePdfJs();
+  const pdf = await window.pdfjsLib.getDocument({ data: bytes.slice() }).promise;
+  try{
+    const page = await pdf.getPage(1), vp = page.getViewport({ scale: 1 });
+    const k = (maxPx || 360) / Math.max(vp.width, vp.height);
+    const c = await renderPagina(page, k);
+    return c.toDataURL('image/png');
+  } finally { pdf.destroy(); }
+}
+
+/* ---- revisión antes de mandar ----
+   Lo que falta (técnica, posición, medida) no frena: se marca en rojo y, si el vendedor decide
+   mandarlo igual, el paquete sale como INCOMPLETO y la ficha lo dice bien grande, para que el
+   taller no produzca nada sin confirmar. Lo dudoso se tilda como revisado y queda escrito. */
 async function revisarPaquete(){
   capturePage();
   const reps = [];
   for(let i = 0; i < pages.length; i++){
     const p = pages[i], F = id => (((p.fields || {})[id]) || '').trim();
     const tecnica = F('f_tecnica'), perfil = perfilTecnica(tecnica), posicion = F('f_posicion');
-    const r = { n: i + 1, p, tecnica, perfil, posicion, bloqueos: [], avisos: [], info: [], logos: [] };
+    const r = { n: i + 1, p, tecnica, perfil, posicion, faltas: [], avisos: [], info: [], logos: [] };
     const aviso = (clave, txt) => r.avisos.push({ id: 'h' + r.n + '-' + clave, txt });
+    const falta = (clave, txt, taller) => r.faltas.push({ id: 'h' + r.n + '-falta-' + clave, txt, taller }); // txt: para el vendedor; taller: lo que lee el taller
     reps.push(r);
-    if(!p.imgLogo){ r.bloqueos.push('La hoja no tiene logo.'); continue; }
-    if(!tecnica) r.bloqueos.push('Falta la técnica de impresión.');
-    if(!posicion) r.bloqueos.push('Falta la posición: dónde va el logo en el producto.');
+    if(!tecnica) falta('tecnica', 'Falta la técnica de impresión.', 'Falta definir la técnica de impresión.');
+    if(!posicion) falta('posicion', 'Falta la posición: dónde va el logo en el producto.', 'Falta definir dónde va el logo en el producto (ver el mockup como referencia).');
+    if(!p.imgLogo){ falta('logo', 'La hoja no tiene logo: va solo el mockup.', 'Esta aplicación no tiene arte: va solo el mockup.'); continue; }
     const w = medidaCm(F('f_medida_w')), h = medidaCm(F('f_medida_h'));
-    if(!w || !h) r.bloqueos.push('Falta la medida del logo (ancho y alto) o no se entiende: escribila como "10,5 cm".');
     r.fuente = await fuenteArte(p);
     let im = null;
-    try{ im = await cargarImagen(r.fuente.url); }catch(e){ r.bloqueos.push('No se pudo leer el logo de la hoja.'); continue; }
+    try{ im = await cargarImagen(r.fuente.url); }catch(e){
+      if(r.fuente.revocar) URL.revokeObjectURL(r.fuente.url);
+      r.fuente = null;
+      falta('logo', 'No se pudo leer el logo de la hoja: va solo el mockup.', 'Esta aplicación no tiene arte: va solo el mockup.');
+      continue;
+    }
     if(w && h){
       const aImg = im.naturalWidth / im.naturalHeight, aMed = w / h;
       if(Math.abs(aImg - aMed) / aMed > 0.03){
@@ -2136,6 +2507,12 @@ async function revisarPaquete(){
         r.artW = fit.w; r.artH = fit.h;
       } else { r.artW = w; r.artH = h; }
       r.dpiArte = Math.round(im.naturalWidth / (r.artW / 2.54));
+    } else {
+      falta('medida', 'Falta la medida del logo (ancho y alto) o no se entiende: escribila como "10,5 cm". Si va igual, el arte sale a un tamaño de referencia y el taller lo tiene que escalar a la medida que confirmes.', 'Falta definir la medida: el arte va a un tamaño de referencia y hay que escalarlo a la medida que se confirme.');
+      // tamaño de referencia: el logo a 300 dpi, entre 3 y 30 cm de lado mayor
+      const lado = Math.min(30, Math.max(3, Math.max(im.naturalWidth, im.naturalHeight) / 300 * 2.54)), asp = im.naturalWidth / im.naturalHeight;
+      r.artW = asp >= 1 ? lado : lado * asp; r.artH = asp >= 1 ? lado / asp : lado;
+      r.sinMedida = true;
     }
     const arte = p.arte || null, logos = (arte && arte.logos) || [];
     if(!logos.length) aviso('sinorig', 'Este logo se cargó antes de que la app guardara los originales (o vino en una foto ya armada): el paquete va sin el archivo original del cliente. Para incluirlo, volvé a cargar el logo en el boceteador.');
@@ -2152,7 +2529,6 @@ async function revisarPaquete(){
       r.logos.push({ L, rec, info, an, nom, vector, adjuntos });
       if(L.origId && !rec) aviso('falta-' + nom, 'El original de "' + nom + '" no está guardado en esta computadora (la plantilla se armó en otra o se borraron los datos del navegador): el paquete va sin él.');
       if(an && an.soloImagen) aviso('trucho-' + nom, '"' + nom + '" es un ' + an.tipo.toUpperCase() + ', pero adentro es una imagen: NO está en curvas.');
-      else if(info && !vector && perfil.vector && !adjuntos.length) aviso('raster-' + nom, '"' + nom + '" es una imagen, no está en curvas: para ' + perfil.nombre + ' el taller va a tener que vectorizarlo o redibujarlo. Lo ideal es pedirle el vector al cliente.');
       if(info && !vector && L.px && L.cm){
         const d = Math.round(L.px / (L.cm / 2.54));
         if(d < 300){ aviso('dpi-' + nom, '"' + nom + '" queda a ' + d + ' dpi a tamaño real (lo ideal son 300): se puede ver pixelado.'); dpiAvisado = true; }
@@ -2168,6 +2544,23 @@ async function revisarPaquete(){
     }
     r.hayVector = hayVector;
     r.negro = perfil.id === 'laser' && todosUnColor;
+    // cómo sale cada logo en el PDF en curvas (lo mismo que después hace arteEnCurvas)
+    const porLogo = logos.length > 0 && logos.every(L => L.geo && L.crop && L.fullW && (L.prodId || logos.length === 1));
+    r.logos.forEach(lg => { lg.metodo = porLogo ? metodoCurvas(lg.L, lg, pinturaDe(lg.L, r.negro)) : 'vectorizado'; });
+    const exactos = r.logos.filter(lg => lg.metodo !== 'vectorizado').length;
+    // en las técnicas que imprimen imagen (DTF, digital…) el PNG manda: las curvas van solo si son las del cliente
+    r.conCurvas = perfil.raster ? exactos > 0 : true;
+    if(r.conCurvas && !perfil.raster){
+      if(!porLogo) aviso('vect-arte', 'Este boceto se armó antes de que la app guardara cómo están ubicados los logos: el arte en curvas se genera vectorizando la imagen del boceto. Mirá la vista previa; para usar las curvas del cliente, volvé a aplicar el logo desde el boceteador.');
+      else r.logos.forEach(lg => {
+        if(lg.metodo !== 'vectorizado') return;
+        const por = lg.L.ia ? 'se retocó con IA en el boceteador' : (lg.vector && lg.L.fondoQuitado) ? 'se le borró un color en el boceteador'
+          : (lg.vector && lg.an && lg.an.imagenes) ? 'tiene imágenes adentro y va a un solo color' : lg.vector ? 'no se pudo leer su vector' : 'es una imagen, no está en curvas';
+        const txt = '"' + lg.nom + '" ' + por + ': se pasó a curvas automáticamente. Mirá la vista previa: si se perdieron detalles finos o algún borde quedó raro, pedí el vector al cliente.';
+        if(lg.adjuntos.length) r.info.push(txt.replace(/ Mirá la vista previa.*$/, ' El taller tiene además el original adjunto (' + lg.adjuntos.map(a => a.x.name).join(', ') + ').'));
+        else aviso('vect-' + lg.nom, txt);
+      });
+    }
     if(arte && arte.unido){
       r.info.push('Son ' + logos.length + ' logos unidos en una sola impresión (un mismo shablón o película).');
       if(arte.dispar) aviso('dispar', 'Los logos unidos no estaban a la misma escala en el boceteador: la medida total es aproximada.');
@@ -2223,6 +2616,24 @@ async function leemePdf(carpetas, generado){
   fila('Color del producto', [S('f_colorprod_nom'), $('f_colorprod_hex').value.toUpperCase()].filter(Boolean).join(' · '));
   if(S('f_obsprod')) fila('Obs. del producto', S('f_obsprod'));
   y += 8;
+  // lo que el vendedor mandó sin completar: lo primero que ve el taller
+  const faltas = carpetas.filter(k => k.r.faltas.length);
+  if(faltas.length){
+    const items = [];
+    faltas.forEach(k => k.r.faltas.forEach(f => items.push('Aplicación ' + k.r.n + ': ' + (f.taller || f.txt))));
+    setF('body'); doc.setFontSize(9);
+    const lineas = items.map(t => doc.splitTextToSize('· ' + t, ANCHO - 24));
+    const alto = 34 + lineas.reduce((n, l) => n + l.length * 13, 0);
+    salto(alto + 8);
+    doc.setFillColor(253, 236, 234); doc.setDrawColor(...ROJO);
+    doc.roundedRect(M, y, ANCHO, alto, 6, 6, 'FD');
+    setF('bold'); doc.setFontSize(10.5); doc.setTextColor(...ROJO);
+    doc.text('PAQUETE INCOMPLETO: NO PRODUCIR SIN CONFIRMAR LO QUE FALTA', M + 12, y + 17);
+    setF('body'); doc.setFontSize(9); doc.setTextColor(...INK);
+    let yy = y + 32;
+    lineas.forEach(l => l.forEach(t => { doc.text(t, M + 12, yy); yy += 13; }));
+    y += alto + 12;
+  }
   // antes de imprimir
   const caja = ['1. Verificá que el arte mida exactamente lo que dice cada aplicación.',
     '2. El arte va AL DERECHO: no está espejado.',
@@ -2239,14 +2650,17 @@ async function leemePdf(carpetas, generado){
     y += 6; salto(60);
     doc.setDrawColor(228, 228, 237); doc.line(M, y, M + ANCHO, y); y += 12;
     setF('display'); doc.setFontSize(13); doc.setTextColor(...NAVY);
-    doc.text('Aplicación ' + r.n + ' · ' + (r.posicion || 'sin posición'), M, y + 12); y += 22;
-    fila('Técnica', r.perfil.nombre + (r.tecnica && r.tecnica.toLowerCase() !== r.perfil.nombre.toLowerCase() ? ' (' + r.tecnica + ')' : ''));
-    fila('Medida final', fmtCmTxt(r.artW) + ' × ' + fmtCmTxt(r.artH) + ' cm (ancho × alto), sin márgenes');
+    doc.text('Aplicación ' + r.n + ' · ' + (r.posicion || 'POSICIÓN A DEFINIR'), M, y + 12); y += 22;
+    fila('Técnica', !r.tecnica ? 'FALTA DEFINIR' : r.perfil.nombre + (r.tecnica.toLowerCase() !== r.perfil.nombre.toLowerCase() ? ' (' + r.tecnica + ')' : ''));
+    fila('Medida final', !r.fuente ? '-' : r.sinMedida ? 'FALTA DEFINIR: el arte va a un tamaño de referencia (' + fmtCmTxt(r.artW) + ' × ' + fmtCmTxt(r.artH) + ' cm) y hay que escalarlo a la medida que se confirme'
+      : fmtCmTxt(r.artW) + ' × ' + fmtCmTxt(r.artH) + ' cm (ancho × alto), sin márgenes');
     const cols = p.engraved ? 'Grabado: sin tinta, en el tono del material'
       : p.fullColor ? 'Full color'
       : (p.printColors || []).map(c => [c.pant ? 'Pantone ' + c.pant : '', c.nom, (c.hex || '').toUpperCase()].filter(Boolean).join(' · ')).join('  |  ')
         + ' (' + (p.printColors || []).length + (((p.printColors || []).length === 1) ? ' color)' : ' colores)');
     fila('Colores', cols);
+    const blanco = ((r.curvas && r.curvas.metodos) || []).some(m => m.tinta === 'blanco');
+    if(blanco) txt('El blanco va en el PDF como tinta directa "BLANCO": en pantalla se ve gris claro para que se note, pero es tinta blanca.', { ind: 112, s: 8.5, c: GRIS, gap: 1 });
     fila('Carpeta', k.nombreCarpeta + '/');
     k.archivos.forEach(a => txt('· ' + a.nombre + ': ' + a.que, { ind: 112, s: 9, gap: 1 }));
     y += 3;
@@ -2279,9 +2693,17 @@ async function armarPaquete(reps, conOriginales){
   for(let i = 0; i < pages.length; i++){ if(i) doc.addPage(); await corelSheet(doc, pages[i], i + 1, pages.length); }
   zip.file('Boceto aprobado.pdf', doc.output('arraybuffer'));
   const carpetas = [];
+  // si se arma antes de que terminen las curvas (o sin la ventana), se esperan acá
+  for(const r of reps){
+    if(r.fuente && r.conCurvas && (!r.curvas || r.curvas.estado === 'armando')){
+      try{ r.curvas = { estado: 'listo', ...(await arteEnCurvas(r)) }; }
+      catch(e){ r.curvas = { estado: 'error', error: (e && e.message) || String(e) }; }
+    }
+  }
   for(const r of reps){
     const p = r.p;
-    const nombreCarpeta = asciiNombre('Hoja ' + r.n + ' - ' + r.posicion + ' - ' + r.perfil.nombre + ' - ' + fmtCmCorto(r.artW) + 'x' + fmtCmCorto(r.artH) + ' cm', 100);
+    const nombreCarpeta = asciiNombre('Hoja ' + r.n + ' - ' + (r.posicion || 'SIN POSICION') + ' - ' + (r.tecnica ? r.perfil.nombre : 'SIN TECNICA') + ' - '
+      + (!r.fuente ? 'SIN LOGO' : r.sinMedida ? 'SIN MEDIDA' : fmtCmCorto(r.artW) + 'x' + fmtCmCorto(r.artH) + ' cm'), 100);
     const dir = zip.folder(nombreCarpeta);
     const archivos = [];
     // el mockup técnico: si la foto en uso es la escena de IA, va el boceto sin IA
@@ -2291,12 +2713,24 @@ async function armarPaquete(reps, conOriginales){
       dir.file('Mockup.' + ext, b);
       archivos.push({ nombre: 'Mockup.' + ext, que: 'cómo tiene que quedar en el producto' });
     }
+    if(!r.fuente){ carpetas.push({ r, nombreCarpeta, archivos }); continue; } // hoja sin logo: va el mockup solo
+    const medida = r.sinMedida ? 'SIN MEDIDA (escalar a la medida que se confirme)' : 'medida real';
+    const curvas = r.curvas && r.curvas.estado === 'listo' ? r.curvas : null;
+    const vectorizado = curvas && curvas.metodos.some(m => m.metodo === 'vectorizado');
+    if(curvas){
+      const nomC = (r.negro ? 'Arte en curvas en negro' : 'Arte en curvas') + ' - ' + medida + '.pdf';
+      dir.file(nomC, curvas.bytes);
+      const como = curvas.metodos.map(m => m.nom + ' ' + METODO_TXT[m.metodo] + (m.tinta ? ' (' + m.tinta + ')' : '')).join('; ');
+      archivos.push({ nombre: nomC, que: (r.perfil.raster ? 'versión en curvas, por si el taller la prefiere' : 'PRODUCIR CON ESTE ARCHIVO')
+        + ': PDF vectorial a ' + (r.sinMedida ? 'un tamaño de referencia' : 'medida real') + ', ' + (curvas.metodos.length > 1 ? 'los logos ubicados como en el mockup' : 'el logo') + ' (' + como + ')'
+        + (vectorizado ? '. Las curvas vectorizadas automáticamente: revisar detalles finos contra el original' : '') });
+    }
     const arte = await artePngTamanoReal(r.fuente.url, r.artW, r.artH, r.negro);
-    const nomArte = (r.negro ? 'Arte en negro' : 'Arte') + ' ' + arte.dpi + 'dpi - medida real.png';
+    const nomArte = (r.negro ? 'Arte en negro' : 'Arte') + ' ' + (r.sinMedida ? '' : arte.dpi + 'dpi ') + '- ' + medida + '.png';
     dir.file(nomArte, arte.bytes);
     archivos.push({ nombre: nomArte, que: r.perfil.raster
-      ? 'IMPRIMIR ESTE ARCHIVO: tamaño real (' + fmtCmTxt(r.artW) + ' × ' + fmtCmTxt(r.artH) + ' cm), ' + arte.dpi + ' dpi, fondo transparente'
-      : 'referencia a tamaño real (' + arte.dpi + ' dpi)' + (r.hayVector ? '; para producir, usar el original en curvas' : '') });
+      ? 'IMPRIMIR ESTE ARCHIVO: ' + (r.sinMedida ? 'falta confirmar la medida' : 'tamaño real (' + fmtCmTxt(r.artW) + ' × ' + fmtCmTxt(r.artH) + ' cm), ' + arte.dpi + ' dpi') + ', fondo transparente'
+      : 'referencia en imagen' + (r.sinMedida ? '' : ' a tamaño real (' + arte.dpi + ' dpi)') + (curvas ? '' : r.hayVector ? '; para producir, usar el original en curvas' : '') });
     if(conOriginales){
       const usados = new Set();
       const nombreUnico = base => { let n = base, i = 2; while(usados.has(n.toLowerCase())){ n = base.replace(/(\.[^.]*)?$/, m => ' (' + i + ')' + m); i++; } usados.add(n.toLowerCase()); return n; };
@@ -2305,7 +2739,7 @@ async function armarPaquete(reps, conOriginales){
           const n = nombreUnico('Original - ' + asciiNombre(lg.info.name, 90));
           dir.file(n, lg.rec.blob);
           archivos.push({ nombre: n, que: lg.vector
-            ? 'EN CURVAS: archivo del cliente, usarlo escalado a ' + fmtCmTxt(r.artW) + ' × ' + fmtCmTxt(r.artH) + ' cm' + (r.logos.length > 1 ? ' (en el conjunto, ubicado como en el mockup)' : '')
+            ? 'EN CURVAS: archivo tal cual lo mandó el cliente' + (curvas ? ', como referencia' : ', usarlo escalado a ' + (r.sinMedida ? 'la medida que se confirme' : fmtCmTxt(r.artW) + ' × ' + fmtCmTxt(r.artH) + ' cm') + (r.logos.length > 1 ? ' (en el conjunto, ubicado como en el mockup)' : ''))
             : 'archivo original del cliente (imagen, no está en curvas)' });
         }
         for(const a of lg.adjuntos){
@@ -2319,7 +2753,7 @@ async function armarPaquete(reps, conOriginales){
   }
   zip.file('LEEME - Ficha tecnica.pdf', await leemePdf(carpetas, generado));
   const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
-  const nombre = asciiNombre(docName(), 120) + ' - Paquete taller.zip';
+  const nombre = (reps.some(r => r.faltas.length) ? 'INCOMPLETO - ' : '') + asciiNombre(docName(), 120) + ' - Paquete taller.zip';
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = nombre;
   document.body.appendChild(a); a.click(); a.remove();
@@ -2329,60 +2763,114 @@ async function armarPaquete(reps, conOriginales){
 }
 
 /* ---- la ventana del paquete ---- */
-let paqReps = null;
+let paqReps = null, paqOk = new Set(), paqUrls = [];
+const paqArmando = () => (paqReps || []).some(r => r.curvas && r.curvas.estado === 'armando');
 function paqSync(){
   if(!paqReps) return;
-  const bloqueado = paqReps.some(r => r.bloqueos.length);
-  const faltan = [...document.querySelectorAll('#paqHojas input[type=checkbox]')].filter(c => !c.checked).length;
-  $('paqGo').disabled = bloqueado || faltan > 0;
+  const cajas = [...document.querySelectorAll('#paqHojas input[type=checkbox]')];
+  const sinTildar = cl => cajas.filter(c => c.dataset.tipo === cl && !c.checked).length;
+  const faltan = sinTildar('falta'), avisos = sinTildar('aviso'), armando = paqArmando();
+  const incompleto = paqReps.some(r => r.faltas.length);
+  $('paqGo').disabled = armando || faltan > 0 || avisos > 0;
+  $('paqGo').textContent = incompleto ? 'Descargar .zip (INCOMPLETO)' : 'Descargar .zip';
   const st = $('paqStatus');
   st.hidden = false;
-  st.textContent = bloqueado ? '⛔ Completá lo marcado en rojo para poder armar el paquete.'
-    : faltan ? '⚠ Revisá y confirmá ' + (faltan === 1 ? 'el aviso' : 'los ' + faltan + ' avisos') + ': lo que confirmes queda escrito en la ficha del paquete.'
+  st.className = faltan ? 'rojo' : '';
+  st.textContent = armando ? '⏳ Pasando los logos a curvas…'
+    : faltan ? '⛔ Falta información (en rojo). Completala en la ficha, o tildá «Mandarlo igual»: el paquete sale como INCOMPLETO y la ficha le dice al taller que no produzca sin confirmar.'
+    : avisos ? '⚠ Revisá y confirmá ' + (avisos === 1 ? 'el aviso' : 'los ' + avisos + ' avisos') + ': lo que confirmes queda escrito en la ficha del paquete.'
+    : incompleto ? '⚠ Listo para armar, marcado como INCOMPLETO: el taller va a ver qué falta definir.'
     : '✓ Todo listo para armar el paquete.';
 }
+const METODO_TXT = { original: 'con sus curvas originales', repintado: 'con sus curvas originales, a una tinta', vectorizado: 'vectorizado automáticamente' };
 function paqRender(){
   const box = $('paqHojas'); box.innerHTML = '';
   let pesoOrig = 0;
   paqReps.forEach(r => {
     const d = document.createElement('div'); d.className = 'paqHoja';
     const h = document.createElement('div'); h.className = 'paqTit';
-    h.textContent = 'Hoja ' + r.n + ' · ' + (r.posicion || 'sin posición') + ' · ' + r.perfil.nombre + (r.artW ? ' · ' + fmtCmTxt(r.artW) + ' × ' + fmtCmTxt(r.artH) + ' cm' : '');
+    h.textContent = 'Hoja ' + r.n + ' · ' + (r.posicion || 'sin posición') + ' · ' + r.perfil.nombre + (r.artW && !r.sinMedida ? ' · ' + fmtCmTxt(r.artW) + ' × ' + fmtCmTxt(r.artH) + ' cm' : '');
     d.appendChild(h);
-    const linea = (cls, t) => { const e = document.createElement('div'); e.className = 'paqL ' + cls; e.textContent = t; d.appendChild(e); };
-    r.bloqueos.forEach(t => linea('bloq', '⛔ ' + t));
-    r.avisos.forEach(a => {
-      const l = document.createElement('label'); l.className = 'paqL aviso';
-      const c = document.createElement('input'); c.type = 'checkbox'; c.dataset.id = a.id;
-      c.addEventListener('change', paqSync);
-      const s = document.createElement('span'); s.textContent = a.txt;
-      const ok = document.createElement('small'); ok.textContent = 'Entendido, mandarlo igual'; s.appendChild(ok);
+    const linea = (cls, t) => { const e = document.createElement('div'); e.className = 'paqL ' + cls; e.textContent = t; d.appendChild(e); return e; };
+    const tilde = (x, tipo, ok) => {
+      const l = document.createElement('label'); l.className = 'paqL ' + tipo;
+      const c = document.createElement('input'); c.type = 'checkbox'; c.dataset.id = x.id; c.dataset.tipo = tipo; c.checked = paqOk.has(x.id);
+      c.addEventListener('change', () => { if(c.checked) paqOk.add(x.id); else paqOk.delete(x.id); paqSync(); });
+      const s = document.createElement('span'); s.textContent = (tipo === 'falta' ? '⛔ ' : '') + x.txt;
+      const sm = document.createElement('small'); sm.textContent = ok; s.appendChild(sm);
       l.append(c, s); d.appendChild(l);
-    });
-    if(!r.bloqueos.length){
+    };
+    r.faltas.forEach(x => tilde(x, 'falta', 'Mandarlo igual: queda como FALTA DEFINIR'));
+    r.avisos.forEach(x => tilde(x, 'aviso', 'Entendido, mandarlo igual'));
+    if(r.fuente){
+      const cv = r.curvas;
+      if(cv){
+        const k = document.createElement('div'); k.className = 'paqCurvas';
+        if(cv.estado === 'armando') k.innerHTML = '<div class="paqPrev vacio">Pasando a curvas…</div>';
+        else if(cv.estado === 'error') k.innerHTML = '<div class="paqPrev vacio">⚠</div>';
+        else {
+          const b = document.createElement('button'); b.type = 'button'; b.className = 'paqPrev'; b.title = 'Ver el PDF en curvas en grande';
+          const im = document.createElement('img'); im.src = cv.preview; im.alt = 'Vista previa del arte en curvas';
+          b.appendChild(im);
+          b.onclick = () => { const u = URL.createObjectURL(new Blob([cv.bytes], { type: 'application/pdf' })); paqUrls.push(u); window.open(u, '_blank'); };
+          k.appendChild(b);
+        }
+        const t = document.createElement('div'); t.className = 'paqCurvasTxt';
+        const tit = document.createElement('b'); tit.textContent = 'Arte en curvas (PDF a medida real)'; t.appendChild(tit);
+        const txt = cv.estado === 'armando' ? 'Se arma con las curvas del cliente cuando las hay; las imágenes se vectorizan.'
+          : cv.estado === 'error' ? 'No se pudo generar (' + cv.error + '): van el PNG a tamaño real y los originales.'
+          : cv.metodos.map(m => '«' + m.nom + '» ' + METODO_TXT[m.metodo] + (m.tinta ? ' (' + m.tinta + ')' : '')).join(' · ') + '. Tocá la imagen para verlo en grande.';
+        const sp = document.createElement('span'); sp.textContent = txt; t.appendChild(sp);
+        k.appendChild(t); d.appendChild(k);
+      }
       const va = ['Mockup', (r.negro ? 'arte en negro' : 'arte') + ' a tamaño real (PNG 300 dpi)'];
+      if(r.conCurvas) va.push('arte en curvas (PDF)');
       r.logos.forEach(lg => {
         if(lg.rec) { va.push('original "' + lg.nom + '"' + (lg.vector ? ' (en curvas)' : '')); pesoOrig += lg.info.size || 0; }
         lg.adjuntos.forEach(a => { va.push('adjunto "' + a.x.name + '"'); pesoOrig += a.x.size || 0; });
       });
       linea('info', 'Va en la carpeta: ' + va.join(' · ') + '.');
       r.info.forEach(t => linea('info', t));
-    }
+    } else if(r.p.imgFoto) linea('info', 'Va en la carpeta: Mockup.');
     box.appendChild(d);
   });
   $('paqPesoOrig').textContent = pesoOrig ? ' (' + fmtPeso(pesoOrig) + ')' : '';
   paqSync();
 }
+/* el arte en curvas se arma después de mostrar la revisión: vectorizar puede tardar unos segundos */
+async function paqCurvas(reps){
+  for(const r of reps){
+    if(!r.fuente || !r.conCurvas) continue;
+    r.curvas = { estado: 'armando' };
+    if(paqReps === reps) paqRender();
+    try{
+      const c = await arteEnCurvas(r);
+      c.preview = await vistaPreviaPdf(c.bytes);
+      r.curvas = { estado: 'listo', ...c };
+      // si las curvas del cliente no se pudieron usar, se avisa como cualquier vectorizado
+      c.metodos.filter(m => m.fallo && !r.perfil.raster).forEach(m => {
+        const id = 'h' + r.n + '-vect-' + m.nom;
+        if(!r.avisos.some(a => a.id === id)) r.avisos.push({ id, txt: '"' + m.nom + '": no se pudieron leer sus curvas y se vectorizó automáticamente. Mirá la vista previa; si algo no está bien, el taller tiene el original en la carpeta.' });
+      });
+    }catch(e){
+      r.curvas = { estado: 'error', error: e && e.message === 'cdn' ? 'sin conexión para descargar la herramienta' : (e && e.message) || String(e) };
+    }
+    if(paqReps !== reps) return; // se cerró la ventana
+    paqRender();
+  }
+}
 $('btn_paquete').onclick = async () => {
   $('paqModal').hidden = false;
   $('paqHojas').innerHTML = '<div class="paqL info">Revisando el pedido…</div>';
   $('paqGo').disabled = true; $('paqResultado').hidden = true; $('paqStatus').hidden = true;
-  try{ paqReps = await revisarPaquete(); paqRender(); }
+  paqOk = new Set();
+  try{ paqReps = await revisarPaquete(); paqRender(); paqCurvas(paqReps); }
   catch(e){ $('paqHojas').innerHTML = ''; $('paqStatus').hidden = false; $('paqStatus').textContent = '⚠ No se pudo revisar el pedido: ' + (e && e.message ? e.message : e); }
 };
 $('paqCancel').onclick = () => {
   $('paqModal').hidden = true;
   (paqReps || []).forEach(r => { if(r.fuente && r.fuente.revocar) URL.revokeObjectURL(r.fuente.url); });
+  paqUrls.forEach(u => URL.revokeObjectURL(u)); paqUrls = [];
   paqReps = null;
 };
 $('paqGo').onclick = async () => {
@@ -2406,7 +2894,7 @@ $('paqGo').onclick = async () => {
 /* ---- las plantillas de Drive llevan adentro los originales, para abrirlas en otra computadora ---- */
 function idsDeArchivos(d){
   const ids = new Set();
-  const deLogo = l => { if(!l) return; if(l.origId) ids.add(l.origId); (l.adjuntos || []).forEach(x => x && x.id && ids.add(x.id)); };
+  const deLogo = l => { if(!l) return; if(l.origId) ids.add(l.origId); if(l.prodId) ids.add(l.prodId); (l.adjuntos || []).forEach(x => x && x.id && ids.add(x.id)); };
   (d.pages || []).forEach(p => { const a = p.arte; if(!a) return; if(a.imgId) ids.add(a.imgId); (a.logos || []).forEach(deLogo); });
   if(d.boceto && d.boceto.logos) d.boceto.logos.forEach(deLogo);
   return [...ids];
@@ -2464,10 +2952,12 @@ hookFile('f_foto','box_foto','txt_foto','clear_foto', v=>{ imgFoto=v; fotoAlt=nu
 hookFile('f_logo','box_logo','txt_logo','clear_logo', v=>{ imgLogo=v; if(!v) arteHoja = null; }, async file => {
   // logo cargado directo en la ficha: el archivo del cliente va tal cual al paquete del taller
   const reg = await registrarArchivo(file);
-  let opaca = false;
-  try{ opaca = esOpaca(await cargarImagen(imgLogo)); }catch(e){}
+  let opaca = false, im = null;
+  try{ im = await cargarImagen(imgLogo); opaca = esOpaca(im); }catch(e){}
+  const W = im ? im.naturalWidth : 0, H = im ? im.naturalHeight : 0;
   arteHoja = { logos: [{ nombre: file.name, origId: reg ? reg.id : null, origInfo: reg ? reg.info : null, adjuntos: [],
-    ia: false, fondoQuitado: false, opacidad: 1, tinte: 'original', sinTransparencia: opaca, px: 0, cm: 0, directo: true }],
+    ia: false, fondoQuitado: false, opacidad: 1, tinte: 'original', sinTransparencia: opaca, px: W, cm: 0, directo: true,
+    crop: W ? { x: 0, y: 0, w: W, h: H } : null, fullW: W, fullH: H, geo: GEO_ENTERO, prodId: null }],
     unido: false, imgId: null };
   render();
 });
@@ -5514,7 +6004,11 @@ function composeUnion(opts){
     out.getContext('2d').drawImage(c, a.x, a.y, a.w, a.h, 0, 0, a.w, a.h);
   }
   const { k, dispar } = escalaUnion();
-  return { url: opts.sinUrl ? null : out.toDataURL('image/png'), canvas: out, wCm: k ? (a.w / S) * k : 0, hCm: k ? (a.h / S) * k : 0, dispar };
+  // dónde queda cada logo dentro del arte (0..1): el PDF en curvas los ubica igual
+  const geo = state.logos.map(l => ({
+    cx: (((l.x + l.w/2)*FW - bb.x)*S - a.x) / a.w, cy: (((l.y + l.h/2)*FH - bb.y)*S - a.y) / a.h,
+    w: l.w*FW*S / a.w, h: l.h*FH*S / a.h, rot: l.rot || 0 }));
+  return { url: opts.sinUrl ? null : out.toDataURL('image/png'), canvas: out, wCm: k ? (a.w / S) * k : 0, hCm: k ? (a.h / S) * k : 0, dispar, geo };
 }
 
 let unirCache = null;
@@ -5573,6 +6067,11 @@ const fichaArte = l => ({
   sinTransparencia: !(l.bgRemove || l.whiteRemoved) && !!l.img && esOpaca(l.img),
   px: (l.useTrim !== false && l.crop) ? l.crop.w : l.fullW,
   cm: cmDe(l),
+  // para pasar a curvas: qué pedazo del archivo se ve y de qué color sale
+  crop: (l.useTrim !== false && l.crop) ? { x: l.crop.x, y: l.crop.y, w: l.crop.w, h: l.crop.h } : { x: 0, y: 0, w: l.fullW, h: l.fullH },
+  fullW: l.fullW, fullH: l.fullH,
+  tinteColor: (l.tint === 'custom' && l.tintColor) ? { hex: l.tintColor.hex, nom: l.tintColor.nom || '', pant: l.tintColor.pant || '' } : null,
+  geo: GEO_ENTERO,
 });
 $('unirClose').addEventListener('click', () => { $('unirModal').hidden = true; unirCache = null; });
 
@@ -5590,8 +6089,13 @@ async function aplicarBoceto(unir){
     mH = u.hCm ? fmtCm(u.hCm*unitK()) + ' ' + state.unit : '';
     grabado = state.logos.every(l => l.tint === 'engrave');
     unColor = state.logos.some(unColorDe); // una sola película: cuenta el tinte de cualquiera de los logos
-    const prod = composeUnion({ fuentes: await Promise.all(state.logos.map(fuenteProduccion)), plena: true, sinUrl: true });
+    const fuentes = await Promise.all(state.logos.map(fuenteProduccion));
+    const prod = composeUnion({ fuentes, plena: true, sinUrl: true });
     const arte = { logos: state.logos.map(fichaArte), unido: true, dispar: !!u.dispar, imgId: await guardarArteImg(prod.canvas) };
+    for(let i = 0; i < arte.logos.length; i++){
+      arte.logos[i].geo = prod.geo[i];
+      arte.logos[i].prodId = await guardarArteImg(lienzoDe(fuentes[i])); // cada logo suelto, por si hay que vectorizarlo
+    }
     logos = [{ logo: logoFicha, medidaW: mW, medidaH: mH, grabado, colorTinte: null, arte }];
   } else {
     ({ w: mW, h: mH } = medidasDe(principal));
@@ -5605,9 +6109,11 @@ async function aplicarBoceto(unir){
       // arte propio solo si difiere del logo de la ficha (silueta limpia o sin la opacidad del mockup)
       const imgId = (l.tint === 'engrave' || l.tint === 'black' || l.opacity < 1)
         ? await guardarArteImg(lienzoDe(await fuenteProduccion(l))) : null;
+      const ficha = fichaArte(l);
+      ficha.prodId = imgId;
       return { logo: logoDataUrl(l), medidaW: m.w, medidaH: m.h, grabado: l.tint === 'engrave',
         colorTinte: (c && c.hex) ? { hex: c.hex, nom: c.nom || '', pant: c.pant || '' } : null,
-        arte: { logos: [fichaArte(l)], unido: false, imgId } };
+        arte: { logos: [ficha], unido: false, imgId } };
     }));
   }
   unirCache = null;
@@ -5648,6 +6154,7 @@ $('cleanToggle').addEventListener('click', () => {
 });
 
 window.__bocetoRender = render;
+window.__normalizeSvg = normalizeSvg; // el arte en curvas del paquete rearma el SVG igual que al cargarlo
 
 /* ---------- snapshot / restauración del editor (para plantillas) ---------- */
 window.__bocetoSnapshot = () => {

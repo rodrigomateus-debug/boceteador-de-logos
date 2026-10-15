@@ -39,34 +39,65 @@ El botón **"📦 Paquete para el taller (.zip)"** arma lo que se le manda al
 proveedor (por mail o WhatsApp) para que imprima sin preguntar nada:
 
 - `Boceto aprobado.pdf`: el mismo boceto que vio el cliente.
-- Una carpeta por aplicación (`Hoja N - posición - técnica - medida`) con el
-  mockup, el **arte a medida real en 300 dpi** (el PNG lleva los dpi adentro,
-  así abre al tamaño justo en Corel/Illustrator/Photoshop) y los **archivos
-  originales del cliente** tal cual se subieron, más los que se adjuntan con
-  «📎 Adjuntar original del cliente» (EPS, CDR, AI…).
+- Una carpeta por aplicación (`Hoja N - posición - técnica - medida`) con:
+  - **`Arte en curvas - medida real.pdf`**: PDF vectorial del tamaño exacto del
+    arte, con los logos ubicados como en el boceto (si van varios juntos, la
+    combinación lista para la película o el shablón, con rotaciones incluidas).
+  - el **arte a medida real en PNG 300 dpi** (lleva los dpi adentro, así abre al
+    tamaño justo en Corel/Illustrator/Photoshop);
+  - el mockup y los **archivos originales del cliente** tal cual se subieron,
+    más los que se adjuntan con «📎 Adjuntar original del cliente» (EPS, CDR…).
 - `LEEME - Ficha tecnica.pdf`: medida, técnica, colores/Pantone, cantidad y
   qué archivo usar para producir cada aplicación.
 
-Antes de armarlo se hace un **chequeo según la técnica** (serigrafía y
-tampografía piden Pantone y curvas, DTF y digital piden fondo transparente y
-resolución, láser pide un solo color, etc.). Lo que falta (técnica, posición,
-medida) frena la descarga; lo dudoso (logo que es una foto metida en un PDF,
-textos sin convertir a curvas, degradés en técnicas de tinta plana, baja
-resolución…) hay que tildarlo como revisado y queda escrito en el LEEME.
+### Cómo se arma el arte en curvas
 
-Detalles para no romper:
+- **Original en curvas (PDF, AI con compatibilidad PDF, SVG):** se usan las
+  curvas del cliente, sin redibujar. Se recorta el pedazo que se ve en el boceto
+  y se escala a la medida. Los colores del archivo (incluidos los Pantone que
+  traiga como color directo) quedan como estaban.
+- **Logo a un color en el boceto** (negro, grabado, blanco o un color elegido):
+  las mismas curvas se repintan a esa tinta. Si el color tiene Pantone, va como
+  tinta directa con ese nombre ("PANTONE 485 C"); el negro va como K 100.
+- **Logo que es una imagen** (o retocado con IA, o con un color borrado en el
+  boceteador): se **vectoriza automáticamente** en el navegador (imagetracerjs).
+  Sirve para logos planos; por eso la ventana muestra una vista previa y pide
+  confirmar que se revisó.
+- En DTF, sublimación e impresión digital manda el PNG: el PDF en curvas solo
+  se suma si hay curvas reales del cliente.
+
+Para saber qué pedazo del PDF original corresponde a la imagen del logo, el
+paquete repite el cálculo de `regionLogoPdf()` (lo mismo que se hizo al
+cargarlo). Si se cambia cómo se rasterizan los PDF, ese cálculo cambia para los
+dos. Si algo no coincide, ese logo se vectoriza y se avisa.
+
+### Revisión antes de mandar
+
+Se chequea **según la técnica** (serigrafía y tampografía piden Pantone y curvas,
+DTF y digital piden fondo transparente y resolución, láser pide un solo color,
+etc.).
+
+- **Lo que falta** (técnica, posición, medida) se marca en rojo, pero **no
+  frena**: si el vendedor tilda «Mandarlo igual», el zip sale como
+  `INCOMPLETO - …`, las carpetas dicen `SIN POSICION` / `SIN MEDIDA`, y el LEEME
+  abre con un recuadro rojo "no producir sin confirmar". Sin medida, el arte va a
+  un tamaño de referencia para escalar.
+- **Lo dudoso** (logo que es una foto metida en un PDF, textos sin convertir a
+  curvas, degradés en técnicas de tinta plana, baja resolución, vectorizado
+  automático…) hay que tildarlo como revisado y queda escrito en el LEEME.
+
+### Detalles para no romper
 
 - Los originales y el arte **no van al autoguardado** (localStorage tiene ~5 MB):
   van a IndexedDB (`formas-archivos`) y la hoja sólo guarda el id. Las
   plantillas de Drive sí los llevan adentro, para abrirse en otra computadora.
 - El arte de producción no es el mockup: sin la opacidad del boceto, el tinte
   grabado sale como silueta negra limpia y el "negro" de pantalla sale #000.
-- Si se unen varios logos en un mismo lugar, el arte es la combinación en PNG a
-  medida real y van todos los originales sueltos. El PDF vectorial con la
-  combinación en curvas es la próxima etapa.
-- JSZip se carga recién al apretar el botón (cdnjs, con jsdelivr de respaldo).
-  Los nombres dentro del zip van sin tildes porque los descompresores viejos de
-  Windows los rompen.
+- Los PDF se rasterizan con fondo transparente: pdf.js pinta la hoja de blanco
+  por defecto y el logo quedaba con un recuadro blanco.
+- JSZip, pdf-lib, imagetracerjs y svg2pdf.js se cargan recién al usarlos (con un
+  CDN de respaldo). Los nombres dentro del zip van sin tildes porque los
+  descompresores viejos de Windows los rompen.
 
 ## Ramas y entornos de prueba
 
