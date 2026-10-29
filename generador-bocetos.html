@@ -659,7 +659,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
   <!-- Internal footer note -->
   <div style="margin-top:auto; padding-top:22px; display:flex; align-items:center; justify-content:space-between; gap:16px; border-top:1px solid var(--border-subtle,#E4E4ED); margin-top:26px;">
     <span style="font-size:10px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--formas-green,#399F4A);">Documento interno</span>
-    <span style="font-size:11px; color:var(--text-muted,#6E6E85);">Formas Publicitarias</span>
+    <span style="font-size:11px; color:var(--text-muted,#6E6E85);">Formas Publicitarias{{MARCA_MEDIDA}}</span>
   </div>
 
 </div>
@@ -1262,6 +1262,7 @@ let imgFoto = null, imgLogo = null;
 let fotoAlt = null;                    // la otra versión de la foto (original ↔ IA) para intercambiar
 let fotoActiva = 'ia';                 // cuál se está mostrando cuando hay dos: 'ia' u 'orig'
 let fotoEscala = '';
+let modoMedida = '';                   // con qué dato se armó el boceto: 'logo' | 'product' ('' = foto subida a mano)
 let arteHoja = null;                    // paquete del taller: originales del cliente y arte de producción (ids en IndexedDB)                   // cuánto abarca la foto en cm reales (sale de la regla del boceteador)
 let logoBg = 'product';                // fondo del recuadro del logo: color del producto (default) o claro
 let printColors = [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
@@ -1282,7 +1283,7 @@ const FIELDS = SHARED_FIELDS.concat(PAGE_FIELDS);
 
 /* ---- hojas ---- */
 function newPage(){
-  return { imgFoto:null, imgLogo:null, fotoAlt:null, fotoActiva:'ia', fotoEscala:'', arte:null, logoBg:'product',
+  return { imgFoto:null, imgLogo:null, fotoAlt:null, fotoActiva:'ia', fotoEscala:'', modoMedida:'', arte:null, logoBg:'product',
     printColors:[{hex:'#FFFFFF', nom:'Blanco', pant:''}],
     barW:100, barH:100, barWOff:0, barHOff:0, fullColor:false, engraved:false, fotoFit:'cover',
     fields:{ f_medida_w:'', f_medida_h:'', f_obslogo:'', f_tecnica:'', f_posicion:'' } };
@@ -1293,7 +1294,7 @@ let cur = 0;
 function capturePage(){
   const p = pages[cur];
   p.imgFoto = imgFoto; p.imgLogo = imgLogo;
-  p.fotoAlt = fotoAlt; p.fotoActiva = fotoActiva; p.fotoEscala = fotoEscala; p.arte = arteHoja;
+  p.fotoAlt = fotoAlt; p.fotoActiva = fotoActiva; p.fotoEscala = fotoEscala; p.modoMedida = modoMedida; p.arte = arteHoja;
   p.logoBg = logoBg; p.printColors = printColors;
   p.barW = barW; p.barH = barH; p.barWOff = barWOff; p.barHOff = barHOff;
   p.fullColor = fullColor; p.engraved = engraved; p.fotoFit = fotoFit;
@@ -1307,6 +1308,7 @@ function loadPage(i){
   fotoAlt = p.fotoAlt || null;
   fotoActiva = p.fotoActiva === 'orig' ? 'orig' : 'ia';
   fotoEscala = p.fotoEscala || '';
+  modoMedida = p.modoMedida || '';
   arteHoja = p.arte || null;
   logoBg = p.logoBg === 'light' ? 'light' : 'product'; // lo guardado como "dark" pasa al color del producto
   printColors = (Array.isArray(p.printColors) && p.printColors.length) ? p.printColors : [{hex:'#FFFFFF', nom:'Blanco', pant:''}];
@@ -1425,6 +1427,10 @@ function coloresHtml(pc, fc, eng){
   }).join('');
 }
 
+/* marca discreta del pie, para producción: con qué dato se armó el boceto.
+   ML = "Tengo la medida exacta del logo" (medida anotada) · MP = "Sé la medida del producto" (calculada con la regla) */
+const MARCA_MEDIDA = { logo: 'ML', product: 'MP' };
+
 function buildPage(p, num, total){
   const f = id => esc((p.fields && p.fields[id]) || '');
   const mw = f('f_medida_w'), mh = f('f_medida_h');
@@ -1470,6 +1476,8 @@ function buildPage(p, num, total){
     BAR_W_OFF: String(Math.round((p.barWOff || 0)*10)/10),
     BAR_H_OFF: String(Math.round((p.barHOff || 0)*10)/10),
     HOJA_BADGE: hojaBadge,
+    MARCA_MEDIDA: MARCA_MEDIDA[p.modoMedida]
+      ? '<span style="margin-left:9px; padding-left:9px; border-left:1px solid var(--border-subtle,#E4E4ED); font-size:9px; letter-spacing:.14em;">' + MARCA_MEDIDA[p.modoMedida] + '</span>' : '',
     COLOR_ACENTO_HEX: accent,
     FOTO_PRODUCTO: p.imgFoto ? '<img src="'+p.imgFoto+'" alt="Producto">' : PH_FOTO,
     LOGO_CLIENTE: p.imgLogo ? '<img src="'+p.imgLogo+'" alt="Logo cliente" style="max-height:100px">'
@@ -2948,7 +2956,7 @@ function hookFile(inputId, boxId, txtId, clearId, setter, onFile){
     render();
   });
 }
-hookFile('f_foto','box_foto','txt_foto','clear_foto', v=>{ imgFoto=v; fotoAlt=null; fotoActiva='ia'; fotoEscala=''; refreshFotoBox(); avisarResFicha(v); });
+hookFile('f_foto','box_foto','txt_foto','clear_foto', v=>{ imgFoto=v; fotoAlt=null; fotoActiva='ia'; fotoEscala=''; modoMedida=''; refreshFotoBox(); avisarResFicha(v); });
 hookFile('f_logo','box_logo','txt_logo','clear_logo', v=>{ imgLogo=v; if(!v) arteHoja = null; }, async file => {
   // logo cargado directo en la ficha: el archivo del cliente va tal cual al paquete del taller
   const reg = await registrarArchivo(file);
@@ -3626,7 +3634,17 @@ async function corelSheet(doc, p, num, total){
   const fy = 1123 - 42;
   hline(L, fy, R, BORDER, 1);
   text('DOCUMENTO INTERNO', L, fy + 10, { size: 9, bold: true, color: GREEN, ls: 1.5 });
-  text('Formas Publicitarias', R, fy + 10, { size: 10, color: GRAY, align: 'right' });
+  let fx = R;
+  const marca = MARCA_MEDIDA[p.modoMedida];
+  if(marca){
+    fx = R - tW(marca, 7.5, {}, 1) + 1; // sin el espaciado que queda después de la última letra
+    text(marca, fx, fy + 12, { size: 7.5, color: GRAY, ls: 1 });
+    fx -= 9;
+    doc.setDrawColor(...BORDER); doc.setLineWidth(X(1));
+    doc.line(X(fx), X(fy + 10), X(fx), X(fy + 22));
+    fx -= 9;
+  }
+  text('Formas Publicitarias', fx, fy + 10, { size: 10, color: GRAY, align: 'right' });
 }
 
 $('btn_corel').onclick = async () => {
@@ -4303,6 +4321,7 @@ window.__applyBoceto = res => {
   const f1 = v => String(Math.round(v*10)/10).replace('.', ',');
   fotoEscala = (res.fotoCmW > 0 && res.fotoCmH > 0) ? f1(res.fotoCmW) + ' × ' + f1(res.fotoCmH) + ' cm' : '';
   fotoFit = 'contain'; // el boceto compuesto se muestra entero, sin recortes
+  modoMedida = res.modo || '';
   refreshFotoBox();
   if(res.logo){
     imgLogo = res.logo;
@@ -4363,7 +4382,7 @@ window.__applyBoceto = res => {
         pages.splice(ultimo + 1, 0, q);
       }
       // lo que se hereda del editor en cada aplicación, igual que en la hoja principal
-      q.imgFoto = base.imgFoto; q.fotoFit = base.fotoFit; q.fotoEscala = base.fotoEscala;
+      q.imgFoto = base.imgFoto; q.fotoFit = base.fotoFit; q.fotoEscala = base.fotoEscala; q.modoMedida = base.modoMedida;
       q.imgLogo = L.logo;
       q.arte = L.arte || null;
       q.fields = Object.assign({}, q.fields, { f_medida_w: L.medidaW || '', f_medida_h: L.medidaH || '' });
@@ -6130,6 +6149,7 @@ async function aplicarBoceto(unir){
     colores: JSON.parse(JSON.stringify(bocetoColors)),
     logos,
     unidos: unir ? state.logos.length : 0,
+    modo: state.mode,
     fotoCmW: kEsc ? frEsc.w * kEsc : 0,
     fotoCmH: kEsc ? frEsc.h * kEsc : 0,
   });

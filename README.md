@@ -33,6 +33,20 @@ Dos detalles a no romper si se toca `corelSheet()`:
   `maxW` y pasa por `fit()`, que achica el cuerpo hasta que entra. Sin eso, un
   nombre de cliente largo se monta sobre la columna de al lado.
 
+## Marca de producción en el pie
+
+Cada hoja lleva, al lado de «Formas Publicitarias», un código chico que le dice
+a producción con qué dato se armó el boceto (en la impresión, en el PDF editable
+y en el `Boceto aprobado.pdf` del paquete):
+
+| Código | Opción del boceteador | Qué significa |
+|---|---|---|
+| **ML** | «Tengo la medida exacta del logo» | la medida la anotó el ejecutivo |
+| **MP** | «Sé la medida del producto» | la medida se calculó con la regla sobre la foto: conviene verificarla |
+
+Sin código: la foto se subió ya lista, sin pasar por el boceteador. Si después
+de aplicar el boceto se cambia la foto a mano, el código se borra de esa hoja.
+
 ## Paquete para el taller (.zip)
 
 El botón **"📦 Paquete para el taller (.zip)"** arma lo que se le manda al
