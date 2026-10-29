@@ -35,17 +35,17 @@ Dos detalles a no romper si se toca `corelSheet()`:
 
 ## Marca de producción en el pie
 
-Cada hoja lleva, al lado de «Formas Publicitarias», un código chico que le dice
-a producción con qué dato se armó el boceto (en la impresión, en el PDF editable
-y en el `Boceto aprobado.pdf` del paquete):
+Cada hoja lleva, al lado de «Formas Publicitarias», una letra chica en un
+círculo de color que le dice a producción con qué dato se armó el boceto (en la
+impresión, en el PDF editable y en el `Boceto aprobado.pdf` del paquete):
 
-| Código | Opción del boceteador | Qué significa |
+| Marca | Opción del boceteador | Qué significa |
 |---|---|---|
-| **ML** | «Tengo la medida exacta del logo» | la medida la anotó el ejecutivo |
-| **MP** | «Sé la medida del producto» | la medida se calculó con la regla sobre la foto: conviene verificarla |
+| **L** en círculo rojo | «Tengo la medida exacta del logo» | la medida la anotó el ejecutivo |
+| **P** en círculo verde | «Sé la medida del producto» | la medida se calculó con la regla sobre la foto: conviene verificarla |
 
-Sin código: la foto se subió ya lista, sin pasar por el boceteador. Si después
-de aplicar el boceto se cambia la foto a mano, el código se borra de esa hoja.
+Sin marca: la foto se subió ya lista, sin pasar por el boceteador. Si después
+de aplicar el boceto se cambia la foto a mano, la marca se borra de esa hoja.
 
 ## Paquete para el taller (.zip)
 

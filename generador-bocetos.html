@@ -1428,8 +1428,8 @@ function coloresHtml(pc, fc, eng){
 }
 
 /* marca discreta del pie, para producción: con qué dato se armó el boceto.
-   ML = "Tengo la medida exacta del logo" (medida anotada) · MP = "Sé la medida del producto" (calculada con la regla) */
-const MARCA_MEDIDA = { logo: 'ML', product: 'MP' };
+   L (rojo) = "Tengo la medida exacta del logo" (medida anotada) · P (verde) = "Sé la medida del producto" (calculada con la regla) */
+const MARCA_MEDIDA = { logo: { letra: 'L', hex: '#D62828' }, product: { letra: 'P', hex: '#399F4A' } };
 
 function buildPage(p, num, total){
   const f = id => esc((p.fields && p.fields[id]) || '');
@@ -1477,7 +1477,7 @@ function buildPage(p, num, total){
     BAR_H_OFF: String(Math.round((p.barHOff || 0)*10)/10),
     HOJA_BADGE: hojaBadge,
     MARCA_MEDIDA: MARCA_MEDIDA[p.modoMedida]
-      ? '<span style="margin-left:9px; padding-left:9px; border-left:1px solid var(--border-subtle,#E4E4ED); font-size:9px; letter-spacing:.14em;">' + MARCA_MEDIDA[p.modoMedida] + '</span>' : '',
+      ? '<span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; margin-left:8px; border-radius:50%; vertical-align:middle; position:relative; top:-1px; background:' + MARCA_MEDIDA[p.modoMedida].hex + '; color:#fff; font-size:9px; font-weight:700; line-height:1;">' + MARCA_MEDIDA[p.modoMedida].letra + '</span>' : '',
     COLOR_ACENTO_HEX: accent,
     FOTO_PRODUCTO: p.imgFoto ? '<img src="'+p.imgFoto+'" alt="Producto">' : PH_FOTO,
     LOGO_CLIENTE: p.imgLogo ? '<img src="'+p.imgLogo+'" alt="Logo cliente" style="max-height:100px">'
@@ -3637,12 +3637,11 @@ async function corelSheet(doc, p, num, total){
   let fx = R;
   const marca = MARCA_MEDIDA[p.modoMedida];
   if(marca){
-    fx = R - tW(marca, 7.5, {}, 1) + 1; // sin el espaciado que queda después de la última letra
-    text(marca, fx, fy + 12, { size: 7.5, color: GRAY, ls: 1 });
-    fx -= 9;
-    doc.setDrawColor(...BORDER); doc.setLineWidth(X(1));
-    doc.line(X(fx), X(fy + 10), X(fx), X(fy + 22));
-    fx -= 9;
+    const r = 7.5, cx = R - r, cy = fy + 14;
+    doc.setFillColor(...hex2rgb(marca.hex));
+    doc.circle(X(cx), X(cy), X(r), 'F');
+    text(marca.letra, cx, cy, { size: 9, bold: true, color: [255,255,255], align: 'center', baseline: 'middle' });
+    fx = R - 2*r - 8;
   }
   text('Formas Publicitarias', fx, fy + 10, { size: 10, color: GRAY, align: 'right' });
 }
