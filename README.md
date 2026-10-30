@@ -15,6 +15,21 @@ se abren directo en el navegador, sin instalación.
 
 ## Traer de formas.shop y medir el producto solo
 
+El boceteador tiene tres pasos y una barra fija abajo:
+
+1. **Producto y técnica**: la técnica (arriba, porque elige la foto y el área) y
+   las fotos del producto, o una propia.
+2. **Medida y área**: la medida del producto (recuadro azul) y el área de
+   impresión (lima), que dependen de la misma escala; acá se guardan para todos.
+   Si salieron solas y no hay nada que mirar, el paso queda en una línea
+   («Producto 8,79 × 27,53 cm · Área 3,49 × 12,30 cm · Grabado láser») con
+   «Revisar»; si algo falta o no cierra, se abre solo.
+3. **Logo y colores**: el logo, su color y los colores de impresión.
+
+La **barra de abajo**, siempre a la vista, muestra la técnica y tiene «Aplicar a
+la ficha» y «Descargar PNG»; mientras no se pueda aplicar, dice qué falta («Falta
+el logo (paso 3)»).
+
 En la ficha, arriba de «Nombre del producto», **Traer de formas.shop** acepta el
 link del producto (`https://formas.shop/app/product/detail/18953`), su código
 (`18953`) o parte del nombre: mientras se escribe aparecen los primeros 5 que
@@ -86,10 +101,9 @@ Apenas se trae, la **vista principal de la hoja** muestra la foto del producto
 boceto con tu logo» y «Subí la foto ya lista». Es solo en pantalla: no se imprime
 ni sale en el PDF, y desaparece cuando se aplica el boceto o se sube la foto.
 
-El boceteador **mide por el producto por defecto** («Medida por el producto ·
-recomendado»). La medida exacta del logo sigue estando, pero hay que elegirla a
-propósito con el link «¿Ya tenés la medida exacta del logo? Usala» (y se vuelve
-con «Volver a medir por el producto»).
+El boceteador **mide por el producto por defecto**. La medida exacta del logo sigue
+estando, pero hay que elegirla a propósito con el link «¿Ya tenés la medida exacta
+del logo? Usala» del paso 2 (y se vuelve con «Volver a medir por el producto»).
 
 Mientras se trae el producto (bajan y se miden las fotos), «Creá el boceto con tu
 logo» queda bloqueado: se habilita cuando terminó, para no abrir un boceto a medias.
@@ -119,8 +133,8 @@ puestas, 4 aceptables y 4 mal (fotos de la espalda o con la caja abierta).
 ### El área depende de la técnica
 
 El paso 1 arranca con la **técnica**, arriba de las fotos: se elige una sola vez,
-ahí, porque define la foto y el área. El paso 4 («Colores y aplicación») solo la
-muestra, con «Cambiar», que lleva al paso 1; si falta, lo avisa y no deja aplicar. Una serigrafía rotativa envuelve todo el producto; una
+ahí, porque define la foto y el área. La barra de abajo solo la muestra, con
+«Cambiar», que lleva al paso 1; si falta, lo avisa y no deja aplicar. Una serigrafía rotativa envuelve todo el producto; una
 tampografía entra en pocos cm. Al elegirla, **la foto y el área se acomodan
 solas**, en este orden:
 
@@ -165,7 +179,7 @@ o se sale del área, el paso 3 lo avisa (con la medida de cada uno). Con una
 rotativa, el área real (por ejemplo, «Área 360° (envuelve el producto): 26,1 ×
 12,5 cm») queda escrita en las observaciones del logo de la ficha, para el taller.
 
-**Límites por técnica.** «Límites por técnica» (paso 2) abre la tabla de hasta
+**Límites por técnica.** «Límites por técnica» (paso 1) abre la tabla de hasta
 cuánto imprime cada técnica, en cm: la carga producción, vacío es sin límite.
 Se guarda con confirmación y sin clave, y vale para todos.
 
