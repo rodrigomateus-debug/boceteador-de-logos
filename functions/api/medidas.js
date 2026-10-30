@@ -12,9 +12,10 @@
  *
  *   GET  /api/medidas?raiz=NFM_820
  *     → {raiz, medidas?, preferida?, tecnicas?:{<técnica>:<url>},
- *        fotos:{<url>:{regla, cm, zona?, area?, zonas?:{<técnica>:{zona, area?, autor, fecha}}, autor, fecha}},
+ *        fotos:{<url>:{regla, cm, contorno?, zona?, area?, zonas?:{<técnica>:{zona, area?, autor, fecha}}, autor, fecha}},
  *        historial?}   o {raiz} si no hay nada
- *   POST /api/medidas  {raiz, foto, regla, cm, zona?, area?, tecnica?, medidas?, autor?}
+ *   POST /api/medidas  {raiz, foto, regla, cm, contorno?, zona?, area?, tecnica?, medidas?, autor?}
+ *     contorno: {x, y, w, h, cm?:[ancho, alto]}, el producto ajustado a mano sobre la foto
  *   POST /api/medidas  {raiz, foto, borrar:true, tecnica?}
  *     → sin técnica, esa foto vuelve a lo automático; con técnica, solo el área de esa técnica
  *
@@ -109,9 +110,19 @@ async function atender({ request: req, env }) {
       }
       zona = { x: z.x, y: z.y, w: z.w, h: z.h };
     }
+    let contorno = null;
+    if (b.contorno) {
+      const c = b.contorno;
+      if (!['x', 'y', 'w', 'h'].every(k => num(c[k], 0, 1)) || c.w <= 0 || c.h <= 0 || c.x + c.w > 1.001 || c.y + c.h > 1.001) {
+        return json({ error: 'Contorno inválido' }, 400);
+      }
+      contorno = { x: c.x, y: c.y, w: c.w, h: c.h };
+      if (Array.isArray(c.cm) && c.cm.length === 2 && c.cm.every(v => num(v, 0.1, 1000))) contorno.cm = [c.cm[0], c.cm[1]];
+    }
     const area = b.area ? String(b.area).slice(0, 80) : '';
     const prev = d.fotos[foto] || {};
     const f = { regla: { x1: r.x1, y1: r.y1, x2: r.x2, y2: r.y2 }, cm: b.cm, autor, fecha };
+    if (contorno) f.contorno = contorno;
     /* lo guardado para las otras técnicas sigue valiendo (y, con técnica, el área sin técnica) */
     if (prev.zonas) f.zonas = prev.zonas;
     if (tecnica && prev.zona) { f.zona = prev.zona; if (prev.area) f.area = prev.area; }

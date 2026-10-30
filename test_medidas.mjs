@@ -113,6 +113,12 @@ assert.equal((await limites({ tecnicas: { 'Tampografía': { w: -1 } } })).status
 assert.equal((await limites({ tecnicas: [1, 2] })).status, 400);
 assert.equal((await limites({ tecnicas: { '<b>': { w: 1 } } })).status, 400);
 
+// el contorno del producto ajustado a mano viaja con la regla
+await guardar({ raiz: 'NFM_900', foto, regla: { x1: .9, y1: .1, x2: .9, y2: .9 }, cm: 29, contorno: { x: .3, y: .1, w: .3, h: .8, cm: [9, 29] } });
+d = await (await leer('NFM_900')).json();
+assert.deepEqual(d.fotos[foto].contorno, { x: .3, y: .1, w: .3, h: .8, cm: [9, 29] });
+assert.equal((await guardar({ raiz: 'NFM_900', foto, regla: { x1: 0, y1: 0, x2: 1, y2: 1 }, cm: 2, contorno: { x: .9, y: 0, w: .3, h: .1 } })).status, 400);
+
 // sin el KV configurado, el motivo vuelve legible
 r = await leer('NFM_820', {});
 assert.equal(r.status, 503);

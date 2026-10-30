@@ -218,6 +218,16 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #autoRect{position:absolute;border:2px dashed var(--formas-green);border-radius:3px;pointer-events:none;z-index:3}
 #bocetoModal #autoRect span{position:absolute;left:-2px;top:-2px;translate:0 -100%;background:var(--formas-green);color:#fff;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px 6px 0 0;white-space:nowrap;font-variant-numeric:tabular-nums}
 #bocetoModal #autoRect.label-in span{translate:0 0;border-radius:0 0 6px 0}
+/* manijas del contorno: se ajusta a los bordes reales del producto y la escala se recalcula */
+#bocetoModal #autoRect .ah{position:absolute;width:calc(11px/var(--Z));height:calc(11px/var(--Z));border-radius:calc(3px/var(--Z));background:#fff;border:calc(2px/var(--Z)) solid var(--formas-green);box-shadow:0 1px 3px rgba(11,11,35,.3);pointer-events:auto;touch-action:none;margin:calc(-6.5px/var(--Z)) 0 0 calc(-6.5px/var(--Z))}
+#bocetoModal #autoRect .ah.tl{left:0;top:0;cursor:nwse-resize}
+#bocetoModal #autoRect .ah.t{left:50%;top:0;cursor:ns-resize}
+#bocetoModal #autoRect .ah.tr{left:100%;top:0;cursor:nesw-resize}
+#bocetoModal #autoRect .ah.r{left:100%;top:50%;cursor:ew-resize}
+#bocetoModal #autoRect .ah.br{left:100%;top:100%;cursor:nwse-resize}
+#bocetoModal #autoRect .ah.b{left:50%;top:100%;cursor:ns-resize}
+#bocetoModal #autoRect .ah.bl{left:0;top:100%;cursor:nesw-resize}
+#bocetoModal #autoRect .ah.l{left:0;top:50%;cursor:ew-resize}
 /* traer de formas.shop */
 #bocetoModal .shopFotos{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 #bocetoModal .shopFoto{position:relative;width:58px;height:58px;border-radius:10px;border:1.5px solid var(--formas-gray-200);background:#fff;padding:3px;cursor:pointer;flex:none}
@@ -1029,7 +1039,10 @@ html,body{margin:0;padding:0;background:#EDEDF2}
               <span class="handle bl" data-corner="bl"></span><span class="handle br" data-corner="br"></span>
             </div>
             <div id="measureChip" hidden></div>
-            <div id="autoRect" hidden><span id="autoRectLbl"></span></div>
+            <div id="autoRect" hidden><span id="autoRectLbl"></span>
+              <i class="ah tl" data-auto="tl"></i><i class="ah t" data-auto="t"></i><i class="ah tr" data-auto="tr"></i><i class="ah r" data-auto="r"></i>
+              <i class="ah br" data-auto="br"></i><i class="ah b" data-auto="b"></i><i class="ah bl" data-auto="bl"></i><i class="ah l" data-auto="l"></i>
+            </div>
             <div id="ruler" hidden>
               <div id="rulerLine"><i></i><i></i></div>
               <span class="ruler-handle" id="rh1"></span>
@@ -4728,7 +4741,8 @@ function render(){
   if(verAuto){
     Object.assign($('autoRect').style,{left:A.x*100+'%',top:A.y*100+'%',width:A.w*100+'%',height:A.h*100+'%'});
     $('autoRect').classList.toggle('label-in', A.y < 0.06);
-    $('autoRectLbl').textContent = 'Producto · ' + fmtPair(A.cmW, A.cmH);
+    const kA = cmPerPx();
+    $('autoRectLbl').textContent = 'Producto · ' + (kA ? fmtPair(A.w*FW*kA, A.h*FH*kA) : fmtPair(A.cmW, A.cmH));
   }
   $('autoMedirBtn').disabled = frame.hidden;
   $('guardarMedidaBox').hidden = !(fotoShopActual && fotoShopActual.raiz && state.mode === 'product' && !frame.hidden);
@@ -5169,6 +5183,34 @@ function reglaAlLado(r, vertical){
   const y = r.y + r.h + m <= 0.98 ? r.y + r.h + m : r.y - m >= 0.02 ? r.y - m : r.y + r.h/2;
   return { x1:r.x, y1:y, x2:r.x + r.w, y2:y };
 }
+/* el contorno verde se ajusta a mano a los bordes reales del producto: la escala sale de la
+   medida del producto (la de la descripción) sobre ese contorno, y la regla lo acompaña */
+function recalibrarContorno(){
+  const A = state.auto;
+  if(!A) return;
+  const {w:FW,h:FH} = frameRect(), vertical = A.h*FH >= A.w*FW;
+  const k = cmPerPx();
+  state.ruler = reglaAlLado(A, vertical);
+  const d = A.desc;
+  if(d) $('rulerCm').value = String(Math.max(d.w, d.h)); // el lado largo del producto, sobre el lado largo del contorno
+  else if(k) $('rulerCm').value = String(Math.round((vertical ? A.h*FH : A.w*FW)*k*100)/100); // sin medida: misma escala
+}
+function contornoAjustado(){
+  const A = state.auto, k = cmPerPx();
+  if(!A || !k) return;
+  A.mano = true;
+  const {w:FW,h:FH} = frameRect(), vertical = A.h*FH >= A.w*FW;
+  /* la medición que usa el área sugerida (bordes y partes lisas) pasa al contorno nuevo */
+  const m = ultimaMedicion && ultimaMedicion.src === photo.src ? ultimaMedicion : null;
+  if(m){ m.rect = { x0:Math.round(A.x*m.W), y0:Math.round(A.y*m.H), x1:Math.round((A.x + A.w)*m.W), y1:Math.round((A.y + A.h)*m.H) }; m.obs = null; }
+  const d = A.desc, mide = fmtPair(A.w*FW*k, A.h*FH*k);
+  if(!d){ autoNota('', '✎', 'Contorno ajustado a mano: con la escala de la regla, el producto mide ' + mide + '.'); return; }
+  const corto = vertical ? A.w*FW*k : A.h*FH*k, cortoDesc = Math.min(d.w, d.h), dif = Math.abs(corto - cortoDesc) / cortoDesc;
+  autoNota(dif > 0.04 ? '' : 'ok', '✎', 'Contorno ajustado a mano: la escala sale de la medida del producto (' + textoMedidas([d.w, d.h]) + ') sobre el contorno; mide ' + mide + '.'
+    + (dif > 0.04 ? ' Ojo: el ' + (vertical ? 'ancho' : 'alto') + ' da ' + fmtCm(corto*unitK()) + ' ' + state.unit + ' y la descripción dice ' + fmtCm(cortoDesc*unitK()) + ' ' + state.unit + ': revisá los bordes del contorno.' : '')
+    + ' Para que la próxima vez salga así, «Guardar medida y área para todos».');
+}
+
 /* la regla y el contorno del producto quedan a la vista (así se ve enseguida si algo no cierra)
    hasta que se carga el logo: desde ahí solo importa el área de impresión */
 function ocultarReglaSiHayLogo(){
@@ -5195,7 +5237,7 @@ function autoMedir(){
     return r;
   }
   const q = r.rect;
-  const A = { x:q.x0/r.W, y:q.y0/r.H, w:(q.x1-q.x0)/r.W, h:(q.y1-q.y0)/r.H, cmW:r.cm.w, cmH:r.cm.h, conf:r.conf, desvio:r.desvio };
+  const A = { x:q.x0/r.W, y:q.y0/r.H, w:(q.x1-q.x0)/r.W, h:(q.y1-q.y0)/r.H, cmW:r.cm.w, cmH:r.cm.h, conf:r.conf, desvio:r.desvio, desc:{ w:r.cm.w, h:r.cm.h } };
   state.auto = A;
   /* la regla va sobre el lado largo, justo de borde a borde (más píxeles = menos error) */
   const vertical = (q.y1-q.y0) >= (q.x1-q.x0);
@@ -5271,6 +5313,12 @@ function contextoArea(){
     const r = dims.length >= 2 ? medirImagenProducto(photo, dims, true) : null;
     if(!r || !r.ok) return null;
     m = ultimaMedicion = Object.assign(r, { src: photo.src });
+  }
+  /* si el contorno se ajustó a mano, el producto es ese */
+  const A = state.auto;
+  if(A && A.mano){
+    const R = { x0:Math.round(A.x*m.W), y0:Math.round(A.y*m.H), x1:Math.round((A.x + A.w)*m.W), y1:Math.round((A.y + A.h)*m.H) };
+    if(!m.rect || ['x0', 'y0', 'x1', 'y1'].some(k => m.rect[k] !== R[k])){ m.rect = R; m.obs = null; }
   }
   if(!m.obs){
     /* obstáculos: bordes marcados sobre la foto suavizada (la textura del kraft o la tela no
@@ -5553,7 +5601,7 @@ function aplicarEscalaProveedor(f){
     state.ruler = reglaAlLado({ x:prod.x0, y:prod.y0, w:prod.x1 - prod.x0, h:prod.y1 - prod.y0 }, vertical);
     $('rulerCm').value = String(Math.round((vertical ? ph : pw)*k*100)/100);
     /* sin medidas, la silueta puede sumar la sombra: se informa solo el largo, donde va la regla */
-    state.auto = prod.desc ? { x:prod.x0, y:prod.y0, w:prod.x1 - prod.x0, h:prod.y1 - prod.y0, cmW:pw*k, cmH:ph*k, conf:prod.conf, desvio:prod.desvio } : null;
+    state.auto = prod.desc ? { x:prod.x0, y:prod.y0, w:prod.x1 - prod.x0, h:prod.y1 - prod.y0, cmW:pw*k, cmH:ph*k, conf:prod.conf, desvio:prod.desvio, desc:prod.desc } : null;
     const mide = prod.desc ? fmtPair(pw*k, ph*k) : fmtCm((vertical ? ph : pw)*k*unitK()) + ' ' + state.unit, d = dif(k);
     if(deDesc) nota = ['', '⚠', 'Las medidas del área ' + area + ' no guardan la proporción de su recuadro y ninguna cierra con la descripción: la escala sale de la descripción (el producto, ' + mide
       + ', de punta a punta). Revisá la regla.'];
@@ -5951,7 +5999,8 @@ function guardadaNota(tipo, ico, txt, conOlvidar){
 }
 function aplicarMedidaGuardada(g){
   if(state.mode !== 'product') setMode('product');
-  state.auto = null;
+  const c = g.contorno;
+  state.auto = c ? { x:c.x, y:c.y, w:c.w, h:c.h, cmW:0, cmH:0, conf:'alta', desvio:0, mano:true, desc: c.cm ? { w:c.cm[0], h:c.cm[1] } : null } : null;
   state.ruler = { x1:g.regla.x1, y1:g.regla.y1, x2:g.regla.x2, y2:g.regla.y2 };
   $('rulerCm').value = String(g.cm);
   state.rulerVisible = true; $('rulerToggle').disabled = false; syncRulerBtn();
@@ -5986,6 +6035,8 @@ $('guardarMedidaBtn').addEventListener('click', async () => {
     const d = await pedirMedidas({ raiz: f.raiz, foto: f.url, regla: { ...state.ruler }, cm,
       zona: conArea ? { x: state.zone.x, y: state.zone.y, w: state.zone.w, h: state.zone.h } : undefined,
       area: conArea ? (state.areaNombre || '') : undefined, tecnica: tec || undefined,
+      contorno: state.auto ? Object.assign({ x: state.auto.x, y: state.auto.y, w: state.auto.w, h: state.auto.h },
+        state.auto.desc ? { cm: [state.auto.desc.w, state.auto.desc.h] } : {}) : undefined,
       medidas: medidas.length >= 2 ? medidas : undefined, autor: ej && ej.value ? ej.value : '' });
     const g = d.fotos && d.fotos[f.url];
     if(f.raiz === shopRaiz) shopGuardada = d;
@@ -7259,6 +7310,11 @@ frame.addEventListener('pointerdown', e => {
     render(); return;
   }
 
+  if(e.target.dataset && e.target.dataset.auto && state.auto){
+    const A = state.auto;
+    active = { mode:'auto-resize', corner:e.target.dataset.auto, startPx:px, start:{ x:A.x, y:A.y, w:A.w, h:A.h } };
+    frame.setPointerCapture(e.pointerId); e.preventDefault(); return;
+  }
   if(e.target.id === 'rh1' || e.target.id === 'rh2'){
     active = { mode:'ruler-end', end:e.target.id, startPx:px, start:{...state.ruler} };
     frame.setPointerCapture(e.pointerId); e.preventDefault(); return;
@@ -7342,6 +7398,10 @@ frame.addEventListener('pointermove', e => {
   else if(active.mode === 'zone-resize'){
     state.zone = resizeRect(active.start, active.corner, dx/FW, dy/FH, 30/FW, 30/FH);
   }
+  else if(active.mode === 'auto-resize'){
+    Object.assign(state.auto, resizeRect(active.start, active.corner, dx/FW, dy/FH, 20/FW, 20/FH));
+    recalibrarContorno(); // la regla y la medida acompañan mientras se arrastra
+  }
   else if(active.mode === 'logo-move'){
     const s = active.start, L = active.logo;
     L.x = clamp(s.x + dx/FW, 0, 1-s.w);
@@ -7371,6 +7431,7 @@ frame.addEventListener('pointermove', e => {
     else exitDrawMode();
     setStepStates();
   }
+  if(active.mode === 'auto-resize') contornoAjustado();
   active = null; render();
 }));
 
