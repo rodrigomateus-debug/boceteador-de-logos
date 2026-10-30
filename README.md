@@ -32,7 +32,10 @@ mouse o con ↑ ↓ y Enter). Al elegirlo:
    **de frente**;
 3. al tocar «Creá el boceto con tu logo», el boceteador abre ya en «Sé la medida
    del producto», con esa foto puesta, **la regla calibrada sola** de borde a borde
-   del lado largo y el contorno del producto marcado en verde. Arriba quedan las
+   del lado largo (al costado del producto, como una cota) y el contorno del
+   producto marcado en verde con su medida. Quedan a la vista junto con el área de
+   impresión, para ver enseguida si algo no cierra; al cargar el logo se ocultan
+   solos y queda solo el área («Medir de nuevo» los vuelve a mostrar). Arriba quedan las
    fotos del shop para cambiarla (✓ = de frente, se mide sola; ~ = con dudas; sin
    marca = sirve para mostrar, no para medir; borde punteado = del proveedor), y
    se puede subir una propia;
@@ -41,9 +44,15 @@ mouse o con ↑ ↓ y Enter). Al elegirlo:
 
 Los productos de **Zecat** traen además las áreas del proveedor: cada una con
 **su propia foto de ese color**, el recuadro marcado sobre la foto y su medida
-en cm. Esas fotos (marca ▣ en la galería) no se miden: **la escala sale del
-recuadro del área**, que mide lo que dice el proveedor. Así se ubican al
-milímetro aunque la descripción no traiga las medidas del producto.
+en cm. En esas fotos (marca ▣ en la galería) **la escala sale del recuadro del
+área**, que mide lo que dice el proveedor. Así se ubican al milímetro aunque la
+descripción no traiga las medidas del producto. La regla igual va **de punta a
+punta del producto**, con la medida que da esa escala, y si la descripción trae
+las medidas se comparan (son dos fuentes independientes): en la Hydra Go 1,2 L
+la escala del proveedor da 29,09 cm y la descripción dice 29 (0,3 %). Si no
+coinciden, el aviso lo dice; si el recuadro del área no guarda la proporción de
+sus cm, vale el lado que cierra con la descripción. En las fotos de 360° (el área
+desplegada viene dibujada encima) la regla va sobre el área.
 
 Mientras se trae el producto (bajan y se miden las fotos), «Creá el boceto con tu
 logo» queda bloqueado: se habilita cuando terminó, para no abrir un boceto a medias.

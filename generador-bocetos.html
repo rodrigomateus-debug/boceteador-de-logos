@@ -5034,6 +5034,8 @@ function medirProductoEnFoto(px, W, H, dims){
     const x = i % W, y = (i / W) | 0;
     if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y;
   }
+  /* sin medidas no hay rectángulo que buscar: queda la caja de la silueta (para medirla con otra escala) */
+  if(dims.filter(v => v > 0).length < 2) return { ok:false, motivo:'medidas', W, H, varios, caja:{ x0, y0, x1:x1+1, y1:y1+1 } };
   /* integral de la silueta: cuánto producto cae dentro de cualquier rectángulo, al instante */
   const W1 = W+1, integ = new Int32Array(W1*(H+1));
   for(let y = 0; y < H; y++){
@@ -5156,6 +5158,23 @@ const MOTIVO_AUTO = {
   error: 'No pude leer la foto para medirla. Ubicá la regla a mano.',
 };
 
+/* la regla va al costado del producto, como una cota de plano: mide lo mismo y no tapa el área
+   de impresión. Si no hay lugar de ningún lado (el producto llena la foto), va por el medio */
+function reglaAlLado(r, vertical){
+  const m = 0.03;
+  if(vertical){
+    const x = r.x + r.w + m <= 0.98 ? r.x + r.w + m : r.x - m >= 0.02 ? r.x - m : r.x + r.w/2;
+    return { x1:x, y1:r.y, x2:x, y2:r.y + r.h };
+  }
+  const y = r.y + r.h + m <= 0.98 ? r.y + r.h + m : r.y - m >= 0.02 ? r.y - m : r.y + r.h/2;
+  return { x1:r.x, y1:y, x2:r.x + r.w, y2:y };
+}
+/* la regla y el contorno del producto quedan a la vista (así se ve enseguida si algo no cierra)
+   hasta que se carga el logo: desde ahí solo importa el área de impresión */
+function ocultarReglaSiHayLogo(){
+  if(state.logos.length && state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); }
+}
+
 /* "📐 Medir solo": busca el producto en la foto del lienzo y deja la regla calibrada */
 function autoMedir(){
   if(frame.hidden) return null;
@@ -5180,9 +5199,7 @@ function autoMedir(){
   state.auto = A;
   /* la regla va sobre el lado largo, justo de borde a borde (más píxeles = menos error) */
   const vertical = (q.y1-q.y0) >= (q.x1-q.x0);
-  state.ruler = vertical
-    ? { x1:A.x + A.w/2, y1:A.y, x2:A.x + A.w/2, y2:A.y + A.h }
-    : { x1:A.x, y1:A.y + A.h/2, x2:A.x + A.w, y2:A.y + A.h/2 };
+  state.ruler = reglaAlLado(A, vertical);
   $('rulerCm').value = String(vertical ? A.cmH : A.cmW);
   state.rulerVisible = true; $('rulerToggle').disabled = false; syncRulerBtn();
   if(state.drawMode) exitDrawMode(); // primero se mira la regla; después, «Marcar área»
@@ -5327,7 +5344,7 @@ function areaNota(tipo, ico, txt){
 function ponerZona(m, r, nombre){
   state.zone = { x: r.x/m.W, y: r.y/m.H, w: r.w/m.W, h: r.h/m.H };
   state.areaNombre = nombre;
-  if(state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); } // igual que al dibujar el área
+  ocultarReglaSiHayLogo();
   exitDrawMode(); setStepStates(); render();
 }
 /* al abrir un producto, medir una foto o elegir la técnica: el área ya queda puesta.
@@ -5495,28 +5512,75 @@ function alCambiarTecnica(){
   render();
 }
 
-/* la escala de la foto de un área del proveedor: su recuadro mide lo que dice en cm */
+/* la escala de la foto de un área del proveedor: su recuadro mide lo que dice en cm. La regla
+   igual va de punta a punta del producto (como en las demás fotos), con su medida según esa
+   escala, y si la descripción trae las medidas se comparan: son dos fuentes independientes */
 function aplicarEscalaProveedor(f){
   const a = f.areas.slice().sort((x, y) => ((x.dudosa ? 1 : 0) - (y.dudosa ? 1 : 0)) || (y.z[2]*y.z[3] - x.z[2]*x.z[3]))[0];
   if(state.mode !== 'product') setMode('product');
   state.auto = null; ultimaMedicion = null;
   const z = aFoto(a.z), {w:FW,h:FH} = frameRect();
-  const horizontal = z.w*FW >= z.h*FH; // la regla va sobre el lado con más píxeles
-  state.ruler = horizontal ? { x1:z.x, y1:z.y + z.h/2, x2:z.x + z.w, y2:z.y + z.h/2 }
-    : { x1:z.x + z.w/2, y1:z.y, x2:z.x + z.w/2, y2:z.y + z.h };
-  $('rulerCm').value = String(horizontal ? a.cm[0] : a.cm[1]);
+  const kW = a.cm[0] / (z.w*FW), kH = a.cm[1] / (z.h*FH); // cm por px del lienzo, según el ancho y el alto del área
+  const horizontal = z.w*FW >= z.h*FH;
+  let k = horizontal ? kW : kH; // el lado con más píxeles
+  const area = '«' + a.n + '», de ' + fmtPair(a.cm[0], a.cm[1]);
+
+  /* el producto en la foto: con las medidas de la descripción, el rectángulo que las explica;
+     sin ellas, la silueta. En las de 360° el área desplegada está pintada encima: no se busca */
+  const dims = medidasDeTexto($('prodMedidas').value, 'cm');
+  let prod = null;
+  if(!AREA_360.test(a.n)){
+    const r = medirImagenProducto(photo, dims.length >= 2 ? dims : [], true);
+    if(r.ok && r.conf !== 'baja'){
+      prod = { x0:r.rect.x0/r.W, y0:r.rect.y0/r.H, x1:r.rect.x1/r.W, y1:r.rect.y1/r.H, desc:r.cm, conf:r.conf, desvio:r.desvio };
+      ultimaMedicion = Object.assign(r, { src: photo.src });
+    } else if(r.caja && !r.varios && r.caja.x0 > 0 && r.caja.y0 > 0 && r.caja.x1 < r.W && r.caja.y1 < r.H){
+      prod = { x0:r.caja.x0/r.W, y0:r.caja.y0/r.H, x1:r.caja.x1/r.W, y1:r.caja.y1/r.H, desc:null };
+    }
+  }
+  let nota = null;
+  if(prod){
+    const pw = (prod.x1 - prod.x0)*FW, ph = (prod.y1 - prod.y0)*FH, vertical = ph >= pw;
+    /* cuánto difiere el largo del producto, con una escala, del de la descripción */
+    const dif = kk => prod.desc ? Math.abs((vertical ? ph : pw)*kk - (vertical ? prod.desc.h : prod.desc.w)) / (vertical ? prod.desc.h : prod.desc.w) : 0;
+    let deDesc = false;
+    if(a.dudosa && prod.desc){
+      /* el recuadro no guarda la proporción de sus cm: vale el lado que cierra con la descripción;
+         si ninguno cierra, la escala sale de la descripción */
+      k = dif(kW) <= dif(kH) ? kW : kH;
+      if(dif(k) > 0.06){ k = (vertical ? prod.desc.h / ph : prod.desc.w / pw); deDesc = true; }
+    }
+    state.ruler = reglaAlLado({ x:prod.x0, y:prod.y0, w:prod.x1 - prod.x0, h:prod.y1 - prod.y0 }, vertical);
+    $('rulerCm').value = String(Math.round((vertical ? ph : pw)*k*100)/100);
+    /* sin medidas, la silueta puede sumar la sombra: se informa solo el largo, donde va la regla */
+    state.auto = prod.desc ? { x:prod.x0, y:prod.y0, w:prod.x1 - prod.x0, h:prod.y1 - prod.y0, cmW:pw*k, cmH:ph*k, conf:prod.conf, desvio:prod.desvio } : null;
+    const mide = prod.desc ? fmtPair(pw*k, ph*k) : fmtCm((vertical ? ph : pw)*k*unitK()) + ' ' + state.unit, d = dif(k);
+    if(deDesc) nota = ['', '⚠', 'Las medidas del área ' + area + ' no guardan la proporción de su recuadro y ninguna cierra con la descripción: la escala sale de la descripción (el producto, ' + mide
+      + ', de punta a punta). Revisá la regla.'];
+    else if(prod.desc && d > 0.04) nota = ['', '⚠', 'Con la escala del proveedor (área ' + area + ') el producto mide ' + mide + ', pero la descripción dice '
+      + textoMedidas(dims) + ' (difieren ' + pct(d) + '). Revisá: la regla va de punta a punta del producto; si la buena es la de la descripción, anotala en la regla.'];
+    else if(prod.desc) nota = ['ok', '✓', 'Escala del proveedor (área ' + area + '): con ella el producto mide ' + mide + ' de punta a punta y coincide con la descripción ('
+      + textoMedidas(dims) + ', diferencia de ' + pct(d) + '). Las medidas del área y del logo ya son reales.'];
+    else nota = [a.dudosa ? '' : 'ok', a.dudosa ? '⚠' : '✓', 'Escala del proveedor (área ' + area + '): con ella el producto mide ' + mide + ' de punta a punta (ahí va la regla).'
+      + (a.dudosa ? ' Ojo: el recuadro del área no guarda la proporción de sus cm; revisá la regla con la medida del producto.' : ' Las medidas del área y del logo ya son reales.')];
+  } else {
+    /* sin el contorno del producto (o en una foto de 360°): la regla, sobre el área */
+    state.ruler = reglaAlLado(z, !horizontal);
+    $('rulerCm').value = String(horizontal ? a.cm[0] : a.cm[1]);
+    nota = a.dudosa
+      ? ['', '⚠', 'Escala del proveedor con dudas: el área ' + area + ' no guarda la proporción de su recuadro. La regla va sobre el ' + (horizontal ? 'ancho' : 'alto') + ' del área: revisala con la medida del producto.']
+      : ['ok', '✓', 'Escala del proveedor: el área ' + area + ' viene marcada en esta foto y la regla va sobre ella' + (AREA_360.test(a.n) ? ' (desplegada)' : '')
+        + ', así que las medidas del área y del logo ya son reales.'];
+  }
   state.rulerVisible = true; $('rulerToggle').disabled = false; syncRulerBtn();
   if(state.drawMode) exitDrawMode();
-  if(a.dudosa) autoNota('', '⚠', 'Escala del proveedor con dudas: el área «' + a.n + '» dice ' + fmtPair(a.cm[0], a.cm[1])
-    + ' pero su recuadro en la foto no guarda esa proporción. La regla va sobre el ' + (horizontal ? 'ancho' : 'alto') + ': revisala con la medida del producto.');
-  else autoNota('ok', '✓', 'Escala del proveedor: el área «' + a.n + '» mide ' + fmtPair(a.cm[0], a.cm[1])
-    + ' y viene marcada en esta foto, así que las medidas del área y del logo ya son reales.');
+  autoNota(nota[0], nota[1], nota[2]);
 }
 function aplicarAreaProveedor(a, tec){
   if(!a) return;
   state.zone = aFoto(a.z);
   state.areaNombre = a.n;
-  if(state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); }
+  ocultarReglaSiHayLogo();
   exitDrawMode();
   const t = tec && tecDeArea(a, tec), admite = (a.tec || []).map(x => x[0]);
   let txt = 'Área del proveedor: ' + a.n + ' · ' + fmtPair(a.cm[0], a.cm[1]) + (t ? ', para ' + tec : '') + '.' + limitarZona(limiteDe(tec, a), tec);
@@ -5530,7 +5594,7 @@ function aplicarAreaProveedor(a, tec){
 function ponerZonaGuardada(zg, tec){
   state.zone = { x: zg.zona.x, y: zg.zona.y, w: zg.zona.w, h: zg.zona.h };
   state.areaNombre = zg.area || '';
-  if(state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); }
+  ocultarReglaSiHayLogo();
   exitDrawMode();
   const extra = limitarZona(limiteDe(tec, null), tec);
   areaNota('ok', '💾', 'Área guardada' + (tec ? ' para ' + tec : '') + ' por ' + quienCuando(zg) + (zg.area ? ' (' + zg.area + ')' : '') + '.'
@@ -5689,7 +5753,7 @@ function marcarAreaShop(a){
   state.zone = { x:clamp(cx - w/2, 0, 1-w), y:clamp(cy - h/2, 0, 1-h), w, h };
   state.areaNombre = a.nombre;
   areaNota('', 'ℹ', a.nombre + ' · ' + fmtPair(a.w, a.h) + ': marcada en el centro; llevala a su lugar.');
-  if(state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); } // igual que al dibujar el área
+  ocultarReglaSiHayLogo();
   exitDrawMode(); setStepStates(); render();
 }
 
@@ -5856,7 +5920,7 @@ function usarFotoShop(i, opts){
       else if(f.areas && f.areas.length) aplicarEscalaProveedor(f);
       else if(medidasDeTexto($('prodMedidas').value, 'cm').length >= 2) autoMedir();
       aplicarAreaSugerida(opts.area);
-      if(previos) reubicarLogos(previos);
+      if(previos){ reubicarLogos(previos); ocultarReglaSiHayLogo(); }
       galeriaNota(shopResumen);
       render();
     },
@@ -6514,6 +6578,7 @@ function loadLogoSrc(url, name, isJpg, file){
       logo.h = (logo.w*FW / aspect) / FH;
     }
     pendingAdd = false;
+    if(state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); } // con el logo, solo queda el área
     if(file) guardarOriginalDelLogo(logo, file);
     rebuildLogo(logo, () => { syncLogoUI(); setStepStates(); render(); });
   };
