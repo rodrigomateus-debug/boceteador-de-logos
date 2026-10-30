@@ -5792,12 +5792,20 @@ const textoLimite = lim => lim.w && lim.h ? fmtPair(lim.w, lim.h)
 function limitarZona(lim, tec){
   const k = cmPerPx();
   if(!lim || !k || !state.zone) return '';
-  const {w:FW,h:FH} = frameRect(), z = state.zone, wCm = z.w*FW*k, hCm = z.h*FH*k;
-  const fw = lim.w && wCm > lim.w ? lim.w/wCm : 1, fh = lim.h && hCm > lim.h ? lim.h/hCm : 1;
-  if(fw === 1 && fh === 1) return '';
-  state.zone = { x: z.x + z.w*(1-fw)/2, y: z.y + z.h*(1-fh)/2, w: z.w*fw, h: z.h*fh };
+  const {w:FW,h:FH} = frameRect();
+  const achicar = z => {
+    const wCm = z.w*FW*k, hCm = z.h*FH*k;
+    const fw = lim.w && wCm > lim.w ? lim.w/wCm : 1, fh = lim.h && hCm > lim.h ? lim.h/hCm : 1;
+    return fw === 1 && fh === 1 ? null : Object.assign({}, z, { x: z.x + z.w*(1-fw)/2, y: z.y + z.h*(1-fh)/2, w: z.w*fw, h: z.h*fh });
+  };
+  /* la sugerida también: «Volver a la sugerida» no puede llevar a un área que la técnica no imprime */
+  const zs = state.zonaSug && achicar(state.zonaSug);
+  if(zs) state.zonaSug = zs;
+  const z = achicar(state.zone);
+  if(!z){ if(zs) render(); return ''; }
+  state.zone = z;
   render();
-  return ' Quedó en ' + fmtPair(wCm*fw, hCm*fh) + ': ' + tec + ' imprime hasta ' + textoLimite(lim) + ' (según ' + lim.de + ').';
+  return ' Quedó en ' + fmtPair(z.w*FW*k, z.h*FH*k) + ': ' + tec + ' imprime hasta ' + textoLimite(lim) + ' (según ' + lim.de + ').';
 }
 /* la técnica no figura para el producto (ni en el cotizador ni en el proveedor) */
 function avisoTecProveedor(tec){
