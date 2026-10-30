@@ -306,7 +306,29 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .paso2Toggle{margin-left:auto;font-size:12.5px}
 #bocetoModal .paso2Resumen{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--text-muted)}
 #bocetoModal .paso2Resumen b{color:var(--formas-navy);font-variant-numeric:tabular-nums}
-#bocetoModal .paso2Sub{display:block;margin-top:16px;padding-top:14px;border-top:1px solid var(--border-subtle)}
+#bocetoModal .medBloque{padding:12px;border:1px solid var(--border-subtle);border-left:4px solid var(--medida);border-radius:12px;background:#fff}
+#bocetoModal .medBloque.area{margin-top:10px;border-left-color:var(--sheet-accent)}
+#bocetoModal .medCab{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+#bocetoModal .medTit{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}
+#bocetoModal .medIcos{display:flex;gap:6px}
+#bocetoModal .icoBtn{width:34px;height:32px;border:1.5px solid var(--formas-gray-200);border-radius:9px;background:#fff;cursor:pointer;font-size:14px;line-height:1}
+#bocetoModal .icoBtn:hover{border-color:var(--formas-navy)}
+#bocetoModal .icoBtn.off{opacity:.45}
+#bocetoModal .icoBtn:disabled{opacity:.35;cursor:default}
+#bocetoModal .medRow{display:flex;align-items:center;gap:8px}
+#bocetoModal .medCampo{flex:1;display:flex;align-items:center;gap:6px;height:42px;padding:0 10px;border:1.5px solid var(--border);border-radius:10px;background:#fff;cursor:text}
+#bocetoModal .medCampo:focus-within{border-color:var(--formas-navy)}
+#bocetoModal .medCampo:has(input.need){border-color:#F9CE32;box-shadow:0 0 0 2.5px rgba(249,206,50,.35)}
+#bocetoModal .medCampo input[type="text"],#bocetoModal .medCampo input[type="text"]:focus,#bocetoModal .medCampo input.need{flex:1;min-width:0;border:none;outline:none;box-shadow:none;border-radius:0;padding:0;background:none;font:inherit;font-size:15px;font-weight:700;color:var(--formas-navy);text-align:right;font-variant-numeric:tabular-nums}
+#bocetoModal .medCampo .pre,#bocetoModal .medCampo .suf{font-size:12px;color:var(--text-muted);flex:none}
+#bocetoModal .medRow .lockBtn{width:38px;height:38px;margin:0}
+#bocetoModal .areaLinea{display:flex;justify-content:space-between;gap:8px;font-size:14px;color:var(--text-body)}
+#bocetoModal .areaLinea b{color:var(--formas-navy)}
+#bocetoModal .zoneRef{margin-top:4px;font-size:12px;color:var(--text-muted)}
+#bocetoModal .btn.btnChico{display:inline-block;flex:none;width:auto;padding:6px 12px;margin:0;font-size:12.5px;border-radius:9px}
+#bocetoModal .paso2Pie{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;margin-top:10px}
+#bocetoModal .paso2Pie #guardarMedidaBtn{font-size:13px}
+#bocetoModal .paso2Pie .modoLinea{margin:0}
 #bocetoModal .aplicarBar{position:sticky;bottom:0;z-index:3;display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:16px;background:#fff;border:1px solid var(--border-subtle);box-shadow:0 -6px 20px rgba(11,11,35,.10)}
 #bocetoModal .aplicarBar .tecResumen{border:none;padding:0;background:none;font-size:13px;align-items:baseline}
 #bocetoModal .aplicarBar .tecResumen .label{margin:0}
@@ -1146,38 +1168,49 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           <span><i class="sw sw-area"></i>Área <b id="resArea">—</b></span>
         </div>
         <div id="paso2Cuerpo">
-        <div class="field" id="rulerField">
-          <span class="label" style="letter-spacing:.08em"><i class="sw sw-prod"></i>Medida real del producto<i class="infoIco" id="medInfo" tabindex="0">i</i></span>
-          <div class="field-row medRow" id="medRow" style="margin-top:0">
-            <div class="field" style="margin-top:0">
-              <span class="miniLbl">↔ Ancho</span>
-              <div class="suffix-wrap"><input type="text" inputmode="decimal" id="prodAncho" placeholder="Ancho" autocomplete="off" aria-label="Ancho real del producto"><span class="suffix">cm</span></div>
+          <!-- el producto: su medida real (el recuadro azul de la foto) -->
+          <div class="medBloque" id="rulerField">
+            <div class="medCab">
+              <span class="medTit"><i class="sw sw-prod"></i>Producto<i class="infoIco" id="medInfo" tabindex="0">i</i></span>
+              <span class="medIcos">
+                <button type="button" class="icoBtn" id="rulerToggle" title="Ocultar la medida en la foto">👁</button>
+                <button type="button" class="icoBtn" id="autoMedirBtn" disabled title="Medir solo: busca el producto en la foto y lleva el recuadro a sus bordes">📐</button>
+              </span>
             </div>
-            <button type="button" class="lockBtn" id="prodLockBtn" aria-pressed="false" disabled>🔗</button>
-            <div class="field" style="margin-top:0">
-              <span class="miniLbl">↕ Alto</span>
-              <div class="suffix-wrap"><input type="text" inputmode="decimal" id="prodAlto" placeholder="Alto" autocomplete="off" aria-label="Alto real del producto"><span class="suffix">cm</span></div>
+            <div class="medRow" id="medRow">
+              <label class="medCampo"><span class="pre">ancho</span><input type="text" inputmode="decimal" id="prodAncho" autocomplete="off" aria-label="Ancho real del producto"><span class="suf">cm</span></label>
+              <button type="button" class="lockBtn" id="prodLockBtn" aria-pressed="false" disabled>🔗</button>
+              <label class="medCampo"><span class="pre">alto</span><input type="text" inputmode="decimal" id="prodAlto" autocomplete="off" aria-label="Alto real del producto"><span class="suf">cm</span></label>
             </div>
-            <div class="field" style="margin-top:0;flex:none">
-              <button class="btn btn-secondary" type="button" id="autoMedirBtn" style="padding:9px 12px" disabled title="Busca el producto en la foto y lleva el recuadro a sus bordes">📐 Medir solo</button>
-            </div>
+            <div class="medFalta" id="medFalta" hidden>↑ Anotá cuánto mide el producto de <b>ancho</b> o de <b>alto</b> (con uno alcanza) y llevá el recuadro azul a sus bordes.</div>
+            <input type="hidden" id="prodMedidas"><!-- la de la descripción del shop (o la guardada): la referencia -->
+            <div class="refMedida" id="refMedida" hidden><span id="refMedidaLbl">Proveedor</span> <b id="refMedidaTxt" title="ancho × alto"></b> <i id="refMedidaEstado" hidden></i></div>
+            <div class="note" id="autoMedNote" hidden><span id="autoMedIco">📐</span> <span id="autoMedTxt"></span></div>
+            <!-- la regla da la escala por dentro: no se muestra -->
+            <span id="rulerLbl" hidden></span>
+            <div id="rulerCmField" hidden><input type="number" id="rulerCm" min="0.5" max="500" step="0.1"></div>
+            <small id="rulerHint" hidden></small>
           </div>
-          <div class="medFalta" id="medFalta" hidden>↑ Anotá cuánto mide el producto de <b>ancho</b> o de <b>alto</b> (con uno alcanza) y llevá el recuadro azul a sus bordes.</div>
-          <input type="hidden" id="prodMedidas"><!-- la de la descripción del shop (o la guardada): la referencia -->
-          <div class="refMedida" id="refMedida" hidden><span id="refMedidaLbl">Medida del proveedor</span> <b id="refMedidaTxt" title="ancho × alto"></b> <i id="refMedidaEstado" hidden></i></div>
-          <div class="note" id="autoMedNote" hidden><span id="autoMedIco">📐</span> <span id="autoMedTxt"></span></div>
-          <span class="label" id="rulerLbl" style="letter-spacing:.08em;margin-top:8px">Escala real · regla</span>
-          <div class="field-row" style="margin-top:0">
-            <div class="field" id="rulerCmField" style="margin-top:0;flex:1.2">
-              <div class="suffix-wrap"><input type="number" id="rulerCm" placeholder="Centímetros" min="0.5" max="500" step="0.1"><span class="suffix">cm</span></div>
+          <!-- el área de impresión (la lima de la foto) -->
+          <div class="medBloque area">
+            <div class="medCab">
+              <span class="medTit"><i class="sw sw-area"></i>Área de impresión<i class="infoIco" id="areaInfo" tabindex="0" title="Si quedó mal puesta, arrastrala desde adentro: se mueve sin cambiar de tamaño. Desde las manijas cambia su tamaño, y con él su medida; la medida del producto no cambia.">i</i></span>
+              <button class="btn btn-secondary btnChico" type="button" id="drawZoneBtn">Marcar área</button>
             </div>
-            <div class="field" style="margin-top:0">
-              <button class="btn btn-secondary" type="button" id="rulerToggle" style="padding:9px 12px" disabled>Ocultar regla</button>
+            <div class="areaLinea" id="zoneReadout" hidden><span id="areaNomOut"></span><b class="num" id="zoneSizeOut">—</b></div>
+            <div class="zoneRef" id="zoneRef" hidden><span id="zoneRefLbl">Sugerida</span> <span id="zoneRefOut"></span> · <button type="button" class="linkBtn" id="zoneRefBtn">Volver a la sugerida</button></div>
+            <div id="areasShop" hidden>
+              <div class="areaChips" id="areaChips"></div>
             </div>
+            <div class="note mal" id="zoneLimNote" hidden>⚠ <span id="zoneLimTxt"></span></div>
+            <div class="note" id="areaNote" hidden><span id="areaNoteIco"></span> <span id="areaNoteTxt"></span></div>
           </div>
-          <small id="rulerHint" hidden style="color:var(--text-muted);font-size:11.5px">Llevá los extremos de la regla de lado a lado del producto en la foto y anotá cuánto mide esa distancia en la vida real. Con eso las medidas del logo se calculan solas.</small>
-        </div>
-        <!-- Modo de medida: por defecto, por el producto; la medida exacta del logo se elige a propósito -->
+          <div class="paso2Pie">
+            <div id="guardarMedidaBox" hidden>
+              <button class="linkBtn" type="button" id="guardarMedidaBtn">💾 Guardar para todos</button>
+              <div class="note" id="guardarMedidaNote" hidden><span id="guardarMedidaIco">💾</span> <span id="guardarMedidaTxt"></span> <button type="button" id="olvidarMedidaBtn" hidden>Volver a lo automático</button></div>
+            </div>
+            <!-- Modo de medida: por defecto, por el producto; la medida exacta del logo se elige a propósito -->
       <div class="modoLinea" id="modeCard">
         <div class="modoActual" id="modoActual">
           <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="modoIcoProd">
@@ -1197,24 +1230,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <button type="button" id="modeLogo" aria-pressed="false" hidden></button>
         <button type="button" id="modeProduct" aria-pressed="true" hidden></button>
       </div>
-
-        <span class="label paso2Sub" style="letter-spacing:.08em"><i class="sw sw-area"></i>Área de impresión</span>
-        <button class="btn btn-secondary" type="button" id="drawZoneBtn">Marcar área sobre la foto</button>
-        <div id="areasShop" hidden>
-          <span class="label" style="letter-spacing:.08em;display:block;margin-top:12px">Áreas de impresión</span>
-          <div class="areaChips" id="areaChips"></div>
-          <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11.5px">Tocá una y se marca a medida real sobre la foto; después la podés mover. Las del proveedor se eligen tocando su foto.</small>
-        </div>
-        <div class="readout" id="zoneReadout" hidden>
-          <div class="row"><span class="label">Área de impresión<i class="infoIco" tabindex="0" title="Si quedó mal puesta, arrastrala desde adentro: se mueve sin cambiar de tamaño. Desde las manijas cambia su tamaño, y con él su medida; la medida del producto no cambia.">i</i></span><span class="val num" id="zoneSizeOut">—</span></div>
-          <div class="row" id="zoneRef" hidden><span class="label" id="zoneRefLbl">Sugerida</span><span class="val num"><span id="zoneRefOut"></span> · <button type="button" class="linkBtn" id="zoneRefBtn">Volver a la sugerida</button></span></div>
-        </div>
-        <div class="note mal" id="zoneLimNote" hidden>⚠ <span id="zoneLimTxt"></span></div>
-        <div class="note" id="areaNote" hidden><span id="areaNoteIco"></span> <span id="areaNoteTxt"></span></div>
-        <div id="guardarMedidaBox" hidden>
-          <button class="btn btn-secondary" type="button" id="guardarMedidaBtn" style="margin-top:10px" title="De acá en adelante, todos los que traigan este producto lo ven así">💾 Guardar medida y área para todos</button>
-          <div class="note" id="guardarMedidaNote" hidden><span id="guardarMedidaIco">💾</span> <span id="guardarMedidaTxt"></span> <button type="button" id="olvidarMedidaBtn" hidden>Volver a lo automático</button></div>
-        </div>
+          </div>
         </div>
       </div>
 
@@ -4778,7 +4794,8 @@ function render(){
     $('zoneReadout').hidden = false;
     $('zoneSizeOut').textContent = k
       ? fmtPair(z.w*FW*k, z.h*FH*k)
-      : (state.mode === 'logo' ? '—' : 'usá la regla para ver la medida');
+      : (state.mode === 'logo' ? '—' : 'falta la medida del producto');
+    $('areaNomOut').textContent = state.areaNombre || '';
   } else { zoneEl.hidden = true; $('zoneReadout').hidden = true; $('zoneLimNote').hidden = true; }
 
   state.logos.forEach((l,i) => {
@@ -4871,7 +4888,7 @@ function render(){
   $('guardarMedidaBox').hidden = !(fotoShopActual && fotoShopActual.raiz && state.mode === 'product' && !frame.hidden);
   $('guardarMedidaBtn').disabled = !cmPerPx() || guardando;
   const tecR = tecnicaElegida();
-  $('guardarMedidaBtn').textContent = '💾 Guardar medida y área' + (tecR && state.zone ? ' de ' + tecR : '') + ' para todos';
+  $('guardarMedidaBtn').title = 'Guardar la medida y el área' + (tecR && state.zone ? ' de ' + tecR : '') + ' así como están: de acá en adelante, todos los que traigan este producto lo ven así';
   const kArea = cmPerPx();
   $('areaChips').querySelectorAll('.areaChip:not(.prov)').forEach(b => {
     const a = state.areasShop[+b.dataset.i];
@@ -5097,7 +5114,8 @@ $('photoIaUndo').addEventListener('click', () => {
 /* una sola forma de medir: el recuadro azul es el producto y su ancho o su alto real dan la escala
    (la regla queda por dentro). Sin recuadro solo en las fotos de 360°, donde la escala es el área */
 function syncRulerBtn(){
-  $('rulerToggle').textContent = state.rulerVisible ? 'Ocultar medida' : 'Ver la medida';
+  $('rulerToggle').classList.toggle('off', !state.rulerVisible); // 👁: la medida en la foto, a la vista o no
+  $('rulerToggle').title = state.rulerVisible ? 'Ocultar la medida en la foto' : 'Ver la medida en la foto';
   $('rulerToggle').disabled = !state.auto; $('rulerToggle').hidden = !state.auto; // sin recuadro (foto de 360°) no hay medida que ocultar
   $('rulerLbl').hidden = true; $('rulerCmField').hidden = true;
   $('medInfo').title = 'El recuadro azul punteado es el producto (no el área de impresión, que es la verde del paso 2). Escribí su ancho o su alto y el recuadro se adapta a esa medida (solo ese lado). Después llevalo a los bordes del producto con las manijas o movelo agarrando la línea: con 🔗 mantiene la forma y la medida, y se ajusta la escala.';
@@ -5632,9 +5650,11 @@ function estimarArea(m){
   }
   return null;
 }
+const AYUDA_AREA = 'Si quedó mal puesta, arrastrala desde adentro: se mueve sin cambiar de tamaño. Desde las manijas cambia su tamaño, y con él su medida; la medida del producto no cambia.';
 function areaNota(tipo, ico, txt){
   const n = $('areaNote');
-  n.hidden = !txt;
+  $('areaInfo').title = (txt ? txt + '\n\n' : '') + AYUDA_AREA;
+  n.hidden = !txt || tipo === 'ok' || ico === '✎'; // lo que salió bien (o la estimada) queda en el ⓘ; a la vista, solo lo que pide algo
   n.classList.toggle('ok', tipo === 'ok');
   n.classList.toggle('mal', tipo === 'mal');
   $('areaNoteIco').textContent = ico;
@@ -6614,7 +6634,7 @@ window.__bocetoAlAbrir = async () => {
   shopGuardada = p.guardada || null; shopBase = p.elegida; paso2Abierto = false;
   shopTecCat = p.tecCat || [];
   $('prodMedidas').value = p.medidas ? textoMedidas(p.medidas.valores) : '';
-  $('refMedidaLbl').textContent = p.medidas && p.medidas.guardada ? 'Medida guardada' : 'Medida del proveedor';
+  $('refMedidaLbl').textContent = p.medidas && p.medidas.guardada ? 'Guardada' : 'Proveedor';
   limpiarMedidaProducto();
   state.areasShop = p.areas; pintarAreas();
   pintarGaleria();
@@ -7559,14 +7579,14 @@ function enterDrawMode(){
   frame.classList.add('drawing');
   $('drawHint').hidden = false;
   $('drawZoneBtn').setAttribute('aria-pressed', 'true');
-  $('drawZoneBtn').textContent = '✏ Dibujando… arrastrá sobre la foto';
+  $('drawZoneBtn').textContent = '✏ Dibujá en la foto';
 }
 function exitDrawMode(){
   state.drawMode = false;
   frame.classList.remove('drawing');
   $('drawHint').hidden = true;
   $('drawZoneBtn').setAttribute('aria-pressed', 'false');
-  $('drawZoneBtn').textContent = state.zone ? 'Redibujar área' : 'Marcar área sobre la foto';
+  $('drawZoneBtn').textContent = state.zone ? 'Redibujar' : 'Marcar área';
 }
 
 /* ---------- interacción con punteros ---------- */
