@@ -1096,7 +1096,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <input type="file" id="photoInput" accept="image/png,image/jpeg,image/webp" hidden>
         <div class="note" id="photoIaNote" hidden>✨ <span id="photoIaNoteTxt"></span> <button type="button" id="photoIaUndo">Volver a la original</button></div>
         <div class="field" id="rulerField">
-          <span class="label" style="letter-spacing:.08em">Medida del producto · de la descripción</span>
+          <span class="label" style="letter-spacing:.08em">Medida real del producto</span>
           <div class="field-row" style="margin-top:0">
             <div class="field" style="margin-top:0;flex:1.2">
               <input type="text" id="prodMedidas" placeholder="Ej.: 14 × 9 cm" autocomplete="off">
@@ -1108,7 +1108,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           <div class="note" id="autoMedNote" hidden><span id="autoMedIco">📐</span> <span id="autoMedTxt"></span></div>
           <span class="label" id="rulerLbl" style="letter-spacing:.08em;margin-top:8px">Escala real · regla</span>
           <div class="field-row" style="margin-top:0">
-            <div class="field" style="margin-top:0;flex:1.2">
+            <div class="field" id="rulerCmField" style="margin-top:0;flex:1.2">
               <div class="suffix-wrap"><input type="number" id="rulerCm" placeholder="Centímetros" min="0.5" max="500" step="0.1"><span class="suffix">cm</span></div>
             </div>
             <div class="field" style="margin-top:0">
@@ -4942,9 +4942,10 @@ $('photoIaUndo').addEventListener('click', () => {
 function syncRulerBtn(){
   const c = !!state.auto;
   $('rulerToggle').textContent = state.rulerVisible ? (c ? 'Ocultar medida' : 'Ocultar regla') : (c ? 'Ver la medida' : 'Medir de nuevo');
-  $('rulerLbl').textContent = c ? 'Escala real · lado largo del producto' : 'Escala real · regla';
+  /* con contorno, la escala sale de la medida del producto: el campo de la regla sobraría */
+  $('rulerLbl').hidden = c; $('rulerCmField').hidden = c;
   $('rulerHint').textContent = c
-    ? 'El contorno verde es el producto: si no agarró bien los bordes, ajustalos con sus manijas. Acá va cuánto mide su lado largo en la vida real; con eso las medidas del área y del logo se calculan solas.'
+    ? 'El contorno verde es el producto: si no agarró bien los bordes, ajustalos con sus manijas y la escala se recalcula con la medida del producto.'
     : 'Llevá los extremos de la regla de lado a lado del producto en la foto y anotá cuánto mide esa distancia en la vida real. Con eso las medidas del logo se calculan solas.';
 }
 $('rulerCm').addEventListener('input', () => {
@@ -5205,7 +5206,7 @@ function recalibrarContorno(){
   if(d) $('rulerCm').value = String(Math.max(d.w, d.h)); // el lado largo del producto, sobre el lado largo del contorno
   else if(k) $('rulerCm').value = String(Math.round((vertical ? A.h*FH : A.w*FW)*k*100)/100); // sin medida: misma escala
 }
-function contornoAjustado(){
+function contornoAjustado(porMedida){
   const A = state.auto, k = cmPerPx();
   if(!A || !k) return;
   A.mano = true;
@@ -5216,7 +5217,7 @@ function contornoAjustado(){
   const d = A.desc, mide = fmtPair(A.w*FW*k, A.h*FH*k);
   if(!d){ autoNota('', '✎', 'Contorno ajustado a mano: con la escala de la regla, el producto mide ' + mide + '.'); return; }
   const corto = vertical ? A.w*FW*k : A.h*FH*k, cortoDesc = Math.min(d.w, d.h), dif = Math.abs(corto - cortoDesc) / cortoDesc;
-  autoNota(dif > 0.04 ? '' : 'ok', '✎', 'Contorno ajustado a mano: la escala sale de la medida del producto (' + textoMedidas([d.w, d.h]) + ') sobre el contorno; mide ' + mide + '.'
+  autoNota(dif > 0.04 ? '' : 'ok', '✎', (porMedida ? 'Medida del producto cambiada' : 'Contorno ajustado a mano') + ': la escala sale de la medida del producto (' + textoMedidas([d.w, d.h]) + ') sobre el contorno; mide ' + mide + '.'
     + (dif > 0.04 ? ' Ojo: el ' + (vertical ? 'ancho' : 'alto') + ' da ' + fmtCm(corto*unitK()) + ' ' + state.unit + ' y la descripción dice ' + fmtCm(cortoDesc*unitK()) + ' ' + state.unit + ': revisá los bordes del contorno.' : '')
     + ' Para que la próxima vez salga así, «Guardar medida y área para todos».');
 }
@@ -5274,6 +5275,20 @@ function autoMedir(){
 const medirYSugerir = () => { autoMedir(); if(!state.zone) aplicarAreaSugerida(); };
 $('autoMedirBtn').addEventListener('click', medirYSugerir);
 $('prodMedidas').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); medirYSugerir(); } });
+/* con contorno, cambiar la medida del producto recalcula la escala sobre ese contorno (sin volver a buscarlo) */
+$('prodMedidas').addEventListener('change', () => {
+  const A = state.auto, dims = medidasDeTexto($('prodMedidas').value, 'cm');
+  if(!A || frame.hidden || dims.length < 2) return;
+  const {w:FW,h:FH} = frameRect(), vertical = A.h*FH >= A.w*FW;
+  const orden = dims.slice().sort((a, b) => b - a), largo = orden[0];
+  /* el otro lado: la medida que mejor cierra con el contorno a la escala nueva */
+  const cortoMed = (vertical ? A.w*FW : A.h*FH) * largo / (vertical ? A.h*FH : A.w*FW);
+  const corto = orden.slice(1).reduce((m, v) => Math.abs(v - cortoMed) < Math.abs(m - cortoMed) ? v : m, orden[1]);
+  const d = vertical ? { w: corto, h: largo } : { w: largo, h: corto };
+  if(A.desc && A.desc.w === d.w && A.desc.h === d.h) return; // es la misma (por ejemplo, después de «Medir solo»)
+  A.desc = d;
+  recalibrarContorno(); contornoAjustado(true); render();
+});
 
 /* ---------- técnicas ----------
    La lista del boceteador y cómo se llama cada una en los proveedores (Zecat: «Tampografia
