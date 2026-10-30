@@ -39,6 +39,12 @@ mouse o con ↑ ↓ y Enter). Al elegirlo:
 4. en el paso 2, cada área de impresión del shop es un botón que la marca **a
    medida real** sobre el producto (después se lleva a su lugar).
 
+Los productos de **Zecat** traen además las áreas del proveedor: cada una con
+**su propia foto de ese color**, el recuadro marcado sobre la foto y su medida
+en cm. Esas fotos (marca ▣ en la galería) no se miden: **la escala sale del
+recuadro del área**, que mide lo que dice el proveedor. Así se ubican al
+milímetro aunque la descripción no traiga las medidas del producto.
+
 Si el boceteador ya tiene un boceto con logos, traer otro producto no lo pisa:
 solo deja sus fotos para elegir.
 
@@ -56,6 +62,44 @@ se agranda como siempre.
 En una prueba con 40 productos al azar del catálogo, 32 áreas quedaron bien
 puestas, 4 aceptables y 4 mal (fotos de la espalda o con la caja abierta).
 
+### El área depende de la técnica
+
+El paso 2 arranca con la **técnica** (la misma del paso 4: elegirla en uno la
+cambia en el otro). Una serigrafía rotativa envuelve todo el producto; una
+tampografía entra en pocos cm. Al elegirla, **la foto y el área se acomodan
+solas**, en este orden:
+
+1. lo que alguien **guardó para esa técnica** en ese producto (con su foto);
+2. el **área del proveedor que admite esa técnica**, en su foto: la principal o,
+   para las rotativas (360°), la que envuelve el producto (Zecat también lista la
+   rotativa en los laterales chicos);
+3. el área de la descripción o la estimada, como antes.
+
+Siempre **dentro del límite de la técnica**: el máximo que da el proveedor para
+esa área (por ejemplo, DTF hasta 14 × 14 cm) y el de la tabla de producción, el
+menor de los dos. Si el proveedor no lista la técnica elegida, el aviso lo dice y
+nombra las que admite.
+
+En los productos de Zecat la técnica arranca **propuesta** (la primera del área
+principal); se cambia cuando haga falta. Los logos que ya estaban puestos siguen
+al cambiar de foto, con su **medida real** y en el mismo lugar del área.
+
+Las técnicas: DTP Full Color, DTF, **Serigrafía plana**, **Serigrafía rotativa
+(360°)**, Tampografía, Grabado láser, **Láser rotativo (360°)**, **Impresión UV**,
+**UV rotativa (360°)**, Bordado, **Hot stamping**, Vinilo y Sublimación (y «Otra…»).
+Los 34 nombres de técnica de Zecat («Tampografia Boligrafos», «Transfer DTF
+Gorras», «Laser CO2»…) caen en estas con `canonTecnica()`. Las plantillas viejas con
+«Serigrafía» abren como «Serigrafía plana».
+
+**Avisos.** Si el logo es más grande que el área o que lo que imprime la técnica,
+o se sale del área, el paso 3 lo avisa (con la medida de cada uno). Con una
+rotativa, el área real (por ejemplo, «Área 360° (envuelve el producto): 26,1 ×
+12,5 cm») queda escrita en las observaciones del logo de la ficha, para el taller.
+
+**Límites por técnica.** «Límites por técnica» (paso 2) abre la tabla de hasta
+cuánto imprime cada técnica, en cm: la carga producción, vacío es sin límite.
+Se guarda con confirmación y sin clave, y vale para todos.
+
 ### Medidas y áreas guardadas
 
 Si la medida o el área no quedaron bien, se ajustan y se toca **💾 Guardar medida y
@@ -63,15 +107,22 @@ Si la medida o el área no quedaron bien, se ajustan y se toca **💾 Guardar me
 todos los que traigan este producto lo van a ver así») y no pide clave. Desde ahí,
 cualquiera que traiga ese producto lo recibe así: la ficha dice quién lo ajustó y
 cuándo, la foto queda marcada con 💾, y la regla y el área salen como las dejaron.
-A medida que se usa, los productos van quedando perfectos. **Volver a lo
-automático** (también con confirmación) borra lo guardado de esa foto.
+A medida que se usa, los productos van quedando perfectos.
+
+Con una técnica elegida, **el área se guarda para esa técnica** (el botón lo dice:
+«Guardar medida y área de Tampografía para todos») y se recuerda en qué foto va:
+la próxima vez que alguien elija esa técnica, sale esa foto con esa área. Las
+áreas de las otras técnicas no se tocan. **Volver a lo automático** (también con
+confirmación) borra, con técnica, solo el área de esa técnica (la regla de la foto
+queda); sin técnica, todo lo guardado de esa foto.
 
 Se guarda por raíz del producto (vale para todos sus colores y talles; la regla y
-el área, por foto) en la función `functions/api/medidas.js`, sobre un KV de
-Cloudflare. Como no hay clave, la función solo acepta guardados hechos desde la
-misma app y lleva un historial de los últimos 30 cambios de cada producto (quién,
-cuándo, qué foto), para ver quién cambió qué si algo se guardó mal.
-Prueba: `node test_medidas.mjs`.
+el área, por foto; el área, también por técnica) en la función
+`functions/api/medidas.js`, sobre un KV de Cloudflare, igual que la tabla de
+límites por técnica. Como no hay clave, la función solo acepta guardados hechos
+desde la misma app y lleva un historial de los últimos 30 cambios de cada producto
+y de la tabla (quién, cuándo, qué foto y técnica), para ver quién cambió qué si
+algo se guardó mal. Prueba: `node test_medidas.mjs`.
 
 **Puesta en marcha (una sola vez, ya hecha):** Cloudflare → Storage & Databases →
 KV → *Create namespace* (por ejemplo `formas-medidas`). Después Workers & Pages →
@@ -84,14 +135,22 @@ redesplegar. Sin eso todo anda igual, pero el botón de guardar avisa que falta.
 La búsqueda usa **`catalogo-shop.json`**, armado desde la API de catálogo de STP
 (`/api/product/67/`, la que hizo Datacrush): los productos activos de formas.shop
 con sus fotos (de la tienda y del proveedor), las medidas y las áreas de impresión
-ya leídas. No lleva precios, stock ni costos. Se regenera con el token de lectura
-(nunca va a la web ni al repo):
+ya leídas. No lleva precios, stock ni costos. Se regenera con los tokens de
+lectura (nunca van a la web ni al repo):
 
 ```
-STP_API_TOKEN=… node herramientas/catalogo-shop.mjs
+STP_API_TOKEN=… ZECAT_TOKEN=… node herramientas/catalogo-shop.mjs
 ```
 
-Tarda medio minuto. Conviene correrlo cada tanto (el shop suma productos todos
+Con `ZECAT_TOKEN` (el de la API de Zecat, `api.zecat.com/v1/generic_product`), los
+productos de Zecat (SKU `ZEC_` + el SKU de la variante en Zecat) suman sus áreas:
+nombre, medida en cm, foto de ese color, recuadro en la foto (Zecat los da sobre una
+grilla de 400 × 400), técnicas con su máximo y si es la principal. Las 1.791
+variantes de Zecat del shop las tienen (6.522 áreas). Las 280 cuyo recuadro no
+guarda la proporción de sus cm quedan marcadas como «escala dudosa» y el boceteador
+lo avisa. Sin `ZECAT_TOKEN` se conservan las áreas del catálogo anterior.
+
+Tarda medio minuto, y con Zecat unos minutos más (un pedido por producto). Conviene correrlo cada tanto (el shop suma productos todos
 los días) y subir el `catalogo-shop.json` nuevo. Un producto más nuevo que el
 catálogo igual se trae por su link o su código: en ese caso se lee su página
 pública (`leerFichaShop()`). Las medidas y las áreas se leen con la misma
@@ -110,7 +169,8 @@ que trae la API (Zecat, X-Trade, Promoproductos, Nuevas Formas…): no es un pro
 abierto. Si aparece un proveedor nuevo con fotos en otro dominio, se suma a
 `HOSTS_FOTOS`. No necesita variables.
 
-Pruebas: `node test_shop.mjs`, `node test_medir_producto.mjs` y `node test_medidas.mjs`.
+Pruebas: `node test_shop.mjs`, `node test_medir_producto.mjs`, `node test_medidas.mjs` y
+`node test_tecnicas.mjs`.
 
 ## PDF editable para CorelDRAW
 

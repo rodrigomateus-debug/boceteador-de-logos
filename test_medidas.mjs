@@ -62,6 +62,57 @@ for (const malo of [
 ]) assert.equal((await guardar(malo)).status, 400, JSON.stringify(malo));
 assert.equal((await (await leer('NFM_820')).json()).historial.length, 4);
 
+// el área depende de la técnica: cada una guarda la suya y recuerda en qué foto va
+const frente = '/upload/frente.jpg', envuelta = 'https://d1yq3fbd6icaus.cloudfront.net/products/360.webp';
+const regla = { x1: .1, y1: .5, x2: .9, y2: .5 };
+await guardar({ raiz: 'ZEC_1', foto: frente, regla, cm: 20, zona: { x: .3, y: .3, w: .2, h: .2 }, area: 'Frente' });
+await guardar({ raiz: 'ZEC_1', foto: frente, regla, cm: 20, zona: { x: .35, y: .35, w: .1, h: .05 }, area: 'Frente', tecnica: 'Tampografía', autor: 'Ana' });
+await guardar({ raiz: 'ZEC_1', foto: envuelta, regla, cm: 22, zona: { x: .05, y: .2, w: .9, h: .5 }, area: '360°', tecnica: 'Serigrafía rotativa (360°)' });
+d = await (await leer('ZEC_1')).json();
+assert.deepEqual(d.tecnicas, { 'Tampografía': frente, 'Serigrafía rotativa (360°)': envuelta });
+assert.deepEqual(d.fotos[frente].zona, { x: .3, y: .3, w: .2, h: .2 }, 'el área sin técnica sigue');
+assert.deepEqual(d.fotos[frente].zonas['Tampografía'].zona, { x: .35, y: .35, w: .1, h: .05 });
+assert.equal(d.fotos[frente].zonas['Tampografía'].autor, 'Ana');
+assert.equal(d.fotos[envuelta].zonas['Serigrafía rotativa (360°)'].area, '360°');
+assert.equal(d.preferida, frente, 'guardar con técnica no cambia la foto preferida');
+assert.equal(d.historial[0].accion, 'guardó medida y área de Serigrafía rotativa (360°)');
+// volver a guardar la escala de la foto (otra técnica) no pisa lo de las demás
+await guardar({ raiz: 'ZEC_1', foto: frente, regla, cm: 21, zona: { x: .2, y: .2, w: .3, h: .3 }, tecnica: 'Grabado láser' });
+d = await (await leer('ZEC_1')).json();
+assert.equal(d.fotos[frente].cm, 21);
+assert.deepEqual(Object.keys(d.fotos[frente].zonas).sort(), ['Grabado láser', 'Tampografía']);
+assert.deepEqual(d.fotos[frente].zona, { x: .3, y: .3, w: .2, h: .2 });
+// volver a lo automático para una técnica: solo esa
+await guardar({ raiz: 'ZEC_1', foto: frente, borrar: true, tecnica: 'Tampografía' });
+d = await (await leer('ZEC_1')).json();
+assert.deepEqual(Object.keys(d.fotos[frente].zonas), ['Grabado láser']);
+assert.equal(d.tecnicas['Tampografía'], undefined);
+assert.equal(d.fotos[frente].cm, 21);
+assert.equal(d.historial[0].accion, 'volvió al área automática de Tampografía');
+// con una técnica que no tenía área ahí, no se borra nada más
+await guardar({ raiz: 'ZEC_1', foto: envuelta, borrar: true, tecnica: 'Bordado' });
+d = await (await leer('ZEC_1')).json();
+assert.ok(d.fotos[envuelta].zonas['Serigrafía rotativa (360°)']);
+// borrar la foto entera se lleva sus técnicas
+await guardar({ raiz: 'ZEC_1', foto: envuelta, borrar: true });
+d = await (await leer('ZEC_1')).json();
+assert.deepEqual(d.tecnicas, { 'Grabado láser': frente });
+assert.equal((await guardar({ raiz: 'ZEC_1', foto: frente, regla, cm: 2, tecnica: '<script>' })).status, 400);
+
+// límites por técnica: los carga producción, sin clave y solo desde la app
+assert.deepEqual(await (await onRequest({ env, request: new Request('https://app.test/api/medidas?config=tecnicas') })).json(), { tecnicas: {} });
+const limites = (cuerpo, origen = 'https://app.test') => guardar(Object.assign({ config: 'tecnicas' }, cuerpo), origen);
+r = await limites({ tecnicas: { 'Tampografía': { w: 7, h: 4 }, 'Grabado láser': { w: 10 }, 'Bordado': { w: null, h: '' } }, autor: 'Producción' });
+assert.equal(r.status, 200);
+d = await (await onRequest({ env, request: new Request('https://app.test/api/medidas?config=tecnicas') })).json();
+assert.deepEqual(d.tecnicas, { 'Tampografía': { w: 7, h: 4 }, 'Grabado láser': { w: 10 } });
+assert.equal(d.autor, 'Producción');
+assert.equal(d.historial[0].accion, 'actualizó los límites por técnica');
+assert.equal((await limites({ tecnicas: { 'Tampografía': { w: 7 } } }, 'https://otro.example')).status, 403);
+assert.equal((await limites({ tecnicas: { 'Tampografía': { w: -1 } } })).status, 400);
+assert.equal((await limites({ tecnicas: [1, 2] })).status, 400);
+assert.equal((await limites({ tecnicas: { '<b>': { w: 1 } } })).status, 400);
+
 // sin el KV configurado, el motivo vuelve legible
 r = await leer('NFM_820', {});
 assert.equal(r.status, 503);
