@@ -45,6 +45,11 @@ en cm. Esas fotos (marca ▣ en la galería) no se miden: **la escala sale del
 recuadro del área**, que mide lo que dice el proveedor. Así se ubican al
 milímetro aunque la descripción no traiga las medidas del producto.
 
+Mientras se trae el producto (bajan y se miden las fotos), «Creá el boceto con tu
+logo» queda bloqueado: se habilita cuando terminó, para no abrir un boceto a medias.
+Para cambiar de producto se vuelve a escribir en el mismo campo: el código o link
+del producto traído se reemplaza con lo que se escribe y la lista vuelve a salir.
+
 Si el boceteador ya tiene un boceto con logos, traer otro producto no lo pisa:
 solo deja sus fotos para elegir.
 
@@ -64,8 +69,9 @@ puestas, 4 aceptables y 4 mal (fotos de la espalda o con la caja abierta).
 
 ### El área depende de la técnica
 
-El paso 2 arranca con la **técnica** (la misma del paso 4: elegirla en uno la
-cambia en el otro). Una serigrafía rotativa envuelve todo el producto; una
+El paso 2 arranca con la **técnica**: se elige una sola vez, ahí, porque define el
+área. El paso 4 («Colores y aplicación») solo la muestra, con «Cambiar», que lleva
+al paso 2; si falta, lo avisa y no deja aplicar. Una serigrafía rotativa envuelve todo el producto; una
 tampografía entra en pocos cm. Al elegirla, **la foto y el área se acomodan
 solas**, en este orden:
 

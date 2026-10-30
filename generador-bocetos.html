@@ -234,6 +234,9 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .areaChip.otra{color:var(--text-muted)}
 #bocetoModal .areaChip[aria-pressed="true"]{border-color:var(--formas-navy);background:color-mix(in srgb, var(--formas-lime) 30%, #fff)}
 #bocetoModal .shopFoto b.area{background:var(--formas-navy)}
+#bocetoModal .tecResumen{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:13.5px;color:var(--formas-navy);padding:9px 12px;border:1.5px solid var(--formas-gray-200);border-radius:10px;background:#fff}
+#bocetoModal .tecResumen.falta{border-color:var(--formas-yellow);background:var(--surface-sunken)}
+#bocetoModal .tecResumen.falta b{font-weight:600;color:var(--text-body)}
 #bocetoModal .linkBtn{border:none;background:none;padding:0;font:inherit;font-weight:700;color:var(--formas-navy);text-decoration:underline;cursor:pointer}
 #bocetoModal .note.ok{border-left-color:var(--formas-green)}
 #bocetoModal .note.mal{border-left-color:#EF7958}
@@ -418,6 +421,7 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 /* botón del generador para abrir el boceteador */
 .btn-boceto{display:block; width:100%; margin-top:6px; padding:11px 12px; border:none; border-radius:10px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
 .btn-boceto:hover{filter:brightness(1.05)}
+.btn-boceto:disabled{opacity:.6; cursor:progress; filter:none}
 
 /* mejora de foto con IA */
 .iaRow{display:flex; gap:8px; margin-top:6px}
@@ -1106,8 +1110,12 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <div class="card step locked" id="step2">
         <div class="step-head"><span class="step-num">2</span><h2>Área de impresión</h2></div>
         <div class="field" id="areaTecField" style="margin-top:0;margin-bottom:12px">
-          <span class="label" style="letter-spacing:.08em">Técnica</span>
-          <select id="areaTecnica"><option value="">Elegí la técnica…</option></select>
+          <span class="label" style="letter-spacing:.08em">Técnica de aplicación</span>
+          <select id="technique">
+            <option value="">Elegí la técnica…</option>
+            <option value="__otra">Otra…</option>
+          </select>
+          <input type="text" id="techniqueOther" placeholder="Escribí la técnica" style="margin-top:8px" hidden>
           <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11.5px">El área depende de la técnica (una rotativa envuelve el producto; la tampografía entra en pocos cm): con la técnica elegida, la foto y el área se acomodan solas. <button type="button" class="linkBtn" id="limitesBtn">Límites por técnica</button></small>
         </div>
         <button class="btn btn-secondary" type="button" id="drawZoneBtn">Marcar área sobre la foto</button>
@@ -1193,9 +1201,9 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <div class="note" id="needMeasureNote" hidden>📏 <span></span></div>
       </div>
 
-      <!-- Paso 4: técnica + descarga -->
+      <!-- Paso 4: colores, aplicación y descarga (la técnica se elige en el paso 2) -->
       <div class="card step locked" id="step4">
-        <div class="step-head"><span class="step-num">4</span><h2>Técnica y aplicación</h2></div>
+        <div class="step-head"><span class="step-num">4</span><h2>Colores y aplicación</h2></div>
         <div class="field" id="bcColoresField" style="margin-top:0; margin-bottom:14px">
           <span class="label" style="letter-spacing:.08em">Colores de impresión</span>
           <div class="codeToggle" style="margin-top:6px">
@@ -1207,11 +1215,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         </div>
         <div class="field" style="margin-top:0">
           <span class="label" style="letter-spacing:.08em">Técnica de aplicación</span>
-          <select id="technique">
-            <option value="">Elegí la técnica…</option>
-            <option value="__otra">Otra…</option>
-          </select>
-          <input type="text" id="techniqueOther" placeholder="Escribí la técnica" style="margin-top:8px" hidden>
+          <div class="tecResumen" id="tecResumen"><b id="tecResumenTxt">—</b> <button type="button" class="linkBtn" id="tecCambiar">Cambiar</button></div>
         </div>
         <button class="btn btn-primary" type="button" id="applyBtn" style="margin-top:12px">Aplicar a la ficha</button>
         <button class="btn btn-secondary" type="button" id="downloadBtn">Descargar PNG</button>
@@ -1463,6 +1467,7 @@ function renderTabs(){
   box.appendChild(add);
 }
 
+window.__textoBotonBoceto = () => imgFoto ? '✎ Editar el boceto' : '✦ Creá el boceto con tu logo';
 function refreshFotoBox(){
   if(imgFoto){
     $('txt_foto').innerHTML = '<img src="'+imgFoto+'"><span style="font-size:11px">Foto de esta hoja — clic para reemplazar</span>';
@@ -1471,7 +1476,7 @@ function refreshFotoBox(){
     $('txt_foto').textContent = 'Subir foto ya lista (con el logo aplicado)';
     $('clear_foto').style.display = 'none';
   }
-  $('openBoceto').textContent = imgFoto ? '✎ Editar el boceto' : '✦ Creá el boceto con tu logo';
+  if(!$('openBoceto').disabled) $('openBoceto').textContent = window.__textoBotonBoceto();
   $('foto_dl').hidden = !imgFoto;
   $('fotoSwap').hidden = !fotoAlt;
   $('fotoIaBtn').setAttribute('aria-pressed', fotoActiva === 'ia');
@@ -4758,7 +4763,7 @@ function render(){
   $('logoHcm').classList.toggle('need', state.mode === 'logo' && !!L2 && !(L2.cmH > 0));
   $('rulerCm').classList.toggle('need', state.mode === 'product' && !frame.hidden && !cmPerPx());
   setStepStates();
-  $('applyBtn').disabled = !techValue();
+  sincronizarTecnica();
 }
 
 /* sin medidas no se avanza: en modo logo, ancho y alto de cada logo;
@@ -4782,8 +4787,8 @@ function setStepStates(){
   if(state.logos.length && !mok){
     note.hidden = false;
     note.querySelector('span').textContent = state.mode === 'logo'
-      ? 'Cargá el ancho y el alto de cada logo para habilitar "Técnica y aplicación".'
-      : 'Cargá la medida de la regla (en cm) para habilitar "Técnica y aplicación".';
+      ? 'Cargá el ancho y el alto de cada logo para habilitar "Colores y aplicación".'
+      : 'Cargá la medida de la regla (en cm) para habilitar "Colores y aplicación".';
   } else note.hidden = true;
 }
 
@@ -5378,22 +5383,27 @@ let shopBase = 0;         // su foto general: la que se mide sola o la que algui
     const o = document.createElement('option');
     o.textContent = n;
     $('technique').insertBefore(o, otra);
-    $('areaTecnica').appendChild(o.cloneNode(true));
   });
 })();
 /* la técnica con su nombre de la lista (lo escrito en «Otra…» también, si se parece a una) */
 const tecnicaElegida = () => { const t = techValue(); return TECNICAS.includes(t) ? t : canonTecnica(t); };
+/* el paso 4 muestra la técnica elegida en el paso 2 (se elige una sola vez, ahí, porque define el área) */
 function sincronizarTecnica(){
-  const t = tecnicaElegida();
-  $('areaTecnica').value = TECNICAS.includes(t) ? t : '';
-  $('applyBtn').disabled = !techValue();
+  const t = techValue();
+  $('tecResumenTxt').textContent = t || 'Falta elegirla: define el área de impresión';
+  $('tecResumen').classList.toggle('falta', !t);
+  $('tecCambiar').textContent = t ? 'Cambiar' : 'Elegir en el paso 2';
+  $('applyBtn').disabled = !t;
 }
+$('tecCambiar').addEventListener('click', () => {
+  $('step2').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(() => $('technique').focus(), 350);
+});
 function ponerTecnica(t){
   $('technique').value = TECNICAS.includes(t) ? t : '';
   $('techniqueOther').hidden = true;
   sincronizarTecnica();
 }
-$('areaTecnica').addEventListener('change', () => { tecnicaAuto = false; ponerTecnica($('areaTecnica').value); alCambiarTecnica(); });
 
 async function cargarLimites(forzar){
   if(limitesTec && !forzar) return limitesTec;
@@ -6057,6 +6067,17 @@ async function buscarEnVivo(){
   pintarResultados(r.slice(0, 5), r.length, r.length ? '' : 'Sin coincidencias en el catálogo. Probá con otra palabra o pegá el link del producto.');
 }
 
+/* mientras se trae el producto (fotos y medición) el boceto no se puede abrir: quedaría a medias */
+let trayendo = false;
+function bloquearBoceto(on){
+  const b = $('openBoceto');
+  b.disabled = on;
+  b.textContent = on ? '⏳ Trayendo el producto… esperá a que bajen las fotos' : window.__textoBotonBoceto();
+}
+/* lo que quedó en el campo después de traer un producto (su código o link): si se vuelve a
+   escribir, se reemplaza en vez de pegarse al final («18953mochila» no encuentra nada) */
+let refTraida = '';
+
 /* "Traer" de la ficha: por link o código va directo; por nombre muestra los que coinciden */
 async function traerDelShop(){
   clearTimeout(busquedaT); // la lista en vivo que estaba por salir ya no hace falta
@@ -6066,6 +6087,7 @@ async function traerDelShop(){
   if(!id && txt.length < 3){ shopNota('mal', '⚠ Pegá el link del producto de formas.shop, su código (18953) o escribí parte del nombre.'); return; }
   const btn = $('shopTraer');
   btn.disabled = true;
+  if(id) bloquearBoceto(true);
   try{
     shopNota('', id ? 'Buscando el producto…' : 'Buscando en el catálogo…');
     const cat = await cargarCatalogo();
@@ -6090,6 +6112,7 @@ async function traerDelShop(){
     shopNota('mal', '⚠ ' + (e && e.message ? e.message : e));
   }finally{
     btn.disabled = false;
+    if(!trayendo) bloquearBoceto(false);
   }
 }
 
@@ -6101,6 +6124,7 @@ async function elegirProducto(ficha){
   const n = ++cargaShop; // si se elige otro mientras baja este, gana el último
   const vigente = () => n === cargaShop;
   btn.disabled = true;
+  trayendo = true; bloquearBoceto(true);
   try{
     const poner = (id, v) => { const el = document.getElementById(id); if(el.value !== v){ el.value = v; el.dispatchEvent(new Event('input', { bubbles:true })); } };
     poner('f_producto', ficha.nombre || '');
@@ -6171,10 +6195,12 @@ async function elegirProducto(ficha){
         : medible ? 'La foto de frente ya está medida y el área de impresión va sugerida: tocá «Creá el boceto con tu logo».'
         : ficha.medidas ? 'Ninguna foto está de frente para medirla sola: en el boceteador ubicá la regla a mano.'
         : 'La descripción no trae las medidas del producto: en el boceteador anotalas o ubicá la regla a mano.'));
+    refTraida = $('shopRef').value;
+    if(document.activeElement === $('shopRef')) $('shopRef').select(); // seguir escribiendo busca otro
   }catch(e){
     if(vigente()) shopNota('mal', '⚠ ' + (e && e.message ? e.message : e));
   }finally{
-    if(vigente()) btn.disabled = false;
+    if(vigente()){ btn.disabled = false; trayendo = false; bloquearBoceto(false); }
   }
 }
 
@@ -6203,9 +6229,16 @@ window.__bocetoAlAbrir = async () => {
 };
 
 $('shopTraer').addEventListener('click', traerDelShop);
-$('shopRef').addEventListener('focus', () => { cargarCatalogo(); }); // el catálogo se baja mientras se empieza a escribir
+$('shopRef').addEventListener('focus', () => {
+  cargarCatalogo(); // el catálogo se baja mientras se empieza a escribir
+  const el = $('shopRef');
+  if(refTraida && el.value === refTraida) setTimeout(() => { if(document.activeElement === el && el.value === refTraida) el.select(); }, 0);
+});
 $('shopRef').addEventListener('input', () => { clearTimeout(busquedaT); busquedaT = setTimeout(buscarEnVivo, 120); });
 $('shopRef').addEventListener('keydown', e => {
+  const el = $('shopRef');
+  if(e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && refTraida && el.value === refTraida
+    && el.selectionStart === el.selectionEnd) el.select(); // la letra reemplaza el código del producto traído
   const abierta = !$('shopResultados').hidden && resultados.length;
   if(e.key === 'ArrowDown' && abierta){ e.preventDefault(); marcarResaltado(resaltado + 1); }
   else if(e.key === 'ArrowUp' && abierta){ e.preventDefault(); marcarResaltado(resaltado - 1); }
@@ -7365,11 +7398,9 @@ $('technique').addEventListener('change', () => {
   tecnicaAuto = false;
   if(otra) $('techniqueOther').focus();
   else alCambiarTecnica(); // la foto y el área se acomodan a la técnica
-  $('applyBtn').disabled = !techValue();
+  sincronizarTecnica();
 });
-$('techniqueOther').addEventListener('input', () => {
-  $('applyBtn').disabled = !techValue();
-});
+$('techniqueOther').addEventListener('input', sincronizarTecnica);
 $('techniqueOther').addEventListener('change', alCambiarTecnica); // al terminar de escribirla
 
 $('applyBtn').addEventListener('click', () => {
