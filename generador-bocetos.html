@@ -1082,10 +1082,6 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             </div>
           </div>
           <small style="color:var(--text-muted);font-size:11.5px">Llevá los extremos de la regla de lado a lado del producto en la foto y anotá cuánto mide esa distancia en la vida real. Con eso las medidas del logo se calculan solas.</small>
-          <div id="guardarMedidaBox" hidden>
-            <button class="btn btn-secondary" type="button" id="guardarMedidaBtn" style="margin-top:8px" title="La próxima vez que alguien traiga este producto del shop, la regla sale así">💾 Guardar esta medida para la próxima</button>
-            <div class="note" id="guardarMedidaNote" hidden><span id="guardarMedidaIco">💾</span> <span id="guardarMedidaTxt"></span> <button type="button" id="olvidarMedidaBtn" hidden>Volver a la automática</button></div>
-          </div>
         </div>
       </div>
 
@@ -1100,6 +1096,11 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         </div>
         <div class="readout" id="zoneReadout" hidden>
           <div class="row"><span class="label">Área marcada</span><span class="val num" id="zoneSizeOut">—</span></div>
+        </div>
+        <div class="note" id="areaNote" hidden><span id="areaNoteIco"></span> <span id="areaNoteTxt"></span></div>
+        <div id="guardarMedidaBox" hidden>
+          <button class="btn btn-secondary" type="button" id="guardarMedidaBtn" style="margin-top:10px" title="De acá en adelante, todos los que traigan este producto lo ven así">💾 Guardar medida y área para todos</button>
+          <div class="note" id="guardarMedidaNote" hidden><span id="guardarMedidaIco">💾</span> <span id="guardarMedidaTxt"></span> <button type="button" id="olvidarMedidaBtn" hidden>Volver a lo automático</button></div>
         </div>
       </div>
 
@@ -4783,6 +4784,7 @@ function loadPhotoSrc(url, name, opts){
     state.ruler = { x1:.08, y1:.5, x2:.92, y2:.5 };
     state.rulerVisible = true;
     state.auto = null; $('autoMedNote').hidden = true; // la medición automática era de la foto anterior
+    ultimaMedicion = null; $('areaNote').hidden = true;
     $('rulerToggle').disabled = false;
     syncRulerBtn();
     $('cleanToggle').hidden = false;
@@ -5047,12 +5049,12 @@ function medirProductoEnFoto(px, W, H, dims){
     rect: { x0:L, y0:T, x1:R, y1:B },
     cm: { w:pr.w, h:pr.h },
     desvio: Math.abs(sx - sy) / Math.min(sx, sy), // cuánto difieren la escala del ancho y la del alto
-    cobertura: best.cobertura, afuera: best.afuera, varios,
+    cobertura: best.cobertura, afuera: best.afuera, varios, sil,
   };
 }
 
 /* mide una imagen ya cargada (img o canvas); las fotos grandes se achican a 1600 px */
-function medirImagenProducto(img, dims){
+function medirImagenProducto(img, dims, conPixeles){
   const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
   const s = Math.min(1, 1600 / Math.max(iw, ih));
   const w = Math.max(1, Math.round(iw*s)), h = Math.max(1, Math.round(ih*s));
@@ -5060,8 +5062,12 @@ function medirImagenProducto(img, dims){
   const x = c.getContext('2d', { willReadFrequently:true });
   x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, w, h); // un PNG sin fondo se mide sobre blanco
   x.drawImage(img, 0, 0, w, h);
-  try{ return medirProductoEnFoto(x.getImageData(0, 0, w, h).data, w, h, dims); }
-  catch(e){ console.error('medir producto:', e); return { ok:false, motivo:'error' }; }
+  try{
+    const px = x.getImageData(0, 0, w, h).data;
+    const r = medirProductoEnFoto(px, w, h, dims);
+    if(conPixeles && r.ok) r.px = px;
+    return r;
+  }catch(e){ console.error('medir producto:', e); return { ok:false, motivo:'error' }; }
 }
 const cargarImagen = src => new Promise((res, rej) => {
   const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error('No pude leer la foto.')); im.src = src;
@@ -5093,8 +5099,9 @@ function autoMedir(){
     return null;
   }
   if(state.mode !== 'product') setMode('product'); // medir el producto es el modo «Sé la medida del producto»
-  const r = medirImagenProducto(photo, dims);
+  const r = medirImagenProducto(photo, dims, true);
   state.auto = null;
+  ultimaMedicion = r.ok ? Object.assign(r, { src: photo.src }) : null;
   if(!r.ok || r.conf === 'baja'){
     autoNota('mal', '⚠', MOTIVO_AUTO[r.motivo] || ('No pude medirlo con seguridad: en esta foto el producto no coincide con '
       + textoMedidas(dims) + ' (puede estar en perspectiva, abierto o de costado). Probá con la foto de frente o ubicá la regla a mano.'));
@@ -5128,10 +5135,133 @@ function autoMedir(){
   render();
   return r;
 }
-$('autoMedirBtn').addEventListener('click', autoMedir);
-$('prodMedidas').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); autoMedir(); } });
+const medirYSugerir = () => { autoMedir(); if(!state.zone) aplicarAreaSugerida(); };
+$('autoMedirBtn').addEventListener('click', medirYSugerir);
+$('prodMedidas').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); medirYSugerir(); } });
 
-/* ---------- áreas de impresión del shop: se marcan a medida real ---------- */
+/* ---------- área de impresión sugerida ----------
+   Al tamaño real (la escala de la regla) y en una parte lisa del producto: sin bordes
+   marcados (bandas, anillados, costuras, cierres, el bolígrafo de costado) y con 3 mm de
+   aire. Si la descripción del shop trae el área, va esa; si no, la más grande que entra
+   («estimada»). Siempre queda para revisar, mover y guardar. */
+let ultimaMedicion = null; // la última medición automática de la foto del lienzo, con sus píxeles
+const OTRA_CARA = /dorso|contratapa|espalda|tras|lateral|perfil|lado|manij|\basas?\b|base|bombilla|interior|fondo|manga/i;
+const esOtraCara = nombre => OTRA_CARA.test(nombre) && !/frente/i.test(nombre);
+function contextoArea(){
+  const k = cmPerPx();
+  if(!k || frame.hidden) return null;
+  let m = ultimaMedicion && ultimaMedicion.src === photo.src ? ultimaMedicion : null;
+  if(!m){
+    /* la escala vino de una medida guardada o de la regla a mano: el producto se busca igual */
+    const dims = medidasDeTexto($('prodMedidas').value, 'cm');
+    const r = dims.length >= 2 ? medirImagenProducto(photo, dims, true) : null;
+    if(!r || !r.ok) return null;
+    m = ultimaMedicion = Object.assign(r, { src: photo.src });
+  }
+  if(!m.obs){
+    /* obstáculos: bordes marcados sobre la foto suavizada (la textura del kraft o la tela no
+       cuenta) y lo que no es producto; con su integral se prueba cualquier posición al instante */
+    const { px, W, H, sil, rect:R } = m, W1 = W+1;
+    const I = new Float64Array(W1*(H+1));
+    for(let y = 0; y < H; y++){ let f = 0; for(let x = 0; x < W; x++){ const i = (y*W+x)*4; f += .3*px[i] + .59*px[i+1] + .11*px[i+2]; I[(y+1)*W1+x+1] = I[y*W1+x+1] + f; } }
+    const prom = (x, y) => { const a = Math.max(0, x-2), b = Math.max(0, y-2), c = Math.min(W, x+3), d = Math.min(H, y+3);
+      return (I[d*W1+c] - I[b*W1+c] - I[d*W1+a] + I[b*W1+a]) / ((c-a)*(d-b)); };
+    const S = new Float32Array(W*H);
+    for(let y = R.y0; y < R.y1; y++) for(let x = R.x0; x < R.x1; x++) S[y*W+x] = prom(x, y);
+    const O = new Int32Array(W1*(H+1));
+    for(let y = 0; y < H; y++){
+      let f = 0;
+      for(let x = 0; x < W; x++){
+        const i = y*W+x, dentro = x >= R.x0 && x < R.x1-1 && y >= R.y0 && y < R.y1-1;
+        if(dentro && (!sil[i] || Math.abs(S[i]-S[i+1]) > 9 || Math.abs(S[i]-S[i+W]) > 9)) f++;
+        O[(y+1)*W1+x+1] = O[y*W1+x+1] + f;
+      }
+    }
+    m.obs = (a, b, c, d) => { a = Math.max(0, Math.round(a)); b = Math.max(0, Math.round(b)); c = Math.min(W, Math.round(c)); d = Math.min(H, Math.round(d));
+      return c > a && d > b ? O[d*W1+c] - O[b*W1+c] - O[d*W1+a] + O[b*W1+a] : 0; };
+  }
+  m.cmPx = k * frameRect().w / m.W; // cm por píxel de la imagen medida, con la regla como esté ahora
+  return m;
+}
+/* el mejor lugar para un área de wCm × hCm: libre de obstáculos y cerca de donde dice su nombre */
+function ubicarArea(m, wCm, hCm, nombre, forzar){
+  nombre = String(nombre || '');
+  if(!forzar && esOtraCara(nombre)) return { estado:'otra cara' };
+  const R = m.rect, rw = R.x1-R.x0, rh = R.y1-R.y0;
+  let w = wCm / m.cmPx, h = hCm / m.cmPx;
+  if(/envolvente|360/i.test(nombre)) w = Math.min(w, rw*0.85); // del cilindro se ve el frente
+  if((w > rw || h > rh) && h <= rw && w <= rh){ const t = w; w = h; h = t; } // anotada alto × ancho
+  if(w > rw*1.02 || h > rh*1.02) return { estado:'no entra' };
+  w = Math.min(w, rw); h = Math.min(h, rh);
+  let ax = R.x0 + rw/2, ay = R.y0 + rh/2;
+  if(/superior|arriba/i.test(nombre)) ay = R.y0 + rh*0.28; else if(/inferior|bajo|abajo/i.test(nombre)) ay = R.y0 + rh*0.72;
+  if(/izquierd/i.test(nombre)) ax = R.x0 + rw*0.3; else if(/derech/i.test(nombre)) ax = R.x0 + rw*0.7;
+  const aire = 0.3 / m.cmPx, paso = Math.max(1, Math.round(Math.min(w, h) / 25));
+  let mejor = null;
+  for(let y = R.y0; y + h <= R.y1 + 0.5; y += paso) for(let x = R.x0; x + w <= R.x1 + 0.5; x += paso){
+    const c = m.obs(x-aire, y-aire, x+w+aire, y+h+aire) / ((w+2*aire) * (h+2*aire));
+    const dist = Math.hypot(x + w/2 - ax, y + h/2 - ay) / Math.max(rw, rh);
+    const costo = (c > 0.004 ? 10 + c*100 : 0) + dist;
+    if(!mejor || costo < mejor.costo) mejor = { x, y, w, h, costo, limpia: c <= 0.004 };
+  }
+  return mejor ? Object.assign(mejor, { estado: mejor.limpia ? 'limpia' : 'con obstáculos' }) : { estado:'no entra' };
+}
+/* sin área en la descripción: la más grande que entra limpia, con la proporción de la cara */
+function estimarArea(m){
+  const R = m.rect, rw = R.x1-R.x0, rh = R.y1-R.y0;
+  for(let f = 0.7; f >= 0.2; f -= 0.05){
+    const r = ubicarArea(m, rw*f*m.cmPx, rh*f*m.cmPx, 'estimada', true);
+    if(r.limpia){
+      /* medidas redondas, al medio centímetro, sin agrandarla */
+      const wCm = Math.max(0.5, Math.floor(r.w*m.cmPx*2)/2), hCm = Math.max(0.5, Math.floor(r.h*m.cmPx*2)/2);
+      return Object.assign(r, { x: r.x + (r.w - wCm/m.cmPx)/2, y: r.y + (r.h - hCm/m.cmPx)/2, w: wCm/m.cmPx, h: hCm/m.cmPx });
+    }
+  }
+  return null;
+}
+function areaNota(tipo, ico, txt){
+  const n = $('areaNote');
+  n.hidden = !txt;
+  n.classList.toggle('ok', tipo === 'ok');
+  n.classList.toggle('mal', tipo === 'mal');
+  $('areaNoteIco').textContent = ico;
+  $('areaNoteTxt').textContent = txt || '';
+}
+function ponerZona(m, r, nombre){
+  state.zone = { x: r.x/m.W, y: r.y/m.H, w: r.w/m.W, h: r.h/m.H };
+  state.areaNombre = nombre;
+  if(state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); } // igual que al dibujar el área
+  exitDrawMode(); setStepStates(); render();
+}
+/* al abrir un producto o medir una foto: el área ya queda puesta */
+function aplicarAreaSugerida(){
+  const m = contextoArea();
+  if(!m) return;
+  const frente = state.areasShop.find(a => !esOtraCara(a.nombre));
+  if(frente){
+    const r = ubicarArea(m, frente.w, frente.h, frente.nombre);
+    if(r.x !== undefined){
+      ponerZona(m, r, frente.nombre);
+      areaNota(r.limpia ? 'ok' : '', r.limpia ? '✓' : '⚠', 'Área sugerida: ' + frente.nombre + ' · ' + fmtPair(frente.w, frente.h)
+        + ' (de la descripción del shop)' + (r.limpia ? ', en una parte lisa del producto.' : '. Quedó tocando algún borde (costura, banda, manija): revisala.')
+        + ' Movela o ajustala si hace falta y guardala.');
+      return;
+    }
+    areaNota('', 'ℹ', 'El área «' + frente.nombre + '» (' + fmtPair(frente.w, frente.h) + ') no entra en esta vista: elegí otra foto o marcala a mano.');
+    return;
+  }
+  if(state.areasShop.length){
+    areaNota('', 'ℹ', 'Las áreas del shop son de otra cara (' + state.areasShop.map(a => a.nombre).join(', ') + '): elegí la foto de esa cara y tocá el área, o marcala a mano.');
+    return;
+  }
+  const r = estimarArea(m);
+  if(!r){ areaNota('', 'ℹ', 'No encontré una parte lisa para sugerir el área: marcala a mano.'); return; }
+  ponerZona(m, r, 'Área estimada');
+  areaNota('', '✎', 'Área estimada (la descripción no trae el área de impresión): ' + fmtPair(r.w*m.cmPx, r.h*m.cmPx)
+    + ' en la parte lisa del producto. Ajustala a lo que corresponda y guardala: la próxima vez sale así.');
+}
+
+/* ---------- áreas de impresión del shop: botones a medida real ---------- */
 function pintarAreas(){
   const box = $('areaChips');
   box.innerHTML = '';
@@ -5146,11 +5276,21 @@ function pintarAreas(){
 function marcarAreaShop(a){
   const k = cmPerPx();
   if(!k) return;
+  /* tocada a mano vale cualquier cara (la foto puede ser la del dorso) */
+  const m = contextoArea(), r = m && ubicarArea(m, a.w, a.h, a.nombre, true);
+  if(r && r.x !== undefined){
+    ponerZona(m, r, a.nombre);
+    areaNota(r.limpia ? 'ok' : '', r.limpia ? '✓' : '⚠', a.nombre + ' · ' + fmtPair(a.w, a.h)
+      + (r.limpia ? ': ubicada en una parte lisa del producto.' : ': quedó tocando algún borde, revisala.') + ' Movela si hace falta y guardala.');
+    return;
+  }
   const {w:FW,h:FH} = frameRect();
   const w = Math.min(1, a.w / k / FW), h = Math.min(1, a.h / k / FH);
   const A = state.auto;
   const cx = A ? A.x + A.w/2 : .5, cy = A ? A.y + A.h/2 : .5;
   state.zone = { x:clamp(cx - w/2, 0, 1-w), y:clamp(cy - h/2, 0, 1-h), w, h };
+  state.areaNombre = a.nombre;
+  areaNota('', 'ℹ', a.nombre + ' · ' + fmtPair(a.w, a.h) + ': marcada en el centro; llevala a su lugar.');
   if(state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); } // igual que al dibujar el área
   exitDrawMode(); setStepStates(); render();
 }
@@ -5308,8 +5448,10 @@ function usarFotoShop(i){
     listo: () => {
       fotoShopActual = shopRaiz ? { raiz: shopRaiz, url: f.url, i } : null;
       $('guardarMedidaNote').hidden = true;
+      areaNota('', '', '');
       if(f.guardada) aplicarMedidaGuardada(f.guardada);
       else if(medidasDeTexto($('prodMedidas').value, 'cm').length >= 2) autoMedir();
+      if(!state.zone) aplicarAreaSugerida();
       galeriaNota(shopResumen);
       render();
     },
@@ -5346,18 +5488,23 @@ function aplicarMedidaGuardada(g){
   state.rulerVisible = true; $('rulerToggle').disabled = false; syncRulerBtn();
   if(state.drawMode) exitDrawMode();
   autoNota('ok', '💾', 'Medida ajustada a mano por ' + quienCuando(g) + ': la regla quedó como la dejaron. Si no coincide, movela y guardala de nuevo.');
-  guardadaNota('ok', '💾', 'Esta foto usa la medida guardada.', true);
+  if(g.zona){
+    state.zone = { x:g.zona.x, y:g.zona.y, w:g.zona.w, h:g.zona.h };
+    state.areaNombre = g.area || '';
+    state.rulerVisible = false; syncRulerBtn();
+    areaNota('ok', '💾', 'Área guardada por ' + quienCuando(g) + (g.area ? ' (' + g.area + ')' : '') + '. Si hace falta, ajustala y guardala de nuevo.');
+    setStepStates();
+  }
+  guardadaNota('ok', '💾', 'Esta foto usa la medida' + (g.zona ? ' y el área guardadas.' : ' guardada.'), true);
   render();
 }
 async function pedirMedidas(cuerpo){
-  const clave = iaClave(); // la misma clave de Formas que piden las funciones de IA
   let r;
   try{
-    r = await fetch(MEDIDAS_ENDPOINT, { method:'POST', headers:{ 'content-type':'application/json', 'x-formas-clave': clave }, body: JSON.stringify(cuerpo) });
+    r = await fetch(MEDIDAS_ENDPOINT, { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify(cuerpo) });
   }catch(e){ throw new Error('No pude conectar para guardar. Revisá la conexión a internet y probá de nuevo.'); }
   let d = null;
   try{ d = JSON.parse(await r.text()); }catch(e){}
-  if(r.status === 401){ localStorage.removeItem('formasIaClave'); throw new Error('Clave incorrecta. Tocá el botón de nuevo para reintentar.'); }
   if(!d) throw new Error('Esta dirección no tiene la función para guardar medidas (respondió ' + r.status + '). Entrá desde formas-bocetos-con-logo.pages.dev.');
   if(!r.ok) throw new Error(d.error || ('Error ' + r.status));
   return d;
@@ -5365,15 +5512,20 @@ async function pedirMedidas(cuerpo){
 $('guardarMedidaBtn').addEventListener('click', async () => {
   const f = fotoShopActual, cm = parseFloat($('rulerCm').value);
   if(!f || !cmPerPx() || guardando) return;
+  const conArea = !!(state.zone && state.zone.w > 0 && state.zone.h > 0);
+  if(!confirm('¿Guardar ' + (conArea ? 'la medida y el área de impresión' : 'la medida') + ' de «' + shopNombre + '» así como están?\n\n'
+    + 'De acá en adelante, todos los que traigan este producto del shop lo van a ver así (reemplaza lo que hubiera guardado para esta foto).')) return;
   const medidas = medidasDeTexto($('prodMedidas').value, 'cm');
   const ej = document.getElementById('f_ejecutivo');
   guardando = true; render();
   try{
     const d = await pedirMedidas({ raiz: f.raiz, foto: f.url, regla: { ...state.ruler }, cm,
+      zona: conArea ? { x: state.zone.x, y: state.zone.y, w: state.zone.w, h: state.zone.h } : undefined,
+      area: conArea ? (state.areaNombre || '') : undefined,
       medidas: medidas.length >= 2 ? medidas : undefined, autor: ej && ej.value ? ej.value : '' });
     const g = d.fotos && d.fotos[f.url];
     if(shopFotos[f.i] && shopFotos[f.i].url === f.url){ shopFotos[f.i].guardada = g; pintarGaleria(); $('shopFotos').querySelectorAll('.shopFoto').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === f.i))); }
-    guardadaNota('ok', '✓', 'Guardado: la próxima vez que alguien traiga «' + shopNombre + '» del shop, la regla sale así.', true);
+    guardadaNota('ok', '✓', 'Guardado: de acá en adelante, «' + shopNombre + '» sale con esta medida' + (conArea ? ' y esta área.' : '.'), true);
   }catch(e){
     guardadaNota('mal', '⚠', e.message, false);
   }finally{
@@ -5383,6 +5535,8 @@ $('guardarMedidaBtn').addEventListener('click', async () => {
 $('olvidarMedidaBtn').addEventListener('click', async () => {
   const f = fotoShopActual;
   if(!f || guardando) return;
+  if(!confirm('¿Volver a la medida y el área automáticas para esta foto de «' + shopNombre + '»?\n\n'
+    + 'De acá en adelante, todos los que traigan este producto lo van a ver medido solo, sin lo que se había guardado.')) return;
   guardando = true; render();
   try{
     await pedirMedidas({ raiz: f.raiz, foto: f.url, borrar: true });
@@ -5390,7 +5544,9 @@ $('olvidarMedidaBtn').addEventListener('click', async () => {
     pintarGaleria();
     $('shopFotos').querySelectorAll('.shopFoto').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === f.i)));
     guardadaNota('', '↺', 'Listo: esta foto vuelve a medirse sola.', false);
+    state.zone = null;
     if(medidasDeTexto($('prodMedidas').value, 'cm').length >= 2) autoMedir();
+    aplicarAreaSugerida();
   }catch(e){
     guardadaNota('mal', '⚠', e.message, true);
   }finally{
@@ -5596,7 +5752,7 @@ async function elegirProducto(ficha){
       resumen: resumen + '. Tocá otra foto para cambiarla o subí una propia.' };
     shopNota('ok', '✓ ' + resumen + '. '
       + (fotos[elegida].guardada ? 'La medida la ajustó a mano ' + quienCuando(fotos[elegida].guardada) + ' y ya queda puesta: tocá «Creá el boceto con tu logo».'
-        : medible ? 'La foto de frente ya está medida: tocá «Creá el boceto con tu logo».'
+        : medible ? 'La foto de frente ya está medida y el área de impresión va sugerida: tocá «Creá el boceto con tu logo».'
         : ficha.medidas ? 'Ninguna foto está de frente para medirla sola: en el boceteador ubicá la regla a mano.'
         : 'La descripción no trae las medidas del producto: en el boceteador anotalas o ubicá la regla a mano.'));
   }catch(e){
@@ -6571,6 +6727,8 @@ frame.addEventListener('pointerdown', e => {
   if(state.drawMode){
     active = { mode:'draw', startPx:px };
     state.zone = { x:px.x/FW, y:px.y/FH, w:0, h:0 };
+    state.areaNombre = '';
+    areaNota('', '', '');
     /* la regla ya cumplió: se retira apenas empieza el trazo del área */
     if(state.mode === 'product' && cmPerPx() && state.rulerVisible){
       state.rulerVisible = false;
@@ -7063,6 +7221,7 @@ window.__bocetoRestore = data => {
     $('prodMedidas').value = ''; state.auto = null; $('autoMedNote').hidden = true;
     state.areasShop = []; pintarAreas();
     shopFotos = []; pintarGaleria(); galeriaNota(''); shopPendiente = null; obsDelShop = ''; fotoShopActual = null;
+    ultimaMedicion = null; areaNota('', '', '');
     shopNota('', ''); $('shopRef').value = ''; $('shopResultados').hidden = true;
     $('photoThumb').innerHTML = '📷';
     $('photoTxt').innerHTML = 'Elegir foto del producto<small>JPG o PNG · se recomienda recortada al producto</small>';

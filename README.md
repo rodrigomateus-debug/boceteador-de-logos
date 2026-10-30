@@ -42,55 +42,42 @@ mouse o con ↑ ↓ y Enter). Al elegirlo:
 Si el boceteador ya tiene un boceto con logos, traer otro producto no lo pisa:
 solo deja sus fotos para elegir.
 
-### Medidas guardadas
+### Área de impresión sugerida
 
-Si la medición automática no quedó bien (o la descripción del shop está mal), se
-mueve la regla, se corrige la medida y se toca **💾 Guardar esta medida para la
-próxima**. Desde ahí, cualquiera que traiga ese producto lo recibe así: en la
-ficha dice quién la ajustó y cuándo, la foto queda marcada con 💾 y la regla sale
-como la dejaron. **Volver a la automática** borra lo guardado de esa foto.
+Al abrir el boceteador con un producto del shop (o al tocar «📐 Medir solo»), el
+área de impresión **ya viene aplicada**: al tamaño real y en una parte lisa del
+producto, esquivando bandas, anillados, costuras, cierres o el bolígrafo de
+costado, con 3 mm de aire. Si la descripción trae el área, va esa (la primera que
+es del frente; las del dorso o los laterales quedan como botones para usar con la
+foto de esa cara). Si no la trae, va un **área estimada**: la más grande que entra
+limpia. El aviso del paso 2 dice cuál es y si quedó tocando algún borde. Se mueve y
+se agranda como siempre.
 
-Se guarda por raíz del producto (vale para todos sus colores y talles; la regla,
-por foto) en la función `functions/api/medidas.js`, sobre un KV de Cloudflare.
-Guardar pide la misma clave de Formas que las funciones de IA (`FORMAS_IA_CLAVE`).
+En una prueba con 40 productos al azar del catálogo, 32 áreas quedaron bien
+puestas, 4 aceptables y 4 mal (fotos de la espalda o con la caja abierta).
+
+### Medidas y áreas guardadas
+
+Si la medida o el área no quedaron bien, se ajustan y se toca **💾 Guardar medida y
+área para todos** (paso 2). Pide confirmación («¿Estás seguro?… de acá en adelante
+todos los que traigan este producto lo van a ver así») y no pide clave. Desde ahí,
+cualquiera que traiga ese producto lo recibe así: la ficha dice quién lo ajustó y
+cuándo, la foto queda marcada con 💾, y la regla y el área salen como las dejaron.
+A medida que se usa, los productos van quedando perfectos. **Volver a lo
+automático** (también con confirmación) borra lo guardado de esa foto.
+
+Se guarda por raíz del producto (vale para todos sus colores y talles; la regla y
+el área, por foto) en la función `functions/api/medidas.js`, sobre un KV de
+Cloudflare. Como no hay clave, la función solo acepta guardados hechos desde la
+misma app y lleva un historial de los últimos 30 cambios de cada producto (quién,
+cuándo, qué foto), para ver quién cambió qué si algo se guardó mal.
 Prueba: `node test_medidas.mjs`.
 
-**Puesta en marcha (una sola vez):** Cloudflare → Storage & Databases → KV →
-*Create namespace* (por ejemplo `formas-medidas`). Después Workers & Pages →
+**Puesta en marcha (una sola vez, ya hecha):** Cloudflare → Storage & Databases →
+KV → *Create namespace* (por ejemplo `formas-medidas`). Después Workers & Pages →
 formas-bocetos-con-logo → Settings → Bindings → *Add* → KV namespace, con
 **Variable name `MEDIDAS`** y ese namespace, en *Production* **y** en *Preview*, y
 redesplegar. Sin eso todo anda igual, pero el botón de guardar avisa que falta.
-
-Con una foto subida a mano también se puede: en «Sé la medida del producto» se
-anota la medida (`14 × 9 cm`) y se toca **📐 Medir solo**.
-
-**Cómo mide:** busca el fondo liso, recorta la silueta del producto, encuentra
-sus bordes rectos y elige el rectángulo que tiene la proporción de la descripción.
-Así quedan afuera el bolígrafo de costado, el anillado, las manijas, la tapa o
-la cinta señaladora. La regla queda en píxeles exactos del borde.
-
-**El control de error:** la descripción da dos medidas y la foto también. Si la
-escala que sale del ancho y la que sale del alto coinciden (diferencia menor al
-3 %), la medición es confiable; si no, avisa «Medido con dudas» y dice por qué
-(proporción que no cierra, varios productos, forma no rectangular). Medido sobre
-el catálogo entero (1.874 productos sin contar colores ni talles, octubre 2026):
-
-| Resultado | Productos |
-|---|---|
-| Se mide solo | 737 (61 % de los que tienen medidas). Diferencia ancho/alto: mediana 0,2 %, el 95 % por debajo de 2 % |
-| Se mide con dudas | 312 (26 %) |
-| Ninguna foto sirve para medir (todas en perspectiva o en situación) | 158 (13 %) |
-| Sin medidas en la descripción | 667 (36 % del total): es lo primero a completar en el shop |
-
-En 97 productos la única foto que sirve para medir es la del proveedor. Una
-muestra al azar de 36 «se mide solo» revisada a ojo: 35 con el contorno bien.
-Las fotos en perspectiva, abiertas, en situación o con el producto cortado por el
-borde se rechazan solas y se pide la regla a mano.
-
-**Límite que no arregla ninguna herramienta:** la precisión depende de qué mide
-la descripción. Si dice 14 cm y no aclara si incluye el anillado o la tapa, el
-detector toma el cuerpo que mejor cierra con las dos medidas; conviene mirar el
-contorno verde antes de seguir.
 
 ### De dónde salen los datos: el catálogo de la API de STP
 
