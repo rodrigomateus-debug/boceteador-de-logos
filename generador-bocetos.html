@@ -5503,6 +5503,7 @@ async function buscarEnVivo(){
 
 /* "Traer" de la ficha: por link o código va directo; por nombre muestra los que coinciden */
 async function traerDelShop(){
+  clearTimeout(busquedaT); // la lista en vivo que estaba por salir ya no hace falta
   const txt = $('shopRef').value.trim();
   const id = shopId(txt);
   $('shopResultados').hidden = true;
@@ -5538,9 +5539,11 @@ async function traerDelShop(){
 
 /* Producto elegido: completa la ficha, baja y mide las fotos, y lo deja listo para el
    boceteador (se aplica al abrirlo). */
-let shopPendiente = null, obsDelShop = '';
+let shopPendiente = null, obsDelShop = '', cargaShop = 0;
 async function elegirProducto(ficha){
   const btn = $('shopTraer');
+  const n = ++cargaShop; // si se elige otro mientras baja este, gana el último
+  const vigente = () => n === cargaShop;
   btn.disabled = true;
   try{
     const poner = (id, v) => { const el = document.getElementById(id); if(el.value !== v){ el.value = v; el.dispatchEvent(new Event('input', { bubbles:true })); } };
@@ -5558,13 +5561,15 @@ async function elegirProducto(ficha){
 
     const lista = ficha.fotos.slice(0, 8);
     const fotos = [];
-    for(let i = 0; i < lista.length; i++){
+    for(let i = 0; i < lista.length && vigente(); i++){
       shopNota('', 'Bajando las fotos… (' + (i+1) + ' de ' + lista.length + ')');
       try{ fotos.push({ url: lista[i].u, prov: !!lista[i].prov, src: await blobADataUrl(await (await shopFetch('img=' + encodeURIComponent(lista[i].u))).blob()) }); }
       catch(e){ console.warn('foto del shop:', lista[i].u, e); } // una foto rota no frena al resto
     }
+    if(!vigente()) return;
     if(!fotos.length) throw new Error('No pude bajar las fotos del producto ' + ficha.id + '.');
     const guardada = await leerMedidaGuardada(ficha.raiz);
+    if(!vigente()) return;
     if(guardada && guardada.medidas) ficha.medidas = { texto: 'Medidas: ' + textoMedidas(guardada.medidas), valores: guardada.medidas };
     if(guardada && guardada.fotos) fotos.forEach(f => { f.guardada = guardada.fotos[f.url] || null; });
     if(ficha.medidas){
@@ -5572,6 +5577,7 @@ async function elegirProducto(ficha){
         shopNota('', 'Buscando la foto de frente para medir… (' + (i+1) + ' de ' + fotos.length + ')');
         await new Promise(r => setTimeout(r, 0)); // deja ver el aviso antes de cada medición
         try{ fotos[i].med = medirImagenProducto(await cargarImagen(fotos[i].src), ficha.medidas.valores); }catch(e){}
+        if(!vigente()) return;
       }
     }
     /* la de frente que se mide sola; a igual confianza, las de la tienda antes que las del proveedor */
@@ -5594,9 +5600,9 @@ async function elegirProducto(ficha){
         : ficha.medidas ? 'Ninguna foto está de frente para medirla sola: en el boceteador ubicá la regla a mano.'
         : 'La descripción no trae las medidas del producto: en el boceteador anotalas o ubicá la regla a mano.'));
   }catch(e){
-    shopNota('mal', '⚠ ' + (e && e.message ? e.message : e));
+    if(vigente()) shopNota('mal', '⚠ ' + (e && e.message ? e.message : e));
   }finally{
-    btn.disabled = false;
+    if(vigente()) btn.disabled = false;
   }
 }
 
