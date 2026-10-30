@@ -31,22 +31,26 @@ mouse o con ↑ ↓ y Enter). Al elegirlo:
    (22 × 9,8 cm) y mangas (8 × 8 cm)»), y mide cada foto para elegir la que está
    **de frente**;
 3. al tocar «Creá el boceto con tu logo», el boceteador abre ya en «Sé la medida
-   del producto», con esa foto puesta, **la regla calibrada sola** de borde a borde
-   del lado largo (al costado del producto, como una cota) y el contorno del
-   producto marcado en verde con su medida. Quedan a la vista junto con el área de
-   impresión, para ver enseguida si algo no cierra; al cargar el logo se ocultan
-   solos y queda solo el área («Medir de nuevo» los vuelve a mostrar).
+   del producto», con esa foto puesta, **la escala calibrada sola** y el contorno
+   del producto marcado en verde con su medida (la regla mediría lo mismo, así que
+   con contorno no se dibuja; queda para las fotos sin contorno: propias o sin
+   medidas en la descripción). El contorno queda a la vista junto con el área de
+   impresión, para ver enseguida si algo no cierra; al cargar el logo se oculta
+   solo y queda solo el área («Ver la medida» lo vuelve a mostrar).
    **El contorno se ajusta**: si el detector agarró mal los bordes (la birome de
    costado, la tapa, una sombra), se arrastran sus esquinas o lados hasta los
    bordes reales y la escala se recalcula con la medida del producto sobre ese
    contorno (la regla lo acompaña). La etiqueta mide con la escala de ese momento:
    si el otro lado no da lo que dice la descripción, el aviso lo marca. Se guarda
-   con la medida («Guardar medida y área para todos»). Arriba quedan las
+   con la medida («Guardar medida y área para todos»).
+4. en el paso 2, las áreas de la descripción del shop que no están entre las del
+   proveedor (en una remera: pecho, espalda) son botones que las marcan **a medida
+   real** sobre la foto. Las del proveedor se eligen tocando su foto; solo si una
+   foto tiene varias (el dorso y el frente superior de un vaso), hay botones para
+   elegir cuál. Arriba quedan las
    fotos del shop para cambiarla (✓ = de frente, se mide sola; ~ = con dudas; sin
    marca = sirve para mostrar, no para medir; borde punteado = del proveedor), y
    se puede subir una propia;
-4. en el paso 2, cada área de impresión del shop es un botón que la marca **a
-   medida real** sobre el producto (después se lleva a su lugar).
 
 Los productos de **Zecat** traen además las áreas del proveedor: cada una con
 **su propia foto de ese color**, el recuadro marcado sobre la foto y su medida
@@ -65,8 +69,11 @@ logo» queda bloqueado: se habilita cuando terminó, para no abrir un boceto a m
 Para cambiar de producto se vuelve a escribir en el mismo campo: el código o link
 del producto traído se reemplaza con lo que se escribe y la lista vuelve a salir.
 
-Si el boceteador ya tiene un boceto con logos, traer otro producto no lo pisa:
-solo deja sus fotos para elegir.
+Si ya había un boceto, traer otro producto lo cambia: el boceteador abre con la
+foto, la escala y el área del producto nuevo, y **los logos siguen puestos** con
+su medida real, en el área nueva (si no entran, el paso 3 lo avisa). Si la hoja
+tenía aplicado el boceto de otro producto (otro nombre u otro color), esa foto se
+saca y el aviso lo dice: se abre el boceto y se aplica de nuevo.
 
 ### Área de impresión sugerida
 

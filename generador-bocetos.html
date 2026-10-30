@@ -1106,7 +1106,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             </div>
           </div>
           <div class="note" id="autoMedNote" hidden><span id="autoMedIco">📐</span> <span id="autoMedTxt"></span></div>
-          <span class="label" style="letter-spacing:.08em;margin-top:8px">Escala real · regla</span>
+          <span class="label" id="rulerLbl" style="letter-spacing:.08em;margin-top:8px">Escala real · regla</span>
           <div class="field-row" style="margin-top:0">
             <div class="field" style="margin-top:0;flex:1.2">
               <div class="suffix-wrap"><input type="number" id="rulerCm" placeholder="Centímetros" min="0.5" max="500" step="0.1"><span class="suffix">cm</span></div>
@@ -1115,7 +1115,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
               <button class="btn btn-secondary" type="button" id="rulerToggle" style="padding:9px 12px" disabled>Ocultar regla</button>
             </div>
           </div>
-          <small style="color:var(--text-muted);font-size:11.5px">Llevá los extremos de la regla de lado a lado del producto en la foto y anotá cuánto mide esa distancia en la vida real. Con eso las medidas del logo se calculan solas.</small>
+          <small id="rulerHint" style="color:var(--text-muted);font-size:11.5px">Llevá los extremos de la regla de lado a lado del producto en la foto y anotá cuánto mide esa distancia en la vida real. Con eso las medidas del logo se calculan solas.</small>
         </div>
       </div>
 
@@ -1133,9 +1133,9 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         </div>
         <button class="btn btn-secondary" type="button" id="drawZoneBtn">Marcar área sobre la foto</button>
         <div id="areasShop" hidden>
-          <span class="label" style="letter-spacing:.08em;display:block;margin-top:12px">Áreas de impresión del producto</span>
+          <span class="label" style="letter-spacing:.08em;display:block;margin-top:12px">Áreas de impresión</span>
           <div class="areaChips" id="areaChips"></div>
-          <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11.5px">Tocá una y se marca a medida real sobre el producto (las del proveedor, en su foto); después la podés mover.</small>
+          <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11.5px">Tocá una y se marca a medida real sobre la foto; después la podés mover. Las del proveedor se eligen tocando su foto.</small>
         </div>
         <div class="readout" id="zoneReadout" hidden>
           <div class="row"><span class="label">Área marcada</span><span class="val num" id="zoneSizeOut">—</span></div>
@@ -1481,6 +1481,7 @@ function renderTabs(){
 }
 
 window.__textoBotonBoceto = () => imgFoto ? '✎ Editar el boceto' : '✦ Creá el boceto con tu logo';
+window.__fichaFotoDeBoceto = () => !!imgFoto && !!modoMedida; // la foto de la hoja salió del boceteador
 function refreshFotoBox(){
   if(imgFoto){
     $('txt_foto').innerHTML = '<img src="'+imgFoto+'"><span style="font-size:11px">Foto de esta hoja — clic para reemplazar</span>';
@@ -4719,7 +4720,8 @@ function render(){
     } else { $('logoWcm').disabled = false; $('logoHcm').disabled = false; }
   } else { chip.hidden = true; $('logoReadout').hidden = true; }
 
-  if(state.mode === 'product' && state.ruler && state.rulerVisible && !frame.hidden){
+  syncRulerBtn();
+  if(state.mode === 'product' && state.ruler && state.rulerVisible && !frame.hidden && !state.auto){
     $('ruler').hidden = false;
     const rl = state.ruler;
     const p1 = {x:rl.x1*FW, y:rl.y1*FH}, p2 = {x:rl.x2*FW, y:rl.y2*FH};
@@ -4839,6 +4841,7 @@ function aFoto(z){
 }
 function loadPhoto(file){
   fotoShopActual = null;
+  pintarAreas(); // las áreas del proveedor eran de su foto
   const r = new FileReader();
   r.onload = ev => loadPhotoSrc(ev.target.result, file.name);
   r.readAsDataURL(file); // dataURL: sobrevive en plantillas guardadas
@@ -4934,8 +4937,15 @@ $('photoIaUndo').addEventListener('click', () => {
   loadPhotoSrc(o.url, o.name, { sinAvisoRes:true });
 });
 
+/* con el contorno del producto, la medida es el contorno (la regla mediría lo mismo, al lado):
+   la regla queda para las fotos sin contorno (propias o sin medidas en la descripción) */
 function syncRulerBtn(){
-  $('rulerToggle').textContent = state.rulerVisible ? 'Ocultar regla' : 'Medir de nuevo';
+  const c = !!state.auto;
+  $('rulerToggle').textContent = state.rulerVisible ? (c ? 'Ocultar medida' : 'Ocultar regla') : (c ? 'Ver la medida' : 'Medir de nuevo');
+  $('rulerLbl').textContent = c ? 'Escala real · lado largo del producto' : 'Escala real · regla';
+  $('rulerHint').textContent = c
+    ? 'El contorno verde es el producto: si no agarró bien los bordes, ajustalos con sus manijas. Acá va cuánto mide su lado largo en la vida real; con eso las medidas del área y del logo se calculan solas.'
+    : 'Llevá los extremos de la regla de lado a lado del producto en la foto y anotá cuánto mide esa distancia en la vida real. Con eso las medidas del logo se calculan solas.';
 }
 $('rulerCm').addEventListener('input', () => {
   /* si se borra la medida en pleno dibujo, el modo dibujo se cancela;
@@ -5656,7 +5666,7 @@ function medidasLogos(){
   if(!state.logos.length) return null;
   const {w:FW,h:FH} = frameRect(), k = cmPerPx(), z = state.zone || { x:0, y:0, w:1, h:1 };
   const cx = z.x + z.w/2, cy = z.y + z.h/2;
-  return state.logos.map(l => ({ l, m: k ? medidaWH(l) : null, aspecto: (l.w*FW) / (l.h*FH || 1),
+  return state.logos.map(l => ({ l, m: medidaWH(l), aspecto: (l.w*FW) / (l.h*FH || 1),
     dx: k ? (l.x + l.w/2 - cx)*FW*k : 0, dy: k ? (l.y + l.h/2 - cy)*FH*k : 0 }));
 }
 function reubicarLogos(previos){
@@ -5769,14 +5779,14 @@ function pintarAreas(){
     b.addEventListener('click', () => marcarAreaShop(a));
     box.appendChild(b);
   });
-  /* las del proveedor: cada una en su foto, con su medida */
+  /* las del proveedor se eligen tocando su foto en la galería; solo si la foto puesta tiene
+     varias (el dorso y el frente superior en la misma), acá se elige cuál */
+  const actual = fotoShopActual ? fotoShopActual.i : -1;
   areasProvLista().forEach(({ a, k }, j) => {
+    if(k !== actual || shopFotos[k].areas.length < 2) return;
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'areaChip prov'; b.dataset.j = j;
-    b.addEventListener('click', () => {
-      if(fotoShopActual && fotoShopActual.i === k){ aplicarAreaProveedor(a, tecnicaElegida()); return; }
-      usarFotoShop(k, { conservarLogos: true, area: a });
-    });
+    b.addEventListener('click', () => aplicarAreaProveedor(a, tecnicaElegida()));
     box.appendChild(b);
   });
   $('areasShop').hidden = !box.children.length;
@@ -5956,12 +5966,13 @@ function usarFotoShop(i, opts){
   const f = shopFotos[i];
   if(!f) return;
   opts = opts || {};
-  const previos = opts.conservarLogos ? medidasLogos() : null; // al cambiar de foto por la técnica
+  const previos = opts.previos || (opts.conservarLogos ? medidasLogos() : null); // al cambiar de foto por la técnica o de producto
   $('shopFotos').querySelectorAll('.shopFoto').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === i)));
   loadPhotoSrc(f.src, (shopNombre || 'Producto') + ' · ' + (f.areas && f.areas.length ? 'área ' + f.areas.map(a => a.n).join(', ') : 'foto ' + (i+1)), {
     conservarLogos: !!previos,
     listo: () => {
       fotoShopActual = { raiz: shopRaiz, url: f.url, i };
+      pintarAreas(); // las áreas de esta foto
       $('guardarMedidaNote').hidden = true;
       areaNota('', '', '');
       if(f.guardada) aplicarMedidaGuardada(f.guardada);
@@ -6240,6 +6251,8 @@ async function elegirProducto(ficha){
   const vigente = () => n === cargaShop;
   btn.disabled = true;
   trayendo = true; bloquearBoceto(true);
+  /* lo que decía la hoja antes: si era otro producto (u otro color), su boceto ya no corresponde */
+  const antes = { nombre: $('f_producto').value.split('\n')[0].trim(), color: $('f_colorprod_nom').value.trim() };
   try{
     const poner = (id, v) => { const el = document.getElementById(id); if(el.value !== v){ el.value = v; el.dispatchEvent(new Event('input', { bubbles:true })); } };
     poner('f_producto', ficha.nombre || '');
@@ -6303,8 +6316,13 @@ async function elegirProducto(ficha){
     const principal = (ficha.areasProv || []).find(a => a.principal) || (ficha.areasProv || [])[0];
     const tecInicial = principal && principal.tec && principal.tec[0] && TECNICAS.includes(principal.tec[0][0]) ? principal.tec[0][0] : '';
     shopPendiente = { fotos, elegida, raiz: ficha.raiz, nombre: ficha.nombre, medidas: ficha.medidas, areas: ficha.areas,
-      guardada, tecInicial, resumen: resumen + '. Tocá otra foto para cambiarla o subí una propia.' };
+      guardada, tecInicial, resumen: resumen + '. ' + (nAreas ? 'Las fotos con ▣ son las áreas del proveedor: tocá una para usar esa área. ' : '')
+        + 'Tocá otra foto para cambiarla o subí una propia.' };
+    const otro = antes.nombre && (antes.nombre !== (ficha.nombre || '').trim() || (antes.color && ficha.color && antes.color !== ficha.color.trim()));
+    let sacada = false;
+    if(otro && window.__fichaFotoDeBoceto && window.__fichaFotoDeBoceto()){ $('clear_foto').click(); sacada = true; }
     shopNota('ok', '✓ ' + resumen + '. '
+      + (sacada ? 'La foto de la hoja era el boceto de «' + antes.nombre + (antes.color ? ' · ' + antes.color : '') + '» y se sacó: abrí el boceto (tu logo sigue puesto, ahora sobre este producto) y aplicalo de nuevo. ' : '')
       + (fotos[elegida].guardada ? 'La medida la ajustó a mano ' + quienCuando(fotos[elegida].guardada) + ' y ya queda puesta: tocá «Creá el boceto con tu logo».'
         : nAreas ? 'Cada área del proveedor viene con su foto y su medida: al elegir la técnica, la foto y el área se acomodan solas. Tocá «Creá el boceto con tu logo».'
         : medible ? 'La foto de frente ya está medida y el área de impresión va sugerida: tocá «Creá el boceto con tu logo».'
@@ -6330,17 +6348,15 @@ window.__bocetoAlAbrir = async () => {
   $('prodMedidas').value = p.medidas ? textoMedidas(p.medidas.valores) : '';
   state.areasShop = p.areas; pintarAreas();
   pintarGaleria();
-  if(state.logos.length){
-    galeriaNota('Trajiste «' + p.nombre + '» de formas.shop: tocá una foto para usarla en este boceto.');
-    return;
-  }
+  /* si ya había un boceto, el producto cambia y los logos siguen: con su medida real, en el área nueva */
+  const previos = medidasLogos();
   /* la técnica: si nadie la eligió (o la había propuesto el boceteador para otro producto), la del proveedor */
   if(p.tecInicial && (!techValue() || tecnicaAuto)){ ponerTecnica(p.tecInicial); tecnicaAuto = true; }
   else if(tecnicaAuto){ ponerTecnica(''); tecnicaAuto = false; }
   if(p.medidas) setMode('product');
   await cargarLimites();
   const i = fotoParaTecnica(tecnicaElegida());
-  usarFotoShop(i >= 0 ? i : p.elegida);
+  usarFotoShop(i >= 0 ? i : p.elegida, previos ? { previos } : undefined);
 };
 
 $('shopTraer').addEventListener('click', traerDelShop);
