@@ -304,8 +304,8 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .suffix-wrap input{padding-right:38px}
 #bocetoModal input.need{border-color:#F9CE32; box-shadow:0 0 0 2.5px rgba(249,206,50,.35)}
 #bocetoModal select{padding-right:32px}
-#bocetoModal #trimUndo, #bocetoModal #undoDeleteBtn, #bocetoModal #photoIaUndo, #bocetoModal #iaLogoUndo{border:none; background:none; color:var(--formas-navy); font-family:var(--font-primary); font-size:12px; font-weight:700; text-decoration:underline; cursor:pointer; padding:0; flex:none; white-space:nowrap}
-#bocetoModal #trimUndo:hover, #bocetoModal #undoDeleteBtn:hover, #bocetoModal #photoIaUndo:hover, #bocetoModal #iaLogoUndo:hover{color:#EF7958}
+#bocetoModal #trimUndo, #bocetoModal #undoDeleteBtn, #bocetoModal #photoIaUndo, #bocetoModal #iaLogoUndo, #bocetoModal #olvidarMedidaBtn{border:none; background:none; color:var(--formas-navy); font-family:var(--font-primary); font-size:12px; font-weight:700; text-decoration:underline; cursor:pointer; padding:0; flex:none; white-space:nowrap}
+#bocetoModal #trimUndo:hover, #bocetoModal #undoDeleteBtn:hover, #bocetoModal #photoIaUndo:hover, #bocetoModal #iaLogoUndo:hover, #bocetoModal #olvidarMedidaBtn:hover{color:#EF7958}
 /* zoom y paneo del canvas */
 #bocetoModal #frameWrap{overflow:hidden; position:relative; border-radius:14px}
 #bocetoModal{--Z:1} /* default para todo lo que está fuera del lienzo con zoom (p. ej. manijas del recorte); sin esto sus calc(--Z) quedan inválidos y las manijas colapsan */
@@ -446,10 +446,14 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 .shopRow input{flex:1; min-width:0}
 .shopRow button{flex:none; padding:0 14px; border:none; border-radius:8px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
 .shopRow button:disabled{opacity:.6; cursor:progress}
-.shopResultados{display:flex; flex-direction:column; gap:5px; margin-top:6px; max-height:260px; overflow:auto}
-.shopRes{display:block; text-align:left; padding:7px 10px; border-radius:8px; border:1px solid var(--border); background:#fff; font:inherit; font-size:12px; font-weight:600; color:var(--navy); cursor:pointer}
-.shopRes:hover{border-color:var(--navy)}
+.shopResultados{display:flex; flex-direction:column; gap:5px; margin-top:6px}
+.shopRes{display:flex; align-items:center; gap:9px; width:100%; text-align:left; padding:5px 8px 5px 5px; border-radius:8px; border:1px solid var(--border); background:#fff; font:inherit; font-size:12px; font-weight:600; color:var(--navy); cursor:pointer}
+.shopRes:hover, .shopRes.activo{border-color:var(--navy); background:var(--sunken)}
+.shopRes img{width:42px; height:42px; flex:none; object-fit:contain; border-radius:6px; background:#fff; border:1px solid var(--border)}
+.shopRes img.sin{visibility:hidden}
+.shopRes span{min-width:0; line-height:1.3}
 .shopRes small{display:block; font-weight:400; color:var(--muted); font-size:10.5px}
+.shopResMas{font-size:10.5px; color:var(--muted); padding:0 2px}
 #shopNote.ok{border-left:3px solid var(--green)}
 #shopNote.mal{border-left:3px solid #EF7958}
 @media (max-width:640px){ #iaModal .iaCompare{grid-template-columns:1fr} }
@@ -1078,6 +1082,10 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             </div>
           </div>
           <small style="color:var(--text-muted);font-size:11.5px">Llevá los extremos de la regla de lado a lado del producto en la foto y anotá cuánto mide esa distancia en la vida real. Con eso las medidas del logo se calculan solas.</small>
+          <div id="guardarMedidaBox" hidden>
+            <button class="btn btn-secondary" type="button" id="guardarMedidaBtn" style="margin-top:8px" title="La próxima vez que alguien traiga este producto del shop, la regla sale así">💾 Guardar esta medida para la próxima</button>
+            <div class="note" id="guardarMedidaNote" hidden><span id="guardarMedidaIco">💾</span> <span id="guardarMedidaTxt"></span> <button type="button" id="olvidarMedidaBtn" hidden>Volver a la automática</button></div>
+          </div>
         </div>
       </div>
 
@@ -4681,6 +4689,8 @@ function render(){
     $('autoRectLbl').textContent = 'Producto · ' + fmtPair(A.cmW, A.cmH);
   }
   $('autoMedirBtn').disabled = frame.hidden;
+  $('guardarMedidaBox').hidden = !(fotoShopActual && state.mode === 'product' && !frame.hidden);
+  $('guardarMedidaBtn').disabled = !cmPerPx() || guardando;
   const kArea = cmPerPx();
   $('areaChips').querySelectorAll('.areaChip').forEach(b => {
     const a = state.areasShop[+b.dataset.i];
@@ -4750,6 +4760,7 @@ function padNarrowPhoto(img){
 
 let photoName = '';
 function loadPhoto(file){
+  fotoShopActual = null;
   const r = new FileReader();
   r.onload = ev => loadPhotoSrc(ev.target.result, file.name);
   r.readAsDataURL(file); // dataURL: sobrevive en plantillas guardadas
@@ -5273,9 +5284,10 @@ function pintarGaleria(){
     b.type = 'button'; b.className = 'shopFoto'; b.dataset.i = i;
     b.setAttribute('aria-pressed', 'false');
     const c = f.med && f.med.ok ? f.med.conf : '';
-    b.title = (f.prov ? 'Foto del proveedor · ' : '') + (c === 'alta' ? 'De frente: se mide sola' : c === 'media' ? 'Se puede medir, con dudas' : 'Sirve para mostrar, no para medir');
+    b.title = (f.prov ? 'Foto del proveedor · ' : '') + (f.guardada ? 'Medida ajustada a mano y guardada'
+      : c === 'alta' ? 'De frente: se mide sola' : c === 'media' ? 'Se puede medir, con dudas' : 'Sirve para mostrar, no para medir');
     if(f.prov) b.classList.add('prov');
-    b.innerHTML = '<img alt="">' + (c === 'alta' ? '<b>✓</b>' : c === 'media' ? '<b class="media">~</b>' : '');
+    b.innerHTML = '<img alt="">' + (f.guardada ? '<b>💾</b>' : c === 'alta' ? '<b>✓</b>' : c === 'media' ? '<b class="media">~</b>' : '');
     b.querySelector('img').src = f.src;
     b.addEventListener('click', () => usarFotoShop(i));
     box.appendChild(b);
@@ -5286,18 +5298,105 @@ function galeriaNota(txt){
   $('shopFotosNote').hidden = !txt;
   $('shopFotosNoteTxt').textContent = txt || '';
 }
-let shopNombre = '', shopResumen = '';
+let shopNombre = '', shopResumen = '', shopRaiz = '';
+let fotoShopActual = null; // {raiz, url, i}: la foto del lienzo es del shop y su medida se puede guardar
 function usarFotoShop(i){
   const f = shopFotos[i];
   if(!f) return;
   $('shopFotos').querySelectorAll('.shopFoto').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === i)));
   loadPhotoSrc(f.src, (shopNombre || 'Producto') + ' · foto ' + (i+1), {
     listo: () => {
-      if(medidasDeTexto($('prodMedidas').value, 'cm').length >= 2) autoMedir();
+      fotoShopActual = shopRaiz ? { raiz: shopRaiz, url: f.url, i } : null;
+      $('guardarMedidaNote').hidden = true;
+      if(f.guardada) aplicarMedidaGuardada(f.guardada);
+      else if(medidasDeTexto($('prodMedidas').value, 'cm').length >= 2) autoMedir();
       galeriaNota(shopResumen);
+      render();
     },
   });
 }
+
+/* ---------- medidas guardadas a mano (functions/api/medidas.js) ----------
+   Si la medición automática no quedó bien, se ajusta la regla y se guarda: la próxima
+   vez que cualquiera traiga ese producto, sale así. */
+const MEDIDAS_ENDPOINT = '/api/medidas';
+let guardando = false;
+const quienCuando = g => (g.autor || 'alguien') + (g.fecha ? ' el ' + new Date(g.fecha).toLocaleDateString('es-AR') : '');
+async function leerMedidaGuardada(raiz){
+  if(!raiz) return null;
+  try{
+    const r = await fetch(MEDIDAS_ENDPOINT + '?raiz=' + encodeURIComponent(raiz));
+    return r.ok ? await r.json() : null; // sin la función o sin el KV, se mide como siempre
+  }catch(e){ return null; }
+}
+function guardadaNota(tipo, ico, txt, conOlvidar){
+  const n = $('guardarMedidaNote');
+  n.hidden = !txt;
+  n.classList.toggle('ok', tipo === 'ok');
+  n.classList.toggle('mal', tipo === 'mal');
+  $('guardarMedidaIco').textContent = ico;
+  $('guardarMedidaTxt').textContent = txt || '';
+  $('olvidarMedidaBtn').hidden = !conOlvidar;
+}
+function aplicarMedidaGuardada(g){
+  if(state.mode !== 'product') setMode('product');
+  state.auto = null;
+  state.ruler = { x1:g.regla.x1, y1:g.regla.y1, x2:g.regla.x2, y2:g.regla.y2 };
+  $('rulerCm').value = String(g.cm);
+  state.rulerVisible = true; $('rulerToggle').disabled = false; syncRulerBtn();
+  if(state.drawMode) exitDrawMode();
+  autoNota('ok', '💾', 'Medida ajustada a mano por ' + quienCuando(g) + ': la regla quedó como la dejaron. Si no coincide, movela y guardala de nuevo.');
+  guardadaNota('ok', '💾', 'Esta foto usa la medida guardada.', true);
+  render();
+}
+async function pedirMedidas(cuerpo){
+  const clave = iaClave(); // la misma clave de Formas que piden las funciones de IA
+  let r;
+  try{
+    r = await fetch(MEDIDAS_ENDPOINT, { method:'POST', headers:{ 'content-type':'application/json', 'x-formas-clave': clave }, body: JSON.stringify(cuerpo) });
+  }catch(e){ throw new Error('No pude conectar para guardar. Revisá la conexión a internet y probá de nuevo.'); }
+  let d = null;
+  try{ d = JSON.parse(await r.text()); }catch(e){}
+  if(r.status === 401){ localStorage.removeItem('formasIaClave'); throw new Error('Clave incorrecta. Tocá el botón de nuevo para reintentar.'); }
+  if(!d) throw new Error('Esta dirección no tiene la función para guardar medidas (respondió ' + r.status + '). Entrá desde formas-bocetos-con-logo.pages.dev.');
+  if(!r.ok) throw new Error(d.error || ('Error ' + r.status));
+  return d;
+}
+$('guardarMedidaBtn').addEventListener('click', async () => {
+  const f = fotoShopActual, cm = parseFloat($('rulerCm').value);
+  if(!f || !cmPerPx() || guardando) return;
+  const medidas = medidasDeTexto($('prodMedidas').value, 'cm');
+  const ej = document.getElementById('f_ejecutivo');
+  guardando = true; render();
+  try{
+    const d = await pedirMedidas({ raiz: f.raiz, foto: f.url, regla: { ...state.ruler }, cm,
+      medidas: medidas.length >= 2 ? medidas : undefined, autor: ej && ej.value ? ej.value : '' });
+    const g = d.fotos && d.fotos[f.url];
+    if(shopFotos[f.i] && shopFotos[f.i].url === f.url){ shopFotos[f.i].guardada = g; pintarGaleria(); $('shopFotos').querySelectorAll('.shopFoto').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === f.i))); }
+    guardadaNota('ok', '✓', 'Guardado: la próxima vez que alguien traiga «' + shopNombre + '» del shop, la regla sale así.', true);
+  }catch(e){
+    guardadaNota('mal', '⚠', e.message, false);
+  }finally{
+    guardando = false; render();
+  }
+});
+$('olvidarMedidaBtn').addEventListener('click', async () => {
+  const f = fotoShopActual;
+  if(!f || guardando) return;
+  guardando = true; render();
+  try{
+    await pedirMedidas({ raiz: f.raiz, foto: f.url, borrar: true });
+    if(shopFotos[f.i]) shopFotos[f.i].guardada = null;
+    pintarGaleria();
+    $('shopFotos').querySelectorAll('.shopFoto').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === f.i)));
+    guardadaNota('', '↺', 'Listo: esta foto vuelve a medirse sola.', false);
+    if(medidasDeTexto($('prodMedidas').value, 'cm').length >= 2) autoMedir();
+  }catch(e){
+    guardadaNota('mal', '⚠', e.message, true);
+  }finally{
+    guardando = false; render();
+  }
+});
 
 /* Catálogo armado desde la API de STP (catalogo-shop.json, ver herramientas/catalogo-shop.mjs):
    busca por link, código o nombre al instante. Si el producto es más nuevo que el catálogo,
@@ -5335,28 +5434,71 @@ function buscarEnCatalogo(cat, txt){
 }
 function fichaDeCatalogo(p){
   return {
-    id: p.id, nombre: p.nombre, color: p.color || '', material: p.material || '', variante: p.variante || '',
+    id: p.id, raiz: p.raiz, nombre: p.nombre, color: p.color || '', material: p.material || '', variante: p.variante || '',
     fotos: (p.fotos || []).map(u => ({ u })).concat((p.proveedor || []).map(u => ({ u, prov:true }))),
     medidas: p.medidas ? { texto: p.medidasTexto || '', valores: p.medidas } : null,
     areas: p.areas || [],
   };
 }
-function pintarResultados(lista, total){
+/* la miniatura de la lista: las fotos de formas.shop tienen su versión chica (thumbnail_);
+   si no carga, va la foto entera y, si tampoco, por el puente */
+function miniaturaShop(img, u){
+  const entera = u.startsWith('/') ? 'https://formas.shop' + u : u;
+  const intentos = [u.startsWith('/upload/') ? 'https://formas.shop/upload/thumbnail_' + u.slice(8).replace(/^thumbnail_/, '') : entera, entera, SHOP_ENDPOINT + '?img=' + encodeURIComponent(u)]
+    .filter((x, k, a) => a.indexOf(x) === k);
+  let k = 0;
+  img.onerror = () => { if(++k < intentos.length) img.src = intentos[k]; else img.classList.add('sin'); };
+  img.src = intentos[0];
+}
+let resultados = [], resaltado = -1;
+function pintarResultados(lista, total, aviso){
   const box = $('shopResultados');
   box.innerHTML = '';
-  lista.forEach(p => {
+  resultados = lista; resaltado = -1;
+  lista.forEach((p, k) => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'shopRes';
-    b.innerHTML = '<span></span><small></small>';
-    b.querySelector('span').textContent = p.nombre + (variantesDe(p) ? ' · ' + variantesDe(p) : '');
+    b.innerHTML = '<img alt="" loading="lazy"><span><b></b><small></small></span>';
+    const foto = (p.fotos || [])[0] || (p.proveedor || [])[0];
+    if(foto) miniaturaShop(b.querySelector('img'), foto); else b.querySelector('img').classList.add('sin');
+    b.querySelector('b').textContent = p.nombre + (variantesDe(p) ? ' · ' + variantesDe(p) : '');
     b.querySelector('small').textContent = (p.talles ? p.talles + ' talles' : p.sku + ' · ' + p.id + (p.talle ? ' · talle ' + p.talle : ''))
       + (p.medidas ? '' : ' · sin medidas en la descripción');
-    b.addEventListener('click', () => { box.hidden = true; $('shopRef').value = String(p.id); elegirProducto(fichaDeCatalogo(p)); });
+    b.addEventListener('mousedown', e => e.preventDefault()); // el campo no pierde el foco al elegir
+    b.addEventListener('click', () => elegirResultado(k));
     box.appendChild(b);
   });
-  box.hidden = !lista.length;
-  if(total > lista.length) shopNota('', total + ' productos coinciden: muestro los primeros ' + lista.length + '. Sumá otra palabra (color, material…) para afinar.');
-  else shopNota('', 'Elegí el producto:');
+  const mas = total > lista.length ? 'Hay ' + total + ' que coinciden: sumá otra palabra (color, material…) para afinar.' : aviso || '';
+  if(mas){ const d = document.createElement('div'); d.className = 'shopResMas'; d.textContent = mas; box.appendChild(d); }
+  box.hidden = !box.children.length;
+}
+function elegirResultado(k){
+  const p = resultados[k];
+  if(!p) return;
+  $('shopResultados').hidden = true;
+  $('shopRef').value = String(p.id);
+  elegirProducto(fichaDeCatalogo(p));
+}
+function marcarResaltado(k){
+  resaltado = Math.max(-1, Math.min(resultados.length - 1, k));
+  $('shopResultados').querySelectorAll('.shopRes').forEach((b, n) => b.classList.toggle('activo', n === resaltado));
+}
+/* en vivo, mientras se escribe: los primeros 5 del catálogo */
+let busquedaT = 0;
+async function buscarEnVivo(){
+  const txt = $('shopRef').value.trim();
+  const id = shopId(txt);
+  if(!id && txt.length < 2){ $('shopResultados').hidden = true; resultados = []; return; }
+  const cat = await cargarCatalogo();
+  if(!cat || $('shopRef').value.trim() !== txt) return; // se siguió escribiendo
+  shopNota('', '');
+  if(id){
+    const p = cat.porId.get(id);
+    pintarResultados(p ? [p] : [], p ? 1 : 0, p ? '' : 'No está en el catálogo: tocá «Traer» para buscarlo en formas.shop.');
+    return;
+  }
+  const r = buscarEnCatalogo(cat, txt);
+  pintarResultados(r.slice(0, 5), r.length, r.length ? '' : 'Sin coincidencias en el catálogo. Probá con otra palabra o pegá el link del producto.');
 }
 
 /* "Traer" de la ficha: por link o código va directo; por nombre muestra los que coinciden */
@@ -5375,7 +5517,7 @@ async function traerDelShop(){
       const r = buscarEnCatalogo(cat, txt);
       if(!r.length) throw new Error('No encontré «' + txt + '» en el catálogo. Probá con otra palabra o pegá el link del producto.');
       if(r.length === 1){ $('shopRef').value = String(r[0].id); await elegirProducto(fichaDeCatalogo(r[0])); }
-      else pintarResultados(r.slice(0, 8), r.length);
+      else { pintarResultados(r.slice(0, 5), r.length); shopNota('', 'Elegí uno de la lista (o seguí escribiendo para afinar).'); }
       return;
     }
     const p = cat && cat.porId.get(id);
@@ -5384,6 +5526,7 @@ async function traerDelShop(){
     const ficha = leerFichaShop(await (await shopFetch('id=' + id)).text());
     if(!ficha.fotos.length) throw new Error('No encontré el producto ' + id + ' en formas.shop: revisá el código.');
     ficha.id = id;
+    ficha.raiz = 'id-' + id; // sin catálogo no se sabe la raíz: lo guardado va por código
     ficha.fotos = ficha.fotos.map(u => ({ u }));
     await elegirProducto(ficha);
   }catch(e){
@@ -5421,6 +5564,9 @@ async function elegirProducto(ficha){
       catch(e){ console.warn('foto del shop:', lista[i].u, e); } // una foto rota no frena al resto
     }
     if(!fotos.length) throw new Error('No pude bajar las fotos del producto ' + ficha.id + '.');
+    const guardada = await leerMedidaGuardada(ficha.raiz);
+    if(guardada && guardada.medidas) ficha.medidas = { texto: 'Medidas: ' + textoMedidas(guardada.medidas), valores: guardada.medidas };
+    if(guardada && guardada.fotos) fotos.forEach(f => { f.guardada = guardada.fotos[f.url] || null; });
     if(ficha.medidas){
       for(let i = 0; i < fotos.length; i++){
         shopNota('', 'Buscando la foto de frente para medir… (' + (i+1) + ' de ' + fotos.length + ')');
@@ -5432,16 +5578,19 @@ async function elegirProducto(ficha){
     const rango = f => (!f.med || !f.med.ok ? 3 : { alta:0, media:1, baja:2 }[f.med.conf]) + (f.prov ? 0.5 : 0);
     let elegida = 0;
     fotos.forEach((f, i) => { if(rango(f) < rango(fotos[elegida])) elegida = i; });
+    const pref = guardada ? fotos.findIndex(f => f.url === guardada.preferida && f.guardada) : -1;
+    if(pref >= 0) elegida = pref; // la que alguien ya ajustó y guardó
     const med = fotos[elegida].med;
-    const medible = med && med.ok && med.conf !== 'baja';
+    const medible = fotos[elegida].guardada || (med && med.ok && med.conf !== 'baja');
     const nProv = fotos.filter(f => f.prov).length;
     const resumen = ficha.nombre + ': ' + fotos.length + (fotos.length === 1 ? ' foto' : ' fotos') + (nProv ? ' (' + nProv + ' del proveedor)' : '')
       + (ficha.medidas ? ' · medidas: ' + textoMedidas(ficha.medidas.valores) : '')
       + (ficha.areas.length ? ' · ' + ficha.areas.length + (ficha.areas.length === 1 ? ' área' : ' áreas') + ' de impresión' : '');
-    shopPendiente = { fotos, elegida, nombre: ficha.nombre, medidas: ficha.medidas, areas: ficha.areas,
+    shopPendiente = { fotos, elegida, raiz: ficha.raiz, nombre: ficha.nombre, medidas: ficha.medidas, areas: ficha.areas,
       resumen: resumen + '. Tocá otra foto para cambiarla o subí una propia.' };
     shopNota('ok', '✓ ' + resumen + '. '
-      + (medible ? 'La foto de frente ya está medida: tocá «Creá el boceto con tu logo».'
+      + (fotos[elegida].guardada ? 'La medida la ajustó a mano ' + quienCuando(fotos[elegida].guardada) + ' y ya queda puesta: tocá «Creá el boceto con tu logo».'
+        : medible ? 'La foto de frente ya está medida: tocá «Creá el boceto con tu logo».'
         : ficha.medidas ? 'Ninguna foto está de frente para medirla sola: en el boceteador ubicá la regla a mano.'
         : 'La descripción no trae las medidas del producto: en el boceteador anotalas o ubicá la regla a mano.'));
   }catch(e){
@@ -5457,7 +5606,7 @@ window.__bocetoAlAbrir = () => {
   if(!shopPendiente) return;
   const p = shopPendiente;
   shopPendiente = null;
-  shopFotos = p.fotos; shopNombre = p.nombre; shopResumen = p.resumen;
+  shopFotos = p.fotos; shopNombre = p.nombre; shopResumen = p.resumen; shopRaiz = p.raiz;
   $('prodMedidas').value = p.medidas ? textoMedidas(p.medidas.valores) : '';
   state.areasShop = p.areas; pintarAreas();
   pintarGaleria();
@@ -5470,7 +5619,20 @@ window.__bocetoAlAbrir = () => {
 };
 
 $('shopTraer').addEventListener('click', traerDelShop);
-$('shopRef').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); traerDelShop(); } });
+$('shopRef').addEventListener('focus', () => { cargarCatalogo(); }); // el catálogo se baja mientras se empieza a escribir
+$('shopRef').addEventListener('input', () => { clearTimeout(busquedaT); busquedaT = setTimeout(buscarEnVivo, 120); });
+$('shopRef').addEventListener('keydown', e => {
+  const abierta = !$('shopResultados').hidden && resultados.length;
+  if(e.key === 'ArrowDown' && abierta){ e.preventDefault(); marcarResaltado(resaltado + 1); }
+  else if(e.key === 'ArrowUp' && abierta){ e.preventDefault(); marcarResaltado(resaltado - 1); }
+  else if(e.key === 'Escape'){ $('shopResultados').hidden = true; }
+  else if(e.key === 'Enter'){
+    e.preventDefault();
+    clearTimeout(busquedaT);
+    if(abierta && resaltado >= 0) elegirResultado(resaltado);
+    else traerDelShop();
+  }
+});
 
 /* ---------- ancla de proporción (solo vincula los campos de medidas) ---------- */
 function syncLockUI(){
@@ -6894,7 +7056,7 @@ window.__bocetoRestore = data => {
     $('rulerCm').value = ''; $('technique').value = ''; $('techniqueOther').value = ''; $('techniqueOther').hidden = true;
     $('prodMedidas').value = ''; state.auto = null; $('autoMedNote').hidden = true;
     state.areasShop = []; pintarAreas();
-    shopFotos = []; pintarGaleria(); galeriaNota(''); shopPendiente = null; obsDelShop = '';
+    shopFotos = []; pintarGaleria(); galeriaNota(''); shopPendiente = null; obsDelShop = ''; fotoShopActual = null;
     shopNota('', ''); $('shopRef').value = ''; $('shopResultados').hidden = true;
     $('photoThumb').innerHTML = '📷';
     $('photoTxt').innerHTML = 'Elegir foto del producto<small>JPG o PNG · se recomienda recortada al producto</small>';
@@ -6926,6 +7088,7 @@ window.__bocetoRestore = data => {
     $('prodMedidas').value = data.prodMedidas || '';
     state.auto = data.auto || null; $('autoMedNote').hidden = true;
     shopPendiente = null; // una plantilla trae su propio boceto: no se pisa con lo último traído del shop
+    fotoShopActual = null;
     state.areasShop = Array.isArray(data.areasShop) ? data.areasShop : []; pintarAreas();
     state.lockAspect = !!data.lockAspect; syncLockUI();
     state.unirLogos = typeof data.unirLogos === 'boolean' ? data.unirLogos : undefined;

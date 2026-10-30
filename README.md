@@ -17,8 +17,9 @@ se abren directo en el navegador, sin instalación.
 
 En la ficha, arriba de «Nombre del producto», **Traer de formas.shop** acepta el
 link del producto (`https://formas.shop/app/product/detail/18953`), su código
-(`18953`) o parte del nombre («anotador eco», «termo hydro»: muestra los que
-coinciden, con los talles de un mismo color juntos). Al elegirlo:
+(`18953`) o parte del nombre: mientras se escribe aparecen los primeros 5 que
+coinciden, con su foto y los talles de un mismo color juntos (se eligen con el
+mouse o con ↑ ↓ y Enter). Al elegirlo:
 
 1. completa la ficha: **nombre**, **color** (con su muestra, si el nombre del
    color es conocido) y las **observaciones** (material y medidas; solo si
@@ -40,6 +41,25 @@ coinciden, con los talles de un mismo color juntos). Al elegirlo:
 
 Si el boceteador ya tiene un boceto con logos, traer otro producto no lo pisa:
 solo deja sus fotos para elegir.
+
+### Medidas guardadas
+
+Si la medición automática no quedó bien (o la descripción del shop está mal), se
+mueve la regla, se corrige la medida y se toca **💾 Guardar esta medida para la
+próxima**. Desde ahí, cualquiera que traiga ese producto lo recibe así: en la
+ficha dice quién la ajustó y cuándo, la foto queda marcada con 💾 y la regla sale
+como la dejaron. **Volver a la automática** borra lo guardado de esa foto.
+
+Se guarda por raíz del producto (vale para todos sus colores y talles; la regla,
+por foto) en la función `functions/api/medidas.js`, sobre un KV de Cloudflare.
+Guardar pide la misma clave de Formas que las funciones de IA (`FORMAS_IA_CLAVE`).
+Prueba: `node test_medidas.mjs`.
+
+**Puesta en marcha (una sola vez):** Cloudflare → Storage & Databases → KV →
+*Create namespace* (por ejemplo `formas-medidas`). Después Workers & Pages →
+formas-bocetos-con-logo → Settings → Bindings → *Add* → KV namespace, con
+**Variable name `MEDIDAS`** y ese namespace, en *Production* **y** en *Preview*, y
+redesplegar. Sin eso todo anda igual, pero el botón de guardar avisa que falta.
 
 Con una foto subida a mano también se puede: en «Sé la medida del producto» se
 anota la medida (`14 × 9 cm`) y se toca **📐 Medir solo**.
@@ -103,7 +123,7 @@ que trae la API (Zecat, X-Trade, Promoproductos, Nuevas Formas…): no es un pro
 abierto. Si aparece un proveedor nuevo con fotos en otro dominio, se suma a
 `HOSTS_FOTOS`. No necesita variables.
 
-Pruebas: `node test_shop.mjs` y `node test_medir_producto.mjs`.
+Pruebas: `node test_shop.mjs`, `node test_medir_producto.mjs` y `node test_medidas.mjs`.
 
 ## PDF editable para CorelDRAW
 
