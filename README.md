@@ -8,28 +8,38 @@ se abren directo en el navegador, sin instalación.
 
 | Archivo | Qué es |
 |---|---|
-| **`generador-bocetos.html`** | ⭐ **La app principal.** Generador de bocetos (formulario + ficha A4 de producción en vivo) con el boceteador "Cargá tu logo" integrado como modal: subís la foto del producto, marcás el área, aplicás el logo (tinte —blanco, negro, grabado o **un color a elección**, con código HEX o Pantone del mismo buscador de la ficha—, opacidad, rotación, **quitar el fondo o cualquier color** —blanco, negro, uno del selector o tomado con el cuentagotas tocando el logo— y **✨ Modificar logo con IA**) y la ficha se completa sola (foto compuesta, logo, medidas, técnica, posición). El lienzo del boceteador ocupa toda la altura de la pantalla. La vista previa de la ficha tiene zoom (botones arriba a la derecha o Ctrl + rueda; «1:1» muestra el tamaño real de impresión para revisar la calidad de la foto). Acepta logos en PNG, JPG, SVG, PDF y .ai de Illustrator (guardados con compatibilidad PDF, que es el default). Trae fotos y medidas de **formas.shop** y mide el producto solo sobre la foto (ver «Traer de formas.shop»). Imprime a PDF y descarga HTML. |
+| **`generador-bocetos.html`** | ⭐ **La app principal.** Generador de bocetos (formulario + ficha A4 de producción en vivo) con el boceteador "Cargá tu logo" integrado como modal: subís la foto del producto, marcás el área, aplicás el logo (tinte —blanco, negro, grabado o **un color a elección**, con código HEX o Pantone del mismo buscador de la ficha—, opacidad, rotación, **quitar el fondo o cualquier color** —blanco, negro, uno del selector o tomado con el cuentagotas tocando el logo— y **✨ Modificar logo con IA**) y la ficha se completa sola (foto compuesta, logo, medidas, técnica, posición). El lienzo del boceteador ocupa toda la altura de la pantalla. La vista previa de la ficha tiene zoom (botones arriba a la derecha o Ctrl + rueda; «1:1» muestra el tamaño real de impresión para revisar la calidad de la foto). Acepta logos en PNG, JPG, SVG, PDF y .ai de Illustrator (guardados con compatibilidad PDF, que es el default). Trae de **formas.shop** el nombre, el color, las fotos y las medidas del producto, y lo mide solo sobre la foto (ver «Traer de formas.shop»). Imprime a PDF y descarga HTML. |
 | `boceteador.html` | El boceteador standalone (versión previa a la integración; el modal del generador es su evolución). |
 | `cotizador-formas.html` | Maqueta funcional del cotizador (fase 3 del roadmap): técnica, cantidades, desglose de precio y markup. |
 | `DESIGN.md` | Documento de diseño: flujos, modelo de datos, sistema de diseño Formas, roadmap. |
 
 ## Traer de formas.shop y medir el producto solo
 
-En el paso 1 del boceteador, **Traer de formas.shop** acepta el link del producto
-(`https://formas.shop/app/product/detail/18953`), su código (`18953`) o parte
-del nombre («anotador eco», «termo hydro»: muestra los que coinciden) y:
+En la ficha, arriba de «Nombre del producto», **Traer de formas.shop** acepta el
+link del producto (`https://formas.shop/app/product/detail/18953`), su código
+(`18953`) o parte del nombre («anotador eco», «termo hydro»: muestra los que
+coinciden, con los talles de un mismo color juntos). Al elegirlo:
 
-1. trae las fotos de la tienda y las del proveedor, y lee la descripción: las
+1. completa la ficha: **nombre**, **color** (con su muestra, si el nombre del
+   color es conocido) y las **observaciones** (material y medidas; solo si
+   estaban vacías o eran de un producto traído antes);
+2. baja las fotos de la tienda y las del proveedor, lee de la descripción las
    **medidas** («Medidas cerrado: 14 × 9 cm», «Ø 8,4 × 30 cm», «Dimensiones:
-   21 × 14 × 1,4 cm», en cm o mm) y, si la ficha las trae, las **áreas de
-   impresión** («Frente: 60 × 15 mm», o varias en un renglón como en los textiles:
-   «Frente (10 × 10 cm), espalda (22 × 9,8 cm) y mangas (8 × 8 cm)»);
-2. mide cada foto y arranca por la que está **de frente** (✓ en la miniatura;
-   ~ = se puede medir con dudas; sin marca = sirve para mostrar, no para medir);
-3. pasa a «Sé la medida del producto» y deja **la regla calibrada sola**, de
-   borde a borde del lado largo, con el contorno del producto marcado en verde;
+   21 × 14 × 1,4 cm», en cm o mm) y las **áreas de impresión** («Frente: 60 × 15 mm»,
+   o varias en un renglón como en los textiles: «Frente (10 × 10 cm), espalda
+   (22 × 9,8 cm) y mangas (8 × 8 cm)»), y mide cada foto para elegir la que está
+   **de frente**;
+3. al tocar «Creá el boceto con tu logo», el boceteador abre ya en «Sé la medida
+   del producto», con esa foto puesta, **la regla calibrada sola** de borde a borde
+   del lado largo y el contorno del producto marcado en verde. Arriba quedan las
+   fotos del shop para cambiarla (✓ = de frente, se mide sola; ~ = con dudas; sin
+   marca = sirve para mostrar, no para medir; borde punteado = del proveedor), y
+   se puede subir una propia;
 4. en el paso 2, cada área de impresión del shop es un botón que la marca **a
    medida real** sobre el producto (después se lleva a su lugar).
+
+Si el boceteador ya tiene un boceto con logos, traer otro producto no lo pisa:
+solo deja sus fotos para elegir.
 
 Con una foto subida a mano también se puede: en «Sé la medida del producto» se
 anota la medida (`14 × 9 cm`) y se toca **📐 Medir solo**.

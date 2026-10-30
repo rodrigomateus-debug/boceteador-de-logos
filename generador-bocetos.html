@@ -219,9 +219,6 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #autoRect span{position:absolute;left:-2px;top:-2px;translate:0 -100%;background:var(--formas-green);color:#fff;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px 6px 0 0;white-space:nowrap;font-variant-numeric:tabular-nums}
 #bocetoModal #autoRect.label-in span{translate:0 0;border-radius:0 0 6px 0}
 /* traer de formas.shop */
-#bocetoModal .shopRow{display:flex;gap:8px}
-#bocetoModal .shopRow input{flex:1;min-width:0}
-#bocetoModal .shopRow .btn{width:auto;flex:none;padding:9px 16px}
 #bocetoModal .shopFotos{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 #bocetoModal .shopFoto{position:relative;width:58px;height:58px;border-radius:10px;border:1.5px solid var(--formas-gray-200);background:#fff;padding:3px;cursor:pointer;flex:none}
 #bocetoModal .shopFoto img{width:100%;height:100%;object-fit:contain;display:block}
@@ -229,10 +226,6 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .shopFoto b{position:absolute;right:-6px;top:-6px;width:18px;height:18px;border-radius:50%;font-size:10px;line-height:1;display:grid;place-items:center;color:#fff;background:var(--formas-green)}
 #bocetoModal .shopFoto b.media{background:var(--formas-yellow);color:var(--formas-ink)}
 #bocetoModal .shopFoto.prov{border-style:dashed}
-#bocetoModal .shopResultados{display:flex;flex-direction:column;gap:6px;margin-top:4px;max-height:280px;overflow:auto}
-#bocetoModal .shopRes{display:block;text-align:left;padding:8px 12px;border-radius:10px;border:1.5px solid var(--formas-gray-200);background:#fff;font-family:var(--font-primary);font-size:12.5px;font-weight:700;color:var(--formas-navy);cursor:pointer}
-#bocetoModal .shopRes:hover{border-color:var(--formas-navy)}
-#bocetoModal .shopRes small{display:block;font-weight:400;color:var(--text-muted);font-size:11px}
 #bocetoModal .areaChips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 #bocetoModal .areaChip{padding:6px 11px;border-radius:999px;border:1.5px solid var(--formas-gray-200);background:#fff;font-family:var(--font-primary);font-size:12px;font-weight:700;color:var(--formas-navy);cursor:pointer;font-variant-numeric:tabular-nums}
 #bocetoModal .areaChip:hover{border-color:var(--formas-navy)}
@@ -448,6 +441,17 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #iaModal .iaBtns .dl{margin-right:auto; border-color:var(--navy); color:var(--navy); font-weight:700}
 .btn-dlfoto{display:block; width:100%; margin-top:6px; padding:8px 10px; border:1px dashed var(--formas-gray-200,#E4E4ED); border-radius:10px; background:#fff; color:var(--text-body); font:inherit; font-size:12px; font-weight:600; cursor:pointer}
 .btn-dlfoto:hover{border-color:var(--navy); color:var(--navy)}
+/* traer el producto de formas.shop (ficha, arriba del nombre) */
+.shopRow{display:flex; gap:6px}
+.shopRow input{flex:1; min-width:0}
+.shopRow button{flex:none; padding:0 14px; border:none; border-radius:8px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
+.shopRow button:disabled{opacity:.6; cursor:progress}
+.shopResultados{display:flex; flex-direction:column; gap:5px; margin-top:6px; max-height:260px; overflow:auto}
+.shopRes{display:block; text-align:left; padding:7px 10px; border-radius:8px; border:1px solid var(--border); background:#fff; font:inherit; font-size:12px; font-weight:600; color:var(--navy); cursor:pointer}
+.shopRes:hover{border-color:var(--navy)}
+.shopRes small{display:block; font-weight:400; color:var(--muted); font-size:10.5px}
+#shopNote.ok{border-left:3px solid var(--green)}
+#shopNote.mal{border-left:3px solid #EF7958}
 @media (max-width:640px){ #iaModal .iaCompare{grid-template-columns:1fr} }
 /* modificar logo con IA: va por encima del boceteador */
 #iaLogoModal{position:fixed; inset:0; z-index:120; background:rgba(11,11,35,.55); display:flex; align-items:center; justify-content:center; padding:20px}
@@ -757,6 +761,13 @@ html,body{margin:0;padding:0;background:#EDEDF2}
 
     <fieldset>
       <legend>Producto</legend>
+      <label for="shopRef">Traer de formas.shop</label>
+      <div class="shopRow">
+        <input type="text" id="shopRef" placeholder="Link, código o nombre del producto" autocomplete="off">
+        <button type="button" id="shopTraer">Traer</button>
+      </div>
+      <div class="shopResultados" id="shopResultados" hidden></div>
+      <div class="iaStatus" id="shopNote" hidden><span id="shopNoteTxt"></span></div>
       <label>Nombre del producto <span style="font-weight:400">(Enter = salto de línea)</span></label>
       <textarea id="f_producto" placeholder="Producto"></textarea>
       <label>Cantidad</label><input type="text" id="f_cantidad" placeholder="Cantidad">
@@ -1034,18 +1045,12 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <!-- Paso 1: producto -->
       <div class="card step" id="step1">
         <div class="step-head"><span class="step-num">1</span><h2>Foto del producto</h2></div>
-        <div class="field" id="shopField" style="margin-top:0">
-          <span class="label" style="letter-spacing:.08em">Traer de formas.shop</span>
-          <div class="shopRow">
-            <input type="text" id="shopRef" placeholder="Link, código o nombre del producto" autocomplete="off">
-            <button class="btn btn-secondary" type="button" id="shopTraer">Traer</button>
-          </div>
-          <small style="color:var(--text-muted);font-size:11.5px">Trae las fotos y las medidas de la descripción, y mide el producto solo sobre la foto.</small>
-          <div class="shopResultados" id="shopResultados" hidden></div>
-          <div class="shopFotos" id="shopFotos" hidden></div>
-          <div class="note" id="shopNote" hidden>🛍 <span id="shopNoteTxt"></span></div>
+        <div class="field" id="shopGaleria" style="margin-top:0" hidden>
+          <span class="label" style="letter-spacing:.08em">Fotos de formas.shop</span>
+          <div class="shopFotos" id="shopFotos"></div>
+          <div class="note" id="shopFotosNote" hidden>🛍 <span id="shopFotosNoteTxt"></span></div>
+          <div class="or-sep" style="margin:12px 0 2px">— o subí otra —</div>
         </div>
-        <div class="or-sep" style="margin:12px 0 10px">— o —</div>
         <label class="upload-tile" for="photoInput">
           <span class="thumb slot" id="photoThumb">📷</span>
           <span class="txt" id="photoTxt">Elegir foto del producto<small>JPG o PNG · se recomienda recortada al producto</small></span>
@@ -4354,6 +4359,7 @@ function openBocetoModal(){
   bocetoColors = JSON.parse(JSON.stringify(printColors)); // el editor arranca con los colores de la ficha
   drawBocetoColors(); syncBcToggles();
   if(window.__bocetoRender) window.__bocetoRender();
+  if(window.__bocetoAlAbrir) window.__bocetoAlAbrir(); // producto traído de formas.shop en la ficha
 }
 function closeBocetoModal(){
   bocetoModal.hidden = true;
@@ -5245,6 +5251,20 @@ function leerFichaShop(html){
   return Object.assign({ nombre, fotos }, leerDescripcion(bloque ? bloque.innerHTML : ''));
 }
 
+/* el color del shop ("Azul marino", "Blanco y Rojo", "Beige / kaki") → la muestra de la ficha.
+   Manda el primero de una combinación; si el nombre no está, la muestra no se toca. */
+const COLORES_SHOP = { negro:'#1A1A1A', blanco:'#FFFFFF', rojo:'#D32F2F', azul:'#1E4FBF', 'azul marino':'#1B2A4A',
+  'azul francia':'#2D5BD3', 'royal blue':'#2250C8', 'azul claro':'#64A6E8', 'azul oscuro':'#1A2F6B', celeste:'#7EC8F0',
+  verde:'#2E8B3E', 'verde claro':'#8BC34A', 'verde oscuro':'#1F5130', 'verde militar':'#4B5320', 'verde manzana':'#8CC63F',
+  gris:'#8C8C94', 'gris claro':'#CFCFD4', 'gris oscuro':'#4A4A50', 'gris topo':'#8A7F75', 'gris melange':'#A8A8AE', 'gris plata':'#C0C0C8',
+  plateado:'#C0C0C8', plata:'#C0C0C8', dorado:'#C9A227', naranja:'#F57C00', amarillo:'#FBC02D', rosa:'#F48FB1', 'rosa pastel':'#F8C8D8',
+  fucsia:'#D81B60', violeta:'#7E57C2', marron:'#6D4C41', bordo:'#7B1E2B', bordeaux:'#7B1E2B', beige:'#E8D9BE',
+  natural:'#D9C29A', crudo:'#EFE6D2', carton:'#C8A97E', kraft:'#C8A97E', madera:'#B98B5A', bamboo:'#C9A36B' };
+function hexDeColor(nombre){
+  const t = String(nombre || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split(/\s+y\s+|\s*\/\s*|,/)[0].trim();
+  return COLORES_SHOP[t] || COLORES_SHOP[t.split(' ')[0]] || null;
+}
+
 function pintarGaleria(){
   const box = $('shopFotos');
   box.innerHTML = '';
@@ -5260,7 +5280,11 @@ function pintarGaleria(){
     b.addEventListener('click', () => usarFotoShop(i));
     box.appendChild(b);
   });
-  box.hidden = !shopFotos.length;
+  $('shopGaleria').hidden = !shopFotos.length;
+}
+function galeriaNota(txt){
+  $('shopFotosNote').hidden = !txt;
+  $('shopFotosNoteTxt').textContent = txt || '';
 }
 let shopNombre = '', shopResumen = '';
 function usarFotoShop(i){
@@ -5270,28 +5294,30 @@ function usarFotoShop(i){
   loadPhotoSrc(f.src, (shopNombre || 'Producto') + ' · foto ' + (i+1), {
     listo: () => {
       if(medidasDeTexto($('prodMedidas').value, 'cm').length >= 2) autoMedir();
-      shopNota('ok', shopResumen);
+      galeriaNota(shopResumen);
     },
   });
 }
+
 /* Catálogo armado desde la API de STP (catalogo-shop.json, ver herramientas/catalogo-shop.mjs):
    busca por link, código o nombre al instante. Si el producto es más nuevo que el catálogo,
-   se lee su página pública como antes. */
+   se lee su página pública. */
 let catalogoShop = null;
 function cargarCatalogo(){
   if(!catalogoShop) catalogoShop = fetch('catalogo-shop.json')
     .then(r => r.ok ? r.json() : null)
     .then(d => {
       if(!d || !Array.isArray(d.productos)) return null;
-      const sinTildes = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const sinTildes = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
       d.porId = new Map(d.productos.map(p => [String(p.id), p]));
-      d.productos.forEach(p => { p.busca = sinTildes([p.nombre, p.color, p.talle, p.sku, p.id].join(' ')); });
+      d.productos.forEach(p => { p.busca = sinTildes([p.nombre, p.color, p.variante, p.material, p.talle, p.sku, p.id].join(' ')); });
       d.sinTildes = sinTildes;
       return d;
     })
     .catch(() => null);
   return catalogoShop;
 }
+const variantesDe = p => [p.color, p.variante].filter(Boolean).join(' · ');
 function buscarEnCatalogo(cat, txt){
   const palabras = cat.sinTildes(txt).split(/\s+/).filter(Boolean);
   const r = cat.productos.filter(p => palabras.every(w => p.busca.includes(w)));
@@ -5301,7 +5327,7 @@ function buscarEnCatalogo(cat, txt){
   /* los talles de un mismo producto y color van juntos: para el boceto son la misma foto */
   const grupos = new Map();
   for(const p of r){
-    const k = p.talle ? p.raiz + '|' + (p.color || '') : String(p.id);
+    const k = p.talle ? p.raiz + '|' + variantesDe(p) : String(p.id);
     if(!grupos.has(k)) grupos.set(k, []);
     grupos.get(k).push(p);
   }
@@ -5309,8 +5335,7 @@ function buscarEnCatalogo(cat, txt){
 }
 function fichaDeCatalogo(p){
   return {
-    id: p.id,
-    nombre: p.nombre + (p.color ? ' · ' + p.color : ''),
+    id: p.id, nombre: p.nombre, color: p.color || '', material: p.material || '', variante: p.variante || '',
     fotos: (p.fotos || []).map(u => ({ u })).concat((p.proveedor || []).map(u => ({ u, prov:true }))),
     medidas: p.medidas ? { texto: p.medidasTexto || '', valores: p.medidas } : null,
     areas: p.areas || [],
@@ -5323,17 +5348,18 @@ function pintarResultados(lista, total){
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'shopRes';
     b.innerHTML = '<span></span><small></small>';
-    b.querySelector('span').textContent = p.nombre + (p.color ? ' · ' + p.color : '');
+    b.querySelector('span').textContent = p.nombre + (variantesDe(p) ? ' · ' + variantesDe(p) : '');
     b.querySelector('small').textContent = (p.talles ? p.talles + ' talles' : p.sku + ' · ' + p.id + (p.talle ? ' · talle ' + p.talle : ''))
       + (p.medidas ? '' : ' · sin medidas en la descripción');
-    b.addEventListener('click', () => { box.hidden = true; $('shopRef').value = String(p.id); traerFicha(fichaDeCatalogo(p)); });
+    b.addEventListener('click', () => { box.hidden = true; $('shopRef').value = String(p.id); elegirProducto(fichaDeCatalogo(p)); });
     box.appendChild(b);
   });
   box.hidden = !lista.length;
   if(total > lista.length) shopNota('', total + ' productos coinciden: muestro los primeros ' + lista.length + '. Sumá otra palabra (color, material…) para afinar.');
-  else shopNota('', lista.length === 1 ? '' : 'Elegí el producto:');
+  else shopNota('', 'Elegí el producto:');
 }
 
+/* "Traer" de la ficha: por link o código va directo; por nombre muestra los que coinciden */
 async function traerDelShop(){
   const txt = $('shopRef').value.trim();
   const id = shopId(txt);
@@ -5348,18 +5374,18 @@ async function traerDelShop(){
       if(!cat) throw new Error('No pude abrir el catálogo para buscar por nombre: pegá el link o el código del producto.');
       const r = buscarEnCatalogo(cat, txt);
       if(!r.length) throw new Error('No encontré «' + txt + '» en el catálogo. Probá con otra palabra o pegá el link del producto.');
-      if(r.length === 1){ $('shopRef').value = String(r[0].id); await traerFicha(fichaDeCatalogo(r[0])); }
+      if(r.length === 1){ $('shopRef').value = String(r[0].id); await elegirProducto(fichaDeCatalogo(r[0])); }
       else pintarResultados(r.slice(0, 8), r.length);
       return;
     }
     const p = cat && cat.porId.get(id);
-    if(p){ await traerFicha(fichaDeCatalogo(p)); return; }
+    if(p){ await elegirProducto(fichaDeCatalogo(p)); return; }
     /* más nuevo que el catálogo (o sin catálogo): la página pública del producto */
     const ficha = leerFichaShop(await (await shopFetch('id=' + id)).text());
     if(!ficha.fotos.length) throw new Error('No encontré el producto ' + id + ' en formas.shop: revisá el código.');
     ficha.id = id;
     ficha.fotos = ficha.fotos.map(u => ({ u }));
-    await traerFicha(ficha);
+    await elegirProducto(ficha);
   }catch(e){
     shopNota('mal', '⚠ ' + (e && e.message ? e.message : e));
   }finally{
@@ -5367,11 +5393,26 @@ async function traerDelShop(){
   }
 }
 
-/* baja las fotos, mide cada una para arrancar por la que está de frente y la carga */
-async function traerFicha(ficha){
+/* Producto elegido: completa la ficha, baja y mide las fotos, y lo deja listo para el
+   boceteador (se aplica al abrirlo). */
+let shopPendiente = null, obsDelShop = '';
+async function elegirProducto(ficha){
   const btn = $('shopTraer');
   btn.disabled = true;
   try{
+    const poner = (id, v) => { const el = document.getElementById(id); if(el.value !== v){ el.value = v; el.dispatchEvent(new Event('input', { bubbles:true })); } };
+    poner('f_producto', ficha.nombre || '');
+    if(ficha.color){
+      poner('f_colorprod_nom', ficha.color);
+      const hex = hexDeColor(ficha.color);
+      if(hex) poner('f_colorprod_hex', hex);
+    }
+    /* las observaciones se completan si estaban vacías o eran de un producto traído antes */
+    const obs = [ficha.material && 'Material: ' + ficha.material, ficha.variante, ficha.medidas && ficha.medidas.texto]
+      .filter(Boolean).join(' · ');
+    const obsEl = document.getElementById('f_obsprod');
+    if(obs && (!obsEl.value.trim() || obsEl.value === obsDelShop)){ poner('f_obsprod', obs); obsDelShop = obs; }
+
     const lista = ficha.fotos.slice(0, 8);
     const fotos = [];
     for(let i = 0; i < lista.length; i++){
@@ -5387,27 +5428,47 @@ async function traerFicha(ficha){
         try{ fotos[i].med = medirImagenProducto(await cargarImagen(fotos[i].src), ficha.medidas.valores); }catch(e){}
       }
     }
-    shopFotos = fotos; shopNombre = ficha.nombre;
-    $('prodMedidas').value = ficha.medidas ? textoMedidas(ficha.medidas.valores) : '';
-    state.areasShop = ficha.areas; pintarAreas();
-    pintarGaleria();
     /* la de frente que se mide sola; a igual confianza, las de la tienda antes que las del proveedor */
     const rango = f => (!f.med || !f.med.ok ? 3 : { alta:0, media:1, baja:2 }[f.med.conf]) + (f.prov ? 0.5 : 0);
     let elegida = 0;
     fotos.forEach((f, i) => { if(rango(f) < rango(fotos[elegida])) elegida = i; });
+    const med = fotos[elegida].med;
+    const medible = med && med.ok && med.conf !== 'baja';
     const nProv = fotos.filter(f => f.prov).length;
-    shopResumen = (ficha.nombre || 'Producto ' + ficha.id) + ': ' + fotos.length + (fotos.length === 1 ? ' foto' : ' fotos')
-      + (nProv ? ' (' + nProv + ' del proveedor)' : '')
-      + (ficha.medidas ? ' · medidas de la descripción: ' + textoMedidas(ficha.medidas.valores) : ' · la descripción no trae las medidas: anotalas abajo o ubicá la regla a mano')
-      + (ficha.areas.length ? ' · ' + ficha.areas.length + (ficha.areas.length === 1 ? ' área' : ' áreas') + ' de impresión (paso 2)' : '')
-      + '. Tocá otra foto para cambiarla.';
-    usarFotoShop(elegida);
+    const resumen = ficha.nombre + ': ' + fotos.length + (fotos.length === 1 ? ' foto' : ' fotos') + (nProv ? ' (' + nProv + ' del proveedor)' : '')
+      + (ficha.medidas ? ' · medidas: ' + textoMedidas(ficha.medidas.valores) : '')
+      + (ficha.areas.length ? ' · ' + ficha.areas.length + (ficha.areas.length === 1 ? ' área' : ' áreas') + ' de impresión' : '');
+    shopPendiente = { fotos, elegida, nombre: ficha.nombre, medidas: ficha.medidas, areas: ficha.areas,
+      resumen: resumen + '. Tocá otra foto para cambiarla o subí una propia.' };
+    shopNota('ok', '✓ ' + resumen + '. '
+      + (medible ? 'La foto de frente ya está medida: tocá «Creá el boceto con tu logo».'
+        : ficha.medidas ? 'Ninguna foto está de frente para medirla sola: en el boceteador ubicá la regla a mano.'
+        : 'La descripción no trae las medidas del producto: en el boceteador anotalas o ubicá la regla a mano.'));
   }catch(e){
     shopNota('mal', '⚠ ' + (e && e.message ? e.message : e));
   }finally{
     btn.disabled = false;
   }
 }
+
+/* al abrir el boceteador: el producto traído en la ficha entra solo. Si ya hay un boceto
+   con logos, no se pisa: quedan las fotos del shop para elegir. */
+window.__bocetoAlAbrir = () => {
+  if(!shopPendiente) return;
+  const p = shopPendiente;
+  shopPendiente = null;
+  shopFotos = p.fotos; shopNombre = p.nombre; shopResumen = p.resumen;
+  $('prodMedidas').value = p.medidas ? textoMedidas(p.medidas.valores) : '';
+  state.areasShop = p.areas; pintarAreas();
+  pintarGaleria();
+  if(state.logos.length){
+    galeriaNota('Trajiste «' + p.nombre + '» de formas.shop: tocá una foto para usarla en este boceto.');
+    return;
+  }
+  if(p.medidas) setMode('product');
+  usarFotoShop(p.elegida);
+};
+
 $('shopTraer').addEventListener('click', traerDelShop);
 $('shopRef').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); traerDelShop(); } });
 
@@ -6833,7 +6894,8 @@ window.__bocetoRestore = data => {
     $('rulerCm').value = ''; $('technique').value = ''; $('techniqueOther').value = ''; $('techniqueOther').hidden = true;
     $('prodMedidas').value = ''; state.auto = null; $('autoMedNote').hidden = true;
     state.areasShop = []; pintarAreas();
-    shopFotos = []; pintarGaleria(); shopNota('', ''); $('shopRef').value = ''; $('shopResultados').hidden = true;
+    shopFotos = []; pintarGaleria(); galeriaNota(''); shopPendiente = null; obsDelShop = '';
+    shopNota('', ''); $('shopRef').value = ''; $('shopResultados').hidden = true;
     $('photoThumb').innerHTML = '📷';
     $('photoTxt').innerHTML = 'Elegir foto del producto<small>JPG o PNG · se recomienda recortada al producto</small>';
     photoName = '';
@@ -6863,6 +6925,7 @@ window.__bocetoRestore = data => {
     $('rulerCm').value = data.rulerCm || '';
     $('prodMedidas').value = data.prodMedidas || '';
     state.auto = data.auto || null; $('autoMedNote').hidden = true;
+    shopPendiente = null; // una plantilla trae su propio boceto: no se pisa con lo último traído del shop
     state.areasShop = Array.isArray(data.areasShop) ? data.areasShop : []; pintarAreas();
     state.lockAspect = !!data.lockAspect; syncLockUI();
     state.unirLogos = typeof data.unirLogos === 'boolean' ? data.unirLogos : undefined;

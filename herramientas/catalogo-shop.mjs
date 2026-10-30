@@ -62,12 +62,15 @@ const productos = crudos
     const fotos = (p.images || []).slice().sort((a, b) => a.position - b.position).map(i => corta(i.url));
     const proveedor = (p.master_images || []).map(i => corta(i.url)).filter(u => u && !fotos.includes(u));
     const o = { id: p.product_id, sku: p.sku, raiz: p.root, nombre: (p.name || '').trim() };
-    /* el talle va aparte: cada talle es un SKU con sus fotos, y en la búsqueda se agrupan por color */
+    /* color y material van a la ficha; el talle va aparte porque cada talle es un SKU con sus
+       fotos y en la búsqueda se agrupan; lo demás (tipo de hojas, capacidad…) es la variante */
     const atributos = [p.attribute_1, p.attribute_2].filter(a => a && a.value);
-    const talle = atributos.find(a => a.attribute_id === 3);
-    const color = atributos.filter(a => a !== talle).map(a => a.value).join(' · ');
-    if (color) o.color = color;
-    if (talle) o.talle = talle.value;
+    const valor = id => (atributos.find(a => a.attribute_id === id) || {}).value;
+    const otros = atributos.filter(a => ![3, 5, 17].includes(a.attribute_id)).map(a => a.value.trim()).join(' · ');
+    if (valor(5)) o.color = valor(5).trim();
+    if (valor(17)) o.material = valor(17).trim();
+    if (otros) o.variante = otros;
+    if (valor(3)) o.talle = valor(3).trim();
     if (fotos.length) o.fotos = fotos;
     if (proveedor.length) o.proveedor = proveedor;
     if (medidas) { o.medidas = medidas.valores; o.medidasTexto = medidas.texto; }
