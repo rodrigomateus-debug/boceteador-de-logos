@@ -48,9 +48,13 @@ mouse o con ↑ ↓ y Enter). Al elegirlo:
    **El recuadro se ajusta**: si el detector agarró mal los bordes (la birome de
    costado, la tapa, una sombra), se arrastran sus esquinas o lados hasta los
    bordes reales (agarrándolo de la línea punteada se mueve entero, sin cambiar
-   de tamaño) y la escala se recalcula con la medida del producto sobre ese
-   recuadro. La etiqueta mide con la escala de ese momento. Se guarda con la
-   medida («Guardar medida y área para todos»).
+   de tamaño). Como en el logo, el ancho y el alto van **anclados (🔗)**: al
+   agrandar o achicar, el recuadro mantiene la forma del producto y la medida no
+   cambia (cambia la escala: se está encajando el producto en la foto); escribir el
+   ancho mueve el alto en proporción. **Sueltos**, cada lado se mueve por su cuenta
+   y el que se mueve cambia su medida. Arranca anclado cuando la proporción se
+   conoce (la medida de la descripción) y suelto con una foto propia. Se guarda con
+   la medida («Guardar medida y área para todos»).
    Con una **foto propia** (o si el producto no se encuentra solo) el recuadro sale
    sobre la silueta, o al medio: se lleva a los bordes del producto y se anota su
    ancho o su alto («Medir solo» también lo busca con esas medidas). La única foto

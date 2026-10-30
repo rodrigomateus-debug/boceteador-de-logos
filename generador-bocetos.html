@@ -260,7 +260,8 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .sw-prod{border:1.5px dashed var(--medida)}
 #bocetoModal .sw-area{border:2px solid var(--sheet-accent);background:color-mix(in srgb, var(--sheet-accent) 30%, transparent)}
 #bocetoModal .medRow{align-items:flex-end;gap:8px}
-#bocetoModal .medX{font-weight:700;color:var(--text-muted);flex:none;padding-bottom:11px}
+#bocetoModal .medRow .lockBtn{margin-bottom:0;height:42px}
+#bocetoModal .lockBtn:disabled{opacity:.4;cursor:default}
 #bocetoModal .miniLbl{display:block;font-size:11px;font-weight:700;color:var(--text-muted);margin:0 0 3px 2px}
 #bocetoModal .refMedida{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:12.5px;color:var(--text-muted)}
 #bocetoModal .refMedida b{color:var(--formas-navy);font-variant-numeric:tabular-nums}
@@ -1136,7 +1137,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
               <span class="miniLbl">↔ Ancho</span>
               <div class="suffix-wrap"><input type="text" inputmode="decimal" id="prodAncho" placeholder="Ancho" autocomplete="off" aria-label="Ancho real del producto"><span class="suffix">cm</span></div>
             </div>
-            <span class="medX">×</span>
+            <button type="button" class="lockBtn" id="prodLockBtn" aria-pressed="false" disabled>🔗</button>
             <div class="field" style="margin-top:0">
               <span class="miniLbl">↕ Alto</span>
               <div class="suffix-wrap"><input type="text" inputmode="decimal" id="prodAlto" placeholder="Alto" autocomplete="off" aria-label="Alto real del producto"><span class="suffix">cm</span></div>
@@ -4782,6 +4783,7 @@ function render(){
     $('autoRectLbl').textContent = '📏 Medida del producto · ' + (kA ? fmtPair(A.w*FW*kA, A.h*FH*kA) : 'anotá su ancho o su alto');
   }
   $('autoMedirBtn').disabled = frame.hidden;
+  syncProdLock();
   const refM = medidasDeTexto($('prodMedidas').value, 'cm'), kM = A ? cmPerPx() : null;
   if(A && kM){
     const f2 = v => String(Math.round(v*100)/100).replace('.', ',');
@@ -5006,7 +5008,7 @@ function syncRulerBtn(){
   $('rulerToggle').textContent = state.rulerVisible ? 'Ocultar medida' : 'Ver la medida';
   $('rulerToggle').disabled = !state.auto;
   $('rulerLbl').hidden = true; $('rulerCmField').hidden = true;
-  $('rulerHint').textContent = 'El recuadro azul punteado es el producto (no el área de impresión, que es la verde del paso 2): llevá sus bordes a los del producto con las manijas, o movelo agarrando la línea, y si la medida no es la real corregí el ancho o el alto.';
+  $('rulerHint').textContent = 'El recuadro azul punteado es el producto (no el área de impresión, que es la verde del paso 2): llevalo a los bordes del producto con las manijas o movelo agarrando la línea. Con 🔗 el ancho y el alto van juntos: el recuadro mantiene la forma y la medida no cambia. Si la medida no es la real, corregí el ancho o el alto.';
 }
 $('rulerCm').addEventListener('input', () => {
   /* si se borra la medida en pleno dibujo, el modo dibujo se cancela;
@@ -5314,6 +5316,31 @@ function limpiarMedidaProducto(){
   medidaEditada = false;
   $('prodAncho').value = ''; $('prodAlto').value = '';
 }
+/* ancho y alto anclados (🔗), como el logo: el recuadro mantiene la forma del producto. Arranca anclado
+   cuando la proporción se conoce (la medida de la descripción); con una foto propia, suelto, para encajarlo */
+const medidaAnclada = () => !!(state.auto && state.auto.anclada);
+function syncProdLock(){
+  const b = $('prodLockBtn'), on = medidaAnclada();
+  b.disabled = !state.auto;
+  b.setAttribute('aria-pressed', String(on));
+  b.title = on ? 'Ancho y alto anclados: al agrandar o achicar el recuadro mantiene la forma del producto y la medida no cambia (cambia la escala) — clic para desanclar'
+    : 'Ancho y alto sueltos: cada lado del recuadro se mueve por su cuenta — clic para anclar';
+}
+$('prodLockBtn').addEventListener('click', () => { if(state.auto){ state.auto.anclada = !state.auto.anclada; render(); } });
+/* agrandar o achicar sin deformar: desde la esquina (o el lado) opuesto, manda el cambio más grande */
+function resizeProporcional(s, corner, dxn, dyn, FW, FH){
+  const r = (s.w*FW) / (s.h*FH), c = resizeRect(s, corner, dxn, dyn, 20/FW, 20/FH);
+  let wpx = c.w*FW, hpx = c.h*FH;
+  const horiz = /[lr]/.test(corner), vert = /[tb]/.test(corner);
+  if(horiz && vert){ if(Math.abs(wpx - s.w*FW) >= Math.abs(hpx - s.h*FH)*r) hpx = wpx / r; else wpx = hpx * r; }
+  else if(horiz) hpx = wpx / r; else wpx = hpx * r;
+  const w = wpx/FW, h = hpx/FH;
+  const x = corner.includes('l') ? s.x + s.w - w : corner.includes('r') ? s.x : s.x + (s.w - w)/2;
+  const y = corner.includes('t') ? s.y + s.h - h : corner.includes('b') ? s.y : s.y + (s.h - h)/2;
+  if(x < -0.001 || y < -0.001 || x + w > 1.001 || y + h > 1.001) return null; // no entra en la foto: queda como estaba
+  return { x, y, w, h };
+}
+
 /* con contorno, el lado que se corrige pasa a dar la escala */
 function anclarMedida(lado){
   const A = state.auto, v = numCampo(lado === 'w' ? 'prodAncho' : 'prodAlto');
@@ -5357,7 +5384,7 @@ function autoMedir(){
     return r;
   }
   const q = r.rect;
-  const A = { x:q.x0/r.W, y:q.y0/r.H, w:(q.x1-q.x0)/r.W, h:(q.y1-q.y0)/r.H, cmW:r.cm.w, cmH:r.cm.h, conf:r.conf, desvio:r.desvio, desc:{ w:r.cm.w, h:r.cm.h } };
+  const A = { x:q.x0/r.W, y:q.y0/r.H, w:(q.x1-q.x0)/r.W, h:(q.y1-q.y0)/r.H, cmW:r.cm.w, cmH:r.cm.h, conf:r.conf, desvio:r.desvio, desc:{ w:r.cm.w, h:r.cm.h }, anclada:true };
   state.auto = A;
   /* la regla va sobre el lado largo, justo de borde a borde (más píxeles = menos error) */
   const vertical = (q.y1-q.y0) >= (q.x1-q.x0);
@@ -5731,7 +5758,7 @@ function aplicarEscalaProveedor(f){
     state.ruler = reglaAlLado({ x:prod.x0, y:prod.y0, w:prod.x1 - prod.x0, h:prod.y1 - prod.y0 }, vertical);
     $('rulerCm').value = String(Math.round((vertical ? ph : pw)*k*100)/100);
     /* sin medidas en la descripción es la silueta (puede sumar la sombra: se ajusta con las manijas) */
-    state.auto = { x:prod.x0, y:prod.y0, w:prod.x1 - prod.x0, h:prod.y1 - prod.y0, cmW:pw*k, cmH:ph*k, conf:prod.conf || 'media', desvio:prod.desvio || 0, desc:prod.desc || null };
+    state.auto = { x:prod.x0, y:prod.y0, w:prod.x1 - prod.x0, h:prod.y1 - prod.y0, cmW:pw*k, cmH:ph*k, conf:prod.conf || 'media', desvio:prod.desvio || 0, desc:prod.desc || null, anclada: !!prod.desc };
     const mide = prod.desc ? fmtPair(pw*k, ph*k) : fmtCm((vertical ? ph : pw)*k*unitK()) + ' ' + state.unit, d = dif(k);
     if(deDesc) nota = ['', '⚠', 'El área del proveedor ' + area + ' no guarda la proporción de sus cm: la escala sale de la medida del producto.'];
     else if(prod.desc && d > 0.04) nota = ['', '⚠', 'Con la escala del proveedor (área ' + area + ') la foto no coincide con la medida: revisá el contorno o corregí el ancho o el alto.'];
@@ -6129,7 +6156,7 @@ function guardadaNota(tipo, ico, txt, conOlvidar){
 function aplicarMedidaGuardada(g){
   if(state.mode !== 'product') setMode('product');
   const c = escalaDeArea ? null : g.contorno;
-  state.auto = c ? { x:c.x, y:c.y, w:c.w, h:c.h, cmW:0, cmH:0, conf:'alta', desvio:0, mano:true, desc: c.cm ? { w:c.cm[0], h:c.cm[1] } : null } : null;
+  state.auto = c ? { x:c.x, y:c.y, w:c.w, h:c.h, cmW:0, cmH:0, conf:'alta', desvio:0, mano:true, desc: c.cm ? { w:c.cm[0], h:c.cm[1] } : null, anclada:true } : null;
   state.ruler = { x1:g.regla.x1, y1:g.regla.y1, x2:g.regla.x2, y2:g.regla.y2 };
   $('rulerCm').value = String(g.cm);
   state.rulerVisible = true; $('rulerToggle').disabled = false; syncRulerBtn();
@@ -7452,8 +7479,9 @@ frame.addEventListener('pointerdown', e => {
     frame.setPointerCapture(e.pointerId); e.preventDefault(); return;
   }
   if(e.target.dataset && e.target.dataset.auto && state.auto){
-    const A = state.auto;
-    active = { mode:'auto-resize', corner:e.target.dataset.auto, startPx:px, start:{ x:A.x, y:A.y, w:A.w, h:A.h } };
+    const A = state.auto, k0 = cmPerPx();
+    active = { mode:'auto-resize', corner:e.target.dataset.auto, startPx:px, start:{ x:A.x, y:A.y, w:A.w, h:A.h },
+      real: k0 ? { w: A.w*FW*k0, h: A.h*FH*k0 } : null }; // lo que mide el producto al empezar
     frame.setPointerCapture(e.pointerId); e.preventDefault(); return;
   }
   if(e.target.id === 'rh1' || e.target.id === 'rh2'){
@@ -7545,8 +7573,22 @@ frame.addEventListener('pointermove', e => {
     state.auto.y = clamp(s.y + dy/FH, 0, 1 - s.h);
   }
   else if(active.mode === 'auto-resize'){
-    Object.assign(state.auto, resizeRect(active.start, active.corner, dx/FW, dy/FH, 20/FW, 20/FH));
-    recalibrarContorno(); // la regla y la medida acompañan mientras se arrastra
+    const A = state.auto;
+    if(A.anclada){
+      /* anclado: el recuadro conserva la forma del producto; su medida real no cambia, cambia la escala */
+      const r = resizeProporcional(active.start, active.corner, dx/FW, dy/FH, FW, FH);
+      if(r) Object.assign(A, r);
+      if(active.real){ const vertical = A.h*FH >= A.w*FW; A.ancla = vertical ? { lado:'h', cm: active.real.h } : { lado:'w', cm: active.real.w }; }
+    } else {
+      /* suelto: el lado que se mueve cambia su medida; el otro queda como estaba (en una esquina, el largo) */
+      Object.assign(A, resizeRect(active.start, active.corner, dx/FW, dy/FH, 20/FW, 20/FH));
+      if(active.real){
+        const c = active.corner, st = active.start, largoAlto = st.h*FH >= st.w*FW;
+        const fijo = /^[lr]$/.test(c) ? 'h' : /^[tb]$/.test(c) ? 'w' : (largoAlto ? 'h' : 'w');
+        A.ancla = { lado: fijo, cm: active.real[fijo] };
+      }
+    }
+    recalibrarContorno(); // la escala acompaña mientras se arrastra
   }
   else if(active.mode === 'logo-move'){
     const s = active.start, L = active.logo;
