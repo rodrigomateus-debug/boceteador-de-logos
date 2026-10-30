@@ -42,8 +42,18 @@ la cinta señaladora. La regla queda en píxeles exactos del borde.
 **El control de error:** la descripción da dos medidas y la foto también. Si la
 escala que sale del ancho y la que sale del alto coinciden (diferencia menor al
 3 %), la medición es confiable; si no, avisa «Medido con dudas» y dice por qué
-(proporción que no cierra, varios productos, forma no rectangular). En 33 fotos
-de frente del shop la diferencia fue de 0 a 2,2 % (el anotador 18953: 0,0 %).
+(proporción que no cierra, varios productos, forma no rectangular). Medido sobre
+el catálogo entero (1.874 productos sin contar colores ni talles, octubre 2026):
+
+| Resultado | Productos |
+|---|---|
+| Se mide solo | 737 (61 % de los que tienen medidas). Diferencia ancho/alto: mediana 0,2 %, el 95 % por debajo de 2 % |
+| Se mide con dudas | 312 (26 %) |
+| Ninguna foto sirve para medir (todas en perspectiva o en situación) | 158 (13 %) |
+| Sin medidas en la descripción | 667 (36 % del total): es lo primero a completar en el shop |
+
+En 97 productos la única foto que sirve para medir es la del proveedor. Una
+muestra al azar de 36 «se mide solo» revisada a ojo: 35 con el contorno bien.
 Las fotos en perspectiva, abiertas, en situación o con el producto cortado por el
 borde se rechazan solas y se pide la regla a mano.
 
