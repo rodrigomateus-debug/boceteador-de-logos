@@ -1,13 +1,17 @@
 // Arma catalogo-shop.json desde la API de catálogo de STP (tienda 67 = formas.shop).
 //
-//   STP_API_TOKEN=… node herramientas/catalogo-shop.mjs
+//   STP_API_TOKEN=… ZECAT_TOKEN=… node herramientas/catalogo-shop.mjs
 //
 // El boceteador lo usa para «Traer de formas.shop»: buscar por link, código o nombre,
 // las fotos de la tienda y del proveedor, las medidas y las áreas de impresión.
 // Solo productos activos y solo lo que el boceteador necesita: sin precios, stock ni
-// el bloque de costos. El token se usa acá y nunca llega a la web.
+// el bloque de costos. Los tokens se usan acá y nunca llegan a la web.
 // Las medidas y las áreas se leen con leerDescripcion(), la misma función del
 // generador, para que el catálogo y la ficha en vivo digan siempre lo mismo.
+//
+// Con ZECAT_TOKEN, los productos de Zecat (SKU «ZEC_…») suman las áreas del proveedor:
+// cada área con su foto para ese color, dónde está en la foto, cuánto mide y qué técnicas
+// admite (con el máximo de cada una). Sin el token se conservan las del catálogo anterior.
 import fs from 'node:fs';
 
 const API = 'https://www.stpo.com.ar/api/product/67/';
@@ -23,19 +27,20 @@ const sacar = (desde, hasta) => {
   if (i < 0 || j < 0) throw new Error('No encontré ' + desde + ' en generador-bocetos.html');
   return html.slice(i, j);
 };
-const { leerDescripcion } = new Function(
+const { leerDescripcion, canonTecnica } = new Function(
   sacar('function medidasDeTexto(', 'const textoMedidas')
   + sacar('const ENTIDADES', '/* de la página pública')
-  + 'return { leerDescripcion };')();
+  + sacar('const TECNICAS', '/* fin de las técnicas */')
+  + 'return { leerDescripcion, canonTecnica };')();
 
-async function pagina(n) {
+async function pedir(url, tok, quien) {
   for (let intento = 1; ; intento++) {
     try {
-      const r = await fetch(`${API}?page=${n}&page_size=500`, {
-        headers: { authorization: 'Bearer ' + token, accept: 'application/json', 'user-agent': 'boceteador-formas' },
+      const r = await fetch(url, {
+        headers: { authorization: 'Bearer ' + tok, accept: 'application/json', 'user-agent': 'boceteador-formas' },
       });
-      if (r.status === 401) throw Object.assign(new Error('La API rechazó el token (401).'), { final: true });
-      if (!r.ok) throw new Error('La API respondió ' + r.status);
+      if (r.status === 401) throw Object.assign(new Error(`La API de ${quien} rechazó el token (401).`), { final: true });
+      if (!r.ok) throw new Error(`La API de ${quien} respondió ${r.status}`);
       return await r.json();
     } catch (e) {
       if (e.final || intento >= 4) throw e;
@@ -43,6 +48,7 @@ async function pagina(n) {
     }
   }
 }
+const pagina = n => pedir(`${API}?page=${n}&page_size=500`, token, 'STP');
 
 const crudos = [];
 for (let n = 1; ; n++) {
@@ -78,7 +84,88 @@ const productos = crudos
     return o;
   });
 
+/* ---------- áreas del proveedor (Zecat) ----------
+   Cada área trae su foto por color (la de esa variante) y su recuadro sobre una grilla de
+   400 × 400, con la medida en cm: la escala sale de ahí, sin medir la foto. */
+const ZECAT = 'https://api.zecat.com/v1/generic_product';
+const tokenZecat = (process.env.ZECAT_TOKEN || '').trim();
+const MAYUS = new Set(['UV', 'DTF', 'DTP', 'CO2', 'HD', 'A4', 'A5', 'A6']);
+const nombreArea = t => {
+  const s = String(t || '').replace(/\s+/g, ' ').trim();
+  if (s !== s.toUpperCase() && !/^[A-ZÁÉÍÓÚÑ]{3,}\b/.test(s)) return s; // ya viene escrito normal
+  return s.toLowerCase().replace(/[^\s]+/g, w => (MAYUS.has(w.toUpperCase()) ? w.toUpperCase() : w))
+    .replace(/^./, c => c.toUpperCase());
+};
+const r4 = v => Math.round(v * 10000) / 10000;
+const r2 = v => Math.round(v * 100) / 100;
+function areasDeZecat(g, v) {
+  const fotos = new Map((v.images || []).filter(i => i.printing_area_id).map(i => [String(i.printing_area_id), i.image_url]));
+  const areas = [];
+  for (const a of g.printing_areas || []) {
+    const foto = fotos.get(String(a.id)) || (a.image && a.image.image_url);
+    const { x_coordinate: x, y_coordinate: y, width: w, height: h, width_centimeters: wc, height_centimeters: hc } = a;
+    if (!foto || !(w > 0 && h > 0 && wc > 0 && hc > 0)) continue;
+    /* algunos recuadros se pasan apenas de la grilla: se recortan y la medida en cm acompaña */
+    const x0 = Math.max(0, x), y0 = Math.max(0, y), x1 = Math.min(400, x + w), y1 = Math.min(400, y + h);
+    if (x1 - x0 < 2 || y1 - y0 < 2) continue;
+    const o = { n: nombreArea(a.name), cm: [r2(wc * (x1 - x0) / w), r2(hc * (y1 - y0) / h)],
+      z: [r4(x0 / 400), r4(y0 / 400), r4((x1 - x0) / 400), r4((y1 - y0) / 400)], foto };
+    /* técnicas con nombre del boceteador; si dos del proveedor caen en la misma (serigrafía de
+       1 y de 2 colores), vale el máximo más generoso (null = el área entera) */
+    const tec = new Map();
+    for (const t of a.printingTypeConfigurations || []) {
+      const n = canonTecnica(t.name) || nombreArea(t.name);
+      const max = [t.maxWidthCm > 0 ? t.maxWidthCm : null, t.maxHeightCm > 0 ? t.maxHeightCm : null];
+      const prev = tec.get(n);
+      tec.set(n, prev ? prev.map((m, i) => (m === null || max[i] === null ? null : Math.max(m, max[i]))) : max);
+    }
+    o.tec = [...tec].map(([n, [mw, mh]]) => [n, mw, mh]);
+    if (a.main) o.principal = 1;
+    if (!fotos.has(String(a.id))) o.otroColor = 1; // la foto del área es de otro color del mismo producto
+    const q = (w / h) / (wc / hc);
+    if (q > 1.1 || q < 0.9) o.dudosa = 1; // el recuadro y los cm no coinciden: la escala no es confiable
+    areas.push(o);
+  }
+  return areas;
+}
+const zecat = productos.filter(p => /^ZEC_/.test(p.sku));
+if (tokenZecat && zecat.length) {
+  const lista = [];
+  for (let n = 1; ; n++) {
+    const d = await pedir(`${ZECAT}?page=${n}&limit=200`, tokenZecat, 'Zecat');
+    lista.push(...(d.generic_products || []));
+    process.stdout.write(`\rZecat: lista ${lista.length}`);
+    if (n >= (d.total_pages || 1)) break;
+  }
+  const porSku = new Map();
+  let hechos = 0;
+  const cola = lista.map(x => x.id);
+  await Promise.all(Array.from({ length: 4 }, async () => {
+    while (cola.length) {
+      const id = cola.shift();
+      try {
+        const g = (await pedir(`${ZECAT}/${id}`, tokenZecat, 'Zecat')).generic_product;
+        for (const v of (g && g.products) || []) if (v.sku) porSku.set(String(v.sku), { g, v });
+      } catch (e) { if (e.final) throw e; console.warn(`\nZecat ${id}: ${e.message}`); }
+      process.stdout.write(`\rZecat: detalle ${++hechos} de ${lista.length}`);
+    }
+  }));
+  console.log();
+  for (const p of zecat) {
+    const z = porSku.get(p.sku.slice(4));
+    const areas = z && areasDeZecat(z.g, z.v);
+    if (areas && areas.length) p.areasProv = areas;
+  }
+} else if (zecat.length) {
+  /* sin token: las áreas del proveedor del catálogo anterior, si las había */
+  let antes = null;
+  try { antes = JSON.parse(fs.readFileSync(SALIDA, 'utf8')); } catch {}
+  const previas = new Map(((antes && antes.productos) || []).filter(p => p.areasProv).map(p => [p.sku, p.areasProv]));
+  zecat.forEach(p => { if (previas.has(p.sku)) p.areasProv = previas.get(p.sku); });
+  console.log(`Sin ZECAT_TOKEN: se conservan las áreas de Zecat del catálogo anterior (${previas.size} productos).`);
+}
+
 fs.writeFileSync(SALIDA, JSON.stringify({ generado: new Date().toISOString(), tienda: 67, productos }));
 const con = k => productos.filter(p => p[k]).length;
 console.log(`${productos.length} productos activos → catalogo-shop.json (${Math.round(fs.statSync(SALIDA).size / 1024)} KB)`);
-console.log(`con medidas: ${con('medidas')} · con áreas de impresión: ${con('areas')} · sin fotos: ${productos.length - con('fotos')}`);
+console.log(`con medidas: ${con('medidas')} · con áreas de impresión: ${con('areas')} · con áreas del proveedor: ${con('areasProv')} · sin fotos: ${productos.length - con('fotos')}`);
