@@ -75,6 +75,9 @@ assert.deepEqual(d.fotos[frente].zonas['Tampografía'].zona, { x: .35, y: .35, w
 assert.equal(d.fotos[frente].zonas['Tampografía'].autor, 'Ana');
 assert.equal(d.fotos[envuelta].zonas['Serigrafía rotativa (360°)'].area, '360°');
 assert.equal(d.preferida, frente, 'guardar con técnica no cambia la foto preferida');
+// un producto guardado solo con técnica no tiene foto preferida general
+await guardar({ raiz: 'ZEC_2', foto: envuelta, regla, cm: 22, zona: { x: .05, y: .2, w: .9, h: .5 }, tecnica: 'Serigrafía rotativa (360°)' });
+assert.equal((await (await leer('ZEC_2')).json()).preferida, undefined);
 assert.equal(d.historial[0].accion, 'guardó medida y área de Serigrafía rotativa (360°)');
 // volver a guardar la escala de la foto (otra técnica) no pisa lo de las demás
 await guardar({ raiz: 'ZEC_1', foto: frente, regla, cm: 21, zona: { x: .2, y: .2, w: .3, h: .3 }, tecnica: 'Grabado láser' });

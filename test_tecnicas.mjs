@@ -20,11 +20,18 @@ const casos = {
   'Uv': 'Impresión UV', 'UV Boligrafos': 'Impresión UV', 'UV Rotativa': 'UV rotativa (360°)',
   'Bordado': 'Bordado', 'Bordado 3D': 'Bordado', 'Hot stamping': 'Hot stamping',
   'Sublimacion tazas': 'Sublimación', 'DTP Full Color': 'DTP Full Color', 'HD Digital C': 'DTP Full Color',
+  // las del cotizador de Formas (por tipo de producto)
+  'DTF HASTA 8CM X 15CM': 'DTF', 'Serigrafía textil': 'Serigrafía plana', 'Serigrafía c/volumen': 'Serigrafía plana',
+  'Serigrafía rotativa UV': 'Serigrafía rotativa (360°)', 'Tampografía Bolígrafos metálicos': 'Tampografía', 'Láser CO2/Fibra': 'Grabado láser',
+  'Láser rotativo (+5CM)': 'Láser rotativo (360°)', 'Láser metal': 'Grabado láser', 'Digital Bolígrafos Plásticos color': 'DTP Full Color',
+  'Impresión digital': 'DTP Full Color', 'Impresión UV': 'Impresión UV', 'Stamping': 'Hot stamping', 'Sublimación CINTAS': 'Sublimación',
   // las que escribían antes en el boceteador
   'Serigrafía': 'Serigrafía plana', 'Grabado láser': 'Grabado láser', 'Vinilo': 'Vinilo', 'DTF': 'DTF',
 };
 for (const [prov, canon] of Object.entries(casos)) assert.equal(canonTecnica(prov), canon, prov);
 assert.equal(canonTecnica('Offset'), '');
+assert.equal(canonTecnica('Etiqueta tejida'), '');
+assert.equal(canonTecnica('Bajo relieve'), '');
 assert.equal(canonTecnica(''), '');
 
 // las rotativas son 360°; las planas no

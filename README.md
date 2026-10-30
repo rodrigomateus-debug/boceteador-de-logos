@@ -31,26 +31,25 @@ mouse o con ↑ ↓ y Enter). Al elegirlo:
    (22 × 9,8 cm) y mangas (8 × 8 cm)»), y mide cada foto para elegir la que está
    **de frente**;
 3. al tocar «Creá el boceto con tu logo», el boceteador abre ya en «Sé la medida
-   del producto», con esa foto puesta, **la escala calibrada sola** y el contorno
-   del producto marcado en verde con su medida (la regla mediría lo mismo, así que
-   con contorno no se dibuja; queda para las fotos sin contorno: propias o sin
-   medidas en la descripción). El contorno queda a la vista junto con el área de
+   del producto», con esa foto puesta, **la escala calibrada sola** y el producto
+   marcado con el **recuadro verde** y su medida. **Hay una sola forma de medir:
+   el recuadro** (no hay regla aparte). Queda a la vista junto con el área de
    impresión, para ver enseguida si algo no cierra; al cargar el logo se oculta
    solo y queda solo el área («Ver la medida» lo vuelve a mostrar).
    **«Medida real del producto»** son dos campos, **↔ ancho × ↕ alto**, que muestran lo
-   que mide el contorno; si uno no es el real se corrige y la escala se ajusta a
+   que mide el recuadro; si uno no es el real se corrige y la escala se ajusta a
    ese lado. Abajo, como referencia y en el mismo orden, **«Medida del proveedor:
-   9 × 29 cm»** con
-   «✓ coincide» o «⚠ difiere 6,9 %». Sin contorno (foto propia), se anotan el
-   ancho y el alto y «Medir solo» lo busca; ahí aparece también el campo de la
-   regla.
-   **El contorno se ajusta**: si el detector agarró mal los bordes (la birome de
+   9 × 29 cm»** con «✓ coincide» o «⚠ difiere 6,9 %».
+   **El recuadro se ajusta**: si el detector agarró mal los bordes (la birome de
    costado, la tapa, una sombra), se arrastran sus esquinas o lados hasta los
    bordes reales (agarrándolo de la línea punteada se mueve entero, sin cambiar
    de tamaño) y la escala se recalcula con la medida del producto sobre ese
-   contorno (la regla lo acompaña). La etiqueta mide con la escala de ese momento:
-   si el otro lado no da lo que dice la descripción, el aviso lo marca. Se guarda
-   con la medida («Guardar medida y área para todos»).
+   recuadro. La etiqueta mide con la escala de ese momento. Se guarda con la
+   medida («Guardar medida y área para todos»).
+   Con una **foto propia** (o si el producto no se encuentra solo) el recuadro sale
+   sobre la silueta, o al medio: se lleva a los bordes del producto y se anota su
+   ancho o su alto («Medir solo» también lo busca con esas medidas). La única foto
+   sin recuadro es la de 360° del proveedor, donde la escala sale de su área.
 4. en el paso 2, las áreas de la descripción del shop que no están entre las del
    proveedor (en una remera: pecho, espalda) son botones que las marcan **a medida
    real** sobre la foto. Las del proveedor se eligen tocando su foto; solo si una
@@ -64,13 +63,13 @@ Los productos de **Zecat** traen además las áreas del proveedor: cada una con
 **su propia foto de ese color**, el recuadro marcado sobre la foto y su medida
 en cm. En esas fotos (marca ▣ en la galería) **la escala sale del recuadro del
 área**, que mide lo que dice el proveedor. Así se ubican al milímetro aunque la
-descripción no traiga las medidas del producto. La regla igual va **de punta a
-punta del producto**, con la medida que da esa escala, y si la descripción trae
-las medidas se comparan (son dos fuentes independientes): en la Hydra Go 1,2 L
-la escala del proveedor da 29,09 cm y la descripción dice 29 (0,3 %). Si no
-coinciden, el aviso lo dice; si el recuadro del área no guarda la proporción de
-sus cm, vale el lado que cierra con la descripción. En las fotos de 360° (el área
-desplegada viene dibujada encima) la regla va sobre el área.
+descripción no traiga las medidas del producto. El recuadro del producto igual
+marca **de punta a punta**, con la medida que da esa escala, y si la descripción
+trae las medidas se comparan (son dos fuentes independientes): en la Hydra Go
+1,2 L la escala del proveedor da 29,09 cm y la descripción dice 29 (0,3 %). Si no
+coinciden, se ve en «⚠ difiere»; si el recuadro del área no guarda la proporción
+de sus cm, vale el lado que cierra con la descripción. En las fotos de 360° (el
+área desplegada viene dibujada encima) no hay recuadro del producto.
 
 Mientras se trae el producto (bajan y se miden las fotos), «Creá el boceto con tu
 logo» queda bloqueado: se habilita cuando terminó, para no abrir un boceto a medias.
@@ -120,6 +119,13 @@ En los productos de Zecat la técnica arranca **propuesta** (la primera del áre
 principal); se cambia cuando haga falta. Los logos que ya estaban puestos siguen
 al cambiar de foto, con su **medida real** y en el mismo lugar del área.
 
+**Las que van para el producto**, marcadas con ✓ y arriba en el selector («Para
+este producto»): las del **cotizador de Formas** para su tipo (la categoría madre
+de STP: «Bolígrafos» → tampografía, láser y digital; «Remeras» → bordado y DTF
+hasta 29 × 29 cm) y las de las áreas del proveedor. Las demás se pueden elegir
+igual («Otras técnicas»), con un aviso de que no figuran para ese producto. Los
+máximos del cotizador también cuentan como límite.
+
 Las técnicas: DTP Full Color, DTF, **Serigrafía plana**, **Serigrafía rotativa
 (360°)**, Tampografía, Grabado láser, **Láser rotativo (360°)**, **Impresión UV**,
 **UV rotativa (360°)**, Bordado, **Hot stamping**, Vinilo y Sublimación (y «Otra…»).
@@ -142,17 +148,17 @@ Si la medida o el área no quedaron bien, se ajustan y se toca **💾 Guardar me
 área para todos** (paso 2). Pide confirmación («¿Estás seguro?… de acá en adelante
 todos los que traigan este producto lo van a ver así») y no pide clave. Desde ahí,
 cualquiera que traiga ese producto lo recibe así: la ficha dice quién lo ajustó y
-cuándo, la foto queda marcada con 💾, y la regla y el área salen como las dejaron.
+cuándo, la foto queda marcada con 💾, y la medida y el área salen como las dejaron.
 A medida que se usa, los productos van quedando perfectos.
 
 Con una técnica elegida, **el área se guarda para esa técnica** (el botón lo dice:
 «Guardar medida y área de Tampografía para todos») y se recuerda en qué foto va:
 la próxima vez que alguien elija esa técnica, sale esa foto con esa área. Las
 áreas de las otras técnicas no se tocan. **Volver a lo automático** (también con
-confirmación) borra, con técnica, solo el área de esa técnica (la regla de la foto
+confirmación) borra, con técnica, solo el área de esa técnica (la medida de la foto
 queda); sin técnica, todo lo guardado de esa foto.
 
-Se guarda por raíz del producto (vale para todos sus colores y talles; la regla y
+Se guarda por raíz del producto (vale para todos sus colores y talles; la medida y
 el área, por foto; el área, también por técnica) en la función
 `functions/api/medidas.js`, sobre un KV de Cloudflare, igual que la tabla de
 límites por técnica. Como no hay clave, la función solo acepta guardados hechos
@@ -185,6 +191,13 @@ grilla de 400 × 400), técnicas con su máximo y si es la principal. Las 1.791
 variantes de Zecat del shop las tienen (6.522 áreas). Las 280 cuyo recuadro no
 guarda la proporción de sus cm quedan marcadas como «escala dudosa» y el boceteador
 lo avisa. Sin `ZECAT_TOKEN` se conservan las áreas del catálogo anterior.
+
+Las técnicas por tipo de producto se leen del **cotizador de Formas**
+(`cotizadorformasshop.pages.dev`, su tabla de subfamilias y métodos): cada
+producto se cruza por su categoría madre de STP (`base_category`), que coincide
+con la subfamilia del cotizador en el 99,7 % (los nombres que difieren apenas, como
+«Necesers» y «Neceser», se igualan). Si el cotizador no responde, se conservan las
+del catálogo anterior.
 
 Tarda medio minuto, y con Zecat unos minutos más (un pedido por producto). Conviene correrlo cada tanto (el shop suma productos todos
 los días) y subir el `catalogo-shop.json` nuevo. Un producto más nuevo que el
@@ -237,7 +250,7 @@ impresión, en el PDF editable y en el `Boceto aprobado.pdf` del paquete):
 | Marca | Opción del boceteador | Qué significa |
 |---|---|---|
 | **L** en círculo rojo | «Tengo la medida exacta del logo» | la medida la anotó el ejecutivo |
-| **P** en círculo verde | «Sé la medida del producto» | la medida se calculó con la regla sobre la foto: conviene verificarla |
+| **P** en círculo verde | «Sé la medida del producto» | la medida se calculó con el recuadro del producto sobre la foto: conviene verificarla |
 
 Sin marca: la foto se subió ya lista, sin pasar por el boceteador. Si después
 de aplicar el boceto se cambia la foto a mano, la marca se borra de esa hoja.

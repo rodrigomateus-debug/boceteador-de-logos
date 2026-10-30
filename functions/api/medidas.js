@@ -134,7 +134,7 @@ async function atender({ request: req, env }) {
       if (area) f.area = area;
     }
     d.fotos[foto] = f;
-    if (!tecnica || !d.preferida) d.preferida = foto;
+    if (!tecnica) d.preferida = foto; // la foto general; la de cada técnica queda en `tecnicas`
     if (Array.isArray(b.medidas) && b.medidas.length >= 2 && b.medidas.length <= 3 && b.medidas.every(v => num(v, 0.1, 1000))) {
       d.medidas = b.medidas;
     }
