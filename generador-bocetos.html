@@ -299,6 +299,20 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .modoReco{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:999px;background:color-mix(in srgb, var(--sheet-accent) 35%, #fff);color:var(--formas-navy);vertical-align:2px}
 #bocetoModal #modeCard.logo .modoActual b{color:#B23A1E}
 #bocetoModal .modoCambiar{display:block;margin:10px 0 0 38px;font-size:12px}
+#bocetoModal .modoLinea{margin-top:12px}
+#bocetoModal #modeCard:not(.logo) .modoActual{display:none}
+#bocetoModal #modeCard:not(.logo) .modoCambiar{margin:0;font-weight:600;color:var(--text-muted)}
+#bocetoModal #modeCard.logo{padding:12px;border-radius:12px;background:var(--surface-sunken);border:1px solid var(--border-subtle)}
+#bocetoModal .paso2Toggle{margin-left:auto;font-size:12.5px}
+#bocetoModal .paso2Resumen{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--text-muted)}
+#bocetoModal .paso2Resumen b{color:var(--formas-navy);font-variant-numeric:tabular-nums}
+#bocetoModal .paso2Sub{display:block;margin-top:16px;padding-top:14px;border-top:1px solid var(--border-subtle)}
+#bocetoModal .aplicarBar{position:sticky;bottom:0;z-index:3;display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:16px;background:#fff;border:1px solid var(--border-subtle);box-shadow:0 -6px 20px rgba(11,11,35,.10)}
+#bocetoModal .aplicarBar .tecResumen{border:none;padding:0;background:none;font-size:13px;align-items:baseline}
+#bocetoModal .aplicarBar .tecResumen .label{margin:0}
+#bocetoModal .aplicarBtns{display:flex;gap:8px}
+#bocetoModal .aplicarBtns .btn{flex:1;margin:0}
+#bocetoModal .aplicarFalta{font-size:12px;color:#7A5600}
 #bocetoModal .mode-opt{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px;border:1.5px solid var(--border-subtle);border-radius:12px;background:var(--surface-page);cursor:pointer;font-family:var(--font-primary);text-align:left;transition:border-color .15s, box-shadow .15s}
 #bocetoModal .mode-opt:hover{border-color:var(--formas-navy)}
 #bocetoModal .mode-opt[aria-pressed="true"]{border-color:var(--formas-navy);background:var(--surface-sunken);box-shadow:0 0 0 2.5px color-mix(in srgb,var(--sheet-accent) 55%, transparent)}
@@ -1096,30 +1110,9 @@ html,body{margin:0;padding:0;background:#EDEDF2}
     <!-- ============ PASOS ============ -->
     <div class="col">
 
-      <!-- Modo de medida: por defecto, por el producto; la medida exacta del logo se elige a propósito -->
-      <div class="card step" id="modeCard">
-        <div class="modoActual" id="modoActual">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="modoIcoProd">
-            <rect x="2" y="9" width="20" height="6" rx="1.5"/>
-            <path d="M6 9v3M10 9v4.5M14 9v3M18 9v4.5"/>
-          </svg>
-          <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="modoIcoLogo" hidden>
-            <rect x="7" y="9" width="12" height="10" rx="2"/>
-            <path d="M7 5h12M7 3.5v3M19 3.5v3"/>
-            <path d="M3 9v10M1.5 9h3M1.5 19h3"/>
-          </svg>
-          <div><b id="modoTit">Medida por el producto</b> <span class="modoReco" id="modoReco">recomendado</span>
-            <small id="modoTxt">El recuadro azul marca el producto con su medida real y los cm del área y del logo salen solos.</small></div>
-        </div>
-        <button type="button" class="linkBtn modoCambiar" id="modoCambiar">¿Ya tenés la medida exacta del logo? Usala</button>
-        <!-- los dos modos de siempre (los usa el código); se eligen con el link de arriba -->
-        <button type="button" id="modeLogo" aria-pressed="false" hidden></button>
-        <button type="button" id="modeProduct" aria-pressed="true" hidden></button>
-      </div>
-
-      <!-- Paso 1: producto -->
+      <!-- Paso 1: el producto y la técnica (elige la foto) -->
       <div class="card step" id="step1">
-        <div class="step-head"><span class="step-num">1</span><h2>Foto del producto</h2></div>
+        <div class="step-head"><span class="step-num">1</span><h2>Producto y técnica</h2></div>
         <div class="field" id="areaTecField" style="margin-top:0;margin-bottom:12px">
           <span class="label" style="letter-spacing:.08em">Técnica de aplicación<i class="infoIco" tabindex="0" title="Elegila primero: según la técnica cambian la foto y el área de impresión (una rotativa envuelve el producto; la tampografía entra en pocos cm). Las que van para este producto vienen arriba, con ✓.">i</i></span>
           <select id="technique">
@@ -1142,6 +1135,17 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         </label>
         <input type="file" id="photoInput" accept="image/png,image/jpeg,image/webp" hidden>
         <div class="note" id="photoIaNote" hidden>✨ <span id="photoIaNoteTxt"></span> <button type="button" id="photoIaUndo">Volver a la original</button></div>
+      </div>
+
+      <!-- Paso 2: la medida del producto y el área de impresión (dependen de la misma escala). Si salieron
+           solas y están bien, queda una línea de resumen; «Revisar» las abre -->
+      <div class="card step locked" id="step2">
+        <div class="step-head"><span class="step-num">2</span><h2>Medida y área</h2><button type="button" class="linkBtn paso2Toggle" id="paso2Toggle" hidden>Revisar</button></div>
+        <div class="paso2Resumen" id="paso2Resumen" hidden>
+          <span><i class="sw sw-prod"></i>Producto <b id="resProd">—</b></span>
+          <span><i class="sw sw-area"></i>Área <b id="resArea">—</b></span>
+        </div>
+        <div id="paso2Cuerpo">
         <div class="field" id="rulerField">
           <span class="label" style="letter-spacing:.08em"><i class="sw sw-prod"></i>Medida real del producto<i class="infoIco" id="medInfo" tabindex="0">i</i></span>
           <div class="field-row medRow" id="medRow" style="margin-top:0">
@@ -1173,11 +1177,28 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           </div>
           <small id="rulerHint" hidden style="color:var(--text-muted);font-size:11.5px">Llevá los extremos de la regla de lado a lado del producto en la foto y anotá cuánto mide esa distancia en la vida real. Con eso las medidas del logo se calculan solas.</small>
         </div>
+        <!-- Modo de medida: por defecto, por el producto; la medida exacta del logo se elige a propósito -->
+      <div class="modoLinea" id="modeCard">
+        <div class="modoActual" id="modoActual">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="modoIcoProd">
+            <rect x="2" y="9" width="20" height="6" rx="1.5"/>
+            <path d="M6 9v3M10 9v4.5M14 9v3M18 9v4.5"/>
+          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="modoIcoLogo" hidden>
+            <rect x="7" y="9" width="12" height="10" rx="2"/>
+            <path d="M7 5h12M7 3.5v3M19 3.5v3"/>
+            <path d="M3 9v10M1.5 9h3M1.5 19h3"/>
+          </svg>
+          <div><b id="modoTit">Medida por el producto</b> <span class="modoReco" id="modoReco">recomendado</span>
+            <small id="modoTxt">El recuadro azul marca el producto con su medida real y los cm del área y del logo salen solos.</small></div>
+        </div>
+        <button type="button" class="linkBtn modoCambiar" id="modoCambiar">¿Ya tenés la medida exacta del logo? Usala</button>
+        <!-- los dos modos de siempre (los usa el código); se eligen con el link de arriba -->
+        <button type="button" id="modeLogo" aria-pressed="false" hidden></button>
+        <button type="button" id="modeProduct" aria-pressed="true" hidden></button>
       </div>
 
-      <!-- Paso 2: área -->
-      <div class="card step locked" id="step2">
-        <div class="step-head"><span class="step-num">2</span><h2><i class="sw sw-area"></i>Área de impresión</h2></div>
+        <span class="label paso2Sub" style="letter-spacing:.08em"><i class="sw sw-area"></i>Área de impresión</span>
         <button class="btn btn-secondary" type="button" id="drawZoneBtn">Marcar área sobre la foto</button>
         <div id="areasShop" hidden>
           <span class="label" style="letter-spacing:.08em;display:block;margin-top:12px">Áreas de impresión</span>
@@ -1194,11 +1215,12 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           <button class="btn btn-secondary" type="button" id="guardarMedidaBtn" style="margin-top:10px" title="De acá en adelante, todos los que traigan este producto lo ven así">💾 Guardar medida y área para todos</button>
           <div class="note" id="guardarMedidaNote" hidden><span id="guardarMedidaIco">💾</span> <span id="guardarMedidaTxt"></span> <button type="button" id="olvidarMedidaBtn" hidden>Volver a lo automático</button></div>
         </div>
+        </div>
       </div>
 
       <!-- Paso 3: logo -->
       <div class="card step locked" id="step3">
-        <div class="step-head"><span class="step-num">3</span><h2>Logo</h2></div>
+        <div class="step-head"><span class="step-num">3</span><h2>Logo y colores</h2></div>
         <label class="upload-tile" for="logoInput">
           <span class="thumb slot" id="logoThumb">◐</span>
           <span class="txt" id="logoTxt">Elegir logo<small>PNG sin fondo recomendado · también SVG, JPG, PDF o AI</small></span>
@@ -1245,12 +1267,21 @@ html,body{margin:0;padding:0;background:#EDEDF2}
               <button type="button" id="tintCodePant" aria-pressed="false">Pantone</button>
             </div>
             <div id="tintColorRow"></div>
-            <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11px">El logo se pinta entero de este color y pasa a «Colores de impresión» del paso 4. Con ◎ se busca el Pantone más cercano.</small>
+            <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11px">El logo se pinta entero de este color y pasa a «Colores de impresión», acá abajo. Con ◎ se busca el Pantone más cercano.</small>
           </div>
           <div class="field">
             <span class="label" style="letter-spacing:.08em">Opacidad · <span id="opacityVal">100%</span></span>
             <input type="range" id="logoOpacity" min="10" max="100" value="100">
           </div>
+        </div>
+        <div class="field" id="bcColoresField">
+          <span class="label" style="letter-spacing:.08em">Colores de impresión</span>
+          <div class="codeToggle" style="margin-top:6px">
+            <button type="button" id="bcCodeHex" aria-pressed="true">Código HEX</button>
+            <button type="button" id="bcCodePant" aria-pressed="false">Pantone</button>
+          </div>
+          <div id="bocetoColors"></div>
+          <button type="button" class="addColor" id="bcAddColor" style="margin-top:6px">＋ Agregar color</button>
         </div>
         <div class="note" id="jpgNote" hidden>⚠ <span>Tu logo no tiene transparencia: sobre productos oscuros se verá con fondo. Probá el botón "Quitar fondo".</span></div>
         <div class="note" id="undoNote" hidden>🗑 <span id="undoNoteTxt"></span> <button type="button" id="undoDeleteBtn">Deshacer</button></div>
@@ -1263,25 +1294,14 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <div class="note" id="needMeasureNote" hidden>📏 <span></span></div>
       </div>
 
-      <!-- Paso 4: colores, aplicación y descarga (la técnica se elige en el paso 1) -->
-      <div class="card step locked" id="step4">
-        <div class="step-head"><span class="step-num">4</span><h2>Colores y aplicación</h2></div>
-        <div class="field" id="bcColoresField" style="margin-top:0; margin-bottom:14px">
-          <span class="label" style="letter-spacing:.08em">Colores de impresión</span>
-          <div class="codeToggle" style="margin-top:6px">
-            <button type="button" id="bcCodeHex" aria-pressed="true">Código HEX</button>
-            <button type="button" id="bcCodePant" aria-pressed="false">Pantone</button>
-          </div>
-          <div id="bocetoColors"></div>
-          <button type="button" class="addColor" id="bcAddColor" style="margin-top:6px">＋ Agregar color</button>
+      <!-- siempre a la vista: la técnica elegida, aplicar a la ficha y descargar -->
+      <div class="aplicarBar" id="step4">
+        <div class="tecResumen" id="tecResumen"><span class="label">Técnica</span> <b id="tecResumenTxt">—</b> <button type="button" class="linkBtn" id="tecCambiar">Cambiar</button></div>
+        <div class="aplicarBtns">
+          <button class="btn btn-primary" type="button" id="applyBtn" title="Se completan solos la foto, el logo, la medida, la técnica y la posición de la ficha. La imagen va limpia, sin marcas de área.">Aplicar a la ficha</button>
+          <button class="btn btn-secondary" type="button" id="downloadBtn">Descargar PNG</button>
         </div>
-        <div class="field" style="margin-top:0">
-          <span class="label" style="letter-spacing:.08em">Técnica de aplicación</span>
-          <div class="tecResumen" id="tecResumen"><b id="tecResumenTxt">—</b> <button type="button" class="linkBtn" id="tecCambiar">Cambiar</button></div>
-        </div>
-        <button class="btn btn-primary" type="button" id="applyBtn" style="margin-top:12px">Aplicar a la ficha</button>
-        <button class="btn btn-secondary" type="button" id="downloadBtn">Descargar PNG</button>
-        <small style="display:block;margin-top:8px;color:var(--text-muted);font-size:11.5px">Al aplicar se completan solos la foto, el logo, la medida, la técnica y la posición de la ficha. La imagen va limpia, sin regla ni marcas de área.</small>
+        <div class="aplicarFalta" id="aplicarFalta" hidden></div>
       </div>
 
     </div>
@@ -4886,7 +4906,35 @@ function render(){
   $('medInfo').hidden = escalaDeArea && !frame.hidden;
   setStepStates();
   sincronizarTecnica();
+  syncPaso2();
 }
+
+/* paso 2: si la medida y el área salieron solas y no hay nada que mirar, queda una línea de resumen;
+   si algo falta o no cierra, se abre solo. «Revisar» lo abre igual */
+let paso2Abierto = false;
+function syncPaso2(){
+  const {w:FW,h:FH} = frameRect(), k = cmPerPx(), A = state.auto, z = state.zone, tec = tecnicaElegida();
+  $('resProd').textContent = A && k ? fmtPair(A.w*FW*k, A.h*FH*k) : escalaDeArea ? 'escala del área 360°' : '—';
+  $('resArea').textContent = z && k ? fmtPair(z.w*FW*k, z.h*FH*k) + (tec ? ' · ' + tec : '') : '—';
+  const nota = id => !$(id).hidden;
+  const problema = state.mode !== 'product' || !k || !z || $('refMedida').classList.contains('mal') || nota('zoneLimNote')
+    || (nota('areaNote') && $('areaNote').classList.contains('mal')) || (nota('autoMedNote') && !$('autoMedNote').classList.contains('ok'))
+    || nota('guardarMedidaNote') || nota('zoneRef'); // si se tocó el área, queda a la vista «Volver a la sugerida»
+  const abierto = frame.hidden || problema || paso2Abierto;
+  $('paso2Cuerpo').hidden = !abierto;
+  $('paso2Resumen').hidden = abierto;
+  $('paso2Toggle').hidden = frame.hidden || problema;
+  $('paso2Toggle').textContent = abierto ? 'Listo' : 'Revisar';
+  /* la barra de aplicar dice qué falta */
+  const falta = frame.hidden ? 'Falta la foto del producto (paso 1).'
+    : !state.logos.length ? 'Falta el logo (paso 3).'
+    : !measuresOk() ? (state.mode === 'logo' ? 'Falta la medida del logo (paso 3).' : 'Falta la medida del producto (paso 2).')
+    : !techValue() ? 'Falta la técnica (paso 1).' : '';
+  $('aplicarFalta').hidden = !falta; $('aplicarFalta').textContent = falta;
+  $('applyBtn').disabled = !!falta;
+  $('downloadBtn').disabled = !state.logos.length;
+}
+$('paso2Toggle').addEventListener('click', () => { paso2Abierto = $('paso2Toggle').textContent === 'Revisar'; render(); });
 
 /* sin medidas no se avanza: en modo logo, ancho y alto de cada logo;
    en modo producto, la regla calibrada */
@@ -4899,18 +4947,17 @@ function setStepStates(){
   const mok = measuresOk();
   /* en modo "sé la medida del producto" no se avanza sin calibrar la regla */
   const scaleOk = state.mode !== 'product' || !!cmPerPx();
-  $('step2').classList.toggle('locked', frame.hidden || !scaleOk);
+  $('step2').classList.toggle('locked', frame.hidden); // la medida del producto se pone acá
   $('step3').classList.toggle('locked', !state.zone || !scaleOk);
-  $('step4').classList.toggle('locked', !mok);
-  $('step1').classList.toggle('done', !frame.hidden && scaleOk);
+  $('step1').classList.toggle('done', !frame.hidden && !!techValue());
   $('step2').classList.toggle('done', !!state.zone && scaleOk);
   $('step3').classList.toggle('done', mok);
   const note = $('needMeasureNote');
   if(state.logos.length && !mok){
     note.hidden = false;
     note.querySelector('span').textContent = state.mode === 'logo'
-      ? 'Cargá el ancho y el alto de cada logo para habilitar "Colores y aplicación".'
-      : 'Anotá el ancho o el alto real del producto para habilitar "Colores y aplicación".';
+      ? 'Cargá el ancho y el alto de cada logo para poder aplicar.'
+      : 'Anotá el ancho o el alto real del producto (paso 2) para poder aplicar.';
   } else note.hidden = true;
 }
 
@@ -5681,7 +5728,6 @@ function sincronizarTecnica(){
   $('tecResumenTxt').textContent = t || 'Falta elegirla: define el área de impresión';
   $('tecResumen').classList.toggle('falta', !t);
   $('tecCambiar').textContent = t ? 'Cambiar' : 'Elegir en el paso 1';
-  $('applyBtn').disabled = !t;
 }
 $('tecCambiar').addEventListener('click', () => {
   $('areaTecField').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -6565,7 +6611,7 @@ window.__bocetoAlAbrir = async () => {
   const p = shopPendiente;
   shopPendiente = null;
   shopFotos = p.fotos; shopNombre = p.nombre; shopResumen = p.resumen; shopRaiz = p.raiz;
-  shopGuardada = p.guardada || null; shopBase = p.elegida;
+  shopGuardada = p.guardada || null; shopBase = p.elegida; paso2Abierto = false;
   shopTecCat = p.tecCat || [];
   $('prodMedidas').value = p.medidas ? textoMedidas(p.medidas.valores) : '';
   $('refMedidaLbl').textContent = p.medidas && p.medidas.guardada ? 'Medida guardada' : 'Medida del proveedor';
@@ -7787,7 +7833,7 @@ $('technique').addEventListener('change', () => {
   else alCambiarTecnica(); // la foto y el área se acomodan a la técnica
   sincronizarTecnica();
 });
-$('techniqueOther').addEventListener('input', sincronizarTecnica);
+$('techniqueOther').addEventListener('input', () => render()); // la barra de aplicar ve la técnica escrita
 $('techniqueOther').addEventListener('change', alCambiarTecnica); // al terminar de escribirla
 
 $('applyBtn').addEventListener('click', () => {
