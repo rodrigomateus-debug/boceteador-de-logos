@@ -7,7 +7,7 @@
  * ajena "ensucia" el canvas y no se puede medir), así que se piden por acá:
  *
  *   GET /api/shop?id=18953     → el HTML de https://formas.shop/app/product/detail/18953, tal cual
- *   GET /api/shop?img=<url>    → la foto, tal cual (solo de los dominios de abajo)
+ *   GET /api/shop?img=<url>    → la foto, tal cual (solo de los dominios del shop y sus proveedores)
  *
  * La página se interpreta en el navegador (DOMParser): acá solo se reenvían los
  * bytes, así que cada llamada gasta casi nada de CPU (el plan Free corta a los 10 ms).
@@ -15,8 +15,15 @@
  */
 
 const SHOP = 'https://formas.shop';
-/* de dónde salen las fotos de las fichas: el shop, la plataforma STP y el proveedor de catálogo */
-const HOSTS_FOTOS = /^(www\.)?(formas\.shop|stpo\.com\.ar|promoproductos\.com)$/i;
+/* de dónde salen las fotos de las fichas: el shop, la plataforma STP y los proveedores
+   (los dominios que trae la API de catálogo en images y master_images, octubre 2026) */
+const HOSTS_FOTOS = new Set([
+  'formas.shop', 'stpo.com.ar', 'promoproductos.com', 'x-tradeonline.com.ar', 'nuevasformas.com.ar',
+  'mayapublicidad.com', 'irion.com.ar', 'images-cdn.zecat.com', 'zecat-user-images-prod.s3.amazonaws.com',
+  'd1yq3fbd6icaus.cloudfront.net', 'd2jygl58194cng.cloudfront.net', 'd3dotvm73vsrvp.cloudfront.net',
+]);
+
+const POR_EXTENSION = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', avif: 'image/avif' };
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), { status, headers: { 'content-type': 'application/json' } });
@@ -48,13 +55,20 @@ async function atender({ request: req }) {
   if (q.has('img')) {
     let u;
     try { u = new URL(q.get('img'), SHOP); } catch { return json({ error: 'Dirección de foto inválida' }, 400); }
-    if (!/^https?:$/.test(u.protocol) || !HOSTS_FOTOS.test(u.hostname)) {
+    if (!/^https?:$/.test(u.protocol) || !HOSTS_FOTOS.has(u.hostname.toLowerCase().replace(/^www\./, ''))) {
       return json({ error: 'Esa foto no es de formas.shop' }, 400);
     }
     const r = await fetch(u.href, { redirect: 'follow' });
-    const tipo = r.headers.get('content-type') || '';
+    let tipo = r.headers.get('content-type') || '';
     if (!r.ok) return json({ error: `La foto no está (${r.status})` }, r.status === 404 ? 404 : 502);
-    if (!/^image\//i.test(tipo)) return json({ error: 'Eso no es una imagen' }, 502);
+    if (!/^image\//i.test(tipo)) {
+      // Zecat sirve fotos reales como application/x-www-form-urlencoded: vale la extensión,
+      // salvo que lo que volvió sea una página de error
+      const ext = (u.pathname.match(/\.([a-z0-9]+)$/i) || [])[1];
+      const porExtension = ext && POR_EXTENSION[ext.toLowerCase()];
+      if (!porExtension || /html|json|xml|text\//i.test(tipo)) return json({ error: 'Eso no es una imagen' }, 502);
+      tipo = porExtension;
+    }
     return new Response(r.body, { headers: { 'content-type': tipo, 'cache-control': 'public, max-age=86400' } });
   }
 

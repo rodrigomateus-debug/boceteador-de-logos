@@ -9,10 +9,26 @@ const sacar = (desde, hasta) => {
   assert.ok(i >= 0 && j > i, 'no encontré ' + desde);
   return html.slice(i, j);
 };
-const { medidasDeTexto, medirProductoEnFoto } = new Function(
+const { medidasDeTexto, medirProductoEnFoto, leerDescripcion } = new Function(
   sacar('function medidasDeTexto(', 'const textoMedidas')
   + sacar('function medirProductoEnFoto(', '/* mide una imagen ya cargada')
-  + 'return { medidasDeTexto, medirProductoEnFoto };')();
+  + sacar('const ENTIDADES', '/* de la página pública')
+  + 'return { medidasDeTexto, medirProductoEnFoto, leerDescripcion };')();
+
+// descripciones como las trae la API de catálogo (description_html) o la ficha del shop
+let d = leerDescripcion('<p>El anotador Eco…</p>\r\n<p><strong>Ficha técnica</strong></p>\r\n<ul>\r\n'
+  + '<li>Hojas: 70 lisas.</li>\r\n<li>Medidas cerrado: 14 &times; 9 cm.</li>\r\n</ul>\r\n'
+  + '<p><strong>Área de impresión</strong></p>\r\n<ul>\r\n<li>Tapa 130 × 180 mm.</li>\r\n<li>Cuerpo: 25 × 120 mm (ancho × alto).</li>\r\n</ul>\r\n'
+  + '<p><strong>Embalaje</strong></p>\r\n<ul>\r\n<li>Caja máster de 40 × 30 × 20 cm.</li>\r\n</ul>');
+assert.deepEqual(d.medidas, { texto: 'Medidas cerrado: 14 × 9 cm.', valores: [14, 9] });
+assert.deepEqual(d.areas, [{ nombre: 'Tapa', w: 13, h: 18 }, { nombre: 'Cuerpo', w: 2.5, h: 12 }]);
+// textiles: varias áreas en un renglón
+d = leerDescripcion('<p><strong>Área de impresión</strong></p><ul><li>Frente (10 × 10 cm), espalda, arriba o abajo (22 × 9,8 cm) y mangas (8 × 8 cm).</li></ul>');
+assert.deepEqual(d.areas.map(a => `${a.nombre} ${a.w}×${a.h}`), ['Frente 10×10', 'Espalda, arriba o abajo 22×9.8', 'Mangas 8×8']);
+// texto suelto con saltos de línea, "Dimensiones" y un área de decoración circular
+d = leerDescripcion('Auriculares con estuche.\r\nDimensiones: 5 x 4,8x 2,5 cm.\r\nÁrea de decoración &oslash;5,5 cm');
+assert.deepEqual(d.medidas.valores, [5, 4.8, 2.5]);
+assert.deepEqual(d.areas, [{ nombre: 'Área de decoración', w: 5.5, h: 5.5 }]);
 
 // las medidas como vienen escritas en las fichas del shop
 const casos = [

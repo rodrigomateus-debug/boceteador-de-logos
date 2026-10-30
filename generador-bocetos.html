@@ -228,6 +228,11 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .shopFoto[aria-pressed="true"]{border-color:var(--formas-navy);box-shadow:0 0 0 2.5px color-mix(in srgb, var(--formas-lime) 55%, transparent)}
 #bocetoModal .shopFoto b{position:absolute;right:-6px;top:-6px;width:18px;height:18px;border-radius:50%;font-size:10px;line-height:1;display:grid;place-items:center;color:#fff;background:var(--formas-green)}
 #bocetoModal .shopFoto b.media{background:var(--formas-yellow);color:var(--formas-ink)}
+#bocetoModal .shopFoto.prov{border-style:dashed}
+#bocetoModal .shopResultados{display:flex;flex-direction:column;gap:6px;margin-top:4px;max-height:280px;overflow:auto}
+#bocetoModal .shopRes{display:block;text-align:left;padding:8px 12px;border-radius:10px;border:1.5px solid var(--formas-gray-200);background:#fff;font-family:var(--font-primary);font-size:12.5px;font-weight:700;color:var(--formas-navy);cursor:pointer}
+#bocetoModal .shopRes:hover{border-color:var(--formas-navy)}
+#bocetoModal .shopRes small{display:block;font-weight:400;color:var(--text-muted);font-size:11px}
 #bocetoModal .areaChips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 #bocetoModal .areaChip{padding:6px 11px;border-radius:999px;border:1.5px solid var(--formas-gray-200);background:#fff;font-family:var(--font-primary);font-size:12px;font-weight:700;color:var(--formas-navy);cursor:pointer;font-variant-numeric:tabular-nums}
 #bocetoModal .areaChip:hover{border-color:var(--formas-navy)}
@@ -1032,10 +1037,11 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <div class="field" id="shopField" style="margin-top:0">
           <span class="label" style="letter-spacing:.08em">Traer de formas.shop</span>
           <div class="shopRow">
-            <input type="text" id="shopRef" placeholder="Link o código del producto" autocomplete="off">
+            <input type="text" id="shopRef" placeholder="Link, código o nombre del producto" autocomplete="off">
             <button class="btn btn-secondary" type="button" id="shopTraer">Traer</button>
           </div>
           <small style="color:var(--text-muted);font-size:11.5px">Trae las fotos y las medidas de la descripción, y mide el producto solo sobre la foto.</small>
+          <div class="shopResultados" id="shopResultados" hidden></div>
           <div class="shopFotos" id="shopFotos" hidden></div>
           <div class="note" id="shopNote" hidden>🛍 <span id="shopNoteTxt"></span></div>
         </div>
@@ -5172,7 +5178,58 @@ const blobADataUrl = b => new Promise((res, rej) => {
   const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => rej(new Error('No pude leer la foto.')); fr.readAsDataURL(b);
 });
 
-/* de la página del producto: nombre, fotos de la galería, medidas y áreas de impresión */
+/* La descripción de un producto (HTML de la ficha del shop o de la API de catálogo) →
+   medidas del producto y áreas de impresión. Trabaja sobre el texto, sin DOM, para que
+   la misma lectura sirva en el navegador y al armar el catálogo (herramientas/catalogo-shop.mjs). */
+const ENTIDADES = { nbsp:' ', amp:'&', quot:'"', lt:'<', gt:'>', times:'×', deg:'°', middot:'·', bull:'•', ndash:'–', minus:'−',
+  oslash:'ø', Oslash:'Ø', aacute:'á', eacute:'é', iacute:'í', oacute:'ó', uacute:'ú', Aacute:'Á', Eacute:'É', Iacute:'Í',
+  Oacute:'Ó', Uacute:'Ú', ntilde:'ñ', Ntilde:'Ñ', uuml:'ü', ouml:'ö', iquest:'¿', iexcl:'¡', ldquo:'“', rdquo:'”',
+  lsquo:'‘', rsquo:'’', plusmn:'±', reg:'®', acute:'´', Egrave:'È', egrave:'è' };
+const sinEntidades = t => t.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) =>
+  e[0] === '#' ? String.fromCodePoint(e[1].toLowerCase() === 'x' ? parseInt(e.slice(2), 16) : +e.slice(1)) : (ENTIDADES[e] || m));
+function leerDescripcion(html){
+  const TITULO = '\u0001';
+  /* un renglón por párrafo, ítem o salto; un párrafo todo en negrita es el título de una sección */
+  const renglones = sinEntidades(String(html || '')
+      .replace(/<p[^>]*>\s*<(strong|b)\b[^>]*>([^<]*)<\/\1>\s*<\/p>/gi, '\n' + TITULO + '$2\n')
+      .replace(/<br\s*\/?>|<\/?(p|li|ul|ol|div|h\d|tr|td)\b[^>]*>/gi, '\n')
+      .replace(/<[^>]+>/g, ''))
+    .split(/\r?\n/).map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  let medidas = null, seccion = '';
+  const areas = [];
+  const sumarArea = (nombre, w, h) => {
+    nombre = nombre.replace(/^[\s,;:.-]+|[\s,;:.øØ-]+$/g, '').replace(/^y\s+/i, '') || 'Área';
+    nombre = nombre[0].toUpperCase() + nombre.slice(1);
+    if(!areas.some(a => a.nombre === nombre && a.w === w && a.h === h)) areas.push({ nombre, w, h });
+  };
+  for(let l of renglones){
+    if(l[0] === TITULO){
+      l = l.slice(1);
+      if(!/\d/.test(l)){ seccion = l.toLowerCase(); continue; }
+    }
+    const dosPuntos = l.indexOf(':');
+    const etiqueta = dosPuntos >= 0 ? l.slice(0, dosPuntos) : l.split(/\d/)[0];
+    const valor = dosPuntos >= 0 ? l.slice(dosPuntos + 1) : l;
+    if(!medidas && /^(medidas?|dimensiones|tama[ñn]o)\b/i.test(l)){
+      const v = medidasDeTexto(valor, 'cm');
+      if(v.length >= 2){ medidas = { texto:l, valores:v }; continue; }
+    }
+    const enSeccion = /impresi|grabado|decoraci|aplicaci|personalizaci/.test(seccion);
+    if(!enSeccion && !/^[aá]reas? de (impresi|grabado|decoraci)/i.test(l)) continue;
+    /* varias en un renglón (textiles): "Frente (10 × 10 cm), espalda, arriba o abajo (22 × 9,8 cm) y mangas (8 × 8 cm)" */
+    const entre = [...l.matchAll(/([^()]*?)\(([^()]*\d[^()]*)\)/g)].filter(m => medidasDeTexto(m[2]).length === 2);
+    if(entre.length > 1 || (entre.length === 1 && dosPuntos < 0)){
+      entre.forEach(m => { const v = medidasDeTexto(m[2]); sumarArea(m[1], v[0], v[1]); });
+      continue;
+    }
+    const v = medidasDeTexto(valor);
+    const circulo = v.length === 1 && /[øØ⌀]|di[aá]m/i.test(l);
+    if(v.length >= 2 || circulo) sumarArea(etiqueta, v[0], circulo ? v[0] : v[1]);
+  }
+  return { medidas, areas };
+}
+
+/* de la página pública del producto: nombre, fotos de la galería y lo de la descripción */
 function leerFichaShop(html){
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const bloque = doc.getElementById('productDescriptionBlock');
@@ -5185,27 +5242,7 @@ function leerFichaShop(html){
     if(u && !fotos.includes(u)) fotos.push(u);
   });
   if(!fotos.length && og('image')) fotos.push(og('image'));
-  let medidas = null, seccion = '';
-  const areas = [];
-  if(bloque) bloque.querySelectorAll('p, li').forEach(el => {
-    const t = el.textContent.replace(/\s+/g, ' ').trim();
-    if(!t) return;
-    const negrita = el.querySelector('strong, b');
-    if(el.tagName === 'P' && negrita && negrita.textContent.trim() === t && !/\d/.test(t)){ seccion = t.toLowerCase(); return; }
-    const etiqueta = (t.includes(':') ? t.split(':')[0] : t.split(/\d/)[0]).replace(/[\s.,;:-]+$/, '').trim();
-    const valor = t.includes(':') ? t.slice(t.indexOf(':') + 1) : t;
-    if(!medidas && /^medidas?\b/i.test(t)){
-      const v = medidasDeTexto(valor, 'cm');
-      if(v.length >= 2) medidas = { texto:t, valores:v };
-      return;
-    }
-    const esArea = (el.tagName === 'LI' && /impresi|grabado|decoraci|aplicaci/.test(seccion)) || /^[aá]rea de (impresi|grabado|decoraci)/i.test(t);
-    if(!esArea) return;
-    const v = medidasDeTexto(valor);
-    const circulo = v.length === 1 && /[øØ⌀]|di[aá]m/i.test(t);
-    if(v.length >= 2 || circulo) areas.push({ nombre: etiqueta || 'Área', w: v[0], h: circulo ? v[0] : v[1] });
-  });
-  return { nombre, fotos, medidas, areas };
+  return Object.assign({ nombre, fotos }, leerDescripcion(bloque ? bloque.innerHTML : ''));
 }
 
 function pintarGaleria(){
@@ -5216,7 +5253,8 @@ function pintarGaleria(){
     b.type = 'button'; b.className = 'shopFoto'; b.dataset.i = i;
     b.setAttribute('aria-pressed', 'false');
     const c = f.med && f.med.ok ? f.med.conf : '';
-    b.title = c === 'alta' ? 'Foto de frente: se mide sola' : c === 'media' ? 'Se puede medir, con dudas' : 'Sirve para mostrar, no para medir';
+    b.title = (f.prov ? 'Foto del proveedor · ' : '') + (c === 'alta' ? 'De frente: se mide sola' : c === 'media' ? 'Se puede medir, con dudas' : 'Sirve para mostrar, no para medir');
+    if(f.prov) b.classList.add('prov');
     b.innerHTML = '<img alt="">' + (c === 'alta' ? '<b>✓</b>' : c === 'media' ? '<b class="media">~</b>' : '');
     b.querySelector('img').src = f.src;
     b.addEventListener('click', () => usarFotoShop(i));
@@ -5236,24 +5274,112 @@ function usarFotoShop(i){
     },
   });
 }
+/* Catálogo armado desde la API de STP (catalogo-shop.json, ver herramientas/catalogo-shop.mjs):
+   busca por link, código o nombre al instante. Si el producto es más nuevo que el catálogo,
+   se lee su página pública como antes. */
+let catalogoShop = null;
+function cargarCatalogo(){
+  if(!catalogoShop) catalogoShop = fetch('catalogo-shop.json')
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      if(!d || !Array.isArray(d.productos)) return null;
+      const sinTildes = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      d.porId = new Map(d.productos.map(p => [String(p.id), p]));
+      d.productos.forEach(p => { p.busca = sinTildes([p.nombre, p.color, p.talle, p.sku, p.id].join(' ')); });
+      d.sinTildes = sinTildes;
+      return d;
+    })
+    .catch(() => null);
+  return catalogoShop;
+}
+function buscarEnCatalogo(cat, txt){
+  const palabras = cat.sinTildes(txt).split(/\s+/).filter(Boolean);
+  const r = cat.productos.filter(p => palabras.every(w => p.busca.includes(w)));
+  /* primero los que empiezan con lo buscado, después los nombres más cortos */
+  const inicio = palabras[0] || '';
+  r.sort((a, b) => (b.busca.startsWith(inicio) - a.busca.startsWith(inicio)) || a.nombre.length - b.nombre.length);
+  /* los talles de un mismo producto y color van juntos: para el boceto son la misma foto */
+  const grupos = new Map();
+  for(const p of r){
+    const k = p.talle ? p.raiz + '|' + (p.color || '') : String(p.id);
+    if(!grupos.has(k)) grupos.set(k, []);
+    grupos.get(k).push(p);
+  }
+  return [...grupos.values()].map(g => g.length === 1 ? g[0] : Object.assign({}, g[0], { talles: g.length }));
+}
+function fichaDeCatalogo(p){
+  return {
+    id: p.id,
+    nombre: p.nombre + (p.color ? ' · ' + p.color : ''),
+    fotos: (p.fotos || []).map(u => ({ u })).concat((p.proveedor || []).map(u => ({ u, prov:true }))),
+    medidas: p.medidas ? { texto: p.medidasTexto || '', valores: p.medidas } : null,
+    areas: p.areas || [],
+  };
+}
+function pintarResultados(lista, total){
+  const box = $('shopResultados');
+  box.innerHTML = '';
+  lista.forEach(p => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'shopRes';
+    b.innerHTML = '<span></span><small></small>';
+    b.querySelector('span').textContent = p.nombre + (p.color ? ' · ' + p.color : '');
+    b.querySelector('small').textContent = (p.talles ? p.talles + ' talles' : p.sku + ' · ' + p.id + (p.talle ? ' · talle ' + p.talle : ''))
+      + (p.medidas ? '' : ' · sin medidas en la descripción');
+    b.addEventListener('click', () => { box.hidden = true; $('shopRef').value = String(p.id); traerFicha(fichaDeCatalogo(p)); });
+    box.appendChild(b);
+  });
+  box.hidden = !lista.length;
+  if(total > lista.length) shopNota('', total + ' productos coinciden: muestro los primeros ' + lista.length + '. Sumá otra palabra (color, material…) para afinar.');
+  else shopNota('', lista.length === 1 ? '' : 'Elegí el producto:');
+}
+
 async function traerDelShop(){
-  const id = shopId($('shopRef').value);
-  if(!id){ shopNota('mal', '⚠ Pegá el link del producto de formas.shop (…/app/product/detail/18953) o solo su código.'); return; }
+  const txt = $('shopRef').value.trim();
+  const id = shopId(txt);
+  $('shopResultados').hidden = true;
+  if(!id && txt.length < 3){ shopNota('mal', '⚠ Pegá el link del producto de formas.shop, su código (18953) o escribí parte del nombre.'); return; }
   const btn = $('shopTraer');
   btn.disabled = true;
   try{
-    shopNota('', 'Buscando el producto en formas.shop…');
+    shopNota('', id ? 'Buscando el producto…' : 'Buscando en el catálogo…');
+    const cat = await cargarCatalogo();
+    if(!id){
+      if(!cat) throw new Error('No pude abrir el catálogo para buscar por nombre: pegá el link o el código del producto.');
+      const r = buscarEnCatalogo(cat, txt);
+      if(!r.length) throw new Error('No encontré «' + txt + '» en el catálogo. Probá con otra palabra o pegá el link del producto.');
+      if(r.length === 1){ $('shopRef').value = String(r[0].id); await traerFicha(fichaDeCatalogo(r[0])); }
+      else pintarResultados(r.slice(0, 8), r.length);
+      return;
+    }
+    const p = cat && cat.porId.get(id);
+    if(p){ await traerFicha(fichaDeCatalogo(p)); return; }
+    /* más nuevo que el catálogo (o sin catálogo): la página pública del producto */
     const ficha = leerFichaShop(await (await shopFetch('id=' + id)).text());
     if(!ficha.fotos.length) throw new Error('No encontré el producto ' + id + ' en formas.shop: revisá el código.');
+    ficha.id = id;
+    ficha.fotos = ficha.fotos.map(u => ({ u }));
+    await traerFicha(ficha);
+  }catch(e){
+    shopNota('mal', '⚠ ' + (e && e.message ? e.message : e));
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+/* baja las fotos, mide cada una para arrancar por la que está de frente y la carga */
+async function traerFicha(ficha){
+  const btn = $('shopTraer');
+  btn.disabled = true;
+  try{
     const lista = ficha.fotos.slice(0, 8);
     const fotos = [];
     for(let i = 0; i < lista.length; i++){
       shopNota('', 'Bajando las fotos… (' + (i+1) + ' de ' + lista.length + ')');
-      try{ fotos.push({ url: lista[i], src: await blobADataUrl(await (await shopFetch('img=' + encodeURIComponent(lista[i]))).blob()) }); }
-      catch(e){ console.warn('foto del shop:', lista[i], e); } // una foto rota no frena al resto
+      try{ fotos.push({ url: lista[i].u, prov: !!lista[i].prov, src: await blobADataUrl(await (await shopFetch('img=' + encodeURIComponent(lista[i].u))).blob()) }); }
+      catch(e){ console.warn('foto del shop:', lista[i].u, e); } // una foto rota no frena al resto
     }
-    if(!fotos.length) throw new Error('No pude bajar las fotos del producto ' + id + '.');
-    /* se mide cada foto para arrancar por la que está de frente */
+    if(!fotos.length) throw new Error('No pude bajar las fotos del producto ' + ficha.id + '.');
     if(ficha.medidas){
       for(let i = 0; i < fotos.length; i++){
         shopNota('', 'Buscando la foto de frente para medir… (' + (i+1) + ' de ' + fotos.length + ')');
@@ -5265,10 +5391,13 @@ async function traerDelShop(){
     $('prodMedidas').value = ficha.medidas ? textoMedidas(ficha.medidas.valores) : '';
     state.areasShop = ficha.areas; pintarAreas();
     pintarGaleria();
-    const rango = f => !f.med || !f.med.ok ? 3 : { alta:0, media:1, baja:2 }[f.med.conf];
+    /* la de frente que se mide sola; a igual confianza, las de la tienda antes que las del proveedor */
+    const rango = f => (!f.med || !f.med.ok ? 3 : { alta:0, media:1, baja:2 }[f.med.conf]) + (f.prov ? 0.5 : 0);
     let elegida = 0;
     fotos.forEach((f, i) => { if(rango(f) < rango(fotos[elegida])) elegida = i; });
-    shopResumen = (ficha.nombre || 'Producto ' + id) + ': ' + fotos.length + (fotos.length === 1 ? ' foto' : ' fotos')
+    const nProv = fotos.filter(f => f.prov).length;
+    shopResumen = (ficha.nombre || 'Producto ' + ficha.id) + ': ' + fotos.length + (fotos.length === 1 ? ' foto' : ' fotos')
+      + (nProv ? ' (' + nProv + ' del proveedor)' : '')
       + (ficha.medidas ? ' · medidas de la descripción: ' + textoMedidas(ficha.medidas.valores) : ' · la descripción no trae las medidas: anotalas abajo o ubicá la regla a mano')
       + (ficha.areas.length ? ' · ' + ficha.areas.length + (ficha.areas.length === 1 ? ' área' : ' áreas') + ' de impresión (paso 2)' : '')
       + '. Tocá otra foto para cambiarla.';
@@ -6704,7 +6833,7 @@ window.__bocetoRestore = data => {
     $('rulerCm').value = ''; $('technique').value = ''; $('techniqueOther').value = ''; $('techniqueOther').hidden = true;
     $('prodMedidas').value = ''; state.auto = null; $('autoMedNote').hidden = true;
     state.areasShop = []; pintarAreas();
-    shopFotos = []; pintarGaleria(); shopNota('', ''); $('shopRef').value = '';
+    shopFotos = []; pintarGaleria(); shopNota('', ''); $('shopRef').value = ''; $('shopResultados').hidden = true;
     $('photoThumb').innerHTML = '📷';
     $('photoTxt').innerHTML = 'Elegir foto del producto<small>JPG o PNG · se recomienda recortada al producto</small>';
     photoName = '';

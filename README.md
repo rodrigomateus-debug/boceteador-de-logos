@@ -16,11 +16,14 @@ se abren directo en el navegador, sin instalación.
 ## Traer de formas.shop y medir el producto solo
 
 En el paso 1 del boceteador, **Traer de formas.shop** acepta el link del producto
-(`https://formas.shop/app/product/detail/18953`) o solo su código (`18953`) y:
+(`https://formas.shop/app/product/detail/18953`), su código (`18953`) o parte
+del nombre («anotador eco», «termo hydro»: muestra los que coinciden) y:
 
-1. baja las fotos de la galería y lee la descripción: las **medidas**
-   («Medidas cerrado: 14 × 9 cm», «Ø 8,4 × 30 cm», «21 × 14 × 1,4 cm», en cm o mm)
-   y, si la ficha las trae, las **áreas de impresión** («Frente: 60 × 15 mm»);
+1. trae las fotos de la tienda y las del proveedor, y lee la descripción: las
+   **medidas** («Medidas cerrado: 14 × 9 cm», «Ø 8,4 × 30 cm», «Dimensiones:
+   21 × 14 × 1,4 cm», en cm o mm) y, si la ficha las trae, las **áreas de
+   impresión** («Frente: 60 × 15 mm», o varias en un renglón como en los textiles:
+   «Frente (10 × 10 cm), espalda (22 × 9,8 cm) y mangas (8 × 8 cm)»);
 2. mide cada foto y arranca por la que está **de frente** (✓ en la miniatura;
    ~ = se puede medir con dudas; sin marca = sirve para mostrar, no para medir);
 3. pasa a «Sé la medida del producto» y deja **la regla calibrada sola**, de
@@ -49,12 +52,37 @@ la descripción. Si dice 14 cm y no aclara si incluye el anillado o la tapa, el
 detector toma el cuerpo que mejor cierra con las dos medidas; conviene mirar el
 contorno verde antes de seguir.
 
-Por dentro: el shop no deja que otra web lea sus páginas ni sus fotos, así que
-pasan por la función `functions/api/shop.js` (`/api/shop?id=` y `/api/shop?img=`).
-Solo reenvía los bytes (casi nada de CPU) y solo responde fichas por número y
-fotos de formas.shop, stpo.com.ar y promoproductos.com: no es un proxy abierto.
-No necesita variables. La ficha se interpreta en el navegador (`leerFichaShop()`).
-Si el shop cambia el HTML de la ficha, el lugar a tocar es esa función.
+### De dónde salen los datos: el catálogo de la API de STP
+
+La búsqueda usa **`catalogo-shop.json`**, armado desde la API de catálogo de STP
+(`/api/product/67/`, la que hizo Datacrush): los productos activos de formas.shop
+con sus fotos (de la tienda y del proveedor), las medidas y las áreas de impresión
+ya leídas. No lleva precios, stock ni costos. Se regenera con el token de lectura
+(nunca va a la web ni al repo):
+
+```
+STP_API_TOKEN=… node herramientas/catalogo-shop.mjs
+```
+
+Tarda medio minuto. Conviene correrlo cada tanto (el shop suma productos todos
+los días) y subir el `catalogo-shop.json` nuevo. Un producto más nuevo que el
+catálogo igual se trae por su link o su código: en ese caso se lee su página
+pública (`leerFichaShop()`). Las medidas y las áreas se leen con la misma
+función, `leerDescripcion()`, en los dos caminos y en el armado del catálogo.
+
+La API no busca por número de producto ni por nombre (solo por `sku` o `root`) y
+todavía no trae las áreas de impresión como campo (`print_areas` quedó pendiente
+en Datacrush): por eso se leen de la descripción. Cuando la API las traiga, el
+lugar a tocar es `herramientas/catalogo-shop.mjs`.
+
+Las fotos pasan por la función `functions/api/shop.js` (`/api/shop?img=`, y
+`/api/shop?id=` para la página pública), porque el shop y los proveedores no
+dejan que otra web las lea. Solo reenvía los bytes (casi nada de CPU) y solo
+responde fichas por número y fotos del shop y de los dominios de los proveedores
+que trae la API (Zecat, X-Trade, Promoproductos, Nuevas Formas…): no es un proxy
+abierto. Si aparece un proveedor nuevo con fotos en otro dominio, se suma a
+`HOSTS_FOTOS`. No necesita variables.
+
 Pruebas: `node test_shop.mjs` y `node test_medir_producto.mjs`.
 
 ## PDF editable para CorelDRAW

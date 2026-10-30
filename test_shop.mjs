@@ -25,15 +25,19 @@ assert.equal(r.headers.get('content-type'), 'image/jpeg');
 assert.deepEqual([...new Uint8Array(await r.arrayBuffer())], [0xff, 0xd8, 0xff]);
 assert.equal(llamadas[0].url, 'https://formas.shop/upload/1792777885_6adb9e9d52dfc.jpg');
 
-responder(new Response('x', { headers: { 'content-type': 'image/webp' } }));
-r = await pedir('img=' + encodeURIComponent('https://www.promoproductos.com/upload/1641933728_61ddeba07f711.jpg'));
-assert.equal(r.status, 200);
+for (const u of ['https://www.promoproductos.com/upload/1641933728_61ddeba07f711.jpg',
+  'https://images-cdn.zecat.com/generic_products/x.webp', 'https://nuevasformas.com.ar/wp-content/uploads/2025/08/820.webp']) {
+  responder(new Response('x', { headers: { 'content-type': 'image/webp' } }));
+  r = await pedir('img=' + encodeURIComponent(u));
+  assert.equal(r.status, 200, u);
+}
 
 // no es un proxy abierto: otros dominios, otros protocolos y códigos raros no salen
 responder();
 for (const qs of [
   'img=' + encodeURIComponent('https://evil.example/x.jpg'),
   'img=' + encodeURIComponent('https://formas.shop.evil.example/x.jpg'),
+  'img=' + encodeURIComponent('https://otro.cloudfront.net/x.jpg'),
   'img=' + encodeURIComponent('file:///etc/passwd'),
   'id=18953/../../admin',
   'id=abc',
@@ -41,6 +45,12 @@ for (const qs of [
 ]) assert.equal((await pedir(qs)).status, 400, qs);
 assert.equal((await pedir('id=1', 'POST')).status, 405);
 assert.equal(llamadas.length, 0);
+
+// Zecat manda fotos reales con un tipo equivocado: vale la extensión
+responder(new Response('png', { headers: { 'content-type': 'application/x-www-form-urlencoded' } }));
+r = await pedir('img=' + encodeURIComponent('https://images-cdn.zecat.com/products/Foto-1746557173.png'));
+assert.equal(r.status, 200);
+assert.equal(r.headers.get('content-type'), 'image/png');
 
 // si lo que vuelve no es una imagen (una página de error del shop), no pasa
 responder(new Response('<html>error</html>', { headers: { 'content-type': 'text/html' } }));
