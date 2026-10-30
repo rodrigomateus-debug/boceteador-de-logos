@@ -8,10 +8,54 @@ se abren directo en el navegador, sin instalación.
 
 | Archivo | Qué es |
 |---|---|
-| **`generador-bocetos.html`** | ⭐ **La app principal.** Generador de bocetos (formulario + ficha A4 de producción en vivo) con el boceteador "Cargá tu logo" integrado como modal: subís la foto del producto, marcás el área, aplicás el logo (tinte —blanco, negro, grabado o **un color a elección**, con código HEX o Pantone del mismo buscador de la ficha—, opacidad, rotación, **quitar el fondo o cualquier color** —blanco, negro, uno del selector o tomado con el cuentagotas tocando el logo— y **✨ Modificar logo con IA**) y la ficha se completa sola (foto compuesta, logo, medidas, técnica, posición). El lienzo del boceteador ocupa toda la altura de la pantalla. La vista previa de la ficha tiene zoom (botones arriba a la derecha o Ctrl + rueda; «1:1» muestra el tamaño real de impresión para revisar la calidad de la foto). Acepta logos en PNG, JPG, SVG, PDF y .ai de Illustrator (guardados con compatibilidad PDF, que es el default). Imprime a PDF y descarga HTML. |
+| **`generador-bocetos.html`** | ⭐ **La app principal.** Generador de bocetos (formulario + ficha A4 de producción en vivo) con el boceteador "Cargá tu logo" integrado como modal: subís la foto del producto, marcás el área, aplicás el logo (tinte —blanco, negro, grabado o **un color a elección**, con código HEX o Pantone del mismo buscador de la ficha—, opacidad, rotación, **quitar el fondo o cualquier color** —blanco, negro, uno del selector o tomado con el cuentagotas tocando el logo— y **✨ Modificar logo con IA**) y la ficha se completa sola (foto compuesta, logo, medidas, técnica, posición). El lienzo del boceteador ocupa toda la altura de la pantalla. La vista previa de la ficha tiene zoom (botones arriba a la derecha o Ctrl + rueda; «1:1» muestra el tamaño real de impresión para revisar la calidad de la foto). Acepta logos en PNG, JPG, SVG, PDF y .ai de Illustrator (guardados con compatibilidad PDF, que es el default). Trae fotos y medidas de **formas.shop** y mide el producto solo sobre la foto (ver «Traer de formas.shop»). Imprime a PDF y descarga HTML. |
 | `boceteador.html` | El boceteador standalone (versión previa a la integración; el modal del generador es su evolución). |
 | `cotizador-formas.html` | Maqueta funcional del cotizador (fase 3 del roadmap): técnica, cantidades, desglose de precio y markup. |
 | `DESIGN.md` | Documento de diseño: flujos, modelo de datos, sistema de diseño Formas, roadmap. |
+
+## Traer de formas.shop y medir el producto solo
+
+En el paso 1 del boceteador, **Traer de formas.shop** acepta el link del producto
+(`https://formas.shop/app/product/detail/18953`) o solo su código (`18953`) y:
+
+1. baja las fotos de la galería y lee la descripción: las **medidas**
+   («Medidas cerrado: 14 × 9 cm», «Ø 8,4 × 30 cm», «21 × 14 × 1,4 cm», en cm o mm)
+   y, si la ficha las trae, las **áreas de impresión** («Frente: 60 × 15 mm»);
+2. mide cada foto y arranca por la que está **de frente** (✓ en la miniatura;
+   ~ = se puede medir con dudas; sin marca = sirve para mostrar, no para medir);
+3. pasa a «Sé la medida del producto» y deja **la regla calibrada sola**, de
+   borde a borde del lado largo, con el contorno del producto marcado en verde;
+4. en el paso 2, cada área de impresión del shop es un botón que la marca **a
+   medida real** sobre el producto (después se lleva a su lugar).
+
+Con una foto subida a mano también se puede: en «Sé la medida del producto» se
+anota la medida (`14 × 9 cm`) y se toca **📐 Medir solo**.
+
+**Cómo mide:** busca el fondo liso, recorta la silueta del producto, encuentra
+sus bordes rectos y elige el rectángulo que tiene la proporción de la descripción.
+Así quedan afuera el bolígrafo de costado, el anillado, las manijas, la tapa o
+la cinta señaladora. La regla queda en píxeles exactos del borde.
+
+**El control de error:** la descripción da dos medidas y la foto también. Si la
+escala que sale del ancho y la que sale del alto coinciden (diferencia menor al
+3 %), la medición es confiable; si no, avisa «Medido con dudas» y dice por qué
+(proporción que no cierra, varios productos, forma no rectangular). En 33 fotos
+de frente del shop la diferencia fue de 0 a 2,2 % (el anotador 18953: 0,0 %).
+Las fotos en perspectiva, abiertas, en situación o con el producto cortado por el
+borde se rechazan solas y se pide la regla a mano.
+
+**Límite que no arregla ninguna herramienta:** la precisión depende de qué mide
+la descripción. Si dice 14 cm y no aclara si incluye el anillado o la tapa, el
+detector toma el cuerpo que mejor cierra con las dos medidas; conviene mirar el
+contorno verde antes de seguir.
+
+Por dentro: el shop no deja que otra web lea sus páginas ni sus fotos, así que
+pasan por la función `functions/api/shop.js` (`/api/shop?id=` y `/api/shop?img=`).
+Solo reenvía los bytes (casi nada de CPU) y solo responde fichas por número y
+fotos de formas.shop, stpo.com.ar y promoproductos.com: no es un proxy abierto.
+No necesita variables. La ficha se interpreta en el navegador (`leerFichaShop()`).
+Si el shop cambia el HTML de la ficha, el lugar a tocar es esa función.
+Pruebas: `node test_shop.mjs` y `node test_medir_producto.mjs`.
 
 ## PDF editable para CorelDRAW
 

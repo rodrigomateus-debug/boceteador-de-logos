@@ -214,6 +214,26 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #rulerLine i:first-child{left:0}#rulerLine i:last-child{right:0}
 #bocetoModal .ruler-handle{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;border:3.5px solid var(--formas-navy);translate:-50% -50%;pointer-events:auto;cursor:grab;box-shadow:0 1px 5px rgba(11,11,35,.35);touch-action:none}
 #bocetoModal #rulerLabel{position:absolute;translate:-50% -145%;background:var(--formas-navy);color:#fff;font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:999px;white-space:nowrap;pointer-events:auto;cursor:move;font-variant-numeric:tabular-nums}
+/* medición automática: el contorno del producto que encontró "Medir solo" */
+#bocetoModal #autoRect{position:absolute;border:2px dashed var(--formas-green);border-radius:3px;pointer-events:none;z-index:3}
+#bocetoModal #autoRect span{position:absolute;left:-2px;top:-2px;translate:0 -100%;background:var(--formas-green);color:#fff;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px 6px 0 0;white-space:nowrap;font-variant-numeric:tabular-nums}
+#bocetoModal #autoRect.label-in span{translate:0 0;border-radius:0 0 6px 0}
+/* traer de formas.shop */
+#bocetoModal .shopRow{display:flex;gap:8px}
+#bocetoModal .shopRow input{flex:1;min-width:0}
+#bocetoModal .shopRow .btn{width:auto;flex:none;padding:9px 16px}
+#bocetoModal .shopFotos{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+#bocetoModal .shopFoto{position:relative;width:58px;height:58px;border-radius:10px;border:1.5px solid var(--formas-gray-200);background:#fff;padding:3px;cursor:pointer;flex:none}
+#bocetoModal .shopFoto img{width:100%;height:100%;object-fit:contain;display:block}
+#bocetoModal .shopFoto[aria-pressed="true"]{border-color:var(--formas-navy);box-shadow:0 0 0 2.5px color-mix(in srgb, var(--formas-lime) 55%, transparent)}
+#bocetoModal .shopFoto b{position:absolute;right:-6px;top:-6px;width:18px;height:18px;border-radius:50%;font-size:10px;line-height:1;display:grid;place-items:center;color:#fff;background:var(--formas-green)}
+#bocetoModal .shopFoto b.media{background:var(--formas-yellow);color:var(--formas-ink)}
+#bocetoModal .areaChips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+#bocetoModal .areaChip{padding:6px 11px;border-radius:999px;border:1.5px solid var(--formas-gray-200);background:#fff;font-family:var(--font-primary);font-size:12px;font-weight:700;color:var(--formas-navy);cursor:pointer;font-variant-numeric:tabular-nums}
+#bocetoModal .areaChip:hover{border-color:var(--formas-navy)}
+#bocetoModal .areaChip:disabled{opacity:.5;cursor:not-allowed}
+#bocetoModal .note.ok{border-left-color:var(--formas-green)}
+#bocetoModal .note.mal{border-left-color:#EF7958}
 /* eliminar logo */
 #bocetoModal .logoDelete{position:absolute;top:-13px;right:-13px;width:26px;height:26px;border-radius:50%;background:#fff;border:1.5px solid var(--border-subtle);color:var(--formas-ink);font-size:15px;font-weight:700;line-height:1;cursor:pointer;z-index:6;display:grid;place-items:center;box-shadow:0 1px 5px rgba(11,11,35,.3);padding:0;font-family:var(--font-primary)}
 #bocetoModal .logoDelete:hover{background:#EF7958;color:#fff;border-color:#EF7958}
@@ -308,6 +328,8 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #rulerLine i{width:calc(2.5px/var(--Z)); height:calc(12px/var(--Z))}
 #bocetoModal .ruler-handle{width:calc(18px/var(--Z)); height:calc(18px/var(--Z)); border-width:calc(3.5px/var(--Z))}
 #bocetoModal #rulerLabel{font-size:calc(11.5px/var(--Z)); padding:calc(4px/var(--Z)) calc(12px/var(--Z))}
+#bocetoModal #autoRect{border-width:calc(2px/var(--Z))}
+#bocetoModal #autoRect span{font-size:calc(10.5px/var(--Z)); padding:calc(2px/var(--Z)) calc(8px/var(--Z))}
 #bocetoModal #frame.panable{cursor:grab}
 #bocetoModal #frame.panable:active{cursor:grabbing}
 #bocetoModal #zoomCtrls{position:absolute; bottom:28px; right:28px; z-index:10; display:flex; align-items:center; gap:2px; padding:4px 6px; border-radius:999px; border:1.5px solid var(--formas-gray-200); background:#fff; box-shadow:0 2px 8px rgba(11,11,35,.18)}
@@ -382,6 +404,7 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #frame.clean .handle,
 #bocetoModal #frame.clean #measureChip,
 #bocetoModal #frame.clean #ruler,
+#bocetoModal #frame.clean #autoRect,
 #bocetoModal #frame.clean .logoDelete,
 #bocetoModal #frame.clean .logoRotate{display:none !important}
 #bocetoModal #frame.clean .logoItem.selected{outline:none}
@@ -965,6 +988,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
               <span class="handle bl" data-corner="bl"></span><span class="handle br" data-corner="br"></span>
             </div>
             <div id="measureChip" hidden></div>
+            <div id="autoRect" hidden><span id="autoRectLbl"></span></div>
             <div id="ruler" hidden>
               <div id="rulerLine"><i></i><i></i></div>
               <span class="ruler-handle" id="rh1"></span>
@@ -1005,6 +1029,17 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <!-- Paso 1: producto -->
       <div class="card step" id="step1">
         <div class="step-head"><span class="step-num">1</span><h2>Foto del producto</h2></div>
+        <div class="field" id="shopField" style="margin-top:0">
+          <span class="label" style="letter-spacing:.08em">Traer de formas.shop</span>
+          <div class="shopRow">
+            <input type="text" id="shopRef" placeholder="Link o código del producto" autocomplete="off">
+            <button class="btn btn-secondary" type="button" id="shopTraer">Traer</button>
+          </div>
+          <small style="color:var(--text-muted);font-size:11.5px">Trae las fotos y las medidas de la descripción, y mide el producto solo sobre la foto.</small>
+          <div class="shopFotos" id="shopFotos" hidden></div>
+          <div class="note" id="shopNote" hidden>🛍 <span id="shopNoteTxt"></span></div>
+        </div>
+        <div class="or-sep" style="margin:12px 0 10px">— o —</div>
         <label class="upload-tile" for="photoInput">
           <span class="thumb slot" id="photoThumb">📷</span>
           <span class="txt" id="photoTxt">Elegir foto del producto<small>JPG o PNG · se recomienda recortada al producto</small></span>
@@ -1012,7 +1047,17 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <input type="file" id="photoInput" accept="image/png,image/jpeg,image/webp" hidden>
         <div class="note" id="photoIaNote" hidden>✨ <span id="photoIaNoteTxt"></span> <button type="button" id="photoIaUndo">Volver a la original</button></div>
         <div class="field" id="rulerField">
-          <span class="label" style="letter-spacing:.08em">Escala real · regla</span>
+          <span class="label" style="letter-spacing:.08em">Medida del producto · de la descripción</span>
+          <div class="field-row" style="margin-top:0">
+            <div class="field" style="margin-top:0;flex:1.2">
+              <input type="text" id="prodMedidas" placeholder="Ej.: 14 × 9 cm" autocomplete="off">
+            </div>
+            <div class="field" style="margin-top:0">
+              <button class="btn btn-secondary" type="button" id="autoMedirBtn" style="padding:9px 12px" disabled title="Busca el producto en la foto y ubica la regla de borde a borde">📐 Medir solo</button>
+            </div>
+          </div>
+          <div class="note" id="autoMedNote" hidden><span id="autoMedIco">📐</span> <span id="autoMedTxt"></span></div>
+          <span class="label" style="letter-spacing:.08em;margin-top:8px">Escala real · regla</span>
           <div class="field-row" style="margin-top:0">
             <div class="field" style="margin-top:0;flex:1.2">
               <div class="suffix-wrap"><input type="number" id="rulerCm" placeholder="Centímetros" min="0.5" max="500" step="0.1"><span class="suffix">cm</span></div>
@@ -1029,6 +1074,11 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <div class="card step locked" id="step2">
         <div class="step-head"><span class="step-num">2</span><h2>Área de impresión</h2></div>
         <button class="btn btn-secondary" type="button" id="drawZoneBtn">Marcar área sobre la foto</button>
+        <div id="areasShop" hidden>
+          <span class="label" style="letter-spacing:.08em;display:block;margin-top:12px">Área de impresión según el shop</span>
+          <div class="areaChips" id="areaChips"></div>
+          <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11.5px">Tocá una y se marca a medida real sobre el producto; después la llevás a su lugar.</small>
+        </div>
         <div class="readout" id="zoneReadout" hidden>
           <div class="row"><span class="label">Área marcada</span><span class="val num" id="zoneSizeOut">—</span></div>
         </div>
@@ -4435,6 +4485,8 @@ const state = {
   drawMode: false,
   ruler: null,
   rulerVisible: false,
+  auto: null,          // lo que encontró "Medir solo": {x,y,w,h} del producto (0–1), cmW, cmH, conf, desvio
+  areasShop: [],       // áreas de impresión de la descripción del shop: {nombre, w, h} en cm
   mode: 'logo',        // por defecto: "Tengo la medida exacta del logo"
   unit: 'cm',          // unidad de carga y lectura de medidas: 'cm' o 'mm' (internamente todo vive en cm)
   zoom: 1,
@@ -4607,6 +4659,25 @@ function render(){
     Object.assign(lbl.style,{left:(p1.x+p2.x)/2+'px',top:(p1.y+p2.y)/2+'px'});
   } else $('ruler').hidden = true;
 
+  /* el contorno que encontró "Medir solo" acompaña a la regla */
+  const A = state.auto;
+  const verAuto = !!A && state.mode === 'product' && state.rulerVisible && !frame.hidden;
+  $('autoRect').hidden = !verAuto;
+  if(verAuto){
+    Object.assign($('autoRect').style,{left:A.x*100+'%',top:A.y*100+'%',width:A.w*100+'%',height:A.h*100+'%'});
+    $('autoRect').classList.toggle('label-in', A.y < 0.06);
+    $('autoRectLbl').textContent = 'Producto · ' + fmtPair(A.cmW, A.cmH);
+  }
+  $('autoMedirBtn').disabled = frame.hidden;
+  const kArea = cmPerPx();
+  $('areaChips').querySelectorAll('.areaChip').forEach(b => {
+    const a = state.areasShop[+b.dataset.i];
+    if(!a) return;
+    b.textContent = a.nombre + ' · ' + fmtPair(a.w, a.h);
+    b.disabled = !kArea;
+    b.title = kArea ? 'Marcar esta área a medida real' : 'Primero calibrá la escala (Medir solo o la regla)';
+  });
+
   /* resaltar lo que falta y mantener vivo el candado del paso 4 */
   const L2 = selLogo();
   $('logoWcm').classList.toggle('need', state.mode === 'logo' && !!L2 && !(L2.cmW > 0));
@@ -4688,6 +4759,7 @@ function loadPhotoSrc(url, name, opts){
     $('logoInput').value = '';
     state.ruler = { x1:.08, y1:.5, x2:.92, y2:.5 };
     state.rulerVisible = true;
+    state.auto = null; $('autoMedNote').hidden = true; // la medición automática era de la foto anterior
     $('rulerToggle').disabled = false;
     syncRulerBtn();
     $('cleanToggle').hidden = false;
@@ -4702,11 +4774,12 @@ function loadPhotoSrc(url, name, opts){
        la foto" queda a la vista para que el clic sea el paso evidente */
     if(state.mode !== 'product') enterDrawMode();
     syncLogoUI(); setStepStates(); render();
+    if(opts.listo) opts.listo();
   };
   const probe = new Image();
   probe.onload = () => {
     if(!opts.sinAvisoRes && esBajaRes(probe.naturalWidth, probe.naturalHeight)){
-      avisarBajaRes(url, name, probe.naturalWidth, probe.naturalHeight);
+      avisarBajaRes(url, name, probe.naturalWidth, probe.naturalHeight, opts.listo);
       return;
     }
     photo.src = padNarrowPhoto(probe) || url;
@@ -4717,7 +4790,7 @@ function loadPhotoSrc(url, name, opts){
 
 /* ---------- foto en baja resolución: cambiar, mantener o agrandar con IA ---------- */
 let fotoOriginalBajaRes = null; // para volver atrás después de agrandar con IA
-function avisarBajaRes(url, name, w, h){
+function avisarBajaRes(url, name, w, h, listo){
   const modal = document.getElementById('lowResModal');
   const status = $('lowResStatus');
   const btns = ['lowResChange', 'lowResKeep', 'lowResIa'].map(id => $(id));
@@ -4728,7 +4801,7 @@ function avisarBajaRes(url, name, w, h){
   modal.hidden = false;
   const cerrar = () => { modal.hidden = true; };
   $('lowResChange').onclick = () => { cerrar(); $('photoInput').value = ''; $('photoInput').click(); };
-  $('lowResKeep').onclick = () => { cerrar(); loadPhotoSrc(url, name, { sinAvisoRes:true }); };
+  $('lowResKeep').onclick = () => { cerrar(); loadPhotoSrc(url, name, { sinAvisoRes:true, listo }); };
   $('lowResIa').onclick = async () => {
     btns.forEach(b => b.disabled = true);
     const setS = t => { status.hidden = false; status.textContent = t; };
@@ -4741,6 +4814,7 @@ function avisarBajaRes(url, name, w, h){
       loadPhotoSrc(image, base + ' (IA)', {
         sinAvisoRes: true,
         iaNote: 'La foto se agrandó con IA' + (m ? ' a ' + m.w + ' × ' + m.h + ' px' : '') + '. Revisá que el producto siga idéntico antes de seguir.',
+        listo,
       });
     }catch(err){
       setS('⚠ ' + (err && err.message ? err.message : err));
@@ -4786,6 +4860,427 @@ function setMode(m){
 }
 $('modeLogo').addEventListener('click', () => setMode('logo'));
 $('modeProduct').addEventListener('click', () => setMode('product'));
+
+/* ---------- medición automática del producto ----------
+   Con las medidas reales de la descripción ("14 × 9 cm") se busca el producto en la
+   foto y la regla queda sola de borde a borde. Es para fotos de catálogo: producto de
+   frente sobre fondo liso. Las dos medidas se verifican entre sí: si el ancho y el alto
+   que se ven en la foto no guardan la proporción de la descripción, se avisa. */
+
+/* "Medidas: 21 × 14 × 1,4 cm (A5)" → [21, 14, 1.4] (siempre en cm).
+   Acepta x / × / X, coma decimal, Ø, cm o mm (el número sin unidad toma la que sigue)
+   e ignora lo que no es largo: gramos, ml, litros, el 5 de "A5". Sin ninguna unidad, va `unidad`. */
+function medidasDeTexto(t, unidad){
+  t = String(t || '').replace(/[øØ⌀]/g, ' ').replace(/[xX×*]\s*(?=\d)/g, ' × ');
+  const re = /(?<![\p{L}\d.,])(\d+(?:[.,]\d+)?)\s*(cm|mm|m(?![\p{L}])|g|kg|ml|l(?![\p{L}])|°|"|pulgadas?)?/giu;
+  const nums = [];
+  let m;
+  while((m = re.exec(t))) nums.push({ v: parseFloat(m[1].replace(',', '.')), u: (m[2] || '').toLowerCase() });
+  /* el número sin unidad hereda la unidad del siguiente que la tenga ("14 × 9 cm") */
+  for(let i = nums.length - 1, u = unidad || ''; i >= 0; i--){
+    if(nums[i].u) u = nums[i].u; else nums[i].u = u;
+  }
+  const k = { cm:1, mm:0.1, m:100 };
+  return nums.filter(n => k[n.u] && n.v > 0).map(n => +(n.v * k[n.u]).toFixed(3));
+}
+const textoMedidas = v => v.map(n => String(n).replace('.', ',')).join(' × ') + ' cm';
+
+/* Busca el cuerpo del producto en la foto (RGBA) y qué medida de la descripción le
+   toca a cada lado. Devuelve el rectángulo en px y qué tan confiable es. */
+function medirProductoEnFoto(px, W, H, dims){
+  const N = W*H;
+  /* 1. color de fondo: mediana del borde de la foto */
+  const borde = [];
+  for(let x = 0; x < W; x += 2) borde.push(x, x + (H-1)*W);
+  for(let y = 0; y < H; y += 2) borde.push(y*W, y*W + W-1);
+  const med = c => { const v = borde.map(i => px[i*4+c]).sort((a,b) => a-b); return v[v.length>>1]; };
+  const bg = [med(0), med(1), med(2)];
+  const dif = i => Math.max(Math.abs(px[i*4]-bg[0]), Math.abs(px[i*4+1]-bg[1]), Math.abs(px[i*4+2]-bg[2]));
+  if(borde.filter(i => dif(i) < 26).length / borde.length < 0.7) return { ok:false, motivo:'fondo' };
+  /* tolerancia según el ruido del fondo: en un blanco de estudio limpio se afina para
+     no perder productos blancos o claros; en un fondo con grano o degradé se abre */
+  const ruido = borde.map(dif).sort((a,b) => a-b)[Math.floor(borde.length*0.9)];
+  const TOL = Math.min(30, Math.max(12, ruido*2 + 8));
+
+  /* 2. silueta: lo que no es fondo conectado al borde (lo blanco de adentro del producto sigue siendo producto) */
+  const fondo = new Uint8Array(N), cola = new Int32Array(N);
+  let qa = 0, qb = 0;
+  const sembrar = i => { if(!fondo[i] && dif(i) < TOL){ fondo[i] = 1; cola[qb++] = i; } };
+  for(let x = 0; x < W; x++){ sembrar(x); sembrar(x + (H-1)*W); }
+  for(let y = 0; y < H; y++){ sembrar(y*W); sembrar(y*W + W-1); }
+  while(qa < qb){
+    const i = cola[qa++], x = i % W;
+    if(x > 0) sembrar(i-1);
+    if(x < W-1) sembrar(i+1);
+    if(i >= W) sembrar(i-W);
+    if(i < N-W) sembrar(i+W);
+  }
+  /* la pieza más grande es el producto (una tapa suelta o un reflejo no cuentan) */
+  const comp = new Int32Array(N).fill(-1), areas = [];
+  let mejor = -1, mejorArea = 0;
+  const unir = (j, s) => { if(!fondo[j] && comp[j] === -1){ comp[j] = s; cola[qb++] = j; } };
+  for(let s = 0; s < N; s++){
+    if(fondo[s] || comp[s] !== -1) continue;
+    qa = 0; qb = 0; cola[qb++] = s; comp[s] = s;
+    while(qa < qb){
+      const i = cola[qa++], x = i % W;
+      if(x > 0) unir(i-1, s);
+      if(x < W-1) unir(i+1, s);
+      if(i >= W) unir(i-W, s);
+      if(i < N-W) unir(i+W, s);
+    }
+    areas.push(qb);
+    if(qb > mejorArea){ mejorArea = qb; mejor = s; }
+  }
+  if(mejorArea < N*0.01) return { ok:false, motivo:'sin-producto' };
+  /* foto grupal (varios colores, varios modelos): se mide uno, pero no es la foto para bocetar */
+  const varios = areas.filter(a => a >= mejorArea*0.25).length > 1;
+  const sil = new Uint8Array(N);
+  let x0 = W, y0 = H, x1 = -1, y1 = -1;
+  for(let i = 0; i < N; i++) if(comp[i] === mejor){
+    sil[i] = 1;
+    const x = i % W, y = (i / W) | 0;
+    if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y;
+  }
+  /* integral de la silueta: cuánto producto cae dentro de cualquier rectángulo, al instante */
+  const W1 = W+1, integ = new Int32Array(W1*(H+1));
+  for(let y = 0; y < H; y++){
+    let fila = 0;
+    for(let x = 0; x < W; x++){ fila += sil[y*W+x]; integ[(y+1)*W1 + x+1] = integ[y*W1 + x+1] + fila; }
+  }
+  const area = (a, b, c, d) => integ[d*W1+c] - integ[b*W1+c] - integ[d*W1+a] + integ[b*W1+a]; // [a,c) × [b,d)
+
+  /* 3. bordes rectos: por cada columna, cuántas filas tienen un salto fuerte de color
+     (o el contorno de la silueta). Una línea vertical larga = un lado del producto. */
+  const salto = (i, j) => sil[i] !== sil[j]
+    || Math.max(Math.abs(px[i*4]-px[j*4]), Math.abs(px[i*4+1]-px[j*4+1]), Math.abs(px[i*4+2]-px[j*4+2])) > 38;
+  const V = new Float64Array(W+1), Hh = new Float64Array(H+1);
+  for(let y = y0; y <= y1; y++) for(let x = Math.max(1, x0); x <= Math.min(W-1, x1+1); x++){
+    const i = y*W + x;
+    if(salto(i, i-1)) V[x]++;
+  }
+  for(let y = Math.max(1, y0); y <= Math.min(H-1, y1+1); y++) for(let x = x0; x <= x1; x++){
+    const i = y*W + x;
+    if(salto(i, i-W)) Hh[y]++;
+  }
+  /* bordes candidatos: picos de línea (tolerando 1 px de temblor) + los extremos de la silueta */
+  const picos = (P, a, b, largo, extra) => {
+    const S = i => P[i-1] + P[i] + P[i+1];
+    const c = [];
+    for(let i = Math.max(1, a); i <= b; i++){
+      const s = S(i);
+      if(s < largo*0.22 || s < S(i-1) || s <= S(i+1)) continue;
+      /* el pico de la suma cae al final de la meseta: el borde es la columna más fuerte de las tres */
+      const p = P[i-1] > P[i] && P[i-1] >= P[i+1] ? i-1 : P[i+1] > P[i] ? i+1 : i;
+      c.push({ p, f:Math.min(1, s/largo) });
+    }
+    c.sort((m, n) => n.f - m.f);
+    const sel = c.slice(0, 14);
+    for(const e of extra) if(!sel.some(m => Math.abs(m.p-e) <= 1)) sel.push({ p:e, f:0.5 });
+    return sel;
+  };
+  const bw = x1-x0+1, bh = y1-y0+1;
+  const cx = picos(V, x0, x1+1, bh, [x0, x1+1]);
+  const cy = picos(Hh, y0, y1+1, bw, [y0, y1+1]);
+
+  /* 4. pares de medidas posibles (en una foto de frente se ven las dos más grandes) */
+  const d = dims.filter(v => v > 0).sort((a, b) => b-a);
+  if(d.length < 2) return { ok:false, motivo:'medidas' };
+  const pares = [];
+  for(let i = 0; i < d.length; i++) for(let j = i+1; j < d.length; j++){
+    const sesgo = (i === 0 && j === 1) ? 0 : 0.03;
+    pares.push({ w:d[i], h:d[j], sesgo }, { w:d[j], h:d[i], sesgo });
+  }
+
+  /* 5. el rectángulo que mejor explica la silueta con la proporción de la descripción:
+     así quedan afuera el bolígrafo de costado, el anillado, las manijas o la cinta */
+  let best = null;
+  for(let a = 0; a < cx.length; a++) for(let c = 0; c < cx.length; c++){
+    const L = cx[a].p, R = cx[c].p, w = R - L;
+    if(w < bw*0.3) continue;
+    for(let b = 0; b < cy.length; b++) for(let e = 0; e < cy.length; e++){
+      const T = cy[b].p, B = cy[e].p, h = B - T;
+      if(h < bh*0.3) continue;
+      const dentro = area(L, T, R, B);
+      const cobertura = dentro / (w*h);
+      const afuera = 1 - dentro / mejorArea;
+      const bordes = (cx[a].f + cx[c].f + cy[b].f + cy[e].f) / 4;
+      for(const pr of pares){
+        const err = Math.abs(Math.log((h/w) / (pr.h/pr.w)));
+        const score = err*4 + (1-cobertura)*1.5 + afuera*1.2 - bordes*0.25 + pr.sesgo;
+        if(!best || score < best.score) best = { score, L, T, R, B, err, cobertura, afuera, pr };
+      }
+    }
+  }
+  if(!best) return { ok:false, motivo:'baja' };
+  const { L, T, R, B, pr } = best;
+  if(L <= 0 || T <= 0 || R >= W || B >= H) return { ok:false, motivo:'recorte' }; // el borde real quedó fuera de la foto
+  const sx = pr.w / (R-L), sy = pr.h / (B-T);
+  let conf = (best.err < 0.03 && best.cobertura > 0.85 && best.afuera < 0.2) ? 'alta'
+    : (best.err < 0.07 && best.cobertura > 0.7) ? 'media' : 'baja';
+  if(varios && conf === 'alta') conf = 'media';
+  return {
+    ok: true, conf, W, H,
+    rect: { x0:L, y0:T, x1:R, y1:B },
+    cm: { w:pr.w, h:pr.h },
+    desvio: Math.abs(sx - sy) / Math.min(sx, sy), // cuánto difieren la escala del ancho y la del alto
+    cobertura: best.cobertura, afuera: best.afuera, varios,
+  };
+}
+
+/* mide una imagen ya cargada (img o canvas); las fotos grandes se achican a 1600 px */
+function medirImagenProducto(img, dims){
+  const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  const s = Math.min(1, 1600 / Math.max(iw, ih));
+  const w = Math.max(1, Math.round(iw*s)), h = Math.max(1, Math.round(ih*s));
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d', { willReadFrequently:true });
+  x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, w, h); // un PNG sin fondo se mide sobre blanco
+  x.drawImage(img, 0, 0, w, h);
+  try{ return medirProductoEnFoto(x.getImageData(0, 0, w, h).data, w, h, dims); }
+  catch(e){ console.error('medir producto:', e); return { ok:false, motivo:'error' }; }
+}
+const cargarImagen = src => new Promise((res, rej) => {
+  const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error('No pude leer la foto.')); im.src = src;
+});
+
+const pct = v => (Math.round(v*1000)/10).toLocaleString('es-AR') + ' %';
+function autoNota(tipo, ico, txt){
+  const n = $('autoMedNote');
+  n.hidden = false;
+  n.classList.toggle('ok', tipo === 'ok');
+  n.classList.toggle('mal', tipo === 'mal');
+  $('autoMedIco').textContent = ico;
+  $('autoMedTxt').textContent = txt;
+}
+const MOTIVO_AUTO = {
+  fondo: 'Esta foto no tiene el fondo liso (parece una foto en situación). Para medir solo hace falta la foto de catálogo: el producto de frente sobre fondo blanco. Elegí otra o ubicá la regla a mano.',
+  recorte: 'El producto toca los bordes de la foto y no se ve entero: así no se puede medir solo. Ubicá la regla a mano.',
+  'sin-producto': 'No encontré el producto en la foto. Ubicá la regla a mano.',
+  error: 'No pude leer la foto para medirla. Ubicá la regla a mano.',
+};
+
+/* "📐 Medir solo": busca el producto en la foto del lienzo y deja la regla calibrada */
+function autoMedir(){
+  if(frame.hidden) return null;
+  const dims = medidasDeTexto($('prodMedidas').value, 'cm');
+  if(dims.length < 2){
+    autoNota('mal', '📐', 'Anotá la medida del producto, ancho × alto (ej. 14 × 9 cm), y tocá «Medir solo».');
+    $('prodMedidas').focus();
+    return null;
+  }
+  if(state.mode !== 'product') setMode('product'); // medir el producto es el modo «Sé la medida del producto»
+  const r = medirImagenProducto(photo, dims);
+  state.auto = null;
+  if(!r.ok || r.conf === 'baja'){
+    autoNota('mal', '⚠', MOTIVO_AUTO[r.motivo] || ('No pude medirlo con seguridad: en esta foto el producto no coincide con '
+      + textoMedidas(dims) + ' (puede estar en perspectiva, abierto o de costado). Probá con la foto de frente o ubicá la regla a mano.'));
+    render();
+    return r;
+  }
+  const q = r.rect;
+  const A = { x:q.x0/r.W, y:q.y0/r.H, w:(q.x1-q.x0)/r.W, h:(q.y1-q.y0)/r.H, cmW:r.cm.w, cmH:r.cm.h, conf:r.conf, desvio:r.desvio };
+  state.auto = A;
+  /* la regla va sobre el lado largo, justo de borde a borde (más píxeles = menos error) */
+  const vertical = (q.y1-q.y0) >= (q.x1-q.x0);
+  state.ruler = vertical
+    ? { x1:A.x + A.w/2, y1:A.y, x2:A.x + A.w/2, y2:A.y + A.h }
+    : { x1:A.x, y1:A.y + A.h/2, x2:A.x + A.w, y2:A.y + A.h/2 };
+  $('rulerCm').value = String(vertical ? A.cmH : A.cmW);
+  state.rulerVisible = true; $('rulerToggle').disabled = false; syncRulerBtn();
+  if(state.drawMode) exitDrawMode(); // primero se mira la regla; después, «Marcar área»
+  const medida = fmtCm(A.cmW) + ' × ' + fmtCm(A.cmH) + ' cm';
+  if(r.conf === 'alta'){
+    autoNota('ok', '✓', 'Medido solo: el producto ocupa ' + medida + ' en la foto y el ancho y el alto coinciden con la descripción (diferencia de '
+      + pct(r.desvio) + '). Las medidas del área y del logo ya son reales.');
+  } else {
+    const dudas = [];
+    if(r.desvio >= 0.03) dudas.push('el ancho y el alto de la foto no guardan del todo la proporción de la descripción (difieren ' + pct(r.desvio) + ')');
+    if(r.varios) dudas.push('en la foto hay varios productos');
+    if(r.cobertura <= 0.85) dudas.push('el producto no es del todo rectangular en la foto');
+    if(r.afuera >= 0.2) dudas.push('parte del producto (manijas, tapa, accesorios) queda fuera de la medida');
+    autoNota('', '⚠', 'Medido con dudas (' + medida + '): ' + (dudas.join('; ') || 'la foto no es del todo de frente')
+      + '. Revisá que la regla vaya de borde a borde del producto y ajustala si hace falta.');
+  }
+  render();
+  return r;
+}
+$('autoMedirBtn').addEventListener('click', autoMedir);
+$('prodMedidas').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); autoMedir(); } });
+
+/* ---------- áreas de impresión del shop: se marcan a medida real ---------- */
+function pintarAreas(){
+  const box = $('areaChips');
+  box.innerHTML = '';
+  state.areasShop.forEach((a, i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'areaChip'; b.dataset.i = i;
+    b.addEventListener('click', () => marcarAreaShop(a));
+    box.appendChild(b);
+  });
+  $('areasShop').hidden = !state.areasShop.length;
+}
+function marcarAreaShop(a){
+  const k = cmPerPx();
+  if(!k) return;
+  const {w:FW,h:FH} = frameRect();
+  const w = Math.min(1, a.w / k / FW), h = Math.min(1, a.h / k / FH);
+  const A = state.auto;
+  const cx = A ? A.x + A.w/2 : .5, cy = A ? A.y + A.h/2 : .5;
+  state.zone = { x:clamp(cx - w/2, 0, 1-w), y:clamp(cy - h/2, 0, 1-h), w, h };
+  if(state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); } // igual que al dibujar el área
+  exitDrawMode(); setStepStates(); render();
+}
+
+/* ---------- traer el producto de formas.shop ----------
+   El shop no deja leer sus páginas ni sus fotos desde otra web: pasan por la función
+   /api/shop (functions/api/shop.js). La ficha se interpreta acá. */
+const SHOP_ENDPOINT = '/api/shop';
+let shopFotos = []; // {url, src (data URL), med}
+
+function shopNota(tipo, txt){
+  const n = $('shopNote');
+  n.hidden = !txt;
+  n.classList.toggle('ok', tipo === 'ok');
+  n.classList.toggle('mal', tipo === 'mal');
+  $('shopNoteTxt').textContent = txt || '';
+}
+/* "https://formas.shop/app/product/detail/18953", "…/detail/18953?x=1" o "18953" */
+function shopId(txt){
+  const t = String(txt || '').trim();
+  const m = t.match(/detail\/(\d{1,9})/) || t.match(/^#?(\d{1,9})$/);
+  return m ? m[1] : null;
+}
+async function shopFetch(qs){
+  let r;
+  try{ r = await fetch(SHOP_ENDPOINT + '?' + qs); }
+  catch(e){
+    throw new Error(location.protocol === 'file:'
+      ? 'Traer del shop funciona en la app publicada (formas-bocetos-con-logo.pages.dev), no abriendo el archivo con doble clic.'
+      : 'No pude conectar con formas.shop. Revisá la conexión a internet y probá de nuevo.');
+  }
+  if(/json/i.test(r.headers.get('content-type') || '')){
+    const d = await r.json().catch(() => ({}));
+    throw new Error((d.error || ('Error ' + r.status)) + (d.detalle ? ': ' + String(d.detalle).slice(0, 200) : ''));
+  }
+  if(!r.ok) throw new Error(r.status === 404 || r.status === 405
+    ? 'Esta dirección no tiene el puente con el shop (respondió ' + r.status + '). Entrá desde formas-bocetos-con-logo.pages.dev.'
+    : 'El servidor falló (error ' + r.status + '). Probá de nuevo en un rato.');
+  return r;
+}
+const blobADataUrl = b => new Promise((res, rej) => {
+  const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => rej(new Error('No pude leer la foto.')); fr.readAsDataURL(b);
+});
+
+/* de la página del producto: nombre, fotos de la galería, medidas y áreas de impresión */
+function leerFichaShop(html){
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const bloque = doc.getElementById('productDescriptionBlock');
+  const og = p => { const m = doc.querySelector('meta[property="og:' + p + '"]'); return m ? (m.getAttribute('content') || '').trim() : ''; };
+  const titulo = bloque && bloque.querySelector('h3');
+  const nombre = (titulo && titulo.textContent.trim()) || og('title');
+  const fotos = [];
+  doc.querySelectorAll('.tf-product-media-main img').forEach(im => {
+    const u = im.getAttribute('data-zoom') || im.getAttribute('data-src') || im.getAttribute('src');
+    if(u && !fotos.includes(u)) fotos.push(u);
+  });
+  if(!fotos.length && og('image')) fotos.push(og('image'));
+  let medidas = null, seccion = '';
+  const areas = [];
+  if(bloque) bloque.querySelectorAll('p, li').forEach(el => {
+    const t = el.textContent.replace(/\s+/g, ' ').trim();
+    if(!t) return;
+    const negrita = el.querySelector('strong, b');
+    if(el.tagName === 'P' && negrita && negrita.textContent.trim() === t && !/\d/.test(t)){ seccion = t.toLowerCase(); return; }
+    const etiqueta = (t.includes(':') ? t.split(':')[0] : t.split(/\d/)[0]).replace(/[\s.,;:-]+$/, '').trim();
+    const valor = t.includes(':') ? t.slice(t.indexOf(':') + 1) : t;
+    if(!medidas && /^medidas?\b/i.test(t)){
+      const v = medidasDeTexto(valor, 'cm');
+      if(v.length >= 2) medidas = { texto:t, valores:v };
+      return;
+    }
+    const esArea = (el.tagName === 'LI' && /impresi|grabado|decoraci|aplicaci/.test(seccion)) || /^[aá]rea de (impresi|grabado|decoraci)/i.test(t);
+    if(!esArea) return;
+    const v = medidasDeTexto(valor);
+    const circulo = v.length === 1 && /[øØ⌀]|di[aá]m/i.test(t);
+    if(v.length >= 2 || circulo) areas.push({ nombre: etiqueta || 'Área', w: v[0], h: circulo ? v[0] : v[1] });
+  });
+  return { nombre, fotos, medidas, areas };
+}
+
+function pintarGaleria(){
+  const box = $('shopFotos');
+  box.innerHTML = '';
+  shopFotos.forEach((f, i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'shopFoto'; b.dataset.i = i;
+    b.setAttribute('aria-pressed', 'false');
+    const c = f.med && f.med.ok ? f.med.conf : '';
+    b.title = c === 'alta' ? 'Foto de frente: se mide sola' : c === 'media' ? 'Se puede medir, con dudas' : 'Sirve para mostrar, no para medir';
+    b.innerHTML = '<img alt="">' + (c === 'alta' ? '<b>✓</b>' : c === 'media' ? '<b class="media">~</b>' : '');
+    b.querySelector('img').src = f.src;
+    b.addEventListener('click', () => usarFotoShop(i));
+    box.appendChild(b);
+  });
+  box.hidden = !shopFotos.length;
+}
+let shopNombre = '', shopResumen = '';
+function usarFotoShop(i){
+  const f = shopFotos[i];
+  if(!f) return;
+  $('shopFotos').querySelectorAll('.shopFoto').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === i)));
+  loadPhotoSrc(f.src, (shopNombre || 'Producto') + ' · foto ' + (i+1), {
+    listo: () => {
+      if(medidasDeTexto($('prodMedidas').value, 'cm').length >= 2) autoMedir();
+      shopNota('ok', shopResumen);
+    },
+  });
+}
+async function traerDelShop(){
+  const id = shopId($('shopRef').value);
+  if(!id){ shopNota('mal', '⚠ Pegá el link del producto de formas.shop (…/app/product/detail/18953) o solo su código.'); return; }
+  const btn = $('shopTraer');
+  btn.disabled = true;
+  try{
+    shopNota('', 'Buscando el producto en formas.shop…');
+    const ficha = leerFichaShop(await (await shopFetch('id=' + id)).text());
+    if(!ficha.fotos.length) throw new Error('No encontré el producto ' + id + ' en formas.shop: revisá el código.');
+    const lista = ficha.fotos.slice(0, 8);
+    const fotos = [];
+    for(let i = 0; i < lista.length; i++){
+      shopNota('', 'Bajando las fotos… (' + (i+1) + ' de ' + lista.length + ')');
+      try{ fotos.push({ url: lista[i], src: await blobADataUrl(await (await shopFetch('img=' + encodeURIComponent(lista[i]))).blob()) }); }
+      catch(e){ console.warn('foto del shop:', lista[i], e); } // una foto rota no frena al resto
+    }
+    if(!fotos.length) throw new Error('No pude bajar las fotos del producto ' + id + '.');
+    /* se mide cada foto para arrancar por la que está de frente */
+    if(ficha.medidas){
+      for(let i = 0; i < fotos.length; i++){
+        shopNota('', 'Buscando la foto de frente para medir… (' + (i+1) + ' de ' + fotos.length + ')');
+        await new Promise(r => setTimeout(r, 0)); // deja ver el aviso antes de cada medición
+        try{ fotos[i].med = medirImagenProducto(await cargarImagen(fotos[i].src), ficha.medidas.valores); }catch(e){}
+      }
+    }
+    shopFotos = fotos; shopNombre = ficha.nombre;
+    $('prodMedidas').value = ficha.medidas ? textoMedidas(ficha.medidas.valores) : '';
+    state.areasShop = ficha.areas; pintarAreas();
+    pintarGaleria();
+    const rango = f => !f.med || !f.med.ok ? 3 : { alta:0, media:1, baja:2 }[f.med.conf];
+    let elegida = 0;
+    fotos.forEach((f, i) => { if(rango(f) < rango(fotos[elegida])) elegida = i; });
+    shopResumen = (ficha.nombre || 'Producto ' + id) + ': ' + fotos.length + (fotos.length === 1 ? ' foto' : ' fotos')
+      + (ficha.medidas ? ' · medidas de la descripción: ' + textoMedidas(ficha.medidas.valores) : ' · la descripción no trae las medidas: anotalas abajo o ubicá la regla a mano')
+      + (ficha.areas.length ? ' · ' + ficha.areas.length + (ficha.areas.length === 1 ? ' área' : ' áreas') + ' de impresión (paso 2)' : '')
+      + '. Tocá otra foto para cambiarla.';
+    usarFotoShop(elegida);
+  }catch(e){
+    shopNota('mal', '⚠ ' + (e && e.message ? e.message : e));
+  }finally{
+    btn.disabled = false;
+  }
+}
+$('shopTraer').addEventListener('click', traerDelShop);
+$('shopRef').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); traerDelShop(); } });
 
 /* ---------- ancla de proporción (solo vincula los campos de medidas) ---------- */
 function syncLockUI(){
@@ -6182,6 +6677,7 @@ window.__bocetoSnapshot = () => {
     photoSrc: photo.src, photoName,
     zone: state.zone, ruler: state.ruler, rulerVisible: state.rulerVisible,
     rulerCm: $('rulerCm').value,
+    prodMedidas: $('prodMedidas').value, auto: state.auto, areasShop: state.areasShop,
     mode: state.mode, unit: state.unit, lockAspect: state.lockAspect, unirLogos: state.unirLogos,
     technique: $('technique').value, techniqueOther: $('techniqueOther').value,
     sel: state.sel,
@@ -6206,6 +6702,9 @@ window.__bocetoRestore = data => {
     $('cleanToggle').hidden = true; $('zoomCtrls').hidden = true; $('alignCtrls').hidden = true;
     $('rulerToggle').disabled = true;
     $('rulerCm').value = ''; $('technique').value = ''; $('techniqueOther').value = ''; $('techniqueOther').hidden = true;
+    $('prodMedidas').value = ''; state.auto = null; $('autoMedNote').hidden = true;
+    state.areasShop = []; pintarAreas();
+    shopFotos = []; pintarGaleria(); shopNota('', ''); $('shopRef').value = '';
     $('photoThumb').innerHTML = '📷';
     $('photoTxt').innerHTML = 'Elegir foto del producto<small>JPG o PNG · se recomienda recortada al producto</small>';
     photoName = '';
@@ -6233,6 +6732,9 @@ window.__bocetoRestore = data => {
     $('rulerToggle').disabled = false;
     syncRulerBtn();
     $('rulerCm').value = data.rulerCm || '';
+    $('prodMedidas').value = data.prodMedidas || '';
+    state.auto = data.auto || null; $('autoMedNote').hidden = true;
+    state.areasShop = Array.isArray(data.areasShop) ? data.areasShop : []; pintarAreas();
     state.lockAspect = !!data.lockAspect; syncLockUI();
     state.unirLogos = typeof data.unirLogos === 'boolean' ? data.unirLogos : undefined;
     $('technique').value = data.technique || '';
