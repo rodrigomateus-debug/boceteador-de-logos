@@ -202,6 +202,9 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
    etiqueta arriba) */
 #bocetoModal #zone{position:absolute;border:2px solid var(--sheet-accent);background:color-mix(in srgb, var(--sheet-accent) 16%, transparent);border-radius:4px;cursor:move;z-index:2;box-shadow:0 0 0 1px var(--formas-navy), 0 0 0 9999px rgba(11,11,35,.14)} /* el filo azul marino: se ve también sobre un producto lima */
 #bocetoModal #zone .zoneLbl{position:absolute;left:calc(-2px/var(--Z));top:100%;background:var(--sheet-accent);color:var(--formas-navy);font-size:calc(10.5px/var(--Z));font-weight:700;padding:calc(2px/var(--Z)) calc(8px/var(--Z));border-radius:0 0 calc(6px/var(--Z)) calc(6px/var(--Z));white-space:nowrap;pointer-events:none;font-variant-numeric:tabular-nums}
+#bocetoModal #zone.excede{border-color:#F5A623}
+#bocetoModal #zone.excede .zoneLbl{background:#FFC24D}
+#bocetoModal #zoneRef .val{font-size:12px;color:var(--text-muted)}
 #bocetoModal #zone.lbl-arriba .zoneLbl{top:auto;bottom:100%;border-radius:calc(6px/var(--Z)) calc(6px/var(--Z)) 0 0}
 #bocetoModal #zone.no-dim{box-shadow:none}
 #bocetoModal .logoItem{position:absolute;cursor:move;z-index:4}
@@ -221,7 +224,7 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .ruler-handle{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;border:3.5px solid var(--formas-navy);translate:-50% -50%;pointer-events:auto;cursor:grab;box-shadow:0 1px 5px rgba(11,11,35,.35);touch-action:none}
 #bocetoModal #rulerLabel{position:absolute;translate:-50% -145%;background:var(--formas-navy);color:#fff;font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:999px;white-space:nowrap;pointer-events:auto;cursor:move;font-variant-numeric:tabular-nums}
 /* medición automática: el contorno del producto que encontró "Medir solo" */
-#bocetoModal #autoRect{position:absolute;border:2px dashed var(--medida);border-radius:3px;pointer-events:none;z-index:3}
+#bocetoModal #autoRect{position:absolute;border:2px dashed var(--medida);border-radius:3px;pointer-events:none;z-index:1} /* debajo del área: donde se tocan, se agarra el área */
 #bocetoModal #autoRect span{position:absolute;left:-2px;top:-2px;translate:0 -100%;background:var(--medida);color:#fff;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px 6px 0 0;white-space:nowrap;font-variant-numeric:tabular-nums}
 #bocetoModal #autoRect.label-in span{translate:0 0;border-radius:0 0 6px 0}
 /* manijas del contorno: se ajusta a los bordes reales del producto y la escala se recalcula */
@@ -1182,8 +1185,10 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11.5px">Tocá una y se marca a medida real sobre la foto; después la podés mover. Las del proveedor se eligen tocando su foto.</small>
         </div>
         <div class="readout" id="zoneReadout" hidden>
-          <div class="row"><span class="label">Área de impresión</span><span class="val num" id="zoneSizeOut">—</span></div>
+          <div class="row"><span class="label">Área de impresión<i class="infoIco" tabindex="0" title="Si quedó mal puesta, arrastrala desde adentro: se mueve sin cambiar de tamaño. Desde las manijas cambia su tamaño, y con él su medida; la medida del producto no cambia.">i</i></span><span class="val num" id="zoneSizeOut">—</span></div>
+          <div class="row" id="zoneRef" hidden><span class="label" id="zoneRefLbl">Sugerida</span><span class="val num"><span id="zoneRefOut"></span> · <button type="button" class="linkBtn" id="zoneRefBtn">Volver a la sugerida</button></span></div>
         </div>
+        <div class="note mal" id="zoneLimNote" hidden>⚠ <span id="zoneLimTxt"></span></div>
         <div class="note" id="areaNote" hidden><span id="areaNoteIco"></span> <span id="areaNoteTxt"></span></div>
         <div id="guardarMedidaBox" hidden>
           <button class="btn btn-secondary" type="button" id="guardarMedidaBtn" style="margin-top:10px" title="De acá en adelante, todos los que traigan este producto lo ven así">💾 Guardar medida y área para todos</button>
@@ -4689,6 +4694,12 @@ $('frameWrap').addEventListener('wheel', e => {
 }, { passive: false });
 
 /* ---------- alineación rápida del logo en el área ---------- */
+$('zoneRefBtn').addEventListener('click', () => {
+  const zs = state.zonaSug;
+  if(!zs) return;
+  state.zone = { x: zs.x, y: zs.y, w: zs.w, h: zs.h };
+  render();
+});
 $('alignH').addEventListener('click', () => {
   const L = selLogo();
   if(!L || !state.zone) return;
@@ -4735,11 +4746,20 @@ function render(){
     const k = cmPerPx(), tz = tecnicaElegida();
     $('zoneLbl').textContent = 'Área de impresión' + (tz ? ' · ' + tz : '') + (k ? ' · ' + fmtPair(z.w*FW*k, z.h*FH*k) : '');
     zoneEl.classList.toggle('lbl-arriba', z.y + z.h > 0.93); // abajo no entra: la etiqueta va arriba
+    const zs = state.zonaSug, cambio = !!(zs && k && (Math.abs(zs.w - z.w) > 0.003 || Math.abs(zs.h - z.h) > 0.003));
+    $('zoneRef').hidden = !cambio;
+    if(cambio){ $('zoneRefLbl').textContent = 'Sugerida (' + zs.de + ')'; $('zoneRefOut').textContent = fmtPair(zs.w*FW*k, zs.h*FH*k); }
+    const fA = fotoShopActual ? shopFotos[fotoShopActual.i] : null;
+    const limZ = k && tz ? limiteDe(tz, fA && fA.areas && fA.areas.find(a => a.n === state.areaNombre)) : null;
+    const pasaZ = !!(limZ && ((limZ.w && z.w*FW*k > limZ.w*1.02 + 0.05) || (limZ.h && z.h*FH*k > limZ.h*1.02 + 0.05)));
+    $('zoneLimNote').hidden = !pasaZ;
+    if(pasaZ) $('zoneLimTxt').textContent = 'El área es más grande de lo que imprime ' + tz + ' (hasta ' + textoLimite(limZ) + ' según ' + limZ.de + '). Achicala o volvé a la sugerida.';
+    zoneEl.classList.toggle('excede', pasaZ);
     $('zoneReadout').hidden = false;
     $('zoneSizeOut').textContent = k
       ? fmtPair(z.w*FW*k, z.h*FH*k)
       : (state.mode === 'logo' ? '—' : 'usá la regla para ver la medida');
-  } else { zoneEl.hidden = true; $('zoneReadout').hidden = true; }
+  } else { zoneEl.hidden = true; $('zoneReadout').hidden = true; $('zoneLimNote').hidden = true; }
 
   state.logos.forEach((l,i) => {
     Object.assign(l.el.style,{left:l.x*100+'%',top:l.y*100+'%',width:l.w*100+'%',height:l.h*100+'%'});
@@ -4950,7 +4970,7 @@ function loadPhotoSrc(url, name, opts){
       $('logoInput').value = '';
     }
     state.ruler = { x1:.08, y1:.5, x2:.92, y2:.5 };
-    $('rulerCm').value = ''; escalaDeArea = false; // la escala era de la foto anterior
+    $('rulerCm').value = ''; escalaDeArea = false; state.zonaSug = null; // la escala y el área eran de la foto anterior
     state.rulerVisible = true;
     state.auto = null; $('autoMedNote').hidden = true; // la medición automática era de la foto anterior
     if(!medidaEditada){ $('prodAncho').value = ''; $('prodAlto').value = ''; }
@@ -5565,6 +5585,9 @@ function areaNota(tipo, ico, txt){
   $('areaNoteIco').textContent = ico;
   $('areaNoteTxt').textContent = txt || '';
 }
+/* el área que se sugirió (del proveedor, de la descripción, estimada o guardada): si después se agranda o
+   se achica, se ve contra qué y se puede volver */
+function fijarSugerida(de){ state.zonaSug = state.zone ? Object.assign({}, state.zone, { de }) : null; }
 function ponerZona(m, r, nombre){
   state.zone = { x: r.x/m.W, y: r.y/m.H, w: r.w/m.W, h: r.h/m.H };
   state.areaNombre = nombre;
@@ -5591,6 +5614,7 @@ function aplicarAreaSugerida(pedida){
     if(r.x !== undefined){
       ponerZona(m, r, frente.nombre);
       const extra = limitarZona(lim, tec);
+      fijarSugerida('de la descripción');
       areaNota(r.limpia && !otra ? 'ok' : '', r.limpia && !otra ? '✓' : '⚠', 'Área sugerida: ' + frente.nombre + ' · ' + fmtPair(frente.w, frente.h)
         + ' (de la descripción del shop)' + (r.limpia ? ', en una parte lisa del producto.' : '. Quedó tocando algún borde (costura, banda, manija): revisala.')
         + extra + otra + ' Movela o ajustala si hace falta y guardala.');
@@ -5607,6 +5631,7 @@ function aplicarAreaSugerida(pedida){
   if(!r){ areaNota('', 'ℹ', 'No encontré una parte lisa para sugerir el área: marcala a mano.'); return; }
   ponerZona(m, r, 'Área estimada');
   const extra = limitarZona(lim, tec);
+  fijarSugerida('estimada');
   areaNota('', '✎', 'Área estimada (la descripción no trae el área de impresión): ' + fmtPair(r.w*m.cmPx, r.h*m.cmPx)
     + ' en la parte lisa del producto.' + extra + otra + ' Ajustala a lo que corresponda y guardala: la próxima vez sale así.');
 }
@@ -5824,6 +5849,7 @@ function aplicarAreaProveedor(a, tec){
   if(es360(tec) || AREA_360.test(a.n)) txt += ' 360°: en la foto se ve desplegada; en el producto envuelve todo el contorno.';
   if(a.otroColor) txt += ' La foto del área es de otro color del producto.';
   areaNota(tec && !t ? 'mal' : 'ok', tec && !t ? '⚠' : '✓', txt + ' Movela o ajustala si hace falta y guardala.');
+  fijarSugerida('del proveedor');
   setStepStates(); render();
 }
 function ponerZonaGuardada(zg, tec){
@@ -5835,6 +5861,7 @@ function ponerZonaGuardada(zg, tec){
   areaNota('ok', '💾', 'Área guardada' + (tec ? ' para ' + tec : '') + ' por ' + quienCuando(zg) + (zg.area ? ' (' + zg.area + ')' : '') + '.'
     + extra + ' Si hace falta, ajustala y guardala de nuevo.');
   guardadaNota('ok', '💾', 'Esta foto usa la medida y el área guardadas' + (tec ? ' para ' + tec : '') + '.', true);
+  fijarSugerida('guardada');
   setStepStates(); render();
 }
 
@@ -5977,6 +6004,7 @@ function marcarAreaShop(a){
   if(r && r.x !== undefined){
     ponerZona(m, r, a.nombre);
     const extra = limitarZona(limiteDe(tecnicaElegida(), null), tecnicaElegida());
+    fijarSugerida('de la descripción');
     areaNota(r.limpia ? 'ok' : '', r.limpia ? '✓' : '⚠', a.nombre + ' · ' + fmtPair(a.w, a.h)
       + (r.limpia ? ': ubicada en una parte lisa del producto.' : ': quedó tocando algún borde, revisala.') + extra + ' Movela si hace falta y guardala.');
     return;
@@ -5987,6 +6015,7 @@ function marcarAreaShop(a){
   const cx = A ? A.x + A.w/2 : .5, cy = A ? A.y + A.h/2 : .5;
   state.zone = { x:clamp(cx - w/2, 0, 1-w), y:clamp(cy - h/2, 0, 1-h), w, h };
   state.areaNombre = a.nombre;
+  fijarSugerida('de la descripción');
   areaNota('', 'ℹ', a.nombre + ' · ' + fmtPair(a.w, a.h) + ': marcada en el centro; llevala a su lugar.');
   ocultarReglaSiHayLogo();
   exitDrawMode(); setStepStates(); render();
@@ -7502,7 +7531,7 @@ frame.addEventListener('pointerdown', e => {
   if(state.drawMode){
     active = { mode:'draw', startPx:px };
     state.zone = { x:px.x/FW, y:px.y/FH, w:0, h:0 };
-    state.areaNombre = '';
+    state.areaNombre = ''; state.zonaSug = null; // marcada a mano
     areaNota('', '', '');
     frame.setPointerCapture(e.pointerId);
     e.preventDefault();

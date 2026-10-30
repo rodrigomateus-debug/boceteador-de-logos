@@ -152,6 +152,13 @@ Los 34 nombres de técnica de Zecat («Tampografia Boligrafos», «Transfer DTF
 Gorras», «Laser CO2»…) caen en estas con `canonTecnica()`. Las plantillas viejas con
 «Serigrafía» abren como «Serigrafía plana».
 
+**El área se corrige sin perder la referencia.** Si quedó mal puesta, se
+arrastra desde adentro (no cambia de tamaño). Si se agranda o se achica, cambia su
+medida (la del producto no: la escala es la misma) y abajo queda la sugerida («del
+proveedor», «de la descripción», «estimada» o «guardada») con «Volver a la
+sugerida». Si pasa de lo que imprime la técnica, el área se marca en ámbar y lo
+avisa. Donde el área y el recuadro del producto se tocan, se agarra el área.
+
 **Avisos.** Si el logo es más grande que el área o que lo que imprime la técnica,
 o se sale del área, el paso 3 lo avisa (con la medida de cada uno). Con una
 rotativa, el área real (por ejemplo, «Área 360° (envuelve el producto): 26,1 ×
