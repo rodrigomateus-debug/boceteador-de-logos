@@ -36,11 +36,13 @@ mouse o con ↑ ↓ y Enter). Al elegirlo:
    con contorno no se dibuja; queda para las fotos sin contorno: propias o sin
    medidas en la descripción). El contorno queda a la vista junto con el área de
    impresión, para ver enseguida si algo no cierra; al cargar el logo se oculta
-   solo y queda solo el área («Ver la medida» lo vuelve a mostrar). Con contorno
-   hay un solo campo, **«Medida real del producto»**: si se corrige (por ejemplo,
-   de 29 × 9 a 30 × 9 cm), la escala se recalcula sobre ese mismo contorno; «Medir
-   solo» lo vuelve a buscar en la foto. El campo de la regla aparece solo sin
-   contorno.
+   solo y queda solo el área («Ver la medida» lo vuelve a mostrar).
+   **«Medida real del producto»** son dos campos, **ancho × alto**, que muestran lo
+   que mide el contorno; si uno no es el real se corrige y la escala se ajusta a
+   ese lado. Abajo, como referencia, **«Medida del proveedor: 29 × 9 cm»** con
+   «✓ coincide» o «⚠ difiere 6,9 %». Sin contorno (foto propia), se anotan el
+   ancho y el alto y «Medir solo» lo busca; ahí aparece también el campo de la
+   regla.
    **El contorno se ajusta**: si el detector agarró mal los bordes (la birome de
    costado, la tapa, una sombra), se arrastran sus esquinas o lados hasta los
    bordes reales y la escala se recalcula con la medida del producto sobre ese
