@@ -32,7 +32,10 @@ mouse o con ↑ ↓ y Enter). Al elegirlo:
    **de frente**;
 3. al tocar «Creá el boceto con tu logo», el boceteador abre ya en «Sé la medida
    del producto», con esa foto puesta, **la regla calibrada sola** de borde a borde
-   del lado largo y el contorno del producto marcado en verde. Arriba quedan las
+   del lado largo (al costado del producto, como una cota) y el contorno del
+   producto marcado en verde con su medida. Quedan a la vista junto con el área de
+   impresión, para ver enseguida si algo no cierra; al cargar el logo se ocultan
+   solos y queda solo el área («Medir de nuevo» los vuelve a mostrar). Arriba quedan las
    fotos del shop para cambiarla (✓ = de frente, se mide sola; ~ = con dudas; sin
    marca = sirve para mostrar, no para medir; borde punteado = del proveedor), y
    se puede subir una propia;

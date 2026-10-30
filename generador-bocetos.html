@@ -5158,6 +5158,23 @@ const MOTIVO_AUTO = {
   error: 'No pude leer la foto para medirla. Ubicá la regla a mano.',
 };
 
+/* la regla va al costado del producto, como una cota de plano: mide lo mismo y no tapa el área
+   de impresión. Si no hay lugar de ningún lado (el producto llena la foto), va por el medio */
+function reglaAlLado(r, vertical){
+  const m = 0.03;
+  if(vertical){
+    const x = r.x + r.w + m <= 0.98 ? r.x + r.w + m : r.x - m >= 0.02 ? r.x - m : r.x + r.w/2;
+    return { x1:x, y1:r.y, x2:x, y2:r.y + r.h };
+  }
+  const y = r.y + r.h + m <= 0.98 ? r.y + r.h + m : r.y - m >= 0.02 ? r.y - m : r.y + r.h/2;
+  return { x1:r.x, y1:y, x2:r.x + r.w, y2:y };
+}
+/* la regla y el contorno del producto quedan a la vista (así se ve enseguida si algo no cierra)
+   hasta que se carga el logo: desde ahí solo importa el área de impresión */
+function ocultarReglaSiHayLogo(){
+  if(state.logos.length && state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); }
+}
+
 /* "📐 Medir solo": busca el producto en la foto del lienzo y deja la regla calibrada */
 function autoMedir(){
   if(frame.hidden) return null;
@@ -5182,9 +5199,7 @@ function autoMedir(){
   state.auto = A;
   /* la regla va sobre el lado largo, justo de borde a borde (más píxeles = menos error) */
   const vertical = (q.y1-q.y0) >= (q.x1-q.x0);
-  state.ruler = vertical
-    ? { x1:A.x + A.w/2, y1:A.y, x2:A.x + A.w/2, y2:A.y + A.h }
-    : { x1:A.x, y1:A.y + A.h/2, x2:A.x + A.w, y2:A.y + A.h/2 };
+  state.ruler = reglaAlLado(A, vertical);
   $('rulerCm').value = String(vertical ? A.cmH : A.cmW);
   state.rulerVisible = true; $('rulerToggle').disabled = false; syncRulerBtn();
   if(state.drawMode) exitDrawMode(); // primero se mira la regla; después, «Marcar área»
@@ -5329,7 +5344,7 @@ function areaNota(tipo, ico, txt){
 function ponerZona(m, r, nombre){
   state.zone = { x: r.x/m.W, y: r.y/m.H, w: r.w/m.W, h: r.h/m.H };
   state.areaNombre = nombre;
-  if(state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); } // igual que al dibujar el área
+  ocultarReglaSiHayLogo();
   exitDrawMode(); setStepStates(); render();
 }
 /* al abrir un producto, medir una foto o elegir la técnica: el área ya queda puesta.
@@ -5535,9 +5550,7 @@ function aplicarEscalaProveedor(f){
       k = dif(kW) <= dif(kH) ? kW : kH;
       if(dif(k) > 0.06){ k = (vertical ? prod.desc.h / ph : prod.desc.w / pw); deDesc = true; }
     }
-    state.ruler = vertical
-      ? { x1:(prod.x0 + prod.x1)/2, y1:prod.y0, x2:(prod.x0 + prod.x1)/2, y2:prod.y1 }
-      : { x1:prod.x0, y1:(prod.y0 + prod.y1)/2, x2:prod.x1, y2:(prod.y0 + prod.y1)/2 };
+    state.ruler = reglaAlLado({ x:prod.x0, y:prod.y0, w:prod.x1 - prod.x0, h:prod.y1 - prod.y0 }, vertical);
     $('rulerCm').value = String(Math.round((vertical ? ph : pw)*k*100)/100);
     /* sin medidas, la silueta puede sumar la sombra: se informa solo el largo, donde va la regla */
     state.auto = prod.desc ? { x:prod.x0, y:prod.y0, w:prod.x1 - prod.x0, h:prod.y1 - prod.y0, cmW:pw*k, cmH:ph*k, conf:prod.conf, desvio:prod.desvio } : null;
@@ -5552,8 +5565,7 @@ function aplicarEscalaProveedor(f){
       + (a.dudosa ? ' Ojo: el recuadro del área no guarda la proporción de sus cm; revisá la regla con la medida del producto.' : ' Las medidas del área y del logo ya son reales.')];
   } else {
     /* sin el contorno del producto (o en una foto de 360°): la regla, sobre el área */
-    state.ruler = horizontal ? { x1:z.x, y1:z.y + z.h/2, x2:z.x + z.w, y2:z.y + z.h/2 }
-      : { x1:z.x + z.w/2, y1:z.y, x2:z.x + z.w/2, y2:z.y + z.h };
+    state.ruler = reglaAlLado(z, !horizontal);
     $('rulerCm').value = String(horizontal ? a.cm[0] : a.cm[1]);
     nota = a.dudosa
       ? ['', '⚠', 'Escala del proveedor con dudas: el área ' + area + ' no guarda la proporción de su recuadro. La regla va sobre el ' + (horizontal ? 'ancho' : 'alto') + ' del área: revisala con la medida del producto.']
@@ -5568,7 +5580,7 @@ function aplicarAreaProveedor(a, tec){
   if(!a) return;
   state.zone = aFoto(a.z);
   state.areaNombre = a.n;
-  if(state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); }
+  ocultarReglaSiHayLogo();
   exitDrawMode();
   const t = tec && tecDeArea(a, tec), admite = (a.tec || []).map(x => x[0]);
   let txt = 'Área del proveedor: ' + a.n + ' · ' + fmtPair(a.cm[0], a.cm[1]) + (t ? ', para ' + tec : '') + '.' + limitarZona(limiteDe(tec, a), tec);
@@ -5582,7 +5594,7 @@ function aplicarAreaProveedor(a, tec){
 function ponerZonaGuardada(zg, tec){
   state.zone = { x: zg.zona.x, y: zg.zona.y, w: zg.zona.w, h: zg.zona.h };
   state.areaNombre = zg.area || '';
-  if(state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); }
+  ocultarReglaSiHayLogo();
   exitDrawMode();
   const extra = limitarZona(limiteDe(tec, null), tec);
   areaNota('ok', '💾', 'Área guardada' + (tec ? ' para ' + tec : '') + ' por ' + quienCuando(zg) + (zg.area ? ' (' + zg.area + ')' : '') + '.'
@@ -5741,7 +5753,7 @@ function marcarAreaShop(a){
   state.zone = { x:clamp(cx - w/2, 0, 1-w), y:clamp(cy - h/2, 0, 1-h), w, h };
   state.areaNombre = a.nombre;
   areaNota('', 'ℹ', a.nombre + ' · ' + fmtPair(a.w, a.h) + ': marcada en el centro; llevala a su lugar.');
-  if(state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); } // igual que al dibujar el área
+  ocultarReglaSiHayLogo();
   exitDrawMode(); setStepStates(); render();
 }
 
@@ -5908,7 +5920,7 @@ function usarFotoShop(i, opts){
       else if(f.areas && f.areas.length) aplicarEscalaProveedor(f);
       else if(medidasDeTexto($('prodMedidas').value, 'cm').length >= 2) autoMedir();
       aplicarAreaSugerida(opts.area);
-      if(previos) reubicarLogos(previos);
+      if(previos){ reubicarLogos(previos); ocultarReglaSiHayLogo(); }
       galeriaNota(shopResumen);
       render();
     },
@@ -6566,6 +6578,7 @@ function loadLogoSrc(url, name, isJpg, file){
       logo.h = (logo.w*FW / aspect) / FH;
     }
     pendingAdd = false;
+    if(state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); } // con el logo, solo queda el área
     if(file) guardarOriginalDelLogo(logo, file);
     rebuildLogo(logo, () => { syncLogoUI(); setStepStates(); render(); });
   };
