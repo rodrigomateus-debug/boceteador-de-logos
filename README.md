@@ -32,8 +32,13 @@ mouse o con ↑ ↓ y Enter). Al elegirlo:
    **de frente**;
 3. al tocar «Creá el boceto con tu logo», el boceteador abre ya en «Sé la medida
    del producto», con esa foto puesta, **la escala calibrada sola** y el producto
-   marcado con el **recuadro verde** y su medida. **Hay una sola forma de medir:
-   el recuadro** (no hay regla aparte). Queda a la vista junto con el área de
+   marcado con el **recuadro azul punteado** y su medida. **Hay una sola forma de
+   medir: ese recuadro** (no hay regla aparte). Para que no se confunda con el área
+   de impresión, son bien distintos: la **medida del producto** es azul, punteada
+   fina como una cota, con manijas cuadradas y la etiqueta «📏 Medida del producto ·
+   8,79 × 27,53 cm» arriba; el **área de impresión** es lima, de línea continua con
+   relleno, manijas redondas y la etiqueta «Área de impresión · Grabado láser · 3,49
+   × 12,30 cm» abajo. En el panel, cada sección lleva su muestra del mismo color. Queda a la vista junto con el área de
    impresión, para ver enseguida si algo no cierra; al cargar el logo se oculta
    solo y queda solo el área («Ver la medida» lo vuelve a mostrar).
    **«Medida real del producto»** son dos campos, **↔ ancho × ↕ alto**, que muestran lo

@@ -196,7 +196,13 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 @keyframes bmHintPulse{0%,100%{box-shadow:0 4px 14px rgba(11,11,35,.35)}50%{box-shadow:0 0 0 6px rgba(142,224,33,.45), 0 4px 18px rgba(11,11,35,.4)}}
 /* el botón de dibujar área queda "encendido" mientras se dibuja */
 #bocetoModal #drawZoneBtn[aria-pressed="true"]{background:var(--formas-navy);color:#fff;border-color:var(--formas-navy)}
-#bocetoModal #zone{position:absolute;border:2px dashed var(--sheet-accent);border-radius:4px;cursor:move;z-index:2;box-shadow:0 0 0 9999px rgba(11,11,35,.14)}
+#bocetoModal{--medida:#1D6FE0}
+/* dos cosas distintas, que no se confundan: el ÁREA DE IMPRESIÓN (lima, línea continua, relleno, manijas
+   redondas, etiqueta abajo) y la MEDIDA DEL PRODUCTO (azul, punteada fina como una cota, manijas cuadradas,
+   etiqueta arriba) */
+#bocetoModal #zone{position:absolute;border:2px solid var(--sheet-accent);background:color-mix(in srgb, var(--sheet-accent) 16%, transparent);border-radius:4px;cursor:move;z-index:2;box-shadow:0 0 0 1px var(--formas-navy), 0 0 0 9999px rgba(11,11,35,.14)} /* el filo azul marino: se ve también sobre un producto lima */
+#bocetoModal #zone .zoneLbl{position:absolute;left:calc(-2px/var(--Z));top:100%;background:var(--sheet-accent);color:var(--formas-navy);font-size:calc(10.5px/var(--Z));font-weight:700;padding:calc(2px/var(--Z)) calc(8px/var(--Z));border-radius:0 0 calc(6px/var(--Z)) calc(6px/var(--Z));white-space:nowrap;pointer-events:none;font-variant-numeric:tabular-nums}
+#bocetoModal #zone.lbl-arriba .zoneLbl{top:auto;bottom:100%;border-radius:calc(6px/var(--Z)) calc(6px/var(--Z)) 0 0}
 #bocetoModal #zone.no-dim{box-shadow:none}
 #bocetoModal .logoItem{position:absolute;cursor:move;z-index:4}
 #bocetoModal .logoItem img{width:100%;height:100%;display:block;pointer-events:none}
@@ -215,8 +221,8 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .ruler-handle{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;border:3.5px solid var(--formas-navy);translate:-50% -50%;pointer-events:auto;cursor:grab;box-shadow:0 1px 5px rgba(11,11,35,.35);touch-action:none}
 #bocetoModal #rulerLabel{position:absolute;translate:-50% -145%;background:var(--formas-navy);color:#fff;font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:999px;white-space:nowrap;pointer-events:auto;cursor:move;font-variant-numeric:tabular-nums}
 /* medición automática: el contorno del producto que encontró "Medir solo" */
-#bocetoModal #autoRect{position:absolute;border:2px dashed var(--formas-green);border-radius:3px;pointer-events:none;z-index:3}
-#bocetoModal #autoRect span{position:absolute;left:-2px;top:-2px;translate:0 -100%;background:var(--formas-green);color:#fff;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px 6px 0 0;white-space:nowrap;font-variant-numeric:tabular-nums}
+#bocetoModal #autoRect{position:absolute;border:2px dashed var(--medida);border-radius:3px;pointer-events:none;z-index:3}
+#bocetoModal #autoRect span{position:absolute;left:-2px;top:-2px;translate:0 -100%;background:var(--medida);color:#fff;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px 6px 0 0;white-space:nowrap;font-variant-numeric:tabular-nums}
 #bocetoModal #autoRect.label-in span{translate:0 0;border-radius:0 0 6px 0}
 /* manijas del contorno: se ajusta a los bordes reales del producto y la escala se recalcula */
 /* la línea punteada se agarra para mover el contorno entero (sin deformarlo: la escala no cambia) */
@@ -225,7 +231,7 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #autoRect .ab.b{left:0;right:0;bottom:calc(-6px/var(--Z));height:calc(12px/var(--Z))}
 #bocetoModal #autoRect .ab.l{top:0;bottom:0;left:calc(-6px/var(--Z));width:calc(12px/var(--Z))}
 #bocetoModal #autoRect .ab.r{top:0;bottom:0;right:calc(-6px/var(--Z));width:calc(12px/var(--Z))}
-#bocetoModal #autoRect .ah{z-index:1;position:absolute;width:calc(11px/var(--Z));height:calc(11px/var(--Z));border-radius:calc(3px/var(--Z));background:#fff;border:calc(2px/var(--Z)) solid var(--formas-green);box-shadow:0 1px 3px rgba(11,11,35,.3);pointer-events:auto;touch-action:none;margin:calc(-6.5px/var(--Z)) 0 0 calc(-6.5px/var(--Z))}
+#bocetoModal #autoRect .ah{z-index:1;position:absolute;width:calc(11px/var(--Z));height:calc(11px/var(--Z));border-radius:calc(3px/var(--Z));background:#fff;border:calc(2px/var(--Z)) solid var(--medida);box-shadow:0 1px 3px rgba(11,11,35,.3);pointer-events:auto;touch-action:none;margin:calc(-6.5px/var(--Z)) 0 0 calc(-6.5px/var(--Z))}
 #bocetoModal #autoRect .ah.tl{left:0;top:0;cursor:nwse-resize}
 #bocetoModal #autoRect .ah.t{left:50%;top:0;cursor:ns-resize}
 #bocetoModal #autoRect .ah.tr{left:100%;top:0;cursor:nesw-resize}
@@ -250,6 +256,9 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .areaChip.otra{color:var(--text-muted)}
 #bocetoModal .areaChip[aria-pressed="true"]{border-color:var(--formas-navy);background:color-mix(in srgb, var(--formas-lime) 30%, #fff)}
 #bocetoModal .shopFoto b.area{background:var(--formas-navy)}
+#bocetoModal .sw{display:inline-block;width:14px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+#bocetoModal .sw-prod{border:1.5px dashed var(--medida)}
+#bocetoModal .sw-area{border:2px solid var(--sheet-accent);background:color-mix(in srgb, var(--sheet-accent) 30%, transparent)}
 #bocetoModal .medRow{align-items:flex-end;gap:8px}
 #bocetoModal .medX{font-weight:700;color:var(--text-muted);flex:none;padding-bottom:11px}
 #bocetoModal .miniLbl{display:block;font-size:11px;font-weight:700;color:var(--text-muted);margin:0 0 3px 2px}
@@ -358,7 +367,7 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #rulerLine i{width:calc(2.5px/var(--Z)); height:calc(12px/var(--Z))}
 #bocetoModal .ruler-handle{width:calc(18px/var(--Z)); height:calc(18px/var(--Z)); border-width:calc(3.5px/var(--Z))}
 #bocetoModal #rulerLabel{font-size:calc(11.5px/var(--Z)); padding:calc(4px/var(--Z)) calc(12px/var(--Z))}
-#bocetoModal #autoRect{border-width:calc(2px/var(--Z))}
+#bocetoModal #autoRect{border-width:calc(1.5px/var(--Z))}
 #bocetoModal #autoRect span{font-size:calc(10.5px/var(--Z)); padding:calc(2px/var(--Z)) calc(8px/var(--Z))}
 #bocetoModal #frame.panable{cursor:grab}
 #bocetoModal #frame.panable:active{cursor:grabbing}
@@ -1048,7 +1057,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           </div>
           <div id="frame" hidden>
             <img id="photo" alt="Producto">
-            <div id="zone" hidden>
+            <div id="zone" hidden><span class="zoneLbl" id="zoneLbl">Área de impresión</span>
               <span class="handle tl" data-corner="tl"></span><span class="handle tr" data-corner="tr"></span>
               <span class="handle bl" data-corner="bl"></span><span class="handle br" data-corner="br"></span>
             </div>
@@ -1121,7 +1130,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <input type="file" id="photoInput" accept="image/png,image/jpeg,image/webp" hidden>
         <div class="note" id="photoIaNote" hidden>✨ <span id="photoIaNoteTxt"></span> <button type="button" id="photoIaUndo">Volver a la original</button></div>
         <div class="field" id="rulerField">
-          <span class="label" style="letter-spacing:.08em">Medida real del producto</span>
+          <span class="label" style="letter-spacing:.08em"><i class="sw sw-prod"></i>Medida real del producto</span>
           <div class="field-row medRow" style="margin-top:0">
             <div class="field" style="margin-top:0">
               <span class="miniLbl">↔ Ancho</span>
@@ -1154,7 +1163,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
 
       <!-- Paso 2: área -->
       <div class="card step locked" id="step2">
-        <div class="step-head"><span class="step-num">2</span><h2>Área de impresión</h2></div>
+        <div class="step-head"><span class="step-num">2</span><h2><i class="sw sw-area"></i>Área de impresión</h2></div>
         <button class="btn btn-secondary" type="button" id="drawZoneBtn">Marcar área sobre la foto</button>
         <div id="areasShop" hidden>
           <span class="label" style="letter-spacing:.08em;display:block;margin-top:12px">Áreas de impresión</span>
@@ -1162,7 +1171,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11.5px">Tocá una y se marca a medida real sobre la foto; después la podés mover. Las del proveedor se eligen tocando su foto.</small>
         </div>
         <div class="readout" id="zoneReadout" hidden>
-          <div class="row"><span class="label">Área marcada</span><span class="val num" id="zoneSizeOut">—</span></div>
+          <div class="row"><span class="label">Área de impresión</span><span class="val num" id="zoneSizeOut">—</span></div>
         </div>
         <div class="note" id="areaNote" hidden><span id="areaNoteIco"></span> <span id="areaNoteTxt"></span></div>
         <div id="guardarMedidaBox" hidden>
@@ -4701,7 +4710,9 @@ function render(){
     const z = state.zone;
     zoneEl.hidden = false;
     Object.assign(zoneEl.style,{left:z.x*100+'%',top:z.y*100+'%',width:z.w*100+'%',height:z.h*100+'%'});
-    const k = cmPerPx();
+    const k = cmPerPx(), tz = tecnicaElegida();
+    $('zoneLbl').textContent = 'Área de impresión' + (tz ? ' · ' + tz : '') + (k ? ' · ' + fmtPair(z.w*FW*k, z.h*FH*k) : '');
+    zoneEl.classList.toggle('lbl-arriba', z.y + z.h > 0.93); // abajo no entra: la etiqueta va arriba
     $('zoneReadout').hidden = false;
     $('zoneSizeOut').textContent = k
       ? fmtPair(z.w*FW*k, z.h*FH*k)
@@ -4768,7 +4779,7 @@ function render(){
     Object.assign($('autoRect').style,{left:A.x*100+'%',top:A.y*100+'%',width:A.w*100+'%',height:A.h*100+'%'});
     $('autoRect').classList.toggle('label-in', A.y < 0.06);
     const kA = cmPerPx();
-    $('autoRectLbl').textContent = 'Producto · ' + (kA ? fmtPair(A.w*FW*kA, A.h*FH*kA) : 'anotá su ancho o su alto');
+    $('autoRectLbl').textContent = '📏 Medida del producto · ' + (kA ? fmtPair(A.w*FW*kA, A.h*FH*kA) : 'anotá su ancho o su alto');
   }
   $('autoMedirBtn').disabled = frame.hidden;
   const refM = medidasDeTexto($('prodMedidas').value, 'cm'), kM = A ? cmPerPx() : null;
@@ -4989,13 +5000,13 @@ $('photoIaUndo').addEventListener('click', () => {
 
 /* con el contorno del producto, la medida es el contorno (la regla mediría lo mismo, al lado):
    la regla queda para las fotos sin contorno (propias o sin medidas en la descripción) */
-/* una sola forma de medir: el recuadro verde es el producto y su ancho o su alto real dan la escala
+/* una sola forma de medir: el recuadro azul es el producto y su ancho o su alto real dan la escala
    (la regla queda por dentro). Sin recuadro solo en las fotos de 360°, donde la escala es el área */
 function syncRulerBtn(){
   $('rulerToggle').textContent = state.rulerVisible ? 'Ocultar medida' : 'Ver la medida';
   $('rulerToggle').disabled = !state.auto;
   $('rulerLbl').hidden = true; $('rulerCmField').hidden = true;
-  $('rulerHint').textContent = 'El recuadro verde es el producto: llevá sus bordes a los del producto con las manijas (o movelo agarrando la línea) y, si la medida no es la real, corregí el ancho o el alto.';
+  $('rulerHint').textContent = 'El recuadro azul punteado es el producto (no el área de impresión, que es la verde del paso 2): llevá sus bordes a los del producto con las manijas, o movelo agarrando la línea, y si la medida no es la real corregí el ancho o el alto.';
 }
 $('rulerCm').addEventListener('input', () => {
   /* si se borra la medida en pleno dibujo, el modo dibujo se cancela;
@@ -5227,10 +5238,10 @@ function autoNota(tipo, ico, txt){
   $('autoMedTxt').textContent = txt;
 }
 const MOTIVO_AUTO = {
-  fondo: 'La foto no tiene el fondo liso: no lo puedo medir solo. Llevá el recuadro verde a los bordes del producto.',
-  recorte: 'El producto toca los bordes de la foto: no lo puedo medir solo. Llevá el recuadro verde a los bordes del producto.',
-  'sin-producto': 'No encontré el producto en la foto: llevá el recuadro verde a sus bordes.',
-  error: 'No pude leer la foto para medirla: llevá el recuadro verde a los bordes del producto.',
+  fondo: 'La foto no tiene el fondo liso: no lo puedo medir solo. Llevá el recuadro azul a los bordes del producto.',
+  recorte: 'El producto toca los bordes de la foto: no lo puedo medir solo. Llevá el recuadro azul a los bordes del producto.',
+  'sin-producto': 'No encontré el producto en la foto: llevá el recuadro azul a sus bordes.',
+  error: 'No pude leer la foto para medirla: llevá el recuadro azul a los bordes del producto.',
 };
 
 /* la regla va al costado del producto, como una cota de plano: mide lo mismo y no tapa el área
@@ -5244,7 +5255,7 @@ function reglaAlLado(r, vertical){
   const y = r.y + r.h + m <= 0.98 ? r.y + r.h + m : r.y - m >= 0.02 ? r.y - m : r.y + r.h/2;
   return { x1:r.x, y1:y, x2:r.x + r.w, y2:y };
 }
-/* el contorno verde se ajusta a mano a los bordes reales del producto: la escala sale de la
+/* el recuadro azul del producto se ajusta a mano a los bordes reales del producto: la escala sale de la
    medida del producto (la de la descripción) sobre ese contorno, y la regla lo acompaña */
 function recalibrarContorno(){
   const A = state.auto;
@@ -5338,7 +5349,7 @@ function autoMedir(){
   ultimaMedicion = r.ok ? Object.assign(r, { src: photo.src }) : null;
   if(!r.ok || r.conf === 'baja'){
     autoNota('mal', '⚠', MOTIVO_AUTO[r.motivo] || ('No pude medirlo con seguridad (puede estar en perspectiva, abierto o de costado): '
-      + 'llevá el recuadro verde a los bordes del producto o probá con la foto de frente.'));
+      + 'llevá el recuadro azul a los bordes del producto o probá con la foto de frente.'));
     asegurarRecuadro();
     /* con la medida de la descripción, el lado largo del recuadro ya da una escala para empezar */
     if(state.auto && !state.auto.ancla && !cmPerPx()){ state.auto.desc = { w: Math.min(...dims), h: Math.max(...dims) }; recalibrarContorno(); }
