@@ -256,6 +256,9 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .areaChip.otra{color:var(--text-muted)}
 #bocetoModal .areaChip[aria-pressed="true"]{border-color:var(--formas-navy);background:color-mix(in srgb, var(--formas-lime) 30%, #fff)}
 #bocetoModal .shopFoto b.area{background:var(--formas-navy)}
+#bocetoModal .infoIco{display:inline-grid;place-items:center;width:15px;height:15px;margin-left:6px;border-radius:50%;border:1.5px solid var(--text-muted);color:var(--text-muted);font:700 10px/1 var(--font-primary);font-style:normal;text-transform:none;letter-spacing:0;cursor:help;vertical-align:1px}
+#bocetoModal .infoIco:hover,#bocetoModal .infoIco:focus{border-color:var(--formas-navy);color:var(--formas-navy);outline:none}
+#bocetoModal .medFalta{margin-top:8px;padding:8px 11px;border-radius:10px;background:#FFF6DB;color:#5C4300;font-size:12.5px;line-height:1.4}
 #bocetoModal .sw{display:inline-block;width:14px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:6px}
 #bocetoModal .sw-prod{border:1.5px dashed var(--medida)}
 #bocetoModal .sw-area{border:2px solid var(--sheet-accent);background:color-mix(in srgb, var(--sheet-accent) 30%, transparent)}
@@ -1115,17 +1118,17 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <div class="card step" id="step1">
         <div class="step-head"><span class="step-num">1</span><h2>Foto del producto</h2></div>
         <div class="field" id="areaTecField" style="margin-top:0;margin-bottom:12px">
-          <span class="label" style="letter-spacing:.08em">Técnica de aplicación</span>
+          <span class="label" style="letter-spacing:.08em">Técnica de aplicación<i class="infoIco" tabindex="0" title="Elegila primero: según la técnica cambian la foto y el área de impresión (una rotativa envuelve el producto; la tampografía entra en pocos cm). Las que van para este producto vienen arriba, con ✓.">i</i></span>
           <select id="technique">
             <option value="">Elegí la técnica…</option>
             <option value="__otra">Otra…</option>
           </select>
           <input type="text" id="techniqueOther" placeholder="Escribí la técnica" style="margin-top:8px" hidden>
           <div class="note" id="tecAviso" hidden>⚠ <span id="tecAvisoTxt"></span></div>
-          <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11.5px">Elegila primero: según la técnica cambian la foto y el área de impresión (una rotativa envuelve el producto; la tampografía entra en pocos cm). <button type="button" class="linkBtn" id="limitesBtn">Límites por técnica</button></small>
+          <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11.5px"><button type="button" class="linkBtn" id="limitesBtn">Límites por técnica</button></small>
         </div>
         <div class="field" id="shopGaleria" style="margin-top:0" hidden>
-          <span class="label" style="letter-spacing:.08em">Fotos de formas.shop</span>
+          <span class="label" style="letter-spacing:.08em">Fotos de formas.shop<i class="infoIco" id="shopFotosInfo" tabindex="0" hidden>i</i></span>
           <div class="shopFotos" id="shopFotos"></div>
           <div class="note" id="shopFotosNote" hidden>🛍 <span id="shopFotosNoteTxt"></span></div>
           <div class="or-sep" style="margin:12px 0 2px">— o subí otra —</div>
@@ -1137,8 +1140,8 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <input type="file" id="photoInput" accept="image/png,image/jpeg,image/webp" hidden>
         <div class="note" id="photoIaNote" hidden>✨ <span id="photoIaNoteTxt"></span> <button type="button" id="photoIaUndo">Volver a la original</button></div>
         <div class="field" id="rulerField">
-          <span class="label" style="letter-spacing:.08em"><i class="sw sw-prod"></i>Medida real del producto</span>
-          <div class="field-row medRow" style="margin-top:0">
+          <span class="label" style="letter-spacing:.08em"><i class="sw sw-prod"></i>Medida real del producto<i class="infoIco" id="medInfo" tabindex="0">i</i></span>
+          <div class="field-row medRow" id="medRow" style="margin-top:0">
             <div class="field" style="margin-top:0">
               <span class="miniLbl">↔ Ancho</span>
               <div class="suffix-wrap"><input type="text" inputmode="decimal" id="prodAncho" placeholder="Ancho" autocomplete="off" aria-label="Ancho real del producto"><span class="suffix">cm</span></div>
@@ -1152,6 +1155,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
               <button class="btn btn-secondary" type="button" id="autoMedirBtn" style="padding:9px 12px" disabled title="Busca el producto en la foto y lleva el recuadro a sus bordes">📐 Medir solo</button>
             </div>
           </div>
+          <div class="medFalta" id="medFalta" hidden>↑ Anotá cuánto mide el producto de <b>ancho</b> o de <b>alto</b> (con uno alcanza) y llevá el recuadro azul a sus bordes.</div>
           <input type="hidden" id="prodMedidas"><!-- la de la descripción del shop (o la guardada): la referencia -->
           <div class="refMedida" id="refMedida" hidden><span id="refMedidaLbl">Medida del proveedor</span> <b id="refMedidaTxt" title="ancho × alto"></b> <i id="refMedidaEstado" hidden></i></div>
           <div class="note" id="autoMedNote" hidden><span id="autoMedIco">📐</span> <span id="autoMedTxt"></span></div>
@@ -1164,7 +1168,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
               <button class="btn btn-secondary" type="button" id="rulerToggle" style="padding:9px 12px" disabled>Ocultar regla</button>
             </div>
           </div>
-          <small id="rulerHint" style="color:var(--text-muted);font-size:11.5px">Llevá los extremos de la regla de lado a lado del producto en la foto y anotá cuánto mide esa distancia en la vida real. Con eso las medidas del logo se calculan solas.</small>
+          <small id="rulerHint" hidden style="color:var(--text-muted);font-size:11.5px">Llevá los extremos de la regla de lado a lado del producto en la foto y anotá cuánto mide esa distancia en la vida real. Con eso las medidas del logo se calculan solas.</small>
         </div>
       </div>
 
@@ -4856,6 +4860,10 @@ function render(){
   $('logoHcm').classList.toggle('need', state.mode === 'logo' && !!L2 && !(L2.cmH > 0));
   const faltaEscala = state.mode === 'product' && !frame.hidden && !cmPerPx();
   $('prodAncho').classList.toggle('need', faltaEscala); $('prodAlto').classList.toggle('need', faltaEscala);
+  $('medFalta').hidden = !faltaEscala || escalaDeArea;
+  /* foto de 360°: la escala es el área del proveedor; el ancho y el alto del producto no hacen falta */
+  $('medRow').hidden = escalaDeArea && !frame.hidden;
+  $('medInfo').hidden = escalaDeArea && !frame.hidden;
   setStepStates();
   sincronizarTecnica();
 }
@@ -5023,9 +5031,9 @@ $('photoIaUndo').addEventListener('click', () => {
    (la regla queda por dentro). Sin recuadro solo en las fotos de 360°, donde la escala es el área */
 function syncRulerBtn(){
   $('rulerToggle').textContent = state.rulerVisible ? 'Ocultar medida' : 'Ver la medida';
-  $('rulerToggle').disabled = !state.auto;
+  $('rulerToggle').disabled = !state.auto; $('rulerToggle').hidden = !state.auto; // sin recuadro (foto de 360°) no hay medida que ocultar
   $('rulerLbl').hidden = true; $('rulerCmField').hidden = true;
-  $('rulerHint').textContent = 'El recuadro azul punteado es el producto (no el área de impresión, que es la verde del paso 2): llevalo a los bordes del producto con las manijas o movelo agarrando la línea. Con 🔗 el ancho y el alto van juntos: el recuadro mantiene la forma y la medida no cambia. Si la medida no es la real, corregí el ancho o el alto.';
+  $('medInfo').title = 'El recuadro azul punteado es el producto (no el área de impresión, que es la verde del paso 2): llevalo a los bordes del producto con las manijas o movelo agarrando la línea. Con 🔗 el ancho y el alto van juntos: el recuadro mantiene la forma y la medida no cambia. Si la medida no es la real, corregí el ancho o el alto.';
 }
 $('rulerCm').addEventListener('input', () => {
   /* si se borra la medida en pleno dibujo, el modo dibujo se cancela;
@@ -6125,9 +6133,10 @@ function pintarGaleria(){
   });
   $('shopGaleria').hidden = !shopFotos.length;
 }
-function galeriaNota(txt){
-  $('shopFotosNote').hidden = !txt;
-  $('shopFotosNoteTxt').textContent = txt || '';
+function galeriaNota(txt){ // el resumen de las fotos va en el ⓘ (con el mouse encima), no ocupa lugar
+  $('shopFotosNote').hidden = true;
+  $('shopFotosInfo').hidden = !txt;
+  $('shopFotosInfo').title = txt || '';
 }
 let shopNombre = '', shopResumen = '', shopRaiz = '';
 let fotoShopActual = null; // {raiz, url, i}: la foto del lienzo es del shop y su medida se puede guardar
