@@ -4932,11 +4932,14 @@ let paso2Abierto = false;
 function syncPaso2(){
   const {w:FW,h:FH} = frameRect(), k = cmPerPx(), A = state.auto, z = state.zone, tec = tecnicaElegida();
   $('resProd').textContent = A && k ? fmtPair(A.w*FW*k, A.h*FH*k) : escalaDeArea ? 'escala del área 360°' : '—';
-  $('resArea').textContent = z && k ? fmtPair(z.w*FW*k, z.h*FH*k) + (tec ? ' · ' + tec : '') : '—';
+  const fG = fotoShopActual && shopFotos[fotoShopActual.i];
+  $('resArea').textContent = (z && k ? fmtPair(z.w*FW*k, z.h*FH*k) + (tec ? ' · ' + tec : '') : '—')
+    + (fG && fG.guardada ? ' · 💾 guardada' : ''); // alguien ya la dejó bien para todos
   const nota = id => !$(id).hidden;
   const problema = state.mode !== 'product' || !k || !z || $('refMedida').classList.contains('mal') || nota('zoneLimNote')
     || (nota('areaNote') && $('areaNote').classList.contains('mal')) || (nota('autoMedNote') && !$('autoMedNote').classList.contains('ok'))
-    || nota('guardarMedidaNote') || nota('zoneRef'); // si se tocó el área, queda a la vista «Volver a la sugerida»
+    || (nota('guardarMedidaNote') && $('guardarMedidaNote').classList.contains('mal')) // un guardado que falló (lo guardado está bien)
+    || nota('zoneRef'); // si se tocó el área, queda a la vista «Volver a la sugerida»
   const abierto = frame.hidden || problema || paso2Abierto;
   $('paso2Cuerpo').hidden = !abierto;
   $('paso2Resumen').hidden = abierto;
