@@ -37,15 +37,17 @@ mouse o con ↑ ↓ y Enter). Al elegirlo:
    medidas en la descripción). El contorno queda a la vista junto con el área de
    impresión, para ver enseguida si algo no cierra; al cargar el logo se oculta
    solo y queda solo el área («Ver la medida» lo vuelve a mostrar).
-   **«Medida real del producto»** son dos campos, **ancho × alto**, que muestran lo
+   **«Medida real del producto»** son dos campos, **↔ ancho × ↕ alto**, que muestran lo
    que mide el contorno; si uno no es el real se corrige y la escala se ajusta a
-   ese lado. Abajo, como referencia, **«Medida del proveedor: 29 × 9 cm»** con
+   ese lado. Abajo, como referencia y en el mismo orden, **«Medida del proveedor:
+   9 × 29 cm»** con
    «✓ coincide» o «⚠ difiere 6,9 %». Sin contorno (foto propia), se anotan el
    ancho y el alto y «Medir solo» lo busca; ahí aparece también el campo de la
    regla.
    **El contorno se ajusta**: si el detector agarró mal los bordes (la birome de
    costado, la tapa, una sombra), se arrastran sus esquinas o lados hasta los
-   bordes reales y la escala se recalcula con la medida del producto sobre ese
+   bordes reales (agarrándolo de la línea punteada se mueve entero, sin cambiar
+   de tamaño) y la escala se recalcula con la medida del producto sobre ese
    contorno (la regla lo acompaña). La etiqueta mide con la escala de ese momento:
    si el otro lado no da lo que dice la descripción, el aviso lo marca. Se guarda
    con la medida («Guardar medida y área para todos»).
@@ -97,9 +99,9 @@ puestas, 4 aceptables y 4 mal (fotos de la espalda o con la caja abierta).
 
 ### El área depende de la técnica
 
-El paso 2 arranca con la **técnica**: se elige una sola vez, ahí, porque define el
-área. El paso 4 («Colores y aplicación») solo la muestra, con «Cambiar», que lleva
-al paso 2; si falta, lo avisa y no deja aplicar. Una serigrafía rotativa envuelve todo el producto; una
+El paso 1 arranca con la **técnica**, arriba de las fotos: se elige una sola vez,
+ahí, porque define la foto y el área. El paso 4 («Colores y aplicación») solo la
+muestra, con «Cambiar», que lleva al paso 1; si falta, lo avisa y no deja aplicar. Una serigrafía rotativa envuelve todo el producto; una
 tampografía entra en pocos cm. Al elegirla, **la foto y el área se acomodan
 solas**, en este orden:
 

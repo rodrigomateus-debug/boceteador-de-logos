@@ -219,7 +219,13 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #autoRect span{position:absolute;left:-2px;top:-2px;translate:0 -100%;background:var(--formas-green);color:#fff;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px 6px 0 0;white-space:nowrap;font-variant-numeric:tabular-nums}
 #bocetoModal #autoRect.label-in span{translate:0 0;border-radius:0 0 6px 0}
 /* manijas del contorno: se ajusta a los bordes reales del producto y la escala se recalcula */
-#bocetoModal #autoRect .ah{position:absolute;width:calc(11px/var(--Z));height:calc(11px/var(--Z));border-radius:calc(3px/var(--Z));background:#fff;border:calc(2px/var(--Z)) solid var(--formas-green);box-shadow:0 1px 3px rgba(11,11,35,.3);pointer-events:auto;touch-action:none;margin:calc(-6.5px/var(--Z)) 0 0 calc(-6.5px/var(--Z))}
+/* la línea punteada se agarra para mover el contorno entero (sin deformarlo: la escala no cambia) */
+#bocetoModal #autoRect .ab{position:absolute;pointer-events:auto;touch-action:none;cursor:move}
+#bocetoModal #autoRect .ab.t{left:0;right:0;top:calc(-6px/var(--Z));height:calc(12px/var(--Z))}
+#bocetoModal #autoRect .ab.b{left:0;right:0;bottom:calc(-6px/var(--Z));height:calc(12px/var(--Z))}
+#bocetoModal #autoRect .ab.l{top:0;bottom:0;left:calc(-6px/var(--Z));width:calc(12px/var(--Z))}
+#bocetoModal #autoRect .ab.r{top:0;bottom:0;right:calc(-6px/var(--Z));width:calc(12px/var(--Z))}
+#bocetoModal #autoRect .ah{z-index:1;position:absolute;width:calc(11px/var(--Z));height:calc(11px/var(--Z));border-radius:calc(3px/var(--Z));background:#fff;border:calc(2px/var(--Z)) solid var(--formas-green);box-shadow:0 1px 3px rgba(11,11,35,.3);pointer-events:auto;touch-action:none;margin:calc(-6.5px/var(--Z)) 0 0 calc(-6.5px/var(--Z))}
 #bocetoModal #autoRect .ah.tl{left:0;top:0;cursor:nwse-resize}
 #bocetoModal #autoRect .ah.t{left:50%;top:0;cursor:ns-resize}
 #bocetoModal #autoRect .ah.tr{left:100%;top:0;cursor:nesw-resize}
@@ -244,8 +250,9 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .areaChip.otra{color:var(--text-muted)}
 #bocetoModal .areaChip[aria-pressed="true"]{border-color:var(--formas-navy);background:color-mix(in srgb, var(--formas-lime) 30%, #fff)}
 #bocetoModal .shopFoto b.area{background:var(--formas-navy)}
-#bocetoModal .medRow{align-items:center;gap:8px}
-#bocetoModal .medX{font-weight:700;color:var(--text-muted);flex:none}
+#bocetoModal .medRow{align-items:flex-end;gap:8px}
+#bocetoModal .medX{font-weight:700;color:var(--text-muted);flex:none;padding-bottom:11px}
+#bocetoModal .miniLbl{display:block;font-size:11px;font-weight:700;color:var(--text-muted);margin:0 0 3px 2px}
 #bocetoModal .refMedida{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:12.5px;color:var(--text-muted)}
 #bocetoModal .refMedida b{color:var(--formas-navy);font-variant-numeric:tabular-nums}
 #bocetoModal .refMedida i{font-style:normal;font-weight:700;font-size:11.5px;padding:2px 9px;border-radius:999px;background:var(--surface-sunken);color:var(--text-body)}
@@ -1047,6 +1054,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             </div>
             <div id="measureChip" hidden></div>
             <div id="autoRect" hidden><span id="autoRectLbl"></span>
+              <i class="ab t" data-mover="1"></i><i class="ab r" data-mover="1"></i><i class="ab b" data-mover="1"></i><i class="ab l" data-mover="1"></i>
               <i class="ah tl" data-auto="tl"></i><i class="ah t" data-auto="t"></i><i class="ah tr" data-auto="tr"></i><i class="ah r" data-auto="r"></i>
               <i class="ah br" data-auto="br"></i><i class="ah b" data-auto="b"></i><i class="ah bl" data-auto="bl"></i><i class="ah l" data-auto="l"></i>
             </div>
@@ -1090,6 +1098,15 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <!-- Paso 1: producto -->
       <div class="card step" id="step1">
         <div class="step-head"><span class="step-num">1</span><h2>Foto del producto</h2></div>
+        <div class="field" id="areaTecField" style="margin-top:0;margin-bottom:12px">
+          <span class="label" style="letter-spacing:.08em">Técnica de aplicación</span>
+          <select id="technique">
+            <option value="">Elegí la técnica…</option>
+            <option value="__otra">Otra…</option>
+          </select>
+          <input type="text" id="techniqueOther" placeholder="Escribí la técnica" style="margin-top:8px" hidden>
+          <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11.5px">Elegila primero: según la técnica cambian la foto y el área de impresión (una rotativa envuelve el producto; la tampografía entra en pocos cm). <button type="button" class="linkBtn" id="limitesBtn">Límites por técnica</button></small>
+        </div>
         <div class="field" id="shopGaleria" style="margin-top:0" hidden>
           <span class="label" style="letter-spacing:.08em">Fotos de formas.shop</span>
           <div class="shopFotos" id="shopFotos"></div>
@@ -1106,10 +1123,12 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           <span class="label" style="letter-spacing:.08em">Medida real del producto</span>
           <div class="field-row medRow" style="margin-top:0">
             <div class="field" style="margin-top:0">
+              <span class="miniLbl">↔ Ancho</span>
               <div class="suffix-wrap"><input type="text" inputmode="decimal" id="prodAncho" placeholder="Ancho" autocomplete="off" aria-label="Ancho real del producto"><span class="suffix">cm</span></div>
             </div>
             <span class="medX">×</span>
             <div class="field" style="margin-top:0">
+              <span class="miniLbl">↕ Alto</span>
               <div class="suffix-wrap"><input type="text" inputmode="decimal" id="prodAlto" placeholder="Alto" autocomplete="off" aria-label="Alto real del producto"><span class="suffix">cm</span></div>
             </div>
             <div class="field" style="margin-top:0;flex:none">
@@ -1117,7 +1136,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             </div>
           </div>
           <input type="hidden" id="prodMedidas"><!-- la de la descripción del shop (o la guardada): la referencia -->
-          <div class="refMedida" id="refMedida" hidden><span id="refMedidaLbl">Medida del proveedor</span> <b id="refMedidaTxt"></b> <i id="refMedidaEstado" hidden></i></div>
+          <div class="refMedida" id="refMedida" hidden><span id="refMedidaLbl">Medida del proveedor</span> <b id="refMedidaTxt" title="ancho × alto"></b> <i id="refMedidaEstado" hidden></i></div>
           <div class="note" id="autoMedNote" hidden><span id="autoMedIco">📐</span> <span id="autoMedTxt"></span></div>
           <span class="label" id="rulerLbl" style="letter-spacing:.08em;margin-top:8px">Escala real · regla</span>
           <div class="field-row" style="margin-top:0">
@@ -1135,15 +1154,6 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <!-- Paso 2: área -->
       <div class="card step locked" id="step2">
         <div class="step-head"><span class="step-num">2</span><h2>Área de impresión</h2></div>
-        <div class="field" id="areaTecField" style="margin-top:0;margin-bottom:12px">
-          <span class="label" style="letter-spacing:.08em">Técnica de aplicación</span>
-          <select id="technique">
-            <option value="">Elegí la técnica…</option>
-            <option value="__otra">Otra…</option>
-          </select>
-          <input type="text" id="techniqueOther" placeholder="Escribí la técnica" style="margin-top:8px" hidden>
-          <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11.5px">El área depende de la técnica (una rotativa envuelve el producto; la tampografía entra en pocos cm): con la técnica elegida, la foto y el área se acomodan solas. <button type="button" class="linkBtn" id="limitesBtn">Límites por técnica</button></small>
-        </div>
         <button class="btn btn-secondary" type="button" id="drawZoneBtn">Marcar área sobre la foto</button>
         <div id="areasShop" hidden>
           <span class="label" style="letter-spacing:.08em;display:block;margin-top:12px">Áreas de impresión</span>
@@ -1227,7 +1237,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <div class="note" id="needMeasureNote" hidden>📏 <span></span></div>
       </div>
 
-      <!-- Paso 4: colores, aplicación y descarga (la técnica se elige en el paso 2) -->
+      <!-- Paso 4: colores, aplicación y descarga (la técnica se elige en el paso 1) -->
       <div class="card step locked" id="step4">
         <div class="step-head"><span class="step-num">4</span><h2>Colores y aplicación</h2></div>
         <div class="field" id="bcColoresField" style="margin-top:0; margin-bottom:14px">
@@ -4776,6 +4786,9 @@ function render(){
       const dif = Math.max(Math.abs(med[0] - r[0]) / r[0], Math.abs(med[1] - corto) / corto);
       ok = dif <= 0.04;
       est = ok ? '✓ coincide' : '⚠ difiere ' + pct(dif);
+      /* en el mismo orden que los campos: ancho × alto según cómo está el producto en la foto */
+      const vertical = A.h*FH >= A.w*FW;
+      $('refMedidaTxt').textContent = textoMedidas(vertical ? [corto, r[0]] : [r[0], corto]) + (refM.length > 2 ? ' (de ' + textoMedidas(refM) + ')' : '');
     }
     $('refMedidaEstado').textContent = est; $('refMedidaEstado').hidden = !est;
     $('refMedida').classList.toggle('ok', ok === true); $('refMedida').classList.toggle('mal', ok === false);
@@ -5524,11 +5537,11 @@ function sincronizarTecnica(){
   const t = techValue();
   $('tecResumenTxt').textContent = t || 'Falta elegirla: define el área de impresión';
   $('tecResumen').classList.toggle('falta', !t);
-  $('tecCambiar').textContent = t ? 'Cambiar' : 'Elegir en el paso 2';
+  $('tecCambiar').textContent = t ? 'Cambiar' : 'Elegir en el paso 1';
   $('applyBtn').disabled = !t;
 }
 $('tecCambiar').addEventListener('click', () => {
-  $('step2').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('areaTecField').scrollIntoView({ behavior: 'smooth', block: 'start' });
   setTimeout(() => $('technique').focus(), 350);
 });
 function ponerTecnica(t){
@@ -7381,6 +7394,11 @@ frame.addEventListener('pointerdown', e => {
     render(); return;
   }
 
+  if(e.target.dataset && e.target.dataset.mover && state.auto){
+    const A = state.auto;
+    active = { mode:'auto-move', startPx:px, start:{ x:A.x, y:A.y, w:A.w, h:A.h } };
+    frame.setPointerCapture(e.pointerId); e.preventDefault(); return;
+  }
   if(e.target.dataset && e.target.dataset.auto && state.auto){
     const A = state.auto;
     active = { mode:'auto-resize', corner:e.target.dataset.auto, startPx:px, start:{ x:A.x, y:A.y, w:A.w, h:A.h } };
@@ -7469,6 +7487,11 @@ frame.addEventListener('pointermove', e => {
   else if(active.mode === 'zone-resize'){
     state.zone = resizeRect(active.start, active.corner, dx/FW, dy/FH, 30/FW, 30/FH);
   }
+  else if(active.mode === 'auto-move'){
+    const s = active.start;
+    state.auto.x = clamp(s.x + dx/FW, 0, 1 - s.w);
+    state.auto.y = clamp(s.y + dy/FH, 0, 1 - s.h);
+  }
   else if(active.mode === 'auto-resize'){
     Object.assign(state.auto, resizeRect(active.start, active.corner, dx/FW, dy/FH, 20/FW, 20/FH));
     recalibrarContorno(); // la regla y la medida acompañan mientras se arrastra
@@ -7502,7 +7525,7 @@ frame.addEventListener('pointermove', e => {
     else exitDrawMode();
     setStepStates();
   }
-  if(active.mode === 'auto-resize') contornoAjustado();
+  if(active.mode === 'auto-resize' || active.mode === 'auto-move') contornoAjustado();
   active = null; render();
 }));
 
