@@ -35,7 +35,13 @@ mouse o con ↑ ↓ y Enter). Al elegirlo:
    del lado largo (al costado del producto, como una cota) y el contorno del
    producto marcado en verde con su medida. Quedan a la vista junto con el área de
    impresión, para ver enseguida si algo no cierra; al cargar el logo se ocultan
-   solos y queda solo el área («Medir de nuevo» los vuelve a mostrar). Arriba quedan las
+   solos y queda solo el área («Medir de nuevo» los vuelve a mostrar).
+   **El contorno se ajusta**: si el detector agarró mal los bordes (la birome de
+   costado, la tapa, una sombra), se arrastran sus esquinas o lados hasta los
+   bordes reales y la escala se recalcula con la medida del producto sobre ese
+   contorno (la regla lo acompaña). La etiqueta mide con la escala de ese momento:
+   si el otro lado no da lo que dice la descripción, el aviso lo marca. Se guarda
+   con la medida («Guardar medida y área para todos»). Arriba quedan las
    fotos del shop para cambiarla (✓ = de frente, se mide sola; ~ = con dudas; sin
    marca = sirve para mostrar, no para medir; borde punteado = del proveedor), y
    se puede subir una propia;
