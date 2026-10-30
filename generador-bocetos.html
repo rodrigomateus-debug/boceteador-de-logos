@@ -5053,7 +5053,7 @@ function syncRulerBtn(){
   $('rulerToggle').textContent = state.rulerVisible ? 'Ocultar medida' : 'Ver la medida';
   $('rulerToggle').disabled = !state.auto; $('rulerToggle').hidden = !state.auto; // sin recuadro (foto de 360°) no hay medida que ocultar
   $('rulerLbl').hidden = true; $('rulerCmField').hidden = true;
-  $('medInfo').title = 'El recuadro azul punteado es el producto (no el área de impresión, que es la verde del paso 2): llevalo a los bordes del producto con las manijas o movelo agarrando la línea. Con 🔗 el ancho y el alto van juntos: el recuadro mantiene la forma y la medida no cambia. Si la medida no es la real, corregí el ancho o el alto.';
+  $('medInfo').title = 'El recuadro azul punteado es el producto (no el área de impresión, que es la verde del paso 2). Escribí su ancho o su alto y el recuadro se adapta a esa medida (solo ese lado). Después llevalo a los bordes del producto con las manijas o movelo agarrando la línea: con 🔗 mantiene la forma y la medida, y se ajusta la escala.';
 }
 $('rulerCm').addEventListener('input', () => {
   /* si se borra la medida en pleno dibujo, el modo dibujo se cancela;
@@ -5395,18 +5395,26 @@ function resizeProporcional(s, corner, dxn, dyn, FW, FH){
   return { x, y, w, h };
 }
 
-/* con contorno, el lado que se corrige pasa a dar la escala */
+/* escribir el ancho o el alto: el recuadro del producto se adapta a esa medida, solo de ese lado (el otro
+   lado, la escala y el área quedan como estaban). Sin escala todavía (foto propia), ese número la da */
 function anclarMedida(lado){
   const A = state.auto, v = numCampo(lado === 'w' ? 'prodAncho' : 'prodAlto');
   if(!A || frame.hidden || !v) return;
   const {w:FW,h:FH} = frameRect(), k = cmPerPx();
-  if(k && Math.abs((lado === 'w' ? A.w*FW : A.h*FH)*k - v) < 0.005) return; // no cambió
-  A.ancla = { lado, cm: v };
+  if(!k){ A.ancla = { lado, cm: v }; recalibrarContorno(); contornoAjustado(); render(); return; }
+  if(Math.abs((lado === 'w' ? A.w*FW : A.h*FH)*k - v) < 0.005) return; // no cambió
+  if(lado === 'w'){ const w = Math.min(1, v / k / FW); A.x = clamp(A.x + (A.w - w)/2, 0, 1 - w); A.w = w; }
+  else { const h = Math.min(1, v / k / FH); A.y = clamp(A.y + (A.h - h)/2, 0, 1 - h); A.h = h; }
+  const vertical = A.h*FH >= A.w*FW;
+  const r4 = x => Math.round(x*1e4)/1e4;
+  A.ancla = vertical ? { lado:'h', cm: r4(A.h*FH*k) } : { lado:'w', cm: r4(A.w*FW*k) }; // la misma escala, sobre el recuadro nuevo
   recalibrarContorno(); contornoAjustado(); render();
 }
 ['prodAncho', 'prodAlto'].forEach(id => {
   const lado = id === 'prodAncho' ? 'w' : 'h';
   $(id).addEventListener('input', () => { medidaEditada = true; });
+  /* al entrar, el número queda seleccionado: lo que se escribe lo reemplaza (no se pega al valor calculado) */
+  $(id).addEventListener('focus', () => setTimeout(() => { if(document.activeElement === $(id)) $(id).select(); }, 0));
   $(id).addEventListener('change', () => anclarMedida(lado));
   $(id).addEventListener('keydown', e => {
     if(e.key !== 'Enter') return;

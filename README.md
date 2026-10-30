@@ -42,16 +42,17 @@ mouse o con ↑ ↓ y Enter). Al elegirlo:
    impresión, para ver enseguida si algo no cierra; al cargar el logo se oculta
    solo y queda solo el área («Ver la medida» lo vuelve a mostrar).
    **«Medida real del producto»** son dos campos, **↔ ancho × ↕ alto**, que muestran lo
-   que mide el recuadro; si uno no es el real se corrige y la escala se ajusta a
-   ese lado. Abajo, como referencia y en el mismo orden, **«Medida del proveedor:
+   que mide el recuadro. **Escribir uno adapta el recuadro a esa medida, solo de ese
+   lado** (el otro, la escala y el área quedan como estaban); sin escala todavía
+   (foto propia), ese número la da. Al entrar a un campo, el número queda
+   seleccionado y lo que se escribe lo reemplaza. Abajo, como referencia y en el mismo orden, **«Medida del proveedor:
    9 × 29 cm»** con «✓ coincide» o «⚠ difiere 6,9 %».
    **El recuadro se ajusta**: si el detector agarró mal los bordes (la birome de
    costado, la tapa, una sombra), se arrastran sus esquinas o lados hasta los
    bordes reales (agarrándolo de la línea punteada se mueve entero, sin cambiar
-   de tamaño). Como en el logo, el ancho y el alto van **anclados (🔗)**: al
-   agrandar o achicar, el recuadro mantiene la forma del producto y la medida no
-   cambia (cambia la escala: se está encajando el producto en la foto); escribir el
-   ancho mueve el alto en proporción. **Sueltos**, cada lado se mueve por su cuenta
+   de tamaño). Al arrastrar, el ancho y el alto van **anclados (🔗)**: el recuadro
+   mantiene la forma del producto y la medida no cambia (cambia la escala: se está
+   encajando el producto en la foto). **Sueltos**, cada lado se mueve por su cuenta
    y el que se mueve cambia su medida. Arranca anclado cuando la proporción se
    conoce (la medida de la descripción) y suelto con una foto propia. Se guarda con
    la medida («Guardar medida y área para todos»).
