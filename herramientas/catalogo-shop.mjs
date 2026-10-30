@@ -12,6 +12,10 @@
 // Con ZECAT_TOKEN, los productos de Zecat (SKU «ZEC_…») suman las áreas del proveedor:
 // cada área con su foto para ese color, dónde está en la foto, cuánto mide y qué técnicas
 // admite (con el máximo de cada una). Sin el token se conservan las del catálogo anterior.
+//
+// Las técnicas por tipo de producto salen del cotizador de Formas (cotizadorformasshop.pages.dev):
+// por cada subfamilia («Bolígrafos», «Remeras»…), las técnicas que se ofrecen y, si la tienen, su
+// medida máxima («DTF hasta 29 × 29 cm»). Cada producto se cruza por su categoría madre de STP.
 import fs from 'node:fs';
 
 const API = 'https://www.stpo.com.ar/api/product/67/';
@@ -77,6 +81,7 @@ const productos = crudos
     if (valor(17)) o.material = valor(17).trim();
     if (otros) o.variante = otros;
     if (valor(3)) o.talle = valor(3).trim();
+    if (p.base_category && p.base_category.name) o.categoria = p.base_category.name.trim(); // la madre: se cruza con el cotizador
     if (fotos.length) o.fotos = fotos;
     if (proveedor.length) o.proveedor = proveedor;
     if (medidas) { o.medidas = medidas.valores; o.medidasTexto = medidas.texto; }
@@ -165,7 +170,41 @@ if (tokenZecat && zecat.length) {
   console.log(`Sin ZECAT_TOKEN: se conservan las áreas de Zecat del catálogo anterior (${previas.size} productos).`);
 }
 
-fs.writeFileSync(SALIDA, JSON.stringify({ generado: new Date().toISOString(), tienda: 67, productos }));
+/* ---------- técnicas por tipo de producto (cotizador de Formas) ---------- */
+const COTIZADOR = 'https://cotizadorformasshop.pages.dev/';
+/* «Necesers & Organizadores» = «Neceser & Organizadores», «Cinta Colgante» = «Cinta Colgante (Lanyard)» */
+const clave = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\(.*?\)/g, ' ')
+  .replace(/[^a-z0-9&]+/g, ' ').trim().split(' ').map(w => w.replace(/s$/, '')).join(' ');
+let tecnicasCategoria = null;
+try {
+  const r = await fetch(COTIZADOR, { headers: { 'user-agent': 'boceteador-formas' } });
+  if (!r.ok) throw new Error('respondió ' + r.status);
+  const html = await r.text(), i = html.indexOf('const SEED_SUB='), j = html.indexOf('.map(', i);
+  if (i < 0 || j < 0) throw new Error('no encontré la tabla de subfamilias');
+  tecnicasCategoria = {};
+  for (const [, sub, , metodos] of JSON.parse(html.slice(i + 'const SEED_SUB='.length, j))) {
+    const porTec = new Map();
+    for (const m of metodos || []) {
+      const n = canonTecnica(m);
+      if (!n) continue; // etiqueta tejida, bajo relieve, offset…: no son técnicas del boceteador
+      const t = String(m).match(/(\d+(?:[.,]\d+)?)\s*(?:cm)?\s*x\s*(\d+(?:[.,]\d+)?)\s*cm/i);
+      const max = t ? [parseFloat(t[1].replace(',', '.')), parseFloat(t[2].replace(',', '.'))] : [null, null];
+      const prev = porTec.get(n); // varias medidas de la misma técnica: vale la más grande (sin medida = sin límite)
+      porTec.set(n, prev ? prev.map((v, k) => (v === null || max[k] === null ? null : Math.max(v, max[k]))) : max);
+    }
+    tecnicasCategoria[sub] = [...porTec].map(([n, [w, h]]) => [n, w, h]);
+  }
+} catch (e) {
+  console.warn('No pude leer las técnicas del cotizador (' + e.message + '): se conservan las del catálogo anterior.');
+  try { tecnicasCategoria = JSON.parse(fs.readFileSync(SALIDA, 'utf8')).tecnicasCategoria || null; } catch {}
+}
+if (tecnicasCategoria) {
+  const porClave = new Map(Object.keys(tecnicasCategoria).map(k => [clave(k), k]));
+  productos.forEach(p => { const sub = porClave.get(clave(p.categoria)); if (sub) p.cat = sub; delete p.categoria; });
+} else productos.forEach(p => { delete p.categoria; });
+
+fs.writeFileSync(SALIDA, JSON.stringify({ generado: new Date().toISOString(), tienda: 67, tecnicasCategoria, productos }));
 const con = k => productos.filter(p => p[k]).length;
 console.log(`${productos.length} productos activos → catalogo-shop.json (${Math.round(fs.statSync(SALIDA).size / 1024)} KB)`);
 console.log(`con medidas: ${con('medidas')} · con áreas de impresión: ${con('areas')} · con áreas del proveedor: ${con('areasProv')} · sin fotos: ${productos.length - con('fotos')}`);
+console.log(`con técnicas del cotizador (por categoría): ${con('cat')} · subfamilias: ${Object.keys(tecnicasCategoria || {}).length}`);
