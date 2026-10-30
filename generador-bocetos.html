@@ -286,6 +286,13 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .step-head h2{font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--formas-navy);margin:0;letter-spacing:-.01em}
 /* toggle de modo de medida */
 #bocetoModal .mode-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#bocetoModal .modoActual{display:flex;gap:12px;align-items:flex-start}
+#bocetoModal .modoActual svg{width:26px;height:26px;flex:none;margin-top:1px}
+#bocetoModal .modoActual b{font-size:14px;color:var(--formas-navy)}
+#bocetoModal .modoActual small{display:block;margin-top:3px;font-size:12px;color:var(--text-muted);line-height:1.4}
+#bocetoModal .modoReco{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:999px;background:color-mix(in srgb, var(--sheet-accent) 35%, #fff);color:var(--formas-navy);vertical-align:2px}
+#bocetoModal #modeCard.logo .modoActual b{color:#B23A1E}
+#bocetoModal .modoCambiar{display:block;margin:10px 0 0 38px;font-size:12px}
 #bocetoModal .mode-opt{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px;border:1.5px solid var(--border-subtle);border-radius:12px;background:var(--surface-page);cursor:pointer;font-family:var(--font-primary);text-align:left;transition:border-color .15s, box-shadow .15s}
 #bocetoModal .mode-opt:hover{border-color:var(--formas-navy)}
 #bocetoModal .mode-opt[aria-pressed="true"]{border-color:var(--formas-navy);background:var(--surface-sunken);box-shadow:0 0 0 2.5px color-mix(in srgb,var(--sheet-accent) 55%, transparent)}
@@ -1083,26 +1090,25 @@ html,body{margin:0;padding:0;background:#EDEDF2}
     <!-- ============ PASOS ============ -->
     <div class="col">
 
-      <!-- Modo de medida -->
+      <!-- Modo de medida: por defecto, por el producto; la medida exacta del logo se elige a propósito -->
       <div class="card step" id="modeCard">
-        <div class="label" style="margin-bottom:10px">¿Con qué dato contás?</div>
-        <div class="mode-row">
-          <button type="button" class="mode-opt" id="modeLogo" aria-pressed="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="7" y="9" width="12" height="10" rx="2"/>
-              <path d="M7 5h12M7 3.5v3M19 3.5v3"/>
-              <path d="M3 9v10M1.5 9h3M1.5 19h3"/>
-            </svg>
-            <span class="t">Tengo la medida exacta del logo<small>Marcás el área, cargás el logo y anotás su ancho × alto en cm.</small></span>
-          </button>
-          <button type="button" class="mode-opt" id="modeProduct" aria-pressed="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="9" width="20" height="6" rx="1.5"/>
-              <path d="M6 9v3M10 9v4.5M14 9v3M18 9v4.5"/>
-            </svg>
-            <span class="t">Sé la medida del producto<small>Calibrás con la regla sobre la foto y los cm se calculan solos.</small></span>
-          </button>
+        <div class="modoActual" id="modoActual">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="modoIcoProd">
+            <rect x="2" y="9" width="20" height="6" rx="1.5"/>
+            <path d="M6 9v3M10 9v4.5M14 9v3M18 9v4.5"/>
+          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="modoIcoLogo" hidden>
+            <rect x="7" y="9" width="12" height="10" rx="2"/>
+            <path d="M7 5h12M7 3.5v3M19 3.5v3"/>
+            <path d="M3 9v10M1.5 9h3M1.5 19h3"/>
+          </svg>
+          <div><b id="modoTit">Medida por el producto</b> <span class="modoReco" id="modoReco">recomendado</span>
+            <small id="modoTxt">El recuadro azul marca el producto con su medida real y los cm del área y del logo salen solos.</small></div>
         </div>
+        <button type="button" class="linkBtn modoCambiar" id="modoCambiar">¿Ya tenés la medida exacta del logo? Usala</button>
+        <!-- los dos modos de siempre (los usa el código); se eligen con el link de arriba -->
+        <button type="button" id="modeLogo" aria-pressed="false" hidden></button>
+        <button type="button" id="modeProduct" aria-pressed="true" hidden></button>
       </div>
 
       <!-- Paso 1: producto -->
@@ -1409,6 +1415,7 @@ let color2 = false;                    // compartido: si el producto lleva color
 
 /* ---- estado de la hoja activa (se captura en pages[cur]) ---- */
 let imgFoto = null, imgLogo = null;
+let fotoPrevia = null; // la foto del producto traído de formas.shop, sin logo: se muestra en pantalla hasta armar el boceto
 let fotoAlt = null;                    // la otra versión de la foto (original ↔ IA) para intercambiar
 let fotoActiva = 'ia';                 // cuál se está mostrando cuando hay dos: 'ia' u 'orig'
 let fotoEscala = '';
@@ -1443,7 +1450,7 @@ let cur = 0;
 
 function capturePage(){
   const p = pages[cur];
-  p.imgFoto = imgFoto; p.imgLogo = imgLogo;
+  p.imgFoto = imgFoto; p.imgLogo = imgLogo; p.fotoPrevia = fotoPrevia;
   p.fotoAlt = fotoAlt; p.fotoActiva = fotoActiva; p.fotoEscala = fotoEscala; p.modoMedida = modoMedida; p.arte = arteHoja;
   p.logoBg = logoBg; p.printColors = printColors;
   p.barW = barW; p.barH = barH; p.barWOff = barWOff; p.barHOff = barHOff;
@@ -1454,7 +1461,7 @@ function capturePage(){
 function loadPage(i){
   cur = clampNum(i, 0, pages.length-1);
   const p = pages[cur];
-  imgFoto = p.imgFoto; imgLogo = p.imgLogo;
+  imgFoto = p.imgFoto; imgLogo = p.imgLogo; fotoPrevia = p.fotoPrevia || null;
   fotoAlt = p.fotoAlt || null;
   fotoActiva = p.fotoActiva === 'orig' ? 'orig' : 'ia';
   fotoEscala = p.fotoEscala || '';
@@ -1583,7 +1590,13 @@ function coloresHtml(pc, fc, eng){
    L (rojo) = "Tengo la medida exacta del logo" (medida anotada) · P (verde) = "Sé la medida del producto" (calculada con la regla) */
 const MARCA_MEDIDA = { logo: { letra: 'L', hex: '#D62828' }, product: { letra: 'P', hex: '#399F4A' } };
 
-function buildPage(p, num, total){
+/* la foto del producto traído, en pantalla (no se imprime): con los mismos dos caminos de la barra lateral */
+const fotoPreviaHtml = src => '<img src="' + src + '" alt="Producto" style="object-fit:contain">'
+  + '<div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; background:rgba(255,255,255,.45); z-index:1;">'
+  + '<button type="button" id="bcpCrearBoceto" style="padding:12px 18px; border:none; border-radius:12px; background:var(--formas-lime,#8EE021); color:var(--formas-navy,#000085); font:inherit; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 4px 14px rgba(11,11,35,.18);">✦ Creá el boceto con tu logo</button>'
+  + '<button type="button" id="bcpSubirFoto" style="padding:9px 16px; border:1.5px solid var(--formas-navy,#000085); border-radius:12px; background:#fff; color:var(--formas-navy,#000085); font:inherit; font-size:12.5px; font-weight:700; cursor:pointer;">Subí la foto ya lista</button>'
+  + '<span style="font-size:10.5px; color:var(--formas-navy,#000085); opacity:.75; background:rgba(255,255,255,.85); padding:2px 8px; border-radius:6px;">Foto de formas.shop, todavía sin el logo</span></div>';
+function buildPage(p, num, total, enPantalla){
   const f = id => esc((p.fields && p.fields[id]) || '');
   const mw = f('f_medida_w'), mh = f('f_medida_h');
   const pos = f('f_posicion');
@@ -1622,7 +1635,7 @@ function buildPage(p, num, total){
       ? 'background:repeating-conic-gradient(#ECECF2 0 25%, #FFFFFF 0 50%) 0 0/16px 16px;'
       : 'background-color:' + $('f_colorprod_hex').value + '; background-image:none;',
     FOTO_FIT: p.fotoFit === 'contain' ? 'contain' : 'cover',
-    FOTO_SLOT_STYLE: (p.imgFoto && p.fotoFit === 'contain') ? 'background-color:#FFFFFF; background-image:none;' : '',
+    FOTO_SLOT_STYLE: ((p.imgFoto && p.fotoFit === 'contain') || (!p.imgFoto && enPantalla && p.fotoPrevia)) ? 'background-color:#FFFFFF; background-image:none;' : '',
     BAR_W_PCT: String(Math.round(p.barW || 100)),
     BAR_H_PCT: String(Math.round(p.barH || 100)),
     BAR_W_OFF: String(Math.round((p.barWOff || 0)*10)/10),
@@ -1631,7 +1644,7 @@ function buildPage(p, num, total){
     MARCA_MEDIDA: MARCA_MEDIDA[p.modoMedida]
       ? '<span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; margin-left:8px; border-radius:50%; vertical-align:middle; position:relative; top:-1px; background:' + MARCA_MEDIDA[p.modoMedida].hex + '; color:#fff; font-size:9px; font-weight:700; line-height:1;">' + MARCA_MEDIDA[p.modoMedida].letra + '</span>' : '',
     COLOR_ACENTO_HEX: accent,
-    FOTO_PRODUCTO: p.imgFoto ? '<img src="'+p.imgFoto+'" alt="Producto">' : PH_FOTO,
+    FOTO_PRODUCTO: p.imgFoto ? '<img src="'+p.imgFoto+'" alt="Producto">' : (enPantalla && p.fotoPrevia ? fotoPreviaHtml(p.fotoPrevia) : PH_FOTO),
     LOGO_CLIENTE: p.imgLogo ? '<img src="'+p.imgLogo+'" alt="Logo cliente" style="max-height:100px">'
       : ((p.logoBg !== 'light' && lumHex($('f_colorprod_hex').value) < 140) ? PH_LOGO_DARK : PH_LOGO)
   };
@@ -1642,7 +1655,7 @@ function buildPage(p, num, total){
 
 function buildCurrent(){
   capturePage();
-  return buildPage(pages[cur], cur+1, pages.length);
+  return buildPage(pages[cur], cur+1, pages.length, true); // en pantalla: con la foto previa del producto, si la hay
 }
 function buildAll(){
   capturePage();
@@ -1673,6 +1686,7 @@ function docName(){
   return parts.length ? 'Boceto - ' + parts.join(' - ') : 'Boceto';
 }
 
+window.__ponerFotoPrevia = src => { fotoPrevia = src || null; render(); };
 function render(){
   const f = $('preview');
   $('ia_logo').disabled = !imgLogo;
@@ -1684,7 +1698,7 @@ function render(){
 /* --- persistencia local --- */
 function save(){
   try{
-    const data = {codeMode, color2, pages, cur};
+    const data = {codeMode, color2, pages: pages.map(p => p.fotoPrevia ? Object.assign({}, p, { fotoPrevia: null }) : p), cur};
     SHARED_FIELDS.forEach(id => data[id] = $(id).value);
     localStorage.setItem('boceto-formas', JSON.stringify(data));
   }catch(e){}
@@ -3869,6 +3883,9 @@ window.addEventListener('resize', rescale);
 function attachBarDrag(){
   const doc = $('preview').contentDocument;
   if(!doc) return;
+  const crear = doc.getElementById('bcpCrearBoceto'), subir = doc.getElementById('bcpSubirFoto');
+  if(crear) crear.addEventListener('click', () => { if(!$('openBoceto').disabled) openBocetoModal(); });
+  if(subir) subir.addEventListener('click', () => $('f_foto').click());
   // el iframe se recrea en cada render, así que el listener no se duplica
   doc.addEventListener('wheel', e => {
     if(!e.ctrlKey) return;
@@ -4597,7 +4614,7 @@ const state = {
   rulerVisible: false,
   auto: null,          // lo que encontró "Medir solo": {x,y,w,h} del producto (0–1), cmW, cmH, conf, desvio
   areasShop: [],       // áreas de impresión de la descripción del shop: {nombre, w, h} en cm
-  mode: 'logo',        // por defecto: "Tengo la medida exacta del logo"
+  mode: 'product',     // por defecto: «Sé la medida del producto» (la medida exacta del logo se elige a propósito)
   unit: 'cm',          // unidad de carga y lectura de medidas: 'cm' o 'mm' (internamente todo vive en cm)
   zoom: 1,
   pan: {x:0, y:0},
@@ -5025,6 +5042,14 @@ $('rulerToggle').addEventListener('click', () => {
 /* ---------- modo de medida ---------- */
 function setMode(m){
   state.mode = m;
+  /* la tarjeta muestra el modo activo; el otro se elige con el link */
+  const logo = m === 'logo';
+  $('modeCard').classList.toggle('logo', logo);
+  $('modoIcoProd').toggleAttribute('hidden', logo); $('modoIcoLogo').toggleAttribute('hidden', !logo); $('modoReco').hidden = logo; // los SVG no tienen .hidden
+  $('modoTit').textContent = logo ? 'Medida exacta del logo' : 'Medida por el producto';
+  $('modoTxt').textContent = logo ? 'Marcás el área a mano, cargás el logo y anotás su ancho × alto en cm. El área y la foto no tienen escala real.'
+    : 'El recuadro azul marca el producto con su medida real y los cm del área y del logo salen solos.';
+  $('modoCambiar').textContent = logo ? '← Volver a medir por el producto (recomendado)' : '¿Ya tenés la medida exacta del logo? Usala';
   if(m === 'product') setTimeout(asegurarRecuadro, 0); // después de que la medición (si la hay) ponga el suyo
   $('modeLogo').setAttribute('aria-pressed', m === 'logo');
   $('modeProduct').setAttribute('aria-pressed', m === 'product');
@@ -5039,6 +5064,7 @@ function setMode(m){
   render();
 }
 $('modeLogo').addEventListener('click', () => setMode('logo'));
+$('modoCambiar').addEventListener('click', () => setMode(state.mode === 'logo' ? 'product' : 'logo'));
 $('modeProduct').addEventListener('click', () => setMode('product'));
 
 /* ---------- medición automática del producto ----------
@@ -6469,6 +6495,7 @@ async function elegirProducto(ficha){
     const otro = antes.nombre && (antes.nombre !== (ficha.nombre || '').trim() || (antes.color && ficha.color && antes.color !== ficha.color.trim()));
     let sacada = false;
     if(otro && window.__fichaFotoDeBoceto && window.__fichaFotoDeBoceto()){ $('clear_foto').click(); sacada = true; }
+    if(window.__ponerFotoPrevia) window.__ponerFotoPrevia(fotos[elegida].src); // la hoja la muestra hasta que se arme el boceto
     shopNota('ok', '✓ ' + resumen + '. '
       + (sacada ? 'La foto de la hoja era el boceto de «' + antes.nombre + (antes.color ? ' · ' + antes.color : '') + '» y se sacó: abrí el boceto (tu logo sigue puesto, ahora sobre este producto) y aplicalo de nuevo. ' : '')
       + (fotos[elegida].guardada ? 'La medida la ajustó a mano ' + quienCuando(fotos[elegida].guardada) + ' y ya queda puesta: tocá «Creá el boceto con tu logo».'
@@ -8000,7 +8027,7 @@ window.__bocetoRestore = data => {
     $('photoTxt').innerHTML = 'Elegir foto del producto<small>JPG o PNG · se recomienda recortada al producto</small>';
     photoName = '';
     setUnit('cm'); state.lockAspect = false; syncLockUI();
-    setMode('logo');
+    setMode('product'); // por defecto se mide por el producto
     syncLogoUI(); setStepStates(); render();
     return;
   }
@@ -8052,7 +8079,7 @@ window.__bocetoRestore = data => {
 
 /* init */
 pintarTecnicas();
-setMode('logo');
+setMode('product'); // por defecto se mide por el producto; la medida exacta del logo se elige a propósito
 syncLockUI();
 syncLogoUI();
 setStepStates(); render();

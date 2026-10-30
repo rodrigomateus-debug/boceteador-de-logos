@@ -80,6 +80,16 @@ coinciden, se ve en «⚠ difiere»; si el recuadro del área no guarda la propo
 de sus cm, vale el lado que cierra con la descripción. En las fotos de 360° (el
 área desplegada viene dibujada encima) no hay recuadro del producto.
 
+Apenas se trae, la **vista principal de la hoja** muestra la foto del producto
+(todavía sin logo) con los dos caminos de la barra lateral centrados: «✦ Creá el
+boceto con tu logo» y «Subí la foto ya lista». Es solo en pantalla: no se imprime
+ni sale en el PDF, y desaparece cuando se aplica el boceto o se sube la foto.
+
+El boceteador **mide por el producto por defecto** («Medida por el producto ·
+recomendado»). La medida exacta del logo sigue estando, pero hay que elegirla a
+propósito con el link «¿Ya tenés la medida exacta del logo? Usala» (y se vuelve
+con «Volver a medir por el producto»).
+
 Mientras se trae el producto (bajan y se miden las fotos), «Creá el boceto con tu
 logo» queda bloqueado: se habilita cuando terminó, para no abrir un boceto a medias.
 Para cambiar de producto se vuelve a escribir en el mismo campo: el código o link
