@@ -8,10 +8,122 @@ se abren directo en el navegador, sin instalación.
 
 | Archivo | Qué es |
 |---|---|
-| **`generador-bocetos.html`** | ⭐ **La app principal.** Generador de bocetos (formulario + ficha A4 de producción en vivo) con el boceteador "Cargá tu logo" integrado como modal: subís la foto del producto, marcás el área, aplicás el logo (tinte —blanco, negro, grabado o **un color a elección**, con código HEX o Pantone del mismo buscador de la ficha—, opacidad, rotación, **quitar el fondo o cualquier color** —blanco, negro, uno del selector o tomado con el cuentagotas tocando el logo— y **✨ Modificar logo con IA**) y la ficha se completa sola (foto compuesta, logo, medidas, técnica, posición). El lienzo del boceteador ocupa toda la altura de la pantalla. La vista previa de la ficha tiene zoom (botones arriba a la derecha o Ctrl + rueda; «1:1» muestra el tamaño real de impresión para revisar la calidad de la foto). Acepta logos en PNG, JPG, SVG, PDF y .ai de Illustrator (guardados con compatibilidad PDF, que es el default). Imprime a PDF y descarga HTML. |
+| **`generador-bocetos.html`** | ⭐ **La app principal.** Generador de bocetos (formulario + ficha A4 de producción en vivo) con el boceteador "Cargá tu logo" integrado como modal: subís la foto del producto, marcás el área, aplicás el logo (tinte —blanco, negro, grabado o **un color a elección**, con código HEX o Pantone del mismo buscador de la ficha—, opacidad, rotación, **quitar el fondo o cualquier color** —blanco, negro, uno del selector o tomado con el cuentagotas tocando el logo— y **✨ Modificar logo con IA**) y la ficha se completa sola (foto compuesta, logo, medidas, técnica, posición). El lienzo del boceteador ocupa toda la altura de la pantalla. La vista previa de la ficha tiene zoom (botones arriba a la derecha o Ctrl + rueda; «1:1» muestra el tamaño real de impresión para revisar la calidad de la foto). Acepta logos en PNG, JPG, SVG, PDF y .ai de Illustrator (guardados con compatibilidad PDF, que es el default). Trae de **formas.shop** el nombre, el color, las fotos y las medidas del producto, y lo mide solo sobre la foto (ver «Traer de formas.shop»). Imprime a PDF y descarga HTML. |
 | `boceteador.html` | El boceteador standalone (versión previa a la integración; el modal del generador es su evolución). |
 | `cotizador-formas.html` | Maqueta funcional del cotizador (fase 3 del roadmap): técnica, cantidades, desglose de precio y markup. |
 | `DESIGN.md` | Documento de diseño: flujos, modelo de datos, sistema de diseño Formas, roadmap. |
+
+## Traer de formas.shop y medir el producto solo
+
+En la ficha, arriba de «Nombre del producto», **Traer de formas.shop** acepta el
+link del producto (`https://formas.shop/app/product/detail/18953`), su código
+(`18953`) o parte del nombre: mientras se escribe aparecen los primeros 5 que
+coinciden, con su foto y los talles de un mismo color juntos (se eligen con el
+mouse o con ↑ ↓ y Enter). Al elegirlo:
+
+1. completa la ficha: **nombre**, **color** (con su muestra, si el nombre del
+   color es conocido) y las **observaciones** (material y medidas; solo si
+   estaban vacías o eran de un producto traído antes);
+2. baja las fotos de la tienda y las del proveedor, lee de la descripción las
+   **medidas** («Medidas cerrado: 14 × 9 cm», «Ø 8,4 × 30 cm», «Dimensiones:
+   21 × 14 × 1,4 cm», en cm o mm) y las **áreas de impresión** («Frente: 60 × 15 mm»,
+   o varias en un renglón como en los textiles: «Frente (10 × 10 cm), espalda
+   (22 × 9,8 cm) y mangas (8 × 8 cm)»), y mide cada foto para elegir la que está
+   **de frente**;
+3. al tocar «Creá el boceto con tu logo», el boceteador abre ya en «Sé la medida
+   del producto», con esa foto puesta, **la regla calibrada sola** de borde a borde
+   del lado largo y el contorno del producto marcado en verde. Arriba quedan las
+   fotos del shop para cambiarla (✓ = de frente, se mide sola; ~ = con dudas; sin
+   marca = sirve para mostrar, no para medir; borde punteado = del proveedor), y
+   se puede subir una propia;
+4. en el paso 2, cada área de impresión del shop es un botón que la marca **a
+   medida real** sobre el producto (después se lleva a su lugar).
+
+Si el boceteador ya tiene un boceto con logos, traer otro producto no lo pisa:
+solo deja sus fotos para elegir.
+
+### Medidas guardadas
+
+Si la medición automática no quedó bien (o la descripción del shop está mal), se
+mueve la regla, se corrige la medida y se toca **💾 Guardar esta medida para la
+próxima**. Desde ahí, cualquiera que traiga ese producto lo recibe así: en la
+ficha dice quién la ajustó y cuándo, la foto queda marcada con 💾 y la regla sale
+como la dejaron. **Volver a la automática** borra lo guardado de esa foto.
+
+Se guarda por raíz del producto (vale para todos sus colores y talles; la regla,
+por foto) en la función `functions/api/medidas.js`, sobre un KV de Cloudflare.
+Guardar pide la misma clave de Formas que las funciones de IA (`FORMAS_IA_CLAVE`).
+Prueba: `node test_medidas.mjs`.
+
+**Puesta en marcha (una sola vez):** Cloudflare → Storage & Databases → KV →
+*Create namespace* (por ejemplo `formas-medidas`). Después Workers & Pages →
+formas-bocetos-con-logo → Settings → Bindings → *Add* → KV namespace, con
+**Variable name `MEDIDAS`** y ese namespace, en *Production* **y** en *Preview*, y
+redesplegar. Sin eso todo anda igual, pero el botón de guardar avisa que falta.
+
+Con una foto subida a mano también se puede: en «Sé la medida del producto» se
+anota la medida (`14 × 9 cm`) y se toca **📐 Medir solo**.
+
+**Cómo mide:** busca el fondo liso, recorta la silueta del producto, encuentra
+sus bordes rectos y elige el rectángulo que tiene la proporción de la descripción.
+Así quedan afuera el bolígrafo de costado, el anillado, las manijas, la tapa o
+la cinta señaladora. La regla queda en píxeles exactos del borde.
+
+**El control de error:** la descripción da dos medidas y la foto también. Si la
+escala que sale del ancho y la que sale del alto coinciden (diferencia menor al
+3 %), la medición es confiable; si no, avisa «Medido con dudas» y dice por qué
+(proporción que no cierra, varios productos, forma no rectangular). Medido sobre
+el catálogo entero (1.874 productos sin contar colores ni talles, octubre 2026):
+
+| Resultado | Productos |
+|---|---|
+| Se mide solo | 737 (61 % de los que tienen medidas). Diferencia ancho/alto: mediana 0,2 %, el 95 % por debajo de 2 % |
+| Se mide con dudas | 312 (26 %) |
+| Ninguna foto sirve para medir (todas en perspectiva o en situación) | 158 (13 %) |
+| Sin medidas en la descripción | 667 (36 % del total): es lo primero a completar en el shop |
+
+En 97 productos la única foto que sirve para medir es la del proveedor. Una
+muestra al azar de 36 «se mide solo» revisada a ojo: 35 con el contorno bien.
+Las fotos en perspectiva, abiertas, en situación o con el producto cortado por el
+borde se rechazan solas y se pide la regla a mano.
+
+**Límite que no arregla ninguna herramienta:** la precisión depende de qué mide
+la descripción. Si dice 14 cm y no aclara si incluye el anillado o la tapa, el
+detector toma el cuerpo que mejor cierra con las dos medidas; conviene mirar el
+contorno verde antes de seguir.
+
+### De dónde salen los datos: el catálogo de la API de STP
+
+La búsqueda usa **`catalogo-shop.json`**, armado desde la API de catálogo de STP
+(`/api/product/67/`, la que hizo Datacrush): los productos activos de formas.shop
+con sus fotos (de la tienda y del proveedor), las medidas y las áreas de impresión
+ya leídas. No lleva precios, stock ni costos. Se regenera con el token de lectura
+(nunca va a la web ni al repo):
+
+```
+STP_API_TOKEN=… node herramientas/catalogo-shop.mjs
+```
+
+Tarda medio minuto. Conviene correrlo cada tanto (el shop suma productos todos
+los días) y subir el `catalogo-shop.json` nuevo. Un producto más nuevo que el
+catálogo igual se trae por su link o su código: en ese caso se lee su página
+pública (`leerFichaShop()`). Las medidas y las áreas se leen con la misma
+función, `leerDescripcion()`, en los dos caminos y en el armado del catálogo.
+
+La API no busca por número de producto ni por nombre (solo por `sku` o `root`) y
+todavía no trae las áreas de impresión como campo (`print_areas` quedó pendiente
+en Datacrush): por eso se leen de la descripción. Cuando la API las traiga, el
+lugar a tocar es `herramientas/catalogo-shop.mjs`.
+
+Las fotos pasan por la función `functions/api/shop.js` (`/api/shop?img=`, y
+`/api/shop?id=` para la página pública), porque el shop y los proveedores no
+dejan que otra web las lea. Solo reenvía los bytes (casi nada de CPU) y solo
+responde fichas por número y fotos del shop y de los dominios de los proveedores
+que trae la API (Zecat, X-Trade, Promoproductos, Nuevas Formas…): no es un proxy
+abierto. Si aparece un proveedor nuevo con fotos en otro dominio, se suma a
+`HOSTS_FOTOS`. No necesita variables.
+
+Pruebas: `node test_shop.mjs`, `node test_medir_producto.mjs` y `node test_medidas.mjs`.
 
 ## PDF editable para CorelDRAW
 

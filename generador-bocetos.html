@@ -214,6 +214,24 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #rulerLine i:first-child{left:0}#rulerLine i:last-child{right:0}
 #bocetoModal .ruler-handle{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;border:3.5px solid var(--formas-navy);translate:-50% -50%;pointer-events:auto;cursor:grab;box-shadow:0 1px 5px rgba(11,11,35,.35);touch-action:none}
 #bocetoModal #rulerLabel{position:absolute;translate:-50% -145%;background:var(--formas-navy);color:#fff;font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:999px;white-space:nowrap;pointer-events:auto;cursor:move;font-variant-numeric:tabular-nums}
+/* medición automática: el contorno del producto que encontró "Medir solo" */
+#bocetoModal #autoRect{position:absolute;border:2px dashed var(--formas-green);border-radius:3px;pointer-events:none;z-index:3}
+#bocetoModal #autoRect span{position:absolute;left:-2px;top:-2px;translate:0 -100%;background:var(--formas-green);color:#fff;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px 6px 0 0;white-space:nowrap;font-variant-numeric:tabular-nums}
+#bocetoModal #autoRect.label-in span{translate:0 0;border-radius:0 0 6px 0}
+/* traer de formas.shop */
+#bocetoModal .shopFotos{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+#bocetoModal .shopFoto{position:relative;width:58px;height:58px;border-radius:10px;border:1.5px solid var(--formas-gray-200);background:#fff;padding:3px;cursor:pointer;flex:none}
+#bocetoModal .shopFoto img{width:100%;height:100%;object-fit:contain;display:block}
+#bocetoModal .shopFoto[aria-pressed="true"]{border-color:var(--formas-navy);box-shadow:0 0 0 2.5px color-mix(in srgb, var(--formas-lime) 55%, transparent)}
+#bocetoModal .shopFoto b{position:absolute;right:-6px;top:-6px;width:18px;height:18px;border-radius:50%;font-size:10px;line-height:1;display:grid;place-items:center;color:#fff;background:var(--formas-green)}
+#bocetoModal .shopFoto b.media{background:var(--formas-yellow);color:var(--formas-ink)}
+#bocetoModal .shopFoto.prov{border-style:dashed}
+#bocetoModal .areaChips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+#bocetoModal .areaChip{padding:6px 11px;border-radius:999px;border:1.5px solid var(--formas-gray-200);background:#fff;font-family:var(--font-primary);font-size:12px;font-weight:700;color:var(--formas-navy);cursor:pointer;font-variant-numeric:tabular-nums}
+#bocetoModal .areaChip:hover{border-color:var(--formas-navy)}
+#bocetoModal .areaChip:disabled{opacity:.5;cursor:not-allowed}
+#bocetoModal .note.ok{border-left-color:var(--formas-green)}
+#bocetoModal .note.mal{border-left-color:#EF7958}
 /* eliminar logo */
 #bocetoModal .logoDelete{position:absolute;top:-13px;right:-13px;width:26px;height:26px;border-radius:50%;background:#fff;border:1.5px solid var(--border-subtle);color:var(--formas-ink);font-size:15px;font-weight:700;line-height:1;cursor:pointer;z-index:6;display:grid;place-items:center;box-shadow:0 1px 5px rgba(11,11,35,.3);padding:0;font-family:var(--font-primary)}
 #bocetoModal .logoDelete:hover{background:#EF7958;color:#fff;border-color:#EF7958}
@@ -286,8 +304,8 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .suffix-wrap input{padding-right:38px}
 #bocetoModal input.need{border-color:#F9CE32; box-shadow:0 0 0 2.5px rgba(249,206,50,.35)}
 #bocetoModal select{padding-right:32px}
-#bocetoModal #trimUndo, #bocetoModal #undoDeleteBtn, #bocetoModal #photoIaUndo, #bocetoModal #iaLogoUndo{border:none; background:none; color:var(--formas-navy); font-family:var(--font-primary); font-size:12px; font-weight:700; text-decoration:underline; cursor:pointer; padding:0; flex:none; white-space:nowrap}
-#bocetoModal #trimUndo:hover, #bocetoModal #undoDeleteBtn:hover, #bocetoModal #photoIaUndo:hover, #bocetoModal #iaLogoUndo:hover{color:#EF7958}
+#bocetoModal #trimUndo, #bocetoModal #undoDeleteBtn, #bocetoModal #photoIaUndo, #bocetoModal #iaLogoUndo, #bocetoModal #olvidarMedidaBtn{border:none; background:none; color:var(--formas-navy); font-family:var(--font-primary); font-size:12px; font-weight:700; text-decoration:underline; cursor:pointer; padding:0; flex:none; white-space:nowrap}
+#bocetoModal #trimUndo:hover, #bocetoModal #undoDeleteBtn:hover, #bocetoModal #photoIaUndo:hover, #bocetoModal #iaLogoUndo:hover, #bocetoModal #olvidarMedidaBtn:hover{color:#EF7958}
 /* zoom y paneo del canvas */
 #bocetoModal #frameWrap{overflow:hidden; position:relative; border-radius:14px}
 #bocetoModal{--Z:1} /* default para todo lo que está fuera del lienzo con zoom (p. ej. manijas del recorte); sin esto sus calc(--Z) quedan inválidos y las manijas colapsan */
@@ -308,6 +326,8 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #rulerLine i{width:calc(2.5px/var(--Z)); height:calc(12px/var(--Z))}
 #bocetoModal .ruler-handle{width:calc(18px/var(--Z)); height:calc(18px/var(--Z)); border-width:calc(3.5px/var(--Z))}
 #bocetoModal #rulerLabel{font-size:calc(11.5px/var(--Z)); padding:calc(4px/var(--Z)) calc(12px/var(--Z))}
+#bocetoModal #autoRect{border-width:calc(2px/var(--Z))}
+#bocetoModal #autoRect span{font-size:calc(10.5px/var(--Z)); padding:calc(2px/var(--Z)) calc(8px/var(--Z))}
 #bocetoModal #frame.panable{cursor:grab}
 #bocetoModal #frame.panable:active{cursor:grabbing}
 #bocetoModal #zoomCtrls{position:absolute; bottom:28px; right:28px; z-index:10; display:flex; align-items:center; gap:2px; padding:4px 6px; border-radius:999px; border:1.5px solid var(--formas-gray-200); background:#fff; box-shadow:0 2px 8px rgba(11,11,35,.18)}
@@ -382,6 +402,7 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #frame.clean .handle,
 #bocetoModal #frame.clean #measureChip,
 #bocetoModal #frame.clean #ruler,
+#bocetoModal #frame.clean #autoRect,
 #bocetoModal #frame.clean .logoDelete,
 #bocetoModal #frame.clean .logoRotate{display:none !important}
 #bocetoModal #frame.clean .logoItem.selected{outline:none}
@@ -420,6 +441,21 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #iaModal .iaBtns .dl{margin-right:auto; border-color:var(--navy); color:var(--navy); font-weight:700}
 .btn-dlfoto{display:block; width:100%; margin-top:6px; padding:8px 10px; border:1px dashed var(--formas-gray-200,#E4E4ED); border-radius:10px; background:#fff; color:var(--text-body); font:inherit; font-size:12px; font-weight:600; cursor:pointer}
 .btn-dlfoto:hover{border-color:var(--navy); color:var(--navy)}
+/* traer el producto de formas.shop (ficha, arriba del nombre) */
+.shopRow{display:flex; gap:6px}
+.shopRow input{flex:1; min-width:0}
+.shopRow button{flex:none; padding:0 14px; border:none; border-radius:8px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
+.shopRow button:disabled{opacity:.6; cursor:progress}
+.shopResultados{display:flex; flex-direction:column; gap:5px; margin-top:6px}
+.shopRes{display:flex; align-items:center; gap:9px; width:100%; text-align:left; padding:5px 8px 5px 5px; border-radius:8px; border:1px solid var(--border); background:#fff; font:inherit; font-size:12px; font-weight:600; color:var(--navy); cursor:pointer}
+.shopRes:hover, .shopRes.activo{border-color:var(--navy); background:var(--sunken)}
+.shopRes img{width:42px; height:42px; flex:none; object-fit:contain; border-radius:6px; background:#fff; border:1px solid var(--border)}
+.shopRes img.sin{visibility:hidden}
+.shopRes span{min-width:0; line-height:1.3}
+.shopRes small{display:block; font-weight:400; color:var(--muted); font-size:10.5px}
+.shopResMas{font-size:10.5px; color:var(--muted); padding:0 2px}
+#shopNote.ok{border-left:3px solid var(--green)}
+#shopNote.mal{border-left:3px solid #EF7958}
 @media (max-width:640px){ #iaModal .iaCompare{grid-template-columns:1fr} }
 /* modificar logo con IA: va por encima del boceteador */
 #iaLogoModal{position:fixed; inset:0; z-index:120; background:rgba(11,11,35,.55); display:flex; align-items:center; justify-content:center; padding:20px}
@@ -729,6 +765,13 @@ html,body{margin:0;padding:0;background:#EDEDF2}
 
     <fieldset>
       <legend>Producto</legend>
+      <label for="shopRef">Traer de formas.shop</label>
+      <div class="shopRow">
+        <input type="text" id="shopRef" placeholder="Link, código o nombre del producto" autocomplete="off">
+        <button type="button" id="shopTraer">Traer</button>
+      </div>
+      <div class="shopResultados" id="shopResultados" hidden></div>
+      <div class="iaStatus" id="shopNote" hidden><span id="shopNoteTxt"></span></div>
       <label>Nombre del producto <span style="font-weight:400">(Enter = salto de línea)</span></label>
       <textarea id="f_producto" placeholder="Producto"></textarea>
       <label>Cantidad</label><input type="text" id="f_cantidad" placeholder="Cantidad">
@@ -965,6 +1008,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
               <span class="handle bl" data-corner="bl"></span><span class="handle br" data-corner="br"></span>
             </div>
             <div id="measureChip" hidden></div>
+            <div id="autoRect" hidden><span id="autoRectLbl"></span></div>
             <div id="ruler" hidden>
               <div id="rulerLine"><i></i><i></i></div>
               <span class="ruler-handle" id="rh1"></span>
@@ -1005,6 +1049,12 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <!-- Paso 1: producto -->
       <div class="card step" id="step1">
         <div class="step-head"><span class="step-num">1</span><h2>Foto del producto</h2></div>
+        <div class="field" id="shopGaleria" style="margin-top:0" hidden>
+          <span class="label" style="letter-spacing:.08em">Fotos de formas.shop</span>
+          <div class="shopFotos" id="shopFotos"></div>
+          <div class="note" id="shopFotosNote" hidden>🛍 <span id="shopFotosNoteTxt"></span></div>
+          <div class="or-sep" style="margin:12px 0 2px">— o subí otra —</div>
+        </div>
         <label class="upload-tile" for="photoInput">
           <span class="thumb slot" id="photoThumb">📷</span>
           <span class="txt" id="photoTxt">Elegir foto del producto<small>JPG o PNG · se recomienda recortada al producto</small></span>
@@ -1012,7 +1062,17 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <input type="file" id="photoInput" accept="image/png,image/jpeg,image/webp" hidden>
         <div class="note" id="photoIaNote" hidden>✨ <span id="photoIaNoteTxt"></span> <button type="button" id="photoIaUndo">Volver a la original</button></div>
         <div class="field" id="rulerField">
-          <span class="label" style="letter-spacing:.08em">Escala real · regla</span>
+          <span class="label" style="letter-spacing:.08em">Medida del producto · de la descripción</span>
+          <div class="field-row" style="margin-top:0">
+            <div class="field" style="margin-top:0;flex:1.2">
+              <input type="text" id="prodMedidas" placeholder="Ej.: 14 × 9 cm" autocomplete="off">
+            </div>
+            <div class="field" style="margin-top:0">
+              <button class="btn btn-secondary" type="button" id="autoMedirBtn" style="padding:9px 12px" disabled title="Busca el producto en la foto y ubica la regla de borde a borde">📐 Medir solo</button>
+            </div>
+          </div>
+          <div class="note" id="autoMedNote" hidden><span id="autoMedIco">📐</span> <span id="autoMedTxt"></span></div>
+          <span class="label" style="letter-spacing:.08em;margin-top:8px">Escala real · regla</span>
           <div class="field-row" style="margin-top:0">
             <div class="field" style="margin-top:0;flex:1.2">
               <div class="suffix-wrap"><input type="number" id="rulerCm" placeholder="Centímetros" min="0.5" max="500" step="0.1"><span class="suffix">cm</span></div>
@@ -1022,6 +1082,10 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             </div>
           </div>
           <small style="color:var(--text-muted);font-size:11.5px">Llevá los extremos de la regla de lado a lado del producto en la foto y anotá cuánto mide esa distancia en la vida real. Con eso las medidas del logo se calculan solas.</small>
+          <div id="guardarMedidaBox" hidden>
+            <button class="btn btn-secondary" type="button" id="guardarMedidaBtn" style="margin-top:8px" title="La próxima vez que alguien traiga este producto del shop, la regla sale así">💾 Guardar esta medida para la próxima</button>
+            <div class="note" id="guardarMedidaNote" hidden><span id="guardarMedidaIco">💾</span> <span id="guardarMedidaTxt"></span> <button type="button" id="olvidarMedidaBtn" hidden>Volver a la automática</button></div>
+          </div>
         </div>
       </div>
 
@@ -1029,6 +1093,11 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <div class="card step locked" id="step2">
         <div class="step-head"><span class="step-num">2</span><h2>Área de impresión</h2></div>
         <button class="btn btn-secondary" type="button" id="drawZoneBtn">Marcar área sobre la foto</button>
+        <div id="areasShop" hidden>
+          <span class="label" style="letter-spacing:.08em;display:block;margin-top:12px">Área de impresión según el shop</span>
+          <div class="areaChips" id="areaChips"></div>
+          <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11.5px">Tocá una y se marca a medida real sobre el producto; después la llevás a su lugar.</small>
+        </div>
         <div class="readout" id="zoneReadout" hidden>
           <div class="row"><span class="label">Área marcada</span><span class="val num" id="zoneSizeOut">—</span></div>
         </div>
@@ -4298,6 +4367,7 @@ function openBocetoModal(){
   bocetoColors = JSON.parse(JSON.stringify(printColors)); // el editor arranca con los colores de la ficha
   drawBocetoColors(); syncBcToggles();
   if(window.__bocetoRender) window.__bocetoRender();
+  if(window.__bocetoAlAbrir) window.__bocetoAlAbrir(); // producto traído de formas.shop en la ficha
 }
 function closeBocetoModal(){
   bocetoModal.hidden = true;
@@ -4435,6 +4505,8 @@ const state = {
   drawMode: false,
   ruler: null,
   rulerVisible: false,
+  auto: null,          // lo que encontró "Medir solo": {x,y,w,h} del producto (0–1), cmW, cmH, conf, desvio
+  areasShop: [],       // áreas de impresión de la descripción del shop: {nombre, w, h} en cm
   mode: 'logo',        // por defecto: "Tengo la medida exacta del logo"
   unit: 'cm',          // unidad de carga y lectura de medidas: 'cm' o 'mm' (internamente todo vive en cm)
   zoom: 1,
@@ -4607,6 +4679,27 @@ function render(){
     Object.assign(lbl.style,{left:(p1.x+p2.x)/2+'px',top:(p1.y+p2.y)/2+'px'});
   } else $('ruler').hidden = true;
 
+  /* el contorno que encontró "Medir solo" acompaña a la regla */
+  const A = state.auto;
+  const verAuto = !!A && state.mode === 'product' && state.rulerVisible && !frame.hidden;
+  $('autoRect').hidden = !verAuto;
+  if(verAuto){
+    Object.assign($('autoRect').style,{left:A.x*100+'%',top:A.y*100+'%',width:A.w*100+'%',height:A.h*100+'%'});
+    $('autoRect').classList.toggle('label-in', A.y < 0.06);
+    $('autoRectLbl').textContent = 'Producto · ' + fmtPair(A.cmW, A.cmH);
+  }
+  $('autoMedirBtn').disabled = frame.hidden;
+  $('guardarMedidaBox').hidden = !(fotoShopActual && state.mode === 'product' && !frame.hidden);
+  $('guardarMedidaBtn').disabled = !cmPerPx() || guardando;
+  const kArea = cmPerPx();
+  $('areaChips').querySelectorAll('.areaChip').forEach(b => {
+    const a = state.areasShop[+b.dataset.i];
+    if(!a) return;
+    b.textContent = a.nombre + ' · ' + fmtPair(a.w, a.h);
+    b.disabled = !kArea;
+    b.title = kArea ? 'Marcar esta área a medida real' : 'Primero calibrá la escala (Medir solo o la regla)';
+  });
+
   /* resaltar lo que falta y mantener vivo el candado del paso 4 */
   const L2 = selLogo();
   $('logoWcm').classList.toggle('need', state.mode === 'logo' && !!L2 && !(L2.cmW > 0));
@@ -4667,6 +4760,7 @@ function padNarrowPhoto(img){
 
 let photoName = '';
 function loadPhoto(file){
+  fotoShopActual = null;
   const r = new FileReader();
   r.onload = ev => loadPhotoSrc(ev.target.result, file.name);
   r.readAsDataURL(file); // dataURL: sobrevive en plantillas guardadas
@@ -4688,6 +4782,7 @@ function loadPhotoSrc(url, name, opts){
     $('logoInput').value = '';
     state.ruler = { x1:.08, y1:.5, x2:.92, y2:.5 };
     state.rulerVisible = true;
+    state.auto = null; $('autoMedNote').hidden = true; // la medición automática era de la foto anterior
     $('rulerToggle').disabled = false;
     syncRulerBtn();
     $('cleanToggle').hidden = false;
@@ -4702,11 +4797,12 @@ function loadPhotoSrc(url, name, opts){
        la foto" queda a la vista para que el clic sea el paso evidente */
     if(state.mode !== 'product') enterDrawMode();
     syncLogoUI(); setStepStates(); render();
+    if(opts.listo) opts.listo();
   };
   const probe = new Image();
   probe.onload = () => {
     if(!opts.sinAvisoRes && esBajaRes(probe.naturalWidth, probe.naturalHeight)){
-      avisarBajaRes(url, name, probe.naturalWidth, probe.naturalHeight);
+      avisarBajaRes(url, name, probe.naturalWidth, probe.naturalHeight, opts.listo);
       return;
     }
     photo.src = padNarrowPhoto(probe) || url;
@@ -4717,7 +4813,7 @@ function loadPhotoSrc(url, name, opts){
 
 /* ---------- foto en baja resolución: cambiar, mantener o agrandar con IA ---------- */
 let fotoOriginalBajaRes = null; // para volver atrás después de agrandar con IA
-function avisarBajaRes(url, name, w, h){
+function avisarBajaRes(url, name, w, h, listo){
   const modal = document.getElementById('lowResModal');
   const status = $('lowResStatus');
   const btns = ['lowResChange', 'lowResKeep', 'lowResIa'].map(id => $(id));
@@ -4728,7 +4824,7 @@ function avisarBajaRes(url, name, w, h){
   modal.hidden = false;
   const cerrar = () => { modal.hidden = true; };
   $('lowResChange').onclick = () => { cerrar(); $('photoInput').value = ''; $('photoInput').click(); };
-  $('lowResKeep').onclick = () => { cerrar(); loadPhotoSrc(url, name, { sinAvisoRes:true }); };
+  $('lowResKeep').onclick = () => { cerrar(); loadPhotoSrc(url, name, { sinAvisoRes:true, listo }); };
   $('lowResIa').onclick = async () => {
     btns.forEach(b => b.disabled = true);
     const setS = t => { status.hidden = false; status.textContent = t; };
@@ -4741,6 +4837,7 @@ function avisarBajaRes(url, name, w, h){
       loadPhotoSrc(image, base + ' (IA)', {
         sinAvisoRes: true,
         iaNote: 'La foto se agrandó con IA' + (m ? ' a ' + m.w + ' × ' + m.h + ' px' : '') + '. Revisá que el producto siga idéntico antes de seguir.',
+        listo,
       });
     }catch(err){
       setS('⚠ ' + (err && err.message ? err.message : err));
@@ -4786,6 +4883,756 @@ function setMode(m){
 }
 $('modeLogo').addEventListener('click', () => setMode('logo'));
 $('modeProduct').addEventListener('click', () => setMode('product'));
+
+/* ---------- medición automática del producto ----------
+   Con las medidas reales de la descripción ("14 × 9 cm") se busca el producto en la
+   foto y la regla queda sola de borde a borde. Es para fotos de catálogo: producto de
+   frente sobre fondo liso. Las dos medidas se verifican entre sí: si el ancho y el alto
+   que se ven en la foto no guardan la proporción de la descripción, se avisa. */
+
+/* "Medidas: 21 × 14 × 1,4 cm (A5)" → [21, 14, 1.4] (siempre en cm).
+   Acepta x / × / X, coma decimal, Ø, cm o mm (el número sin unidad toma la que sigue)
+   e ignora lo que no es largo: gramos, ml, litros, el 5 de "A5". Sin ninguna unidad, va `unidad`. */
+function medidasDeTexto(t, unidad){
+  t = String(t || '').replace(/[øØ⌀]/g, ' ').replace(/[xX×*]\s*(?=\d)/g, ' × ');
+  const re = /(?<![\p{L}\d.,])(\d+(?:[.,]\d+)?)\s*(cm|mm|m(?![\p{L}])|g|kg|ml|l(?![\p{L}])|°|"|pulgadas?)?/giu;
+  const nums = [];
+  let m;
+  while((m = re.exec(t))) nums.push({ v: parseFloat(m[1].replace(',', '.')), u: (m[2] || '').toLowerCase() });
+  /* el número sin unidad hereda la unidad del siguiente que la tenga ("14 × 9 cm") */
+  for(let i = nums.length - 1, u = unidad || ''; i >= 0; i--){
+    if(nums[i].u) u = nums[i].u; else nums[i].u = u;
+  }
+  const k = { cm:1, mm:0.1, m:100 };
+  return nums.filter(n => k[n.u] && n.v > 0).map(n => +(n.v * k[n.u]).toFixed(3));
+}
+const textoMedidas = v => v.map(n => String(n).replace('.', ',')).join(' × ') + ' cm';
+
+/* Busca el cuerpo del producto en la foto (RGBA) y qué medida de la descripción le
+   toca a cada lado. Devuelve el rectángulo en px y qué tan confiable es. */
+function medirProductoEnFoto(px, W, H, dims){
+  const N = W*H;
+  /* 1. color de fondo: mediana del borde de la foto */
+  const borde = [];
+  for(let x = 0; x < W; x += 2) borde.push(x, x + (H-1)*W);
+  for(let y = 0; y < H; y += 2) borde.push(y*W, y*W + W-1);
+  const med = c => { const v = borde.map(i => px[i*4+c]).sort((a,b) => a-b); return v[v.length>>1]; };
+  const bg = [med(0), med(1), med(2)];
+  const dif = i => Math.max(Math.abs(px[i*4]-bg[0]), Math.abs(px[i*4+1]-bg[1]), Math.abs(px[i*4+2]-bg[2]));
+  if(borde.filter(i => dif(i) < 26).length / borde.length < 0.7) return { ok:false, motivo:'fondo' };
+  /* tolerancia según el ruido del fondo: en un blanco de estudio limpio se afina para
+     no perder productos blancos o claros; en un fondo con grano o degradé se abre */
+  const ruido = borde.map(dif).sort((a,b) => a-b)[Math.floor(borde.length*0.9)];
+  const TOL = Math.min(30, Math.max(12, ruido*2 + 8));
+
+  /* 2. silueta: lo que no es fondo conectado al borde (lo blanco de adentro del producto sigue siendo producto) */
+  const fondo = new Uint8Array(N), cola = new Int32Array(N);
+  let qa = 0, qb = 0;
+  const sembrar = i => { if(!fondo[i] && dif(i) < TOL){ fondo[i] = 1; cola[qb++] = i; } };
+  for(let x = 0; x < W; x++){ sembrar(x); sembrar(x + (H-1)*W); }
+  for(let y = 0; y < H; y++){ sembrar(y*W); sembrar(y*W + W-1); }
+  while(qa < qb){
+    const i = cola[qa++], x = i % W;
+    if(x > 0) sembrar(i-1);
+    if(x < W-1) sembrar(i+1);
+    if(i >= W) sembrar(i-W);
+    if(i < N-W) sembrar(i+W);
+  }
+  /* la pieza más grande es el producto (una tapa suelta o un reflejo no cuentan) */
+  const comp = new Int32Array(N).fill(-1), areas = [];
+  let mejor = -1, mejorArea = 0;
+  const unir = (j, s) => { if(!fondo[j] && comp[j] === -1){ comp[j] = s; cola[qb++] = j; } };
+  for(let s = 0; s < N; s++){
+    if(fondo[s] || comp[s] !== -1) continue;
+    qa = 0; qb = 0; cola[qb++] = s; comp[s] = s;
+    while(qa < qb){
+      const i = cola[qa++], x = i % W;
+      if(x > 0) unir(i-1, s);
+      if(x < W-1) unir(i+1, s);
+      if(i >= W) unir(i-W, s);
+      if(i < N-W) unir(i+W, s);
+    }
+    areas.push(qb);
+    if(qb > mejorArea){ mejorArea = qb; mejor = s; }
+  }
+  if(mejorArea < N*0.01) return { ok:false, motivo:'sin-producto' };
+  /* foto grupal (varios colores, varios modelos): se mide uno, pero no es la foto para bocetar */
+  const varios = areas.filter(a => a >= mejorArea*0.25).length > 1;
+  const sil = new Uint8Array(N);
+  let x0 = W, y0 = H, x1 = -1, y1 = -1;
+  for(let i = 0; i < N; i++) if(comp[i] === mejor){
+    sil[i] = 1;
+    const x = i % W, y = (i / W) | 0;
+    if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y;
+  }
+  /* integral de la silueta: cuánto producto cae dentro de cualquier rectángulo, al instante */
+  const W1 = W+1, integ = new Int32Array(W1*(H+1));
+  for(let y = 0; y < H; y++){
+    let fila = 0;
+    for(let x = 0; x < W; x++){ fila += sil[y*W+x]; integ[(y+1)*W1 + x+1] = integ[y*W1 + x+1] + fila; }
+  }
+  const area = (a, b, c, d) => integ[d*W1+c] - integ[b*W1+c] - integ[d*W1+a] + integ[b*W1+a]; // [a,c) × [b,d)
+
+  /* 3. bordes rectos: por cada columna, cuántas filas tienen un salto fuerte de color
+     (o el contorno de la silueta). Una línea vertical larga = un lado del producto. */
+  const salto = (i, j) => sil[i] !== sil[j]
+    || Math.max(Math.abs(px[i*4]-px[j*4]), Math.abs(px[i*4+1]-px[j*4+1]), Math.abs(px[i*4+2]-px[j*4+2])) > 38;
+  const V = new Float64Array(W+1), Hh = new Float64Array(H+1);
+  for(let y = y0; y <= y1; y++) for(let x = Math.max(1, x0); x <= Math.min(W-1, x1+1); x++){
+    const i = y*W + x;
+    if(salto(i, i-1)) V[x]++;
+  }
+  for(let y = Math.max(1, y0); y <= Math.min(H-1, y1+1); y++) for(let x = x0; x <= x1; x++){
+    const i = y*W + x;
+    if(salto(i, i-W)) Hh[y]++;
+  }
+  /* bordes candidatos: picos de línea (tolerando 1 px de temblor) + los extremos de la silueta */
+  const picos = (P, a, b, largo, extra) => {
+    const S = i => P[i-1] + P[i] + P[i+1];
+    const c = [];
+    for(let i = Math.max(1, a); i <= b; i++){
+      const s = S(i);
+      if(s < largo*0.22 || s < S(i-1) || s <= S(i+1)) continue;
+      /* el pico de la suma cae al final de la meseta: el borde es la columna más fuerte de las tres */
+      const p = P[i-1] > P[i] && P[i-1] >= P[i+1] ? i-1 : P[i+1] > P[i] ? i+1 : i;
+      c.push({ p, f:Math.min(1, s/largo) });
+    }
+    c.sort((m, n) => n.f - m.f);
+    const sel = c.slice(0, 14);
+    for(const e of extra) if(!sel.some(m => Math.abs(m.p-e) <= 1)) sel.push({ p:e, f:0.5 });
+    return sel;
+  };
+  const bw = x1-x0+1, bh = y1-y0+1;
+  const cx = picos(V, x0, x1+1, bh, [x0, x1+1]);
+  const cy = picos(Hh, y0, y1+1, bw, [y0, y1+1]);
+
+  /* 4. pares de medidas posibles (en una foto de frente se ven las dos más grandes) */
+  const d = dims.filter(v => v > 0).sort((a, b) => b-a);
+  if(d.length < 2) return { ok:false, motivo:'medidas' };
+  const pares = [];
+  for(let i = 0; i < d.length; i++) for(let j = i+1; j < d.length; j++){
+    const sesgo = (i === 0 && j === 1) ? 0 : 0.03;
+    pares.push({ w:d[i], h:d[j], sesgo }, { w:d[j], h:d[i], sesgo });
+  }
+
+  /* 5. el rectángulo que mejor explica la silueta con la proporción de la descripción:
+     así quedan afuera el bolígrafo de costado, el anillado, las manijas o la cinta */
+  let best = null;
+  for(let a = 0; a < cx.length; a++) for(let c = 0; c < cx.length; c++){
+    const L = cx[a].p, R = cx[c].p, w = R - L;
+    if(w < bw*0.3) continue;
+    for(let b = 0; b < cy.length; b++) for(let e = 0; e < cy.length; e++){
+      const T = cy[b].p, B = cy[e].p, h = B - T;
+      if(h < bh*0.3) continue;
+      const dentro = area(L, T, R, B);
+      const cobertura = dentro / (w*h);
+      const afuera = 1 - dentro / mejorArea;
+      const bordes = (cx[a].f + cx[c].f + cy[b].f + cy[e].f) / 4;
+      for(const pr of pares){
+        const err = Math.abs(Math.log((h/w) / (pr.h/pr.w)));
+        const score = err*4 + (1-cobertura)*1.5 + afuera*1.2 - bordes*0.25 + pr.sesgo;
+        if(!best || score < best.score) best = { score, L, T, R, B, err, cobertura, afuera, pr };
+      }
+    }
+  }
+  if(!best) return { ok:false, motivo:'baja' };
+  const { L, T, R, B, pr } = best;
+  if(L <= 0 || T <= 0 || R >= W || B >= H) return { ok:false, motivo:'recorte' }; // el borde real quedó fuera de la foto
+  const sx = pr.w / (R-L), sy = pr.h / (B-T);
+  let conf = (best.err < 0.03 && best.cobertura > 0.85 && best.afuera < 0.2) ? 'alta'
+    : (best.err < 0.07 && best.cobertura > 0.7) ? 'media' : 'baja';
+  if(varios && conf === 'alta') conf = 'media';
+  return {
+    ok: true, conf, W, H,
+    rect: { x0:L, y0:T, x1:R, y1:B },
+    cm: { w:pr.w, h:pr.h },
+    desvio: Math.abs(sx - sy) / Math.min(sx, sy), // cuánto difieren la escala del ancho y la del alto
+    cobertura: best.cobertura, afuera: best.afuera, varios,
+  };
+}
+
+/* mide una imagen ya cargada (img o canvas); las fotos grandes se achican a 1600 px */
+function medirImagenProducto(img, dims){
+  const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  const s = Math.min(1, 1600 / Math.max(iw, ih));
+  const w = Math.max(1, Math.round(iw*s)), h = Math.max(1, Math.round(ih*s));
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d', { willReadFrequently:true });
+  x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, w, h); // un PNG sin fondo se mide sobre blanco
+  x.drawImage(img, 0, 0, w, h);
+  try{ return medirProductoEnFoto(x.getImageData(0, 0, w, h).data, w, h, dims); }
+  catch(e){ console.error('medir producto:', e); return { ok:false, motivo:'error' }; }
+}
+const cargarImagen = src => new Promise((res, rej) => {
+  const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error('No pude leer la foto.')); im.src = src;
+});
+
+const pct = v => (Math.round(v*1000)/10).toLocaleString('es-AR') + ' %';
+function autoNota(tipo, ico, txt){
+  const n = $('autoMedNote');
+  n.hidden = false;
+  n.classList.toggle('ok', tipo === 'ok');
+  n.classList.toggle('mal', tipo === 'mal');
+  $('autoMedIco').textContent = ico;
+  $('autoMedTxt').textContent = txt;
+}
+const MOTIVO_AUTO = {
+  fondo: 'Esta foto no tiene el fondo liso (parece una foto en situación). Para medir solo hace falta la foto de catálogo: el producto de frente sobre fondo blanco. Elegí otra o ubicá la regla a mano.',
+  recorte: 'El producto toca los bordes de la foto y no se ve entero: así no se puede medir solo. Ubicá la regla a mano.',
+  'sin-producto': 'No encontré el producto en la foto. Ubicá la regla a mano.',
+  error: 'No pude leer la foto para medirla. Ubicá la regla a mano.',
+};
+
+/* "📐 Medir solo": busca el producto en la foto del lienzo y deja la regla calibrada */
+function autoMedir(){
+  if(frame.hidden) return null;
+  const dims = medidasDeTexto($('prodMedidas').value, 'cm');
+  if(dims.length < 2){
+    autoNota('mal', '📐', 'Anotá la medida del producto, ancho × alto (ej. 14 × 9 cm), y tocá «Medir solo».');
+    $('prodMedidas').focus();
+    return null;
+  }
+  if(state.mode !== 'product') setMode('product'); // medir el producto es el modo «Sé la medida del producto»
+  const r = medirImagenProducto(photo, dims);
+  state.auto = null;
+  if(!r.ok || r.conf === 'baja'){
+    autoNota('mal', '⚠', MOTIVO_AUTO[r.motivo] || ('No pude medirlo con seguridad: en esta foto el producto no coincide con '
+      + textoMedidas(dims) + ' (puede estar en perspectiva, abierto o de costado). Probá con la foto de frente o ubicá la regla a mano.'));
+    render();
+    return r;
+  }
+  const q = r.rect;
+  const A = { x:q.x0/r.W, y:q.y0/r.H, w:(q.x1-q.x0)/r.W, h:(q.y1-q.y0)/r.H, cmW:r.cm.w, cmH:r.cm.h, conf:r.conf, desvio:r.desvio };
+  state.auto = A;
+  /* la regla va sobre el lado largo, justo de borde a borde (más píxeles = menos error) */
+  const vertical = (q.y1-q.y0) >= (q.x1-q.x0);
+  state.ruler = vertical
+    ? { x1:A.x + A.w/2, y1:A.y, x2:A.x + A.w/2, y2:A.y + A.h }
+    : { x1:A.x, y1:A.y + A.h/2, x2:A.x + A.w, y2:A.y + A.h/2 };
+  $('rulerCm').value = String(vertical ? A.cmH : A.cmW);
+  state.rulerVisible = true; $('rulerToggle').disabled = false; syncRulerBtn();
+  if(state.drawMode) exitDrawMode(); // primero se mira la regla; después, «Marcar área»
+  const medida = fmtCm(A.cmW) + ' × ' + fmtCm(A.cmH) + ' cm';
+  if(r.conf === 'alta'){
+    autoNota('ok', '✓', 'Medido solo: el producto ocupa ' + medida + ' en la foto y el ancho y el alto coinciden con la descripción (diferencia de '
+      + pct(r.desvio) + '). Las medidas del área y del logo ya son reales.');
+  } else {
+    const dudas = [];
+    if(r.desvio >= 0.03) dudas.push('el ancho y el alto de la foto no guardan del todo la proporción de la descripción (difieren ' + pct(r.desvio) + ')');
+    if(r.varios) dudas.push('en la foto hay varios productos');
+    if(r.cobertura <= 0.85) dudas.push('el producto no es del todo rectangular en la foto');
+    if(r.afuera >= 0.2) dudas.push('parte del producto (manijas, tapa, accesorios) queda fuera de la medida');
+    autoNota('', '⚠', 'Medido con dudas (' + medida + '): ' + (dudas.join('; ') || 'la foto no es del todo de frente')
+      + '. Revisá que la regla vaya de borde a borde del producto y ajustala si hace falta.');
+  }
+  render();
+  return r;
+}
+$('autoMedirBtn').addEventListener('click', autoMedir);
+$('prodMedidas').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); autoMedir(); } });
+
+/* ---------- áreas de impresión del shop: se marcan a medida real ---------- */
+function pintarAreas(){
+  const box = $('areaChips');
+  box.innerHTML = '';
+  state.areasShop.forEach((a, i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'areaChip'; b.dataset.i = i;
+    b.addEventListener('click', () => marcarAreaShop(a));
+    box.appendChild(b);
+  });
+  $('areasShop').hidden = !state.areasShop.length;
+}
+function marcarAreaShop(a){
+  const k = cmPerPx();
+  if(!k) return;
+  const {w:FW,h:FH} = frameRect();
+  const w = Math.min(1, a.w / k / FW), h = Math.min(1, a.h / k / FH);
+  const A = state.auto;
+  const cx = A ? A.x + A.w/2 : .5, cy = A ? A.y + A.h/2 : .5;
+  state.zone = { x:clamp(cx - w/2, 0, 1-w), y:clamp(cy - h/2, 0, 1-h), w, h };
+  if(state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); } // igual que al dibujar el área
+  exitDrawMode(); setStepStates(); render();
+}
+
+/* ---------- traer el producto de formas.shop ----------
+   El shop no deja leer sus páginas ni sus fotos desde otra web: pasan por la función
+   /api/shop (functions/api/shop.js). La ficha se interpreta acá. */
+const SHOP_ENDPOINT = '/api/shop';
+let shopFotos = []; // {url, src (data URL), med}
+
+function shopNota(tipo, txt){
+  const n = $('shopNote');
+  n.hidden = !txt;
+  n.classList.toggle('ok', tipo === 'ok');
+  n.classList.toggle('mal', tipo === 'mal');
+  $('shopNoteTxt').textContent = txt || '';
+}
+/* "https://formas.shop/app/product/detail/18953", "…/detail/18953?x=1" o "18953" */
+function shopId(txt){
+  const t = String(txt || '').trim();
+  const m = t.match(/detail\/(\d{1,9})/) || t.match(/^#?(\d{1,9})$/);
+  return m ? m[1] : null;
+}
+async function shopFetch(qs){
+  let r;
+  try{ r = await fetch(SHOP_ENDPOINT + '?' + qs); }
+  catch(e){
+    throw new Error(location.protocol === 'file:'
+      ? 'Traer del shop funciona en la app publicada (formas-bocetos-con-logo.pages.dev), no abriendo el archivo con doble clic.'
+      : 'No pude conectar con formas.shop. Revisá la conexión a internet y probá de nuevo.');
+  }
+  if(/json/i.test(r.headers.get('content-type') || '')){
+    const d = await r.json().catch(() => ({}));
+    throw new Error((d.error || ('Error ' + r.status)) + (d.detalle ? ': ' + String(d.detalle).slice(0, 200) : ''));
+  }
+  if(!r.ok) throw new Error(r.status === 404 || r.status === 405
+    ? 'Esta dirección no tiene el puente con el shop (respondió ' + r.status + '). Entrá desde formas-bocetos-con-logo.pages.dev.'
+    : 'El servidor falló (error ' + r.status + '). Probá de nuevo en un rato.');
+  return r;
+}
+const blobADataUrl = b => new Promise((res, rej) => {
+  const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => rej(new Error('No pude leer la foto.')); fr.readAsDataURL(b);
+});
+
+/* La descripción de un producto (HTML de la ficha del shop o de la API de catálogo) →
+   medidas del producto y áreas de impresión. Trabaja sobre el texto, sin DOM, para que
+   la misma lectura sirva en el navegador y al armar el catálogo (herramientas/catalogo-shop.mjs). */
+const ENTIDADES = { nbsp:' ', amp:'&', quot:'"', lt:'<', gt:'>', times:'×', deg:'°', middot:'·', bull:'•', ndash:'–', minus:'−',
+  oslash:'ø', Oslash:'Ø', aacute:'á', eacute:'é', iacute:'í', oacute:'ó', uacute:'ú', Aacute:'Á', Eacute:'É', Iacute:'Í',
+  Oacute:'Ó', Uacute:'Ú', ntilde:'ñ', Ntilde:'Ñ', uuml:'ü', ouml:'ö', iquest:'¿', iexcl:'¡', ldquo:'“', rdquo:'”',
+  lsquo:'‘', rsquo:'’', plusmn:'±', reg:'®', acute:'´', Egrave:'È', egrave:'è' };
+const sinEntidades = t => t.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) =>
+  e[0] === '#' ? String.fromCodePoint(e[1].toLowerCase() === 'x' ? parseInt(e.slice(2), 16) : +e.slice(1)) : (ENTIDADES[e] || m));
+function leerDescripcion(html){
+  const TITULO = '\u0001';
+  /* un renglón por párrafo, ítem o salto; un párrafo todo en negrita es el título de una sección */
+  const renglones = sinEntidades(String(html || '')
+      .replace(/<p[^>]*>\s*<(strong|b)\b[^>]*>([^<]*)<\/\1>\s*<\/p>/gi, '\n' + TITULO + '$2\n')
+      .replace(/<br\s*\/?>|<\/?(p|li|ul|ol|div|h\d|tr|td)\b[^>]*>/gi, '\n')
+      .replace(/<[^>]+>/g, ''))
+    .split(/\r?\n/).map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  let medidas = null, seccion = '';
+  const areas = [];
+  const sumarArea = (nombre, w, h) => {
+    nombre = nombre.replace(/^[\s,;:.-]+|[\s,;:.øØ-]+$/g, '').replace(/^y\s+/i, '') || 'Área';
+    nombre = nombre[0].toUpperCase() + nombre.slice(1);
+    if(!areas.some(a => a.nombre === nombre && a.w === w && a.h === h)) areas.push({ nombre, w, h });
+  };
+  for(let l of renglones){
+    if(l[0] === TITULO){
+      l = l.slice(1);
+      if(!/\d/.test(l)){ seccion = l.toLowerCase(); continue; }
+    }
+    const dosPuntos = l.indexOf(':');
+    const etiqueta = dosPuntos >= 0 ? l.slice(0, dosPuntos) : l.split(/\d/)[0];
+    const valor = dosPuntos >= 0 ? l.slice(dosPuntos + 1) : l;
+    if(!medidas && /^(medidas?|dimensiones|tama[ñn]o)\b/i.test(l)){
+      const v = medidasDeTexto(valor, 'cm');
+      if(v.length >= 2){ medidas = { texto:l, valores:v }; continue; }
+    }
+    const enSeccion = /impresi|grabado|decoraci|aplicaci|personalizaci/.test(seccion);
+    if(!enSeccion && !/^[aá]reas? de (impresi|grabado|decoraci)/i.test(l)) continue;
+    /* varias en un renglón (textiles): "Frente (10 × 10 cm), espalda, arriba o abajo (22 × 9,8 cm) y mangas (8 × 8 cm)" */
+    const entre = [...l.matchAll(/([^()]*?)\(([^()]*\d[^()]*)\)/g)].filter(m => medidasDeTexto(m[2]).length === 2);
+    if(entre.length > 1 || (entre.length === 1 && dosPuntos < 0)){
+      entre.forEach(m => { const v = medidasDeTexto(m[2]); sumarArea(m[1], v[0], v[1]); });
+      continue;
+    }
+    const v = medidasDeTexto(valor);
+    const circulo = v.length === 1 && /[øØ⌀]|di[aá]m/i.test(l);
+    if(v.length >= 2 || circulo) sumarArea(etiqueta, v[0], circulo ? v[0] : v[1]);
+  }
+  return { medidas, areas };
+}
+
+/* de la página pública del producto: nombre, fotos de la galería y lo de la descripción */
+function leerFichaShop(html){
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const bloque = doc.getElementById('productDescriptionBlock');
+  const og = p => { const m = doc.querySelector('meta[property="og:' + p + '"]'); return m ? (m.getAttribute('content') || '').trim() : ''; };
+  const titulo = bloque && bloque.querySelector('h3');
+  const nombre = (titulo && titulo.textContent.trim()) || og('title');
+  const fotos = [];
+  doc.querySelectorAll('.tf-product-media-main img').forEach(im => {
+    const u = im.getAttribute('data-zoom') || im.getAttribute('data-src') || im.getAttribute('src');
+    if(u && !fotos.includes(u)) fotos.push(u);
+  });
+  if(!fotos.length && og('image')) fotos.push(og('image'));
+  return Object.assign({ nombre, fotos }, leerDescripcion(bloque ? bloque.innerHTML : ''));
+}
+
+/* el color del shop ("Azul marino", "Blanco y Rojo", "Beige / kaki") → la muestra de la ficha.
+   Manda el primero de una combinación; si el nombre no está, la muestra no se toca. */
+const COLORES_SHOP = { negro:'#1A1A1A', blanco:'#FFFFFF', rojo:'#D32F2F', azul:'#1E4FBF', 'azul marino':'#1B2A4A',
+  'azul francia':'#2D5BD3', 'royal blue':'#2250C8', 'azul claro':'#64A6E8', 'azul oscuro':'#1A2F6B', celeste:'#7EC8F0',
+  verde:'#2E8B3E', 'verde claro':'#8BC34A', 'verde oscuro':'#1F5130', 'verde militar':'#4B5320', 'verde manzana':'#8CC63F',
+  gris:'#8C8C94', 'gris claro':'#CFCFD4', 'gris oscuro':'#4A4A50', 'gris topo':'#8A7F75', 'gris melange':'#A8A8AE', 'gris plata':'#C0C0C8',
+  plateado:'#C0C0C8', plata:'#C0C0C8', dorado:'#C9A227', naranja:'#F57C00', amarillo:'#FBC02D', rosa:'#F48FB1', 'rosa pastel':'#F8C8D8',
+  fucsia:'#D81B60', violeta:'#7E57C2', marron:'#6D4C41', bordo:'#7B1E2B', bordeaux:'#7B1E2B', beige:'#E8D9BE',
+  natural:'#D9C29A', crudo:'#EFE6D2', carton:'#C8A97E', kraft:'#C8A97E', madera:'#B98B5A', bamboo:'#C9A36B' };
+function hexDeColor(nombre){
+  const t = String(nombre || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split(/\s+y\s+|\s*\/\s*|,/)[0].trim();
+  return COLORES_SHOP[t] || COLORES_SHOP[t.split(' ')[0]] || null;
+}
+
+function pintarGaleria(){
+  const box = $('shopFotos');
+  box.innerHTML = '';
+  shopFotos.forEach((f, i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'shopFoto'; b.dataset.i = i;
+    b.setAttribute('aria-pressed', 'false');
+    const c = f.med && f.med.ok ? f.med.conf : '';
+    b.title = (f.prov ? 'Foto del proveedor · ' : '') + (f.guardada ? 'Medida ajustada a mano y guardada'
+      : c === 'alta' ? 'De frente: se mide sola' : c === 'media' ? 'Se puede medir, con dudas' : 'Sirve para mostrar, no para medir');
+    if(f.prov) b.classList.add('prov');
+    b.innerHTML = '<img alt="">' + (f.guardada ? '<b>💾</b>' : c === 'alta' ? '<b>✓</b>' : c === 'media' ? '<b class="media">~</b>' : '');
+    b.querySelector('img').src = f.src;
+    b.addEventListener('click', () => usarFotoShop(i));
+    box.appendChild(b);
+  });
+  $('shopGaleria').hidden = !shopFotos.length;
+}
+function galeriaNota(txt){
+  $('shopFotosNote').hidden = !txt;
+  $('shopFotosNoteTxt').textContent = txt || '';
+}
+let shopNombre = '', shopResumen = '', shopRaiz = '';
+let fotoShopActual = null; // {raiz, url, i}: la foto del lienzo es del shop y su medida se puede guardar
+function usarFotoShop(i){
+  const f = shopFotos[i];
+  if(!f) return;
+  $('shopFotos').querySelectorAll('.shopFoto').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === i)));
+  loadPhotoSrc(f.src, (shopNombre || 'Producto') + ' · foto ' + (i+1), {
+    listo: () => {
+      fotoShopActual = shopRaiz ? { raiz: shopRaiz, url: f.url, i } : null;
+      $('guardarMedidaNote').hidden = true;
+      if(f.guardada) aplicarMedidaGuardada(f.guardada);
+      else if(medidasDeTexto($('prodMedidas').value, 'cm').length >= 2) autoMedir();
+      galeriaNota(shopResumen);
+      render();
+    },
+  });
+}
+
+/* ---------- medidas guardadas a mano (functions/api/medidas.js) ----------
+   Si la medición automática no quedó bien, se ajusta la regla y se guarda: la próxima
+   vez que cualquiera traiga ese producto, sale así. */
+const MEDIDAS_ENDPOINT = '/api/medidas';
+let guardando = false;
+const quienCuando = g => (g.autor || 'alguien') + (g.fecha ? ' el ' + new Date(g.fecha).toLocaleDateString('es-AR') : '');
+async function leerMedidaGuardada(raiz){
+  if(!raiz) return null;
+  try{
+    const r = await fetch(MEDIDAS_ENDPOINT + '?raiz=' + encodeURIComponent(raiz));
+    return r.ok ? await r.json() : null; // sin la función o sin el KV, se mide como siempre
+  }catch(e){ return null; }
+}
+function guardadaNota(tipo, ico, txt, conOlvidar){
+  const n = $('guardarMedidaNote');
+  n.hidden = !txt;
+  n.classList.toggle('ok', tipo === 'ok');
+  n.classList.toggle('mal', tipo === 'mal');
+  $('guardarMedidaIco').textContent = ico;
+  $('guardarMedidaTxt').textContent = txt || '';
+  $('olvidarMedidaBtn').hidden = !conOlvidar;
+}
+function aplicarMedidaGuardada(g){
+  if(state.mode !== 'product') setMode('product');
+  state.auto = null;
+  state.ruler = { x1:g.regla.x1, y1:g.regla.y1, x2:g.regla.x2, y2:g.regla.y2 };
+  $('rulerCm').value = String(g.cm);
+  state.rulerVisible = true; $('rulerToggle').disabled = false; syncRulerBtn();
+  if(state.drawMode) exitDrawMode();
+  autoNota('ok', '💾', 'Medida ajustada a mano por ' + quienCuando(g) + ': la regla quedó como la dejaron. Si no coincide, movela y guardala de nuevo.');
+  guardadaNota('ok', '💾', 'Esta foto usa la medida guardada.', true);
+  render();
+}
+async function pedirMedidas(cuerpo){
+  const clave = iaClave(); // la misma clave de Formas que piden las funciones de IA
+  let r;
+  try{
+    r = await fetch(MEDIDAS_ENDPOINT, { method:'POST', headers:{ 'content-type':'application/json', 'x-formas-clave': clave }, body: JSON.stringify(cuerpo) });
+  }catch(e){ throw new Error('No pude conectar para guardar. Revisá la conexión a internet y probá de nuevo.'); }
+  let d = null;
+  try{ d = JSON.parse(await r.text()); }catch(e){}
+  if(r.status === 401){ localStorage.removeItem('formasIaClave'); throw new Error('Clave incorrecta. Tocá el botón de nuevo para reintentar.'); }
+  if(!d) throw new Error('Esta dirección no tiene la función para guardar medidas (respondió ' + r.status + '). Entrá desde formas-bocetos-con-logo.pages.dev.');
+  if(!r.ok) throw new Error(d.error || ('Error ' + r.status));
+  return d;
+}
+$('guardarMedidaBtn').addEventListener('click', async () => {
+  const f = fotoShopActual, cm = parseFloat($('rulerCm').value);
+  if(!f || !cmPerPx() || guardando) return;
+  const medidas = medidasDeTexto($('prodMedidas').value, 'cm');
+  const ej = document.getElementById('f_ejecutivo');
+  guardando = true; render();
+  try{
+    const d = await pedirMedidas({ raiz: f.raiz, foto: f.url, regla: { ...state.ruler }, cm,
+      medidas: medidas.length >= 2 ? medidas : undefined, autor: ej && ej.value ? ej.value : '' });
+    const g = d.fotos && d.fotos[f.url];
+    if(shopFotos[f.i] && shopFotos[f.i].url === f.url){ shopFotos[f.i].guardada = g; pintarGaleria(); $('shopFotos').querySelectorAll('.shopFoto').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === f.i))); }
+    guardadaNota('ok', '✓', 'Guardado: la próxima vez que alguien traiga «' + shopNombre + '» del shop, la regla sale así.', true);
+  }catch(e){
+    guardadaNota('mal', '⚠', e.message, false);
+  }finally{
+    guardando = false; render();
+  }
+});
+$('olvidarMedidaBtn').addEventListener('click', async () => {
+  const f = fotoShopActual;
+  if(!f || guardando) return;
+  guardando = true; render();
+  try{
+    await pedirMedidas({ raiz: f.raiz, foto: f.url, borrar: true });
+    if(shopFotos[f.i]) shopFotos[f.i].guardada = null;
+    pintarGaleria();
+    $('shopFotos').querySelectorAll('.shopFoto').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === f.i)));
+    guardadaNota('', '↺', 'Listo: esta foto vuelve a medirse sola.', false);
+    if(medidasDeTexto($('prodMedidas').value, 'cm').length >= 2) autoMedir();
+  }catch(e){
+    guardadaNota('mal', '⚠', e.message, true);
+  }finally{
+    guardando = false; render();
+  }
+});
+
+/* Catálogo armado desde la API de STP (catalogo-shop.json, ver herramientas/catalogo-shop.mjs):
+   busca por link, código o nombre al instante. Si el producto es más nuevo que el catálogo,
+   se lee su página pública. */
+let catalogoShop = null;
+function cargarCatalogo(){
+  if(!catalogoShop) catalogoShop = fetch('catalogo-shop.json')
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      if(!d || !Array.isArray(d.productos)) return null;
+      const sinTildes = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      d.porId = new Map(d.productos.map(p => [String(p.id), p]));
+      d.productos.forEach(p => { p.busca = sinTildes([p.nombre, p.color, p.variante, p.material, p.talle, p.sku, p.id].join(' ')); });
+      d.sinTildes = sinTildes;
+      return d;
+    })
+    .catch(() => null);
+  return catalogoShop;
+}
+const variantesDe = p => [p.color, p.variante].filter(Boolean).join(' · ');
+function buscarEnCatalogo(cat, txt){
+  const palabras = cat.sinTildes(txt).split(/\s+/).filter(Boolean);
+  const r = cat.productos.filter(p => palabras.every(w => p.busca.includes(w)));
+  /* primero los que empiezan con lo buscado, después los nombres más cortos */
+  const inicio = palabras[0] || '';
+  r.sort((a, b) => (b.busca.startsWith(inicio) - a.busca.startsWith(inicio)) || a.nombre.length - b.nombre.length);
+  /* los talles de un mismo producto y color van juntos: para el boceto son la misma foto */
+  const grupos = new Map();
+  for(const p of r){
+    const k = p.talle ? p.raiz + '|' + variantesDe(p) : String(p.id);
+    if(!grupos.has(k)) grupos.set(k, []);
+    grupos.get(k).push(p);
+  }
+  return [...grupos.values()].map(g => g.length === 1 ? g[0] : Object.assign({}, g[0], { talles: g.length }));
+}
+function fichaDeCatalogo(p){
+  return {
+    id: p.id, raiz: p.raiz, nombre: p.nombre, color: p.color || '', material: p.material || '', variante: p.variante || '',
+    fotos: (p.fotos || []).map(u => ({ u })).concat((p.proveedor || []).map(u => ({ u, prov:true }))),
+    medidas: p.medidas ? { texto: p.medidasTexto || '', valores: p.medidas } : null,
+    areas: p.areas || [],
+  };
+}
+/* la miniatura de la lista: las fotos de formas.shop tienen su versión chica (thumbnail_);
+   si no carga, va la foto entera y, si tampoco, por el puente */
+function miniaturaShop(img, u){
+  const entera = u.startsWith('/') ? 'https://formas.shop' + u : u;
+  const intentos = [u.startsWith('/upload/') ? 'https://formas.shop/upload/thumbnail_' + u.slice(8).replace(/^thumbnail_/, '') : entera, entera, SHOP_ENDPOINT + '?img=' + encodeURIComponent(u)]
+    .filter((x, k, a) => a.indexOf(x) === k);
+  let k = 0;
+  img.onerror = () => { if(++k < intentos.length) img.src = intentos[k]; else img.classList.add('sin'); };
+  img.src = intentos[0];
+}
+let resultados = [], resaltado = -1;
+function pintarResultados(lista, total, aviso){
+  const box = $('shopResultados');
+  box.innerHTML = '';
+  resultados = lista; resaltado = -1;
+  lista.forEach((p, k) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'shopRes';
+    b.innerHTML = '<img alt="" loading="lazy"><span><b></b><small></small></span>';
+    const foto = (p.fotos || [])[0] || (p.proveedor || [])[0];
+    if(foto) miniaturaShop(b.querySelector('img'), foto); else b.querySelector('img').classList.add('sin');
+    b.querySelector('b').textContent = p.nombre + (variantesDe(p) ? ' · ' + variantesDe(p) : '');
+    b.querySelector('small').textContent = (p.talles ? p.talles + ' talles' : p.sku + ' · ' + p.id + (p.talle ? ' · talle ' + p.talle : ''))
+      + (p.medidas ? '' : ' · sin medidas en la descripción');
+    b.addEventListener('mousedown', e => e.preventDefault()); // el campo no pierde el foco al elegir
+    b.addEventListener('click', () => elegirResultado(k));
+    box.appendChild(b);
+  });
+  const mas = total > lista.length ? 'Hay ' + total + ' que coinciden: sumá otra palabra (color, material…) para afinar.' : aviso || '';
+  if(mas){ const d = document.createElement('div'); d.className = 'shopResMas'; d.textContent = mas; box.appendChild(d); }
+  box.hidden = !box.children.length;
+}
+function elegirResultado(k){
+  const p = resultados[k];
+  if(!p) return;
+  $('shopResultados').hidden = true;
+  $('shopRef').value = String(p.id);
+  elegirProducto(fichaDeCatalogo(p));
+}
+function marcarResaltado(k){
+  resaltado = Math.max(-1, Math.min(resultados.length - 1, k));
+  $('shopResultados').querySelectorAll('.shopRes').forEach((b, n) => b.classList.toggle('activo', n === resaltado));
+}
+/* en vivo, mientras se escribe: los primeros 5 del catálogo */
+let busquedaT = 0;
+async function buscarEnVivo(){
+  const txt = $('shopRef').value.trim();
+  const id = shopId(txt);
+  if(!id && txt.length < 2){ $('shopResultados').hidden = true; resultados = []; return; }
+  const cat = await cargarCatalogo();
+  if(!cat || $('shopRef').value.trim() !== txt) return; // se siguió escribiendo
+  shopNota('', '');
+  if(id){
+    const p = cat.porId.get(id);
+    pintarResultados(p ? [p] : [], p ? 1 : 0, p ? '' : 'No está en el catálogo: tocá «Traer» para buscarlo en formas.shop.');
+    return;
+  }
+  const r = buscarEnCatalogo(cat, txt);
+  pintarResultados(r.slice(0, 5), r.length, r.length ? '' : 'Sin coincidencias en el catálogo. Probá con otra palabra o pegá el link del producto.');
+}
+
+/* "Traer" de la ficha: por link o código va directo; por nombre muestra los que coinciden */
+async function traerDelShop(){
+  const txt = $('shopRef').value.trim();
+  const id = shopId(txt);
+  $('shopResultados').hidden = true;
+  if(!id && txt.length < 3){ shopNota('mal', '⚠ Pegá el link del producto de formas.shop, su código (18953) o escribí parte del nombre.'); return; }
+  const btn = $('shopTraer');
+  btn.disabled = true;
+  try{
+    shopNota('', id ? 'Buscando el producto…' : 'Buscando en el catálogo…');
+    const cat = await cargarCatalogo();
+    if(!id){
+      if(!cat) throw new Error('No pude abrir el catálogo para buscar por nombre: pegá el link o el código del producto.');
+      const r = buscarEnCatalogo(cat, txt);
+      if(!r.length) throw new Error('No encontré «' + txt + '» en el catálogo. Probá con otra palabra o pegá el link del producto.');
+      if(r.length === 1){ $('shopRef').value = String(r[0].id); await elegirProducto(fichaDeCatalogo(r[0])); }
+      else { pintarResultados(r.slice(0, 5), r.length); shopNota('', 'Elegí uno de la lista (o seguí escribiendo para afinar).'); }
+      return;
+    }
+    const p = cat && cat.porId.get(id);
+    if(p){ await elegirProducto(fichaDeCatalogo(p)); return; }
+    /* más nuevo que el catálogo (o sin catálogo): la página pública del producto */
+    const ficha = leerFichaShop(await (await shopFetch('id=' + id)).text());
+    if(!ficha.fotos.length) throw new Error('No encontré el producto ' + id + ' en formas.shop: revisá el código.');
+    ficha.id = id;
+    ficha.raiz = 'id-' + id; // sin catálogo no se sabe la raíz: lo guardado va por código
+    ficha.fotos = ficha.fotos.map(u => ({ u }));
+    await elegirProducto(ficha);
+  }catch(e){
+    shopNota('mal', '⚠ ' + (e && e.message ? e.message : e));
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+/* Producto elegido: completa la ficha, baja y mide las fotos, y lo deja listo para el
+   boceteador (se aplica al abrirlo). */
+let shopPendiente = null, obsDelShop = '';
+async function elegirProducto(ficha){
+  const btn = $('shopTraer');
+  btn.disabled = true;
+  try{
+    const poner = (id, v) => { const el = document.getElementById(id); if(el.value !== v){ el.value = v; el.dispatchEvent(new Event('input', { bubbles:true })); } };
+    poner('f_producto', ficha.nombre || '');
+    if(ficha.color){
+      poner('f_colorprod_nom', ficha.color);
+      const hex = hexDeColor(ficha.color);
+      if(hex) poner('f_colorprod_hex', hex);
+    }
+    /* las observaciones se completan si estaban vacías o eran de un producto traído antes */
+    const obs = [ficha.material && 'Material: ' + ficha.material, ficha.variante, ficha.medidas && ficha.medidas.texto]
+      .filter(Boolean).join(' · ');
+    const obsEl = document.getElementById('f_obsprod');
+    if(obs && (!obsEl.value.trim() || obsEl.value === obsDelShop)){ poner('f_obsprod', obs); obsDelShop = obs; }
+
+    const lista = ficha.fotos.slice(0, 8);
+    const fotos = [];
+    for(let i = 0; i < lista.length; i++){
+      shopNota('', 'Bajando las fotos… (' + (i+1) + ' de ' + lista.length + ')');
+      try{ fotos.push({ url: lista[i].u, prov: !!lista[i].prov, src: await blobADataUrl(await (await shopFetch('img=' + encodeURIComponent(lista[i].u))).blob()) }); }
+      catch(e){ console.warn('foto del shop:', lista[i].u, e); } // una foto rota no frena al resto
+    }
+    if(!fotos.length) throw new Error('No pude bajar las fotos del producto ' + ficha.id + '.');
+    const guardada = await leerMedidaGuardada(ficha.raiz);
+    if(guardada && guardada.medidas) ficha.medidas = { texto: 'Medidas: ' + textoMedidas(guardada.medidas), valores: guardada.medidas };
+    if(guardada && guardada.fotos) fotos.forEach(f => { f.guardada = guardada.fotos[f.url] || null; });
+    if(ficha.medidas){
+      for(let i = 0; i < fotos.length; i++){
+        shopNota('', 'Buscando la foto de frente para medir… (' + (i+1) + ' de ' + fotos.length + ')');
+        await new Promise(r => setTimeout(r, 0)); // deja ver el aviso antes de cada medición
+        try{ fotos[i].med = medirImagenProducto(await cargarImagen(fotos[i].src), ficha.medidas.valores); }catch(e){}
+      }
+    }
+    /* la de frente que se mide sola; a igual confianza, las de la tienda antes que las del proveedor */
+    const rango = f => (!f.med || !f.med.ok ? 3 : { alta:0, media:1, baja:2 }[f.med.conf]) + (f.prov ? 0.5 : 0);
+    let elegida = 0;
+    fotos.forEach((f, i) => { if(rango(f) < rango(fotos[elegida])) elegida = i; });
+    const pref = guardada ? fotos.findIndex(f => f.url === guardada.preferida && f.guardada) : -1;
+    if(pref >= 0) elegida = pref; // la que alguien ya ajustó y guardó
+    const med = fotos[elegida].med;
+    const medible = fotos[elegida].guardada || (med && med.ok && med.conf !== 'baja');
+    const nProv = fotos.filter(f => f.prov).length;
+    const resumen = ficha.nombre + ': ' + fotos.length + (fotos.length === 1 ? ' foto' : ' fotos') + (nProv ? ' (' + nProv + ' del proveedor)' : '')
+      + (ficha.medidas ? ' · medidas: ' + textoMedidas(ficha.medidas.valores) : '')
+      + (ficha.areas.length ? ' · ' + ficha.areas.length + (ficha.areas.length === 1 ? ' área' : ' áreas') + ' de impresión' : '');
+    shopPendiente = { fotos, elegida, raiz: ficha.raiz, nombre: ficha.nombre, medidas: ficha.medidas, areas: ficha.areas,
+      resumen: resumen + '. Tocá otra foto para cambiarla o subí una propia.' };
+    shopNota('ok', '✓ ' + resumen + '. '
+      + (fotos[elegida].guardada ? 'La medida la ajustó a mano ' + quienCuando(fotos[elegida].guardada) + ' y ya queda puesta: tocá «Creá el boceto con tu logo».'
+        : medible ? 'La foto de frente ya está medida: tocá «Creá el boceto con tu logo».'
+        : ficha.medidas ? 'Ninguna foto está de frente para medirla sola: en el boceteador ubicá la regla a mano.'
+        : 'La descripción no trae las medidas del producto: en el boceteador anotalas o ubicá la regla a mano.'));
+  }catch(e){
+    shopNota('mal', '⚠ ' + (e && e.message ? e.message : e));
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+/* al abrir el boceteador: el producto traído en la ficha entra solo. Si ya hay un boceto
+   con logos, no se pisa: quedan las fotos del shop para elegir. */
+window.__bocetoAlAbrir = () => {
+  if(!shopPendiente) return;
+  const p = shopPendiente;
+  shopPendiente = null;
+  shopFotos = p.fotos; shopNombre = p.nombre; shopResumen = p.resumen; shopRaiz = p.raiz;
+  $('prodMedidas').value = p.medidas ? textoMedidas(p.medidas.valores) : '';
+  state.areasShop = p.areas; pintarAreas();
+  pintarGaleria();
+  if(state.logos.length){
+    galeriaNota('Trajiste «' + p.nombre + '» de formas.shop: tocá una foto para usarla en este boceto.');
+    return;
+  }
+  if(p.medidas) setMode('product');
+  usarFotoShop(p.elegida);
+};
+
+$('shopTraer').addEventListener('click', traerDelShop);
+$('shopRef').addEventListener('focus', () => { cargarCatalogo(); }); // el catálogo se baja mientras se empieza a escribir
+$('shopRef').addEventListener('input', () => { clearTimeout(busquedaT); busquedaT = setTimeout(buscarEnVivo, 120); });
+$('shopRef').addEventListener('keydown', e => {
+  const abierta = !$('shopResultados').hidden && resultados.length;
+  if(e.key === 'ArrowDown' && abierta){ e.preventDefault(); marcarResaltado(resaltado + 1); }
+  else if(e.key === 'ArrowUp' && abierta){ e.preventDefault(); marcarResaltado(resaltado - 1); }
+  else if(e.key === 'Escape'){ $('shopResultados').hidden = true; }
+  else if(e.key === 'Enter'){
+    e.preventDefault();
+    clearTimeout(busquedaT);
+    if(abierta && resaltado >= 0) elegirResultado(resaltado);
+    else traerDelShop();
+  }
+});
 
 /* ---------- ancla de proporción (solo vincula los campos de medidas) ---------- */
 function syncLockUI(){
@@ -6182,6 +7029,7 @@ window.__bocetoSnapshot = () => {
     photoSrc: photo.src, photoName,
     zone: state.zone, ruler: state.ruler, rulerVisible: state.rulerVisible,
     rulerCm: $('rulerCm').value,
+    prodMedidas: $('prodMedidas').value, auto: state.auto, areasShop: state.areasShop,
     mode: state.mode, unit: state.unit, lockAspect: state.lockAspect, unirLogos: state.unirLogos,
     technique: $('technique').value, techniqueOther: $('techniqueOther').value,
     sel: state.sel,
@@ -6206,6 +7054,10 @@ window.__bocetoRestore = data => {
     $('cleanToggle').hidden = true; $('zoomCtrls').hidden = true; $('alignCtrls').hidden = true;
     $('rulerToggle').disabled = true;
     $('rulerCm').value = ''; $('technique').value = ''; $('techniqueOther').value = ''; $('techniqueOther').hidden = true;
+    $('prodMedidas').value = ''; state.auto = null; $('autoMedNote').hidden = true;
+    state.areasShop = []; pintarAreas();
+    shopFotos = []; pintarGaleria(); galeriaNota(''); shopPendiente = null; obsDelShop = ''; fotoShopActual = null;
+    shopNota('', ''); $('shopRef').value = ''; $('shopResultados').hidden = true;
     $('photoThumb').innerHTML = '📷';
     $('photoTxt').innerHTML = 'Elegir foto del producto<small>JPG o PNG · se recomienda recortada al producto</small>';
     photoName = '';
@@ -6233,6 +7085,11 @@ window.__bocetoRestore = data => {
     $('rulerToggle').disabled = false;
     syncRulerBtn();
     $('rulerCm').value = data.rulerCm || '';
+    $('prodMedidas').value = data.prodMedidas || '';
+    state.auto = data.auto || null; $('autoMedNote').hidden = true;
+    shopPendiente = null; // una plantilla trae su propio boceto: no se pisa con lo último traído del shop
+    fotoShopActual = null;
+    state.areasShop = Array.isArray(data.areasShop) ? data.areasShop : []; pintarAreas();
     state.lockAspect = !!data.lockAspect; syncLockUI();
     state.unirLogos = typeof data.unirLogos === 'boolean' ? data.unirLogos : undefined;
     $('technique').value = data.technique || '';
