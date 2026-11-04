@@ -174,6 +174,15 @@ proveedor», «de la descripción», «estimada» o «guardada») con «Volver a
 sugerida». Si pasa de lo que imprime la técnica, el área se marca en ámbar y lo
 avisa. Donde el área y el recuadro del producto se tocan, se agarra el área.
 
+**El área también se escribe**, como el producto: son dos campos, **ancho × alto**
+(en cm o mm, según la unidad del paso 3), con el **🔗** en el medio. Escribir un
+lado cambia el área desde su centro (el producto y la escala no se tocan); **anclada
+(🔗)**, el otro lado acompaña y el área no se deforma, también al arrastrar sus
+esquinas. **Suelta** (como arranca), cada lado va por su cuenta. Si no entra en la
+foto, llega hasta el borde. Sin área todavía (una foto propia), con el ancho y el
+alto anotados se marca una, centrada en el producto. Abajo queda el nombre del área
+(«Área estimada», «Frente»…) y, si se cambió, la sugerida con «Volver a la sugerida».
+
 **Avisos.** Si el logo es más grande que el área o que lo que imprime la técnica,
 o se sale del área, el paso 3 lo avisa (con la medida de cada uno). Con una
 rotativa, el área real (por ejemplo, «Área 360° (envuelve el producto): 26,1 ×
