@@ -27,21 +27,36 @@ El boceteador tiene tres pasos y una barra fija abajo:
 3. **Logo y colores**: el logo, sus medidas, los cambios que se le hicieron y lo
    que va al taller (colores de impresión y el original del cliente).
 
-**Las herramientas del logo están sobre la foto.** Al elegir un logo (o tocarlo),
-aparece una barra pegada a él, debajo de su medida (arriba si abajo no entra):
-**Fondo** (quitar el fondo o cualquier color; muestra cuántos se borraron),
+**Las herramientas del logo están sobre la foto.** Con un logo elegido hay una
+barra pegada a él, debajo de su medida (arriba si abajo no entra, sin pisar los
+controles de zoom ni de centrar): **Fondo** (con ✓ cuando ya se le quitó),
 **Recortar**, **Color ▾** (Full color, Blanco, Negro, Grabado o Un color, con su
-muestra; «Un color» abre ahí mismo el HEX o Pantone), **Opacidad** e **IA**. Los
-menús abren para el lado contrario al logo, así no lo tapan. Mientras se arrastra
-el logo, la barra se esconde; tocando la foto fuera del logo también, y vuelve al
-tocarlo. Con «Ocultar guías» no se ve.
+muestra; el botón dice el color de verdad, por ejemplo «186 C» o «#3A7D44», y «Un
+color» abre ahí mismo el HEX o Pantone), **Opacidad** e **IA**. Los menús abren para
+el lado contrario al logo, así no lo tapan (si no entran, se achican con scroll);
+se cierran tocando fuera o con Esc, que recién la segunda vez cierra el editor.
+Con el teclado, ← → recorren la barra. La barra se esconde mientras se arrastra
+algo, al marcar el área, con «Ocultar guías», con el paso 3 bloqueado y, con zoom,
+si el logo quedó fuera de la vista. En el celular muestra solo los íconos.
+
+Si la imagen del logo **trae fondo** (no es transparente), el menú de color y el
+panel lo avisan —en Blanco, Negro o Un color se pintaría el rectángulo entero— con
+«Quitar el fondo» a mano.
 
 En el panel, **«Cambios en este logo»** junta lo que se le hizo, cada cosa con su
-acción: «Fondo: 2 colores borrados · Editar · Deshacer», «Se recortaron los
-márgenes vacíos · Deshacer», «Modificado con IA · Volver al original», «Color:
-Grabado · Deshacer», «Opacidad: 84 % · Deshacer». Reemplaza a los avisos sueltos
-de antes. Debajo, **«Para el taller»**: los colores de impresión y «📎 Adjuntar
-original del cliente».
+acción: «Fondo: 2 colores borrados · Editar · Deshacer», «Recorte manual ·
+Deshacer», «Modificado con IA · Volver al original», «Color: Un color · 186 C ·
+Deshacer», «Opacidad: 84 % · Deshacer». El recorte automático de los márgenes va
+en gris, como dato («Usar el archivo entero»). Debajo, separado, **«Para el
+taller»**: los colores de impresión y «📎 Adjuntar original del cliente».
+
+Con **varios logos**, las manijas, ⟳ y × se ven solo en el elegido, la barra va del
+lado donde tapa menos a los otros y un logo nuevo va en el lugar libre del área
+(o, si está llena, justo debajo del anterior, no encima). La medida del logo se
+corre al costado si tapaba la etiqueta del área.
+
+En los colores (de la ficha y de «Un color»), **cambiar el HEX a mano suelta el
+Pantone** que había: así al taller no le llega un Pantone que ya no corresponde.
 
 La **barra de abajo**, siempre a la vista, muestra la técnica y tiene «Aplicar a
 la ficha» y «Descargar PNG»; mientras no se pueda aplicar, dice qué falta («Falta
