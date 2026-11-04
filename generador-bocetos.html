@@ -463,8 +463,6 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .cm-pill{flex:none; margin-left:auto; padding:7px 12px; border:1.5px solid var(--formas-gray-200); border-radius:999px; background:#fff; font-family:var(--font-primary); font-size:12px; font-weight:700; color:var(--formas-navy); cursor:pointer; white-space:nowrap}
 #bocetoModal .cm-pill:hover{border-color:var(--formas-navy)}
 #bocetoModal .cm-pill[aria-pressed="true"]{background:var(--formas-navy); color:#fff; border-color:var(--formas-navy)}
-#bocetoModal .btn-ia-logo{background:#fff; color:var(--formas-navy); border-color:var(--formas-navy)}
-#bocetoModal .btn-ia-logo:hover{background:var(--formas-navy); color:#fff}
 #bocetoModal .cm-card{background:#fff; border-radius:16px; padding:18px; width:min(700px,100%); max-height:100%; overflow:auto; box-shadow:0 20px 60px rgba(11,11,35,.4)}
 #bocetoModal .cm-head{display:flex; justify-content:space-between; align-items:center; gap:12px}
 #bocetoModal .cm-head h3{font-family:var(--font-display); font-weight:800; color:var(--formas-navy); font-size:17px; margin:0}
@@ -493,6 +491,53 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #cleanToggle{position:absolute; top:28px; right:28px; z-index:10; display:flex; align-items:center; gap:6px; padding:7px 14px; border-radius:999px; border:1.5px solid var(--formas-gray-200); background:#fff; color:var(--formas-navy); font-family:var(--font-primary); font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 2px 8px rgba(11,11,35,.18)}
 #bocetoModal #cleanToggle:hover{border-color:var(--formas-navy)}
 #bocetoModal #cleanToggle[aria-pressed="true"]{background:var(--formas-navy); color:#fff; border-color:var(--formas-navy)}
+/* la barra del logo: flota sobre la foto, junto al logo elegido */
+#bocetoModal #logoBar{position:absolute; z-index:12; display:flex; flex-wrap:wrap; align-items:center; gap:2px; max-width:calc(100% - 12px); box-sizing:border-box; padding:5px; border-radius:14px; background:#fff; border:1px solid var(--border-subtle); box-shadow:0 8px 24px rgba(11,11,35,.16); white-space:nowrap}
+#bocetoModal #logoBar[hidden]{display:none}
+#bocetoModal .lbBtn{position:relative; display:flex; align-items:center; gap:6px; width:auto; height:40px; margin:0; padding:0 11px; border:none; border-radius:10px; background:none; font-family:var(--font-primary); font-size:12.5px; font-weight:600; color:var(--formas-navy); cursor:pointer}
+#bocetoModal .lbBtn:hover, #bocetoModal .lbBtn[aria-expanded="true"]{background:var(--formas-gray-100)}
+#bocetoModal .lbBtn:disabled{opacity:.45; cursor:default}
+#bocetoModal .lbBtn[hidden]{display:none}
+#bocetoModal .lbIco{fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none}
+#bocetoModal .lbIa{color:#691BB9; font-weight:700}
+#bocetoModal .lbSep{width:1px; height:22px; background:var(--border-subtle); margin:0 3px}
+#bocetoModal .lbOk{display:grid; place-items:center; width:16px; height:16px; border-radius:50%; background:var(--formas-lime); color:var(--formas-navy); font-size:10px; font-weight:800; line-height:1}
+#bocetoModal .lbOk[hidden]{display:none}
+#bocetoModal .lbSw{width:16px; height:16px; box-sizing:border-box; border-radius:50%; border:1.5px solid var(--formas-gray-300); flex:none}
+#bocetoModal .lbPop{position:absolute; left:0; top:calc(100% + 8px); z-index:13; width:min(360px, calc(100vw - 40px)); overflow:auto; box-sizing:border-box; padding:12px; border-radius:16px; background:#fff; border:1px solid var(--border-subtle); box-shadow:0 18px 48px rgba(11,11,35,.18); white-space:normal}
+#bocetoModal .lbPop.lbPopChico{width:240px}
+#bocetoModal .lbPopTit{margin-bottom:8px; font-size:11.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted)}
+#bocetoModal #lbPopColor .seg{display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:6px; margin:0}
+#bocetoModal #lbPopColor .seg button{display:flex; flex-direction:column; align-items:center; gap:6px; padding:8px 2px 7px; font-size:11.5px}
+#bocetoModal #lbPopColor .seg button::before{content:""; width:24px; height:24px; box-sizing:border-box; border-radius:50%; border:1.5px solid var(--formas-gray-300)}
+#bocetoModal #lbPopColor [data-tint="original"]::before, #bocetoModal .lbSw[data-tint="original"]{background:conic-gradient(#EF7958, #F9CE32, #8EE021, #0194FE, #B600E9, #EF7958)}
+#bocetoModal #lbPopColor [data-tint="white"]::before, #bocetoModal .lbSw[data-tint="white"]{background:#fff; border-color:#9A9AAE}
+#bocetoModal #lbPopColor [data-tint="black"]::before, #bocetoModal .lbSw[data-tint="black"]{background:#0B0B23}
+#bocetoModal #lbPopColor [data-tint="engrave"]::before, #bocetoModal .lbSw[data-tint="engrave"]{background:linear-gradient(135deg, #F4F4F6, #9A9AAE 55%, #E4E4ED)}
+#bocetoModal #lbPopColor [data-tint="custom"]::before, #bocetoModal .lbSw[data-tint="custom"]{background:var(--tintSw, #000085)}
+#bocetoModal #tintCustom{margin-top:10px}
+#bocetoModal #lbPopOpac input[type=range]{width:100%; accent-color:var(--formas-navy)}
+/* «Cambios en este logo»: cada cosa con su Deshacer */
+#bocetoModal #cambiosLista{display:flex; flex-direction:column; margin-top:6px; border:1px solid var(--border-subtle); border-radius:12px; overflow:hidden}
+#bocetoModal .cambio{display:flex; align-items:baseline; gap:10px; padding:9px 12px; border-top:1px solid var(--border-subtle); font-size:12.5px; line-height:1.35; color:var(--text-body)}
+#bocetoModal .cambio:first-child{border-top:none}
+#bocetoModal .cambio span{flex:1}
+#bocetoModal .cambio button{flex:none; width:auto; margin:0; padding:0; border:none; background:none; font-family:var(--font-primary); font-size:12px; font-weight:700; color:var(--formas-navy); text-decoration:underline; cursor:pointer; white-space:nowrap}
+#bocetoModal .cambio button:hover{color:#EF7958}
+#bocetoModal .cambioVacio{padding:10px 12px; font-size:12.5px; line-height:1.4; color:var(--text-muted)}
+#bocetoModal #adjBtn{margin-top:10px}
+#bocetoModal .lbAviso{margin-bottom:10px; padding:8px 10px; border-radius:10px; background:#FFF6DB; color:#5C4300; font-size:12px; line-height:1.4}
+#bocetoModal .lbAviso button, #bocetoModal #jpgQuitar{border:none; background:none; padding:0; width:auto; margin:0; font-family:var(--font-primary); font-size:12px; font-weight:700; color:var(--formas-navy); text-decoration:underline; cursor:pointer}
+#bocetoModal .cambio.dato{background:var(--surface-sunken); color:var(--text-muted)}
+#bocetoModal #cambiosLista:focus{outline:none}
+#bocetoModal #tallerTit{margin-top:18px; padding-top:14px; border-top:1px solid var(--border-subtle); font-size:12.5px; color:var(--formas-navy)}
+/* manijas, ⟳ y × solo en el logo elegido: con varios logos se sabe cuál se está tocando */
+#bocetoModal .logoItem:not(.selected) .handle, #bocetoModal .logoItem:not(.selected) .logoRotate, #bocetoModal .logoItem:not(.selected) .logoDelete{display:none}
+/* en pantallas angostas, la barra solo con íconos */
+@media (max-width:600px){
+  #bocetoModal .lbBtn > span{display:none}
+  #bocetoModal .lbBtn{padding:0 9px}
+}
 #bocetoModal #frame.clean #zone,
 #bocetoModal #frame.clean .handle,
 #bocetoModal #frame.clean #measureChip,
@@ -1103,6 +1148,39 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           <button type="button" id="alignH" title="Centrar el logo horizontalmente en el área">⇔</button>
           <button type="button" id="alignV" title="Centrar el logo verticalmente en el área">⇕</button>
         </div>
+        <!-- la barra del logo: va pegada al logo elegido, sobre la foto (se esconde al arrastrarlo, al marcar el área y con «Ocultar guías») -->
+        <div id="logoBar" role="toolbar" aria-label="Herramientas del logo" hidden>
+          <button type="button" class="lbBtn" id="removeWhiteBtn" aria-label="Quitar fondo" title="Quitar fondo: borra el fondo o cualquier color del logo (blanco, negro, uno a elección o tomado con el cuentagotas)"><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg><span>Fondo</span><b class="lbOk" id="lbFondoN" hidden aria-hidden="true">✓</b></button>
+          <button type="button" class="lbBtn" id="cropEditBtn" title="Recortar el logo a mano"><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg><span>Recortar</span></button>
+          <i class="lbSep"></i>
+          <button type="button" class="lbBtn" id="lbColor" aria-expanded="false" aria-controls="lbPopColor" aria-label="Color del logo: Full color" title="Color del logo"><i class="lbSw" id="lbColorSw"></i><span id="lbColorTxt">Full color</span><svg class="lbIco" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="lbPop" id="lbPopColor" hidden>
+            <div class="lbPopTit">Color del logo</div>
+            <div class="lbAviso" id="lbOpacoNote" hidden>Este logo parece tener fondo: en Blanco, Negro o Un color se pinta el rectángulo entero. <button type="button" id="lbOpacoBtn">Quitar el fondo</button></div>
+            <div class="seg" id="tintSeg">
+              <button type="button" data-tint="original" aria-pressed="true">Full color</button>
+              <button type="button" data-tint="white" aria-pressed="false">Blanco</button>
+              <button type="button" data-tint="black" aria-pressed="false">Negro</button>
+              <button type="button" data-tint="engrave" aria-pressed="false" title="Efecto de grabado metálico">Grabado</button>
+              <button type="button" data-tint="custom" aria-pressed="false" title="Pintar el logo de un solo color a elección: HEX o Pantone">Un color</button>
+            </div>
+            <div id="tintCustom" hidden>
+              <div class="codeToggle">
+                <button type="button" id="tintCodeHex" aria-pressed="true">Código HEX</button>
+                <button type="button" id="tintCodePant" aria-pressed="false">Pantone</button>
+              </div>
+              <div id="tintColorRow"></div>
+              <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11px">Pasa a «Colores de impresión» del paso 3.</small>
+            </div>
+          </div>
+          <button type="button" class="lbBtn" id="lbOpac" aria-expanded="false" aria-controls="lbPopOpac" aria-label="Opacidad 100 %" title="Opacidad del logo"><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 18a6 6 0 0 0 0-12v12z"/></svg><span id="lbOpacTxt">Opacidad</span></button>
+          <div class="lbPop lbPopChico" id="lbPopOpac" hidden>
+            <div class="lbPopTit">Opacidad · <span id="opacityVal">100%</span></div>
+            <input type="range" id="logoOpacity" min="10" max="100" value="100" aria-label="Opacidad del logo">
+          </div>
+          <i class="lbSep"></i>
+          <button type="button" class="lbBtn lbIa" id="iaLogoBtn" aria-label="Modificar el logo con IA" title="Pedile a la IA un cambio en este logo: sacar un texto, cambiar un color, redibujarlo prolijo…"><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0l1.58 6.14a2 2 0 0 0 1.44 1.44l6.14 1.58a.5.5 0 0 1 0 .96l-6.14 1.58a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"/></svg><span>IA</span></button>
+        </div>
         <div id="frameWrap">
           <div id="emptyState" class="slot">
             <span class="big">Subí la foto del producto</span>
@@ -1274,34 +1352,14 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             <div class="suffix-wrap"><input type="number" id="logoHcm" placeholder="Alto" min="0.1" max="200" step="0.1"><span class="suffix">cm</span></div>
           </div>
         </div>
-        <button class="btn btn-secondary" type="button" id="removeWhiteBtn" style="margin-top:10px" hidden title="Borra el fondo o cualquier color del logo: blanco, negro, uno a elección o tomado directo de la imagen">Quitar fondo</button>
-        <button class="btn btn-secondary" type="button" id="cropEditBtn" hidden>✂ Editar recorte</button>
-        <button class="btn btn-secondary" type="button" id="adjBtn" hidden title="Adjuntá el archivo original que mandó el cliente (EPS, CDR, AI, PDF…): no se ve en el boceto, pero va tal cual en el paquete para el taller">📎 Adjuntar original del cliente</button>
-        <input type="file" id="adjInput" hidden>
-        <div id="adjList" hidden></div>
-        <button class="btn btn-ia-logo" type="button" id="iaLogoBtn" hidden title="Pedile a la IA un cambio en este logo: sacar un texto, cambiar un color, redibujarlo prolijo…">✨ Modificar logo con IA</button>
-        <div id="logoTools" hidden>
-          <div class="label" style="margin-top:12px;letter-spacing:.08em">Color del logo</div>
-          <div class="seg" id="tintSeg">
-            <button type="button" data-tint="original" aria-pressed="true">Full color</button>
-            <button type="button" data-tint="white" aria-pressed="false">Blanco</button>
-            <button type="button" data-tint="black" aria-pressed="false">Negro</button>
-            <button type="button" data-tint="engrave" aria-pressed="false" title="Efecto de grabado metálico">Grabado</button>
-            <button type="button" data-tint="custom" aria-pressed="false" title="Pintar el logo de un solo color a elección: HEX o Pantone">Un color</button>
-          </div>
-          <div id="tintCustom" hidden>
-            <div class="codeToggle">
-              <button type="button" id="tintCodeHex" aria-pressed="true">Código HEX</button>
-              <button type="button" id="tintCodePant" aria-pressed="false">Pantone</button>
-            </div>
-            <div id="tintColorRow"></div>
-            <small style="display:block;margin-top:6px;color:var(--text-muted);font-size:11px">El logo se pinta entero de este color y pasa a «Colores de impresión», acá abajo. Con ◎ se busca el Pantone más cercano.</small>
-          </div>
-          <div class="field">
-            <span class="label" style="letter-spacing:.08em">Opacidad · <span id="opacityVal">100%</span></span>
-            <input type="range" id="logoOpacity" min="10" max="100" value="100">
-          </div>
+        <!-- lo que se le hizo al logo elegido, cada cosa con su Deshacer (las herramientas están en la barra
+             que aparece sobre el logo, en la foto) -->
+        <div id="cambiosBox" hidden>
+          <div class="label" style="margin-top:14px;letter-spacing:.08em">Cambios en este logo</div>
+          <div id="cambiosLista" tabindex="-1"></div>
         </div>
+        <div class="note" id="jpgNote" hidden>⚠ <span>El logo parece tener fondo (no es transparente): sobre productos oscuros, o en Blanco, Negro o Un color, se ve el rectángulo.</span> <button type="button" id="jpgQuitar">Quitar el fondo</button></div>
+        <div class="tallerTit label" id="tallerTit" style="letter-spacing:.08em" hidden>Para el taller</div>
         <div class="field" id="bcColoresField">
           <span class="label" style="letter-spacing:.08em">Colores de impresión</span>
           <div class="codeToggle" style="margin-top:6px">
@@ -1311,10 +1369,10 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           <div id="bocetoColors"></div>
           <button type="button" class="addColor" id="bcAddColor" style="margin-top:6px">＋ Agregar color</button>
         </div>
-        <div class="note" id="jpgNote" hidden>⚠ <span>Tu logo no tiene transparencia: sobre productos oscuros se verá con fondo. Probá el botón "Quitar fondo".</span></div>
+        <button class="btn btn-secondary" type="button" id="adjBtn" hidden title="Adjuntá el archivo original que mandó el cliente (EPS, CDR, AI, PDF…): no se ve en el boceto, pero va tal cual en el paquete para el taller">📎 Adjuntar original del cliente</button>
+        <input type="file" id="adjInput" hidden>
+        <div id="adjList" hidden></div>
         <div class="note" id="undoNote" hidden>🗑 <span id="undoNoteTxt"></span> <button type="button" id="undoDeleteBtn">Deshacer</button></div>
-        <div class="note" id="iaLogoNote" hidden>✨ <span>Logo modificado con IA: revisá que siga fiel al original.</span> <button type="button" id="iaLogoUndo">Volver al original</button></div>
-        <div class="note" id="trimNote" hidden>✂ <span id="trimNoteTxt">Se recortaron los márgenes vacíos del logo: la medida corresponde al logo real, no al recuadro del archivo.</span> <button type="button" id="trimUndo">Deshacer recorte</button></div>
         <div class="readout" id="logoReadout" hidden>
           <div class="row"><span class="label">Logo aplicado</span><span class="val num" id="logoSizeOut">—</span></div>
         </div>
@@ -1949,8 +2007,19 @@ function drawColorRows(box, colors, opts){
       + (colors.length>1 ? '<button type="button" class="del" title="Quitar color">✕</button>' : '');
     const sw = row.querySelector('input[type=color]');
     const hxTxt = row.querySelector('.pcHexTxt');
+    /* el color se cambió a mano (selector o HEX): si ya no es el del Pantone, el Pantone (y el nombre que venía
+       de él) se sueltan, para que al taller no le llegue un Pantone que no corresponde */
+    const soltarPantone = ()=>{
+      if(!c.pant) return;
+      const hx = pantoneHex(c.pant);
+      if(hx && hx.toLowerCase() === c.hex.toLowerCase()) return;
+      if(c.nom === pantoneNombre(c.pant)){ c.nom = ''; row.querySelector('.pcNom').value = ''; }
+      c.pant = '';
+      const pi = row.querySelector('.pcPant'); if(pi) pi.value = '';
+    };
     sw.addEventListener('input', e=>{
       c.hex = e.target.value;
+      soltarPantone();
       if(hxTxt){ hxTxt.value = c.hex.toUpperCase(); hxTxt.classList.remove('pcMiss'); }
       opts.onChange();
     });
@@ -1960,7 +2029,7 @@ function drawColorRows(box, colors, opts){
         const v = '#' + e.target.value.trim().replace(/^#/,'');
         const ok = /^#[0-9a-fA-F]{6}$/.test(v);
         hxTxt.classList.toggle('pcMiss', !ok && e.target.value.trim() !== '');
-        if(ok){ c.hex = v.toLowerCase(); sw.value = c.hex; opts.onChange(); }
+        if(ok){ c.hex = v.toLowerCase(); sw.value = c.hex; soltarPantone(); opts.onChange(); }
       });
       hxTxt.addEventListener('change', ()=>{ hxTxt.value = c.hex.toUpperCase(); hxTxt.classList.remove('pcMiss'); });
     }
@@ -1985,7 +2054,7 @@ function drawColorRows(box, colors, opts){
         if(e.key === 'ArrowDown'){ e.preventDefault(); panPopAct(Math.min(panPopIdx+1, panPopItems.length-1)); }
         else if(e.key === 'ArrowUp'){ e.preventDefault(); panPopAct(Math.max(panPopIdx-1, 0)); }
         else if(e.key === 'Enter' && panPopItems.length){ e.preventDefault(); panPopItems[panPopIdx >= 0 ? panPopIdx : 0].dispatchEvent(new Event('mousedown')); }
-        else if(e.key === 'Escape'){ cerrarPantonePop(); }
+        else if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); cerrarPantonePop(); } // solo la lista: no cierra lo de abajo
       });
     }
     const f = row.querySelector('.pms');
@@ -4529,6 +4598,7 @@ function openBocetoModal(){
   if(window.__bocetoAlAbrir) window.__bocetoAlAbrir(); // producto traído de formas.shop en la ficha
 }
 function closeBocetoModal(){
+  if(window.__bocetoCerrarPops) window.__bocetoCerrarPops(); // al volver, los menús de la barra arrancan cerrados
   bocetoModal.hidden = true;
   document.body.style.overflow = '';
 }
@@ -4540,7 +4610,10 @@ document.addEventListener('keydown', e => {
   // primero lo que está encima: el editor de logo con IA y el de quitar fondo
   if(!$('iaLogoModal').hidden){ cerrarIaLogo(); return; }
   if(!$('bgModal').hidden){ $('bgClose').click(); return; }
-  if(!bocetoModal.hidden) closeBocetoModal();
+  if(!bocetoModal.hidden){
+    if(window.__bocetoEsc && window.__bocetoEsc()) return; // un menú de la barra del logo o «Marcar área»
+    closeBocetoModal();
+  }
 });
 
 window.__applyBoceto = res => {
@@ -4678,6 +4751,11 @@ const state = {
   pan: {x:0, y:0},
 };
 const unitK = () => state.unit === 'mm' ? 10 : 1;
+const TINT_NOMBRE = { original:'Full color', white:'Blanco', black:'Negro', engrave:'Grabado', custom:'Un color' };
+let barLogo = null;        // el logo de la barra: si cambia, sus menús se cierran
+let focoCambios = false;   // se tocó una acción de «Cambios en este logo»: el foco vuelve a la lista
+const opacoDe = new WeakMap(); // logo → { src, opaco }: si la imagen trae fondo (no es transparente)
+let active = null;         // lo que se está arrastrando en la foto (logo, área, recuadro…)
 const fmtPair = (wCm, hCm) => `${fmtCm(wCm*unitK())} × ${fmtCm(hCm*unitK())} ${state.unit}`;
 let pendingAdd = false; // el próximo archivo agrega un logo en vez de reemplazar el seleccionado
 
@@ -4701,6 +4779,14 @@ function fitStage(){
   if(!frame.hidden) applyView(); // el paneo se reacomoda al nuevo tamaño
 }
 window.__bocetoFit = fitStage;
+if(window.ResizeObserver){
+  let rq = 0;
+  const ro = new ResizeObserver(() => {
+    if(rq) return;
+    rq = requestAnimationFrame(() => { rq = 0; if(!frame.hidden && !bocetoModal.hidden) render(); });
+  });
+  ro.observe($('frameWrap')); ro.observe(frame);
+}
 window.addEventListener('resize', () => { if(!bocetoModal.hidden) fitStage(); });
 
 /* ---------- zoom y paneo del canvas ---------- */
@@ -4716,6 +4802,7 @@ function applyView(){
   frame.style.setProperty('--Z', state.zoom); // los controles compensan la escala vía CSS
   frame.classList.toggle('panable', state.zoom > 1);
   $('zoomLabel').textContent = Math.round(state.zoom*100) + '%';
+  posLogoBar();
 }
 function setZoomAt(newZ, clientX, clientY){
   newZ = clamp(newZ, 1, 4);
@@ -4831,6 +4918,17 @@ function render(){
     if(chipTop + chipH > FH) chipTop = cyL - vH/2 - gapC - chipH - 34/Zc;
     if(chipTop < 0) chipTop = clamp(cyL + vH/2 + gapC, 0, FH - chipH);
     chip.style.top = chipTop + 'px';
+    if(state.zone && !zoneEl.hidden){
+      const zl = $('zoneLbl'), z = state.zone, lw = zl.offsetWidth, lh = zl.offsetHeight;
+      const lx = z.x*FW, ly = zoneEl.classList.contains('lbl-arriba') ? z.y*FH - lh : (z.y + z.h)*FH;
+      const cw = chip.offsetWidth, cx = (L.x + L.w/2)*FW;
+      const choca = (x, y) => x - cw/2 < lx + lw && x + cw/2 > lx && y < ly + lh && y + chipH > ly;
+      if(choca(cx, chipTop)){
+        const cx2 = lx + lw + 6/Zc + cw/2;
+        if(cx2 + cw/2 <= FW) chip.style.left = cx2 + 'px';
+        else if(ly + lh + 4/Zc + chipH <= FH) chip.style.top = (ly + lh + 4/Zc) + 'px';
+      }
+    }
     $('logoReadout').hidden = false;
     $('logoSizeOut').textContent = m ? fmtPair(m.w, m.h) : '—';
     if(state.mode === 'product'){
@@ -4934,6 +5032,7 @@ function render(){
   setStepStates();
   sincronizarTecnica();
   syncPaso2();
+  posLogoBar();
 }
 
 /* paso 2: si la medida y el área salieron solas y no hay nada que mirar, queda una línea de resumen;
@@ -5132,7 +5231,7 @@ function syncRulerBtn(){
   $('rulerToggle').title = state.rulerVisible ? 'Ocultar la medida en la foto' : 'Ver la medida en la foto';
   $('rulerToggle').disabled = !state.auto; $('rulerToggle').hidden = !state.auto; // sin recuadro (foto de 360°) no hay medida que ocultar
   $('rulerLbl').hidden = true; $('rulerCmField').hidden = true;
-  $('medInfo').title = 'El recuadro azul punteado es el producto (no el área de impresión, que es la verde del paso 2). Escribí su ancho o su alto y el recuadro se adapta a esa medida (solo ese lado). Después llevalo a los bordes del producto con las manijas o movelo agarrando la línea: con 🔗 mantiene la forma y la medida, y se ajusta la escala.';
+  $('medInfo').title = 'El recuadro azul punteado es el producto (no el área de impresión, que es la verde del paso 2). Escribí su ancho o su alto: el primer número da la escala (si te equivocaste, escribí el bueno en el mismo campo y se corrige) y el otro adapta el recuadro de ese lado. Después llevalo a los bordes del producto con las manijas o movelo agarrando la línea: con 🔗 mantiene la forma y la medida, y se ajusta la escala.';
 }
 $('rulerCm').addEventListener('input', () => {
   /* si se borra la medida en pleno dibujo, el modo dibujo se cancela;
@@ -5474,20 +5573,35 @@ function resizeProporcional(s, corner, dxn, dyn, FW, FH, minPx = 20){
   return { x, y, w, h };
 }
 
-/* escribir el ancho o el alto: el recuadro del producto se adapta a esa medida, solo de ese lado (el otro
-   lado, la escala y el área quedan como estaban). Sin escala todavía (foto propia), ese número la da */
+/* escribir el ancho o el alto. El lado que da la escala (el primero que se anotó; si no, el largo) la corrige:
+   el recuadro queda donde está y pasa a medir eso, así un número mal puesto se arregla escribiendo el bueno
+   (antes la escala quedaba clavada en el primero y el recuadro se estiraba hasta el borde de la foto). El otro
+   lado adapta el recuadro a su medida, con la misma escala. Lo anotado a mano se respeta: al corregir la escala,
+   el otro lado (si se escribió) conserva su número. Sin escala todavía (foto propia), el primer número la da */
 function anclarMedida(lado){
   const A = state.auto, v = numCampo(lado === 'w' ? 'prodAncho' : 'prodAlto');
   if(!A || frame.hidden || !v) return;
   const {w:FW,h:FH} = frameRect(), k = cmPerPx();
-  if(!k){ A.ancla = { lado, cm: v }; recalibrarContorno(); contornoAjustado(); render(); return; }
-  if(Math.abs((lado === 'w' ? A.w*FW : A.h*FH)*k - v) < 0.005) return; // no cambió
+  const mide = (l, kk) => (l === 'w' ? A.w*FW : A.h*FH)*kk;
+  A.tecleado = Object.assign({}, A.tecleado, { [lado]: v });
+  const ladoEsc = A.ancla ? A.ancla.lado : (A.h*FH >= A.w*FW ? 'h' : 'w');
+  if(!k || lado === ladoEsc){
+    if(k && Math.abs(mide(lado, k) - v) < 0.005) return; // no cambió
+    A.ancla = { lado, cm: v }; recalibrarContorno(); // la escala nueva; el recuadro no se mueve
+    const otro = lado === 'w' ? 'h' : 'w', vo = A.tecleado[otro], k2 = cmPerPx();
+    if(vo && k2 && Math.abs(mide(otro, k2) - vo) >= 0.005){ ajustarLado(A, otro, vo, k2); recalibrarContorno(); }
+  } else {
+    if(Math.abs(mide(lado, k) - v) < 0.005) return; // no cambió
+    if(!A.ancla) A.ancla = { lado: ladoEsc, cm: Math.round(mide(ladoEsc, k)*1e4)/1e4 }; // la misma escala
+    ajustarLado(A, lado, v, k); recalibrarContorno();
+  }
+  contornoAjustado(); render();
+}
+/* lleva un lado del recuadro a una medida (desde su centro, sin salirse de la foto) */
+function ajustarLado(A, lado, v, k){
+  const {w:FW,h:FH} = frameRect();
   if(lado === 'w'){ const w = Math.min(1, v / k / FW); A.x = clamp(A.x + (A.w - w)/2, 0, 1 - w); A.w = w; }
   else { const h = Math.min(1, v / k / FH); A.y = clamp(A.y + (A.h - h)/2, 0, 1 - h); A.h = h; }
-  const vertical = A.h*FH >= A.w*FW;
-  const r4 = x => Math.round(x*1e4)/1e4;
-  A.ancla = vertical ? { lado:'h', cm: r4(A.h*FH*k) } : { lado:'w', cm: r4(A.w*FW*k) }; // la misma escala, sobre el recuadro nuevo
-  recalibrarContorno(); contornoAjustado(); render();
 }
 ['prodAncho', 'prodAlto'].forEach(id => {
   const lado = id === 'prodAncho' ? 'w' : 'h';
@@ -6932,6 +7046,36 @@ function placeInZone(logo, idx){
   const {w:FW,h:FH} = frameRect();
   const z = state.zone;
   const zw = z.w*FW, zh = z.h*FH;
+  /* el segundo logo (o más) va en la franja libre del área, abajo o arriba de los que ya están */
+  const otros = state.logos.filter(o => o !== logo && o.w > 0 && o.h > 0);
+  if(otros.length){
+    const bajo = Math.max(...otros.map(o => o.y + o.h)), alto = Math.min(...otros.map(o => o.y));
+    const libre = [{ y0: bajo + 0.01, y1: z.y + z.h }, { y0: z.y, y1: alto - 0.01 }]
+      .map(b => Object.assign(b, { hpx: (b.y1 - b.y0)*FH })).filter(b => b.hpx >= zh*0.12)
+      .sort((a, b) => b.hpx - a.hpx)[0];
+    /* su tamaño de siempre; en una franja que lo achica a menos de la mitad no va (quedaría diminuto) */
+    let h0 = zw*.8/logo.aspect; if(h0 > zh*.8) h0 = zh*.8;
+    if(libre && libre.hpx*.85 >= h0*.5){
+      let w = zw*.8, h = w/logo.aspect;
+      if(h > libre.hpx*.85){ h = libre.hpx*.85; w = h*logo.aspect; }
+      logo.w = w/FW; logo.h = h/FH;
+      logo.x = clamp(z.x + (z.w - logo.w)/2, 0, 1 - logo.w);
+      logo.y = clamp(libre.y0 + (libre.y1 - libre.y0 - logo.h)/2, 0, 1 - logo.h);
+      logo.rot = 0;
+      return;
+    }
+    /* el área ya está llena: abajo de los otros (o arriba), aunque se salga del área (el paso 3 lo avisa),
+       antes que encima: así se ve y se puede tocar */
+    let w = zw*.8, h = w/logo.aspect;
+    if(h > zh*.8){ h = zh*.8; w = h*logo.aspect; }
+    const lw = w/FW, lh = h/FH, gap = 8/FH;
+    const y = bajo + gap + lh <= 1 ? bajo + gap : alto - gap - lh >= 0 ? alto - gap - lh : null;
+    if(y !== null){
+      logo.w = lw; logo.h = lh; logo.rot = 0;
+      logo.x = clamp(z.x + (z.w - lw)/2, 0, 1 - lw); logo.y = y;
+      return;
+    }
+  }
   let w = zw*.8, h = w/logo.aspect;
   if(h > zh*.8){ h = zh*.8; w = h*logo.aspect; }
   const off = Math.min(idx*0.03, 0.15); // cascada para que no queden exactamente superpuestos
@@ -7194,37 +7338,36 @@ function syncLogoUI(){
     chips.appendChild(b);
   });
   $('addLogoBtn').hidden = !state.logos.length;
-  $('logoTools').hidden = !L;
+  if(L !== barLogo){ barLogo = L; cerrarPopsBarra(); } // otro logo: sus menús arrancan cerrados
   $('logoCmFields').hidden = !state.logos.length;
   $('unitField').hidden = !state.logos.length;
   $('lockAspectBtn').hidden = state.mode === 'product';
   const btn = $('removeWhiteBtn');
   btn.hidden = !L;
   $('iaLogoBtn').hidden = !L;
-  $('iaLogoNote').hidden = !(L && L.iaPrev);
   if(L){
     btn.disabled = false;
     const sp = quitarSpec(L), n = sp ? sp.colors.length : 0;
-    btn.textContent = n ? 'Quitar fondo · ' + n + (n === 1 ? ' color borrado' : ' colores borrados') : 'Quitar fondo';
+    $('lbFondoN').hidden = !n; // ✓: ya se le quitó el fondo
+    btn.setAttribute('aria-label', n ? 'Fondo: ' + n + (n === 1 ? ' color borrado' : ' colores borrados') : 'Quitar fondo');
     $('logoThumb').innerHTML = L.img && L.img.src ? `<img src="${L.img.src}" alt="">` : '◐';
     $('logoTxt').innerHTML = `${L.name}<small>clic para reemplazar este logo</small>`;
-    $('jpgNote').hidden = !(L.isJpg && !quitarSpec(L));
+    medirOpaco(L);
+    const conFondo = !!(opacoDe.get(L) || {}).opaco && !quitarSpec(L); // trae fondo y todavía no se le quitó
+    $('jpgNote').hidden = !conFondo; $('lbOpacoNote').hidden = !conFondo;
     $('cropEditBtn').hidden = false;
     syncAdjuntos();
-    $('trimNote').hidden = !(L.crop && L.crop.trimmed);
-    if(L.crop && L.crop.trimmed){
-      const activo = L.useTrim !== false;
-      $('trimUndo').textContent = activo ? 'Deshacer recorte' : 'Volver a recortar';
-      $('trimNoteTxt').textContent = !activo
-        ? 'Recorte deshecho: la medida corresponde al archivo completo, con sus márgenes.'
-        : (L.crop.manual
-          ? 'Recorte manual aplicado: la medida corresponde al rectángulo que marcaste.'
-          : 'Se recortaron los márgenes vacíos del logo: la medida corresponde al logo real, no al recuadro del archivo.');
-    }
     $('logoOpacity').value = Math.round(L.opacity*100);
     $('opacityVal').textContent = Math.round(L.opacity*100) + '%';
+    syncOpacBtn(Math.round(L.opacity*100));
     document.querySelectorAll('#tintSeg button').forEach(b =>
       b.setAttribute('aria-pressed', b.dataset.tint === L.tint));
+    /* el botón dice el color de verdad: con «Un color», su Pantone o su HEX */
+    const colorTxt = L.tint === 'custom' && L.tintColor ? nombreTinte(L.tintColor) : (TINT_NOMBRE[L.tint] || 'Full color');
+    $('lbColorTxt').textContent = colorTxt;
+    $('lbColor').setAttribute('aria-label', 'Color del logo: ' + colorTxt);
+    $('lbColorSw').dataset.tint = L.tint || 'original';
+    $('logoBar').style.setProperty('--tintSw', (L.tintColor && L.tintColor.hex) || '#000085');
     $('tintCustom').hidden = L.tint !== 'custom';
     if(L.tint === 'custom') drawTintColor(L);
     // grabado no lleva color específico: se oculta el selector de colores del paso 4
@@ -7237,12 +7380,138 @@ function syncLogoUI(){
     $('tintCustom').hidden = true;
     $('logoThumb').innerHTML = '◐';
     $('logoTxt').innerHTML = 'Elegir logo<small>PNG sin fondo recomendado · también SVG, JPG, PDF o AI</small>';
-    $('jpgNote').hidden = true;
-    $('trimNote').hidden = true;
+    $('jpgNote').hidden = true; $('lbOpacoNote').hidden = true;
     $('cropEditBtn').hidden = true;
     syncAdjuntos();
     $('logoWcm').value = ''; $('logoHcm').value = '';
   }
+  syncCambios();
+  $('tallerTit').hidden = !L;
+}
+
+/* ---------- la barra del logo (sobre la foto) y «Cambios en este logo» (en el panel) ---------- */
+/* «Un color»: su Pantone si es uno válido (no uno a medio escribir), si no su HEX */
+const nombreTinte = c => (c.pant && pantoneHex(c.pant)) ? c.pant : c.hex.toUpperCase();
+function syncOpacBtn(op){
+  $('lbOpacTxt').textContent = op < 100 ? 'Opacidad ' + op + ' %' : 'Opacidad';
+  $('lbOpac').setAttribute('aria-label', 'Opacidad ' + op + ' %');
+}
+function cerrarPopsBarra(){
+  if(panPopInput && $('logoBar').contains(panPopInput)) cerrarPantonePop(); // la lista de Pantone del menú no queda suelta
+  ['lbPopColor', 'lbPopOpac'].forEach(id => $(id).hidden = true);
+  ['lbColor', 'lbOpac'].forEach(id => $(id).setAttribute('aria-expanded', 'false'));
+}
+function abrirPopBarra(cual){
+  const pop = $(cual === 'color' ? 'lbPopColor' : 'lbPopOpac'), abrir = pop.hidden;
+  cerrarPopsBarra();
+  if(!abrir) return;
+  pop.hidden = false;
+  $(cual === 'color' ? 'lbColor' : 'lbOpac').setAttribute('aria-expanded', 'true');
+  if(cual === 'color'){ const L = selLogo(); if(L && L.tint === 'custom') drawTintColor(L, true); }
+  posLogoBar(); // ya se sabe cuánto mide el menú: abre para el lado donde entra
+  /* el foco entra al menú: la opción elegida, o el control de la opacidad */
+  const f = cual === 'color' ? (pop.querySelector('#tintSeg [aria-pressed="true"]') || pop.querySelector('#tintSeg button')) : $('logoOpacity');
+  if(f) f.focus();
+}
+$('lbColor').addEventListener('click', () => abrirPopBarra('color'));
+$('lbOpac').addEventListener('click', () => abrirPopBarra('opac'));
+/* Esc (desde el document, ver closeBocetoModal): primero cierra el menú abierto y vuelve a su botón, o sale de «Marcar área» */
+window.__bocetoEsc = () => {
+  const abierto = ['lbPopColor', 'lbPopOpac'].find(id => !$(id).hidden);
+  if(abierto){ cerrarPopsBarra(); $(abierto === 'lbPopColor' ? 'lbColor' : 'lbOpac').focus(); return true; }
+  if(state.drawMode){ exitDrawMode(); return true; }
+  return false;
+};
+window.__bocetoCerrarPops = cerrarPopsBarra;
+/* tocar fuera de la barra (y de la lista de Pantone) cierra sus menús */
+document.addEventListener('pointerdown', e => {
+  if($('lbPopColor').hidden && $('lbPopOpac').hidden) return;
+  if($('logoBar').contains(e.target) || (panPop && panPop.contains(e.target))) return;
+  cerrarPopsBarra();
+}, true);
+/* con el teclado, ← → recorren los botones de la barra */
+$('logoBar').addEventListener('keydown', e => {
+  if(!/^Arrow(Left|Right)$/.test(e.key) || !e.target.classList.contains('lbBtn')) return;
+  const bs = [...$('logoBar').querySelectorAll('.lbBtn')].filter(b => !b.hidden && !b.disabled);
+  const i = bs.indexOf(e.target);
+  if(i < 0) return;
+  e.preventDefault();
+  bs[(i + (e.key === 'ArrowRight' ? 1 : -1) + bs.length) % bs.length].focus();
+});
+/* «Quitar el fondo» desde los avisos de logo con fondo */
+const irAFondo = () => { cerrarPopsBarra(); $('removeWhiteBtn').click(); };
+$('lbOpacoBtn').addEventListener('click', irAFondo);
+$('jpgQuitar').addEventListener('click', irAFondo);
+
+/* ¿la imagen del logo trae fondo? (el contorno es todo opaco): con Blanco, Negro o Un color se pintaría el
+   rectángulo entero. Se mide una vez por imagen, en chico */
+function medirOpaco(L){
+  const prev = opacoDe.get(L);
+  if(prev && prev.src === L.src) return;
+  opacoDe.set(L, { src: L.src, opaco: !!L.isJpg });
+  if(L.isJpg) return;
+  const im = new Image();
+  im.onload = () => {
+    let opaco = false;
+    try{
+      const n = 48, c = document.createElement('canvas'); c.width = n; c.height = n;
+      const g = c.getContext('2d'); g.drawImage(im, 0, 0, n, n);
+      const d = g.getImageData(0, 0, n, n).data;
+      let llenos = 0, total = 0;
+      for(let k = 0; k < n; k++) for(const [x, y] of [[k, 0], [k, n-1], [0, k], [n-1, k]]){ total++; if(d[(y*n + x)*4 + 3] > 245) llenos++; }
+      opaco = llenos / total > 0.95;
+    }catch(e){}
+    const m = opacoDe.get(L);
+    if(!m || m.src !== L.src) return;
+    m.opaco = opaco;
+    if(opaco && selLogo() === L) syncLogoUI();
+  };
+  im.src = L.src;
+}
+
+/* lo que se le hizo al logo elegido, cada cosa con su acción: reemplaza a los avisos sueltos. El recorte
+   automático va como dato (en gris): no es algo que haya hecho el usuario */
+function syncCambios(){
+  const L = selLogo(), box = $('cambiosLista');
+  $('cambiosBox').hidden = !L;
+  box.innerHTML = '';
+  if(!L) return;
+  const filas = [];
+  const sp = quitarSpec(L), n = sp ? sp.colors.length : 0;
+  if(n) filas.push({ txt: 'Fondo: ' + n + (n === 1 ? ' color borrado' : ' colores borrados'), de: 'el fondo',
+    acc: [['Editar', () => $('removeWhiteBtn').click()], ['Deshacer', () => aplicarQuitar(L, [], QUITAR_TOL)]] });
+  if(L.crop && L.crop.trimmed){
+    const activo = L.useTrim !== false;
+    if(activo && !L.crop.manual) filas.push({ dato: true, txt: 'Se recortaron solos los márgenes vacíos: la medida es la del logo real', de: 'el recorte',
+      acc: [['Usar el archivo entero', alternarRecorte]] });
+    else filas.push({ txt: activo ? 'Recorte manual: la medida es la del rectángulo que marcaste' : 'Sin recorte: la medida es la del archivo entero, con sus márgenes', de: 'el recorte',
+      acc: [[activo ? 'Deshacer' : 'Volver a recortar', alternarRecorte]] });
+  }
+  if(L.iaPrev) filas.push({ txt: 'Modificado con IA: revisá que siga fiel al original', de: 'la IA', acc: [['Volver al original', volverOriginalIa]] });
+  if(L.tint && L.tint !== 'original'){
+    const c = L.tint === 'custom' && L.tintColor ? ' · ' + nombreTinte(L.tintColor) : '';
+    filas.push({ txt: 'Color: ' + TINT_NOMBRE[L.tint] + c, de: 'el color', acc: [['Deshacer', () => document.querySelector('#tintSeg button[data-tint="original"]').click()]] });
+  }
+  if(L.opacity < 1) filas.push({ txt: 'Opacidad: ' + Math.round(L.opacity*100) + ' %', de: 'la opacidad', acc: [['Deshacer', () => {
+    $('logoOpacity').value = 100; $('logoOpacity').dispatchEvent(new Event('input')); }]] });
+  if(!filas.some(f => !f.dato)){
+    const v = document.createElement('div'); v.className = 'cambioVacio';
+    v.textContent = 'Todavía sin cambios. Las herramientas están en la barra pegada al logo, en la foto: Fondo, Recortar, Color, Opacidad e IA.';
+    box.appendChild(v);
+  }
+  filas.forEach(f => {
+    const row = document.createElement('div'); row.className = 'cambio' + (f.dato ? ' dato' : '');
+    const t = document.createElement('span'); t.textContent = f.txt;
+    row.appendChild(t);
+    f.acc.forEach(([lbl, fn]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = lbl;
+      b.setAttribute('aria-label', lbl + ' (' + f.de + ')');
+      b.onclick = () => { focoCambios = true; fn(); };
+      row.appendChild(b);
+    });
+    box.appendChild(row);
+  });
+  if(focoCambios){ focoCambios = false; box.focus(); } // después de deshacer, el foco no se pierde
 }
 
 /* ---------- recorte manual del logo ---------- */
@@ -7343,7 +7612,8 @@ $('cropApply').addEventListener('click', () => {
 });
 
 /* deshacer / rehacer el recorte automático del logo seleccionado */
-$('trimUndo').addEventListener('click', () => {
+/* recortado ↔ archivo entero */
+function alternarRecorte(){
   const L = selLogo();
   if(!L || !L.crop || !L.crop.trimmed) return;
   L.useTrim = L.useTrim === false;
@@ -7353,7 +7623,7 @@ $('trimUndo').addEventListener('click', () => {
   L.h = (L.w*FW / newAspect) / FH; // conserva el ancho en pantalla
   if(state.mode === 'logo' && state.lockAspect && L.cmW > 0) L.cmH = L.cmW / newAspect;
   rebuildLogo(L, () => { syncLogoUI(); render(); });
-});
+}
 
 /* ---------- quitar fondo / colores del logo seleccionado ----------
    El modal muestra una miniatura del logo: se elige el color entre los sugeridos, con el
@@ -7562,13 +7832,14 @@ function usarLogoIa(L, url){
   };
   probe.src = url;
 }
-$('iaLogoUndo').addEventListener('click', () => {
+/* vuelve al logo de antes de la IA */
+function volverOriginalIa(){
   const L = selLogo();
   if(!L || !L.iaPrev) return;
   const previo = L.iaPrev;
   L.iaPrev = null;
   cambiarImagenLogo(L, previo);
-});
+}
 
 /* tinte del logo seleccionado */
 document.querySelectorAll('#tintSeg button').forEach(b => b.addEventListener('click', () => {
@@ -7647,6 +7918,8 @@ $('logoOpacity').addEventListener('input', () => {
   if(!L) return;
   L.opacity = parseInt($('logoOpacity').value,10) / 100;
   $('opacityVal').textContent = $('logoOpacity').value + '%';
+  syncOpacBtn(parseInt($('logoOpacity').value, 10));
+  syncCambios();
   render();
 });
 
@@ -7658,6 +7931,7 @@ function enterDrawMode(){
   $('drawHint').hidden = false;
   $('drawZoneBtn').setAttribute('aria-pressed', 'true');
   $('drawZoneBtn').textContent = '✏ Dibujá en la foto';
+  posLogoBar();
 }
 function exitDrawMode(){
   state.drawMode = false;
@@ -7665,10 +7939,68 @@ function exitDrawMode(){
   $('drawHint').hidden = true;
   $('drawZoneBtn').setAttribute('aria-pressed', 'false');
   $('drawZoneBtn').textContent = state.zone ? 'Redibujar' : 'Marcar área';
+  posLogoBar();
 }
 
 /* ---------- interacción con punteros ---------- */
-let active = null;
+
+/* la barra del logo va pegada al logo elegido, debajo de su medida; si abajo no entra, arriba (por encima de ⟳).
+   Se esconde mientras se arrastra el logo, al marcar el área, con «Ocultar guías» o si se tocó la foto fuera del logo */
+/* la barra va pegada al logo elegido, debajo de él y de su medida (o arriba si abajo no entra), sin pisar los
+   controles de zoom ni de centrar y, con varios logos, del lado donde tape menos a los otros. Se esconde mientras
+   se arrastra algo, al marcar el área, con «Ocultar guías», con el paso 3 bloqueado y si con zoom el logo no se ve */
+const rectDe = el => el ? el.getBoundingClientRect() : null;
+function posLogoBar(){
+  const bar = $('logoBar'), L = selLogo();
+  let ver = !!L && !!L.el && !frame.hidden && !bocetoModal.hidden && !state.drawMode && !active
+    && !frame.classList.contains('clean') && !$('step3').classList.contains('locked');
+  const wr = $('frameWrap').getBoundingClientRect();
+  const er = ver ? L.el.getBoundingClientRect() : null;
+  if(er) ver = er.right > wr.left && er.left < wr.right && er.bottom > wr.top && er.top < wr.bottom;
+  if(!ver){ if(!bar.hidden){ bar.hidden = true; cerrarPopsBarra(); } return; }
+  bar.hidden = false;
+  /* el logo con lo que lleva alrededor (medida, ⟳ y ×): la barra no tapa nada de eso */
+  const lr = [er, chip.hidden ? null : rectDe(chip), rectDe(L.el.querySelector('.logoRotate')), rectDe(L.el.querySelector('.logoDelete'))]
+    .filter(r => r && (r.width || r.height))
+    .reduce((a, r) => ({ left: Math.min(a.left, r.left), top: Math.min(a.top, r.top), right: Math.max(a.right, r.right), bottom: Math.max(a.bottom, r.bottom) }));
+  let piso = wr.bottom - 6;
+  ['zoomCtrls', 'alignCtrls'].forEach(id => { const c = $(id); if(!c.hidden) piso = Math.min(piso, c.getBoundingClientRect().top - 6); });
+  const techo = wr.top + 6, card = bar.parentElement.getBoundingClientRect();
+  const bw = bar.offsetWidth, bh = bar.offsetHeight;
+  const left = clamp((er.left + er.right)/2 - bw/2, wr.left + 6, Math.max(wr.left + 6, wr.right - bw - 6));
+  const abajo = lr.bottom + 8, arriba = lr.top - 8 - bh;
+  const entraAbajo = abajo + bh <= piso, entraArriba = arriba >= techo;
+  const tapa = t => state.logos.reduce((sum, o) => {
+    if(o === L || !o.el) return sum;
+    const r = o.el.getBoundingClientRect();
+    return sum + Math.max(0, Math.min(left + bw, r.right) - Math.max(left, r.left)) * Math.max(0, Math.min(t + bh, r.bottom) - Math.max(t, r.top));
+  }, 0);
+  const top = entraAbajo && (!entraArriba || tapa(abajo) <= tapa(arriba)) ? abajo
+    : entraArriba ? arriba
+    : clamp(abajo, techo, Math.max(techo, piso - bh)); // no entra de ningún lado: lo más cerca posible
+  bar.style.left = Math.round(left - card.left) + 'px';
+  bar.style.top = Math.round(top - card.top) + 'px';
+  const pop = [$('lbPopColor'), $('lbPopOpac')].find(x => !x.hidden);
+  if(pop) ubicarPop(pop, top, bh, top >= er.top + er.height/2, left, card);
+}
+/* el menú abre hacia el lado contrario al logo; si de ese lado no entra entero, se achica con scroll (y solo
+   si ni así tiene lugar, abre del otro lado). A lo ancho sale de su botón, sin pasarse de la tarjeta */
+function ubicarPop(pop, top, bh, bajoLogo, left, card){
+  const cuerpo = bocetoModal.querySelector('.bm-body').getBoundingClientRect();
+  const limArr = Math.max(cuerpo.top, 0) + 6, limAb = Math.min(cuerpo.bottom, window.innerHeight) - 6;
+  pop.style.maxHeight = '';
+  const ph = pop.offsetHeight;
+  const lugarAb = limAb - (top + bh + 8), lugarArr = top - 8 - limArr;
+  let haciaAbajo = bajoLogo, lugar = bajoLogo ? lugarAb : lugarArr;
+  if(ph > lugar && lugar < 150){ haciaAbajo = !bajoLogo; lugar = haciaAbajo ? lugarAb : lugarArr; }
+  pop.style.top = haciaAbajo ? (bh + 8) + 'px' : 'auto';
+  pop.style.bottom = haciaAbajo ? 'auto' : (bh + 8) + 'px';
+  pop.style.maxHeight = ph > lugar ? Math.max(120, Math.floor(lugar)) + 'px' : '';
+  pop.style.maxWidth = Math.max(200, card.width - 12) + 'px'; // en pantallas angostas, no más ancho que la tarjeta
+  const boton = pop.previousElementSibling, pw = pop.offsetWidth;
+  const abs = clamp(left + (boton ? boton.offsetLeft : 0), card.left + 6, Math.max(card.left + 6, card.right - pw - 6));
+  pop.style.left = Math.round(abs - left) + 'px';
+}
 
 frame.addEventListener('pointerdown', e => {
   if(document.activeElement && document.activeElement.tagName === 'INPUT') document.activeElement.blur();
@@ -7697,6 +8029,7 @@ frame.addEventListener('pointerdown', e => {
   }
   if(e.target.dataset && e.target.dataset.auto && state.auto){
     const A = state.auto, k0 = cmPerPx();
+    A.tecleado = null; // se acomoda a mano: lo anotado antes ya no se sostiene solo
     active = { mode:'auto-resize', corner:e.target.dataset.auto, startPx:px, start:{ x:A.x, y:A.y, w:A.w, h:A.h },
       real: k0 ? { w: A.w*FW*k0, h: A.h*FH*k0 } : null }; // lo que mide el producto al empezar
     frame.setPointerCapture(e.pointerId); e.preventDefault(); return;
@@ -8173,6 +8506,7 @@ $('cleanToggle').addEventListener('click', () => {
   $('cleanToggle').setAttribute('aria-pressed', on);
   $('cleanToggle').textContent = on ? '👁 Mostrar guías' : '👁 Ocultar guías';
   if(on) exitDrawMode();
+  posLogoBar();
 });
 
 window.__bocetoRender = render;

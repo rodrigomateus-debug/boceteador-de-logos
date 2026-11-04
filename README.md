@@ -24,7 +24,39 @@ El boceteador tiene tres pasos y una barra fija abajo:
    Si salieron solas y no hay nada que mirar, el paso queda en una línea
    («Producto 8,79 × 27,53 cm · Área 3,49 × 12,30 cm · Grabado láser») con
    «Revisar»; si algo falta o no cierra, se abre solo.
-3. **Logo y colores**: el logo, su color y los colores de impresión.
+3. **Logo y colores**: el logo, sus medidas, los cambios que se le hicieron y lo
+   que va al taller (colores de impresión y el original del cliente).
+
+**Las herramientas del logo están sobre la foto.** Con un logo elegido hay una
+barra pegada a él, debajo de su medida (arriba si abajo no entra, sin pisar los
+controles de zoom ni de centrar): **Fondo** (con ✓ cuando ya se le quitó),
+**Recortar**, **Color ▾** (Full color, Blanco, Negro, Grabado o Un color, con su
+muestra; el botón dice el color de verdad, por ejemplo «186 C» o «#3A7D44», y «Un
+color» abre ahí mismo el HEX o Pantone), **Opacidad** e **IA**. Los menús abren para
+el lado contrario al logo, así no lo tapan (si no entran, se achican con scroll);
+se cierran tocando fuera o con Esc, que recién la segunda vez cierra el editor.
+Con el teclado, ← → recorren la barra. La barra se esconde mientras se arrastra
+algo, al marcar el área, con «Ocultar guías», con el paso 3 bloqueado y, con zoom,
+si el logo quedó fuera de la vista. En el celular muestra solo los íconos.
+
+Si la imagen del logo **trae fondo** (no es transparente), el menú de color y el
+panel lo avisan —en Blanco, Negro o Un color se pintaría el rectángulo entero— con
+«Quitar el fondo» a mano.
+
+En el panel, **«Cambios en este logo»** junta lo que se le hizo, cada cosa con su
+acción: «Fondo: 2 colores borrados · Editar · Deshacer», «Recorte manual ·
+Deshacer», «Modificado con IA · Volver al original», «Color: Un color · 186 C ·
+Deshacer», «Opacidad: 84 % · Deshacer». El recorte automático de los márgenes va
+en gris, como dato («Usar el archivo entero»). Debajo, separado, **«Para el
+taller»**: los colores de impresión y «📎 Adjuntar original del cliente».
+
+Con **varios logos**, las manijas, ⟳ y × se ven solo en el elegido, la barra va del
+lado donde tapa menos a los otros y un logo nuevo va en el lugar libre del área
+(o, si está llena, justo debajo del anterior, no encima). La medida del logo se
+corre al costado si tapaba la etiqueta del área.
+
+En los colores (de la ficha y de «Un color»), **cambiar el HEX a mano suelta el
+Pantone** que había: así al taller no le llega un Pantone que ya no corresponde.
 
 La **barra de abajo**, siempre a la vista, muestra la técnica y tiene «Aplicar a
 la ficha» y «Descargar PNG»; mientras no se pueda aplicar, dice qué falta («Falta
@@ -57,9 +89,12 @@ mouse o con ↑ ↓ y Enter). Al elegirlo:
    impresión, para ver enseguida si algo no cierra; al cargar el logo se oculta
    solo y queda solo el área («Ver la medida» lo vuelve a mostrar).
    **«Medida real del producto»** son dos campos, **↔ ancho × ↕ alto**, que muestran lo
-   que mide el recuadro. **Escribir uno adapta el recuadro a esa medida, solo de ese
-   lado** (el otro, la escala y el área quedan como estaban); sin escala todavía
-   (foto propia), ese número la da. Al entrar a un campo, el número queda
+   que mide el recuadro. **El lado que da la escala** (el primero que se anota; si
+   no, el largo) **la corrige**: el recuadro queda donde está y pasa a medir eso, así
+   un número mal puesto (5 en vez de 52) se arregla escribiendo el bueno en el mismo
+   campo. **El otro lado adapta el recuadro** a su medida, con la misma escala. Lo
+   anotado a mano se respeta: al corregir la escala, el otro lado conserva su número.
+   Sin escala todavía (foto propia), el primer número la da. Al entrar a un campo, el número queda
    seleccionado y lo que se escribe lo reemplaza. Abajo, como referencia y en el mismo orden, **«Medida del proveedor:
    9 × 29 cm»** con «✓ coincide» o «⚠ difiere 6,9 %».
    **El recuadro se ajusta**: si el detector agarró mal los bordes (la birome de
@@ -477,13 +512,15 @@ Alrededor de la mejora hay tres comodidades más:
 
 ### Modificar logo con IA
 
-En el paso 3 del boceteador (para el logo seleccionado) y debajo de "Logo del
-cliente" en la ficha (para el logo de la hoja) está **✨ Modificar logo con IA**:
+En la barra del logo del boceteador (**IA**, para el logo seleccionado) y debajo
+de "Logo del cliente" en la ficha (para el logo de la hoja) está **✨ Modificar
+logo con IA**:
 se abre un modal con el logo, se escribe qué cambiarle («sacale el slogan»,
 «pasalo a un solo color», «redibujalo prolijo»…) y la IA devuelve una versión
 para comparar con la actual. «↻ Seguir editando este» encadena otro pedido sobre
 el resultado; «Usar este logo» lo reemplaza manteniendo posición, ancho y color
-de impresión, y en el boceteador queda «Volver al original». El logo viaja en
+de impresión, y en el boceteador queda «Volver al original» (en «Cambios en este
+logo»). El logo viaja en
 PNG (con su transparencia) y vuelve sin fondo; las reglas de cómo se edita un
 logo (cambiar solo lo pedido, gráfico plano para imprimir) están en
 `ESTILO_LOGO`, en la misma función.
