@@ -24,7 +24,24 @@ El boceteador tiene tres pasos y una barra fija abajo:
    Si salieron solas y no hay nada que mirar, el paso queda en una línea
    («Producto 8,79 × 27,53 cm · Área 3,49 × 12,30 cm · Grabado láser») con
    «Revisar»; si algo falta o no cierra, se abre solo.
-3. **Logo y colores**: el logo, su color y los colores de impresión.
+3. **Logo y colores**: el logo, sus medidas, los cambios que se le hicieron y lo
+   que va al taller (colores de impresión y el original del cliente).
+
+**Las herramientas del logo están sobre la foto.** Al elegir un logo (o tocarlo),
+aparece una barra pegada a él, debajo de su medida (arriba si abajo no entra):
+**Fondo** (quitar el fondo o cualquier color; muestra cuántos se borraron),
+**Recortar**, **Color ▾** (Full color, Blanco, Negro, Grabado o Un color, con su
+muestra; «Un color» abre ahí mismo el HEX o Pantone), **Opacidad** e **IA**. Los
+menús abren para el lado contrario al logo, así no lo tapan. Mientras se arrastra
+el logo, la barra se esconde; tocando la foto fuera del logo también, y vuelve al
+tocarlo. Con «Ocultar guías» no se ve.
+
+En el panel, **«Cambios en este logo»** junta lo que se le hizo, cada cosa con su
+acción: «Fondo: 2 colores borrados · Editar · Deshacer», «Se recortaron los
+márgenes vacíos · Deshacer», «Modificado con IA · Volver al original», «Color:
+Grabado · Deshacer», «Opacidad: 84 % · Deshacer». Reemplaza a los avisos sueltos
+de antes. Debajo, **«Para el taller»**: los colores de impresión y «📎 Adjuntar
+original del cliente».
 
 La **barra de abajo**, siempre a la vista, muestra la técnica y tiene «Aplicar a
 la ficha» y «Descargar PNG»; mientras no se pueda aplicar, dice qué falta («Falta
@@ -477,13 +494,15 @@ Alrededor de la mejora hay tres comodidades más:
 
 ### Modificar logo con IA
 
-En el paso 3 del boceteador (para el logo seleccionado) y debajo de "Logo del
-cliente" en la ficha (para el logo de la hoja) está **✨ Modificar logo con IA**:
+En la barra del logo del boceteador (**IA**, para el logo seleccionado) y debajo
+de "Logo del cliente" en la ficha (para el logo de la hoja) está **✨ Modificar
+logo con IA**:
 se abre un modal con el logo, se escribe qué cambiarle («sacale el slogan»,
 «pasalo a un solo color», «redibujalo prolijo»…) y la IA devuelve una versión
 para comparar con la actual. «↻ Seguir editando este» encadena otro pedido sobre
 el resultado; «Usar este logo» lo reemplaza manteniendo posición, ancho y color
-de impresión, y en el boceteador queda «Volver al original». El logo viaja en
+de impresión, y en el boceteador queda «Volver al original» (en «Cambios en este
+logo»). El logo viaja en
 PNG (con su transparencia) y vuelve sin fondo; las reglas de cómo se edita un
 logo (cambiar solo lo pedido, gráfico plano para imprimir) están en
 `ESTILO_LOGO`, en la misma función.
