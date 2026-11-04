@@ -89,9 +89,12 @@ mouse o con ↑ ↓ y Enter). Al elegirlo:
    impresión, para ver enseguida si algo no cierra; al cargar el logo se oculta
    solo y queda solo el área («Ver la medida» lo vuelve a mostrar).
    **«Medida real del producto»** son dos campos, **↔ ancho × ↕ alto**, que muestran lo
-   que mide el recuadro. **Escribir uno adapta el recuadro a esa medida, solo de ese
-   lado** (el otro, la escala y el área quedan como estaban); sin escala todavía
-   (foto propia), ese número la da. Al entrar a un campo, el número queda
+   que mide el recuadro. **El lado que da la escala** (el primero que se anota; si
+   no, el largo) **la corrige**: el recuadro queda donde está y pasa a medir eso, así
+   un número mal puesto (5 en vez de 52) se arregla escribiendo el bueno en el mismo
+   campo. **El otro lado adapta el recuadro** a su medida, con la misma escala. Lo
+   anotado a mano se respeta: al corregir la escala, el otro lado conserva su número.
+   Sin escala todavía (foto propia), el primer número la da. Al entrar a un campo, el número queda
    seleccionado y lo que se escribe lo reemplaza. Abajo, como referencia y en el mismo orden, **«Medida del proveedor:
    9 × 29 cm»** con «✓ coincide» o «⚠ difiere 6,9 %».
    **El recuadro se ajusta**: si el detector agarró mal los bordes (la birome de

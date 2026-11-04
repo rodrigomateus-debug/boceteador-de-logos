@@ -5231,7 +5231,7 @@ function syncRulerBtn(){
   $('rulerToggle').title = state.rulerVisible ? 'Ocultar la medida en la foto' : 'Ver la medida en la foto';
   $('rulerToggle').disabled = !state.auto; $('rulerToggle').hidden = !state.auto; // sin recuadro (foto de 360°) no hay medida que ocultar
   $('rulerLbl').hidden = true; $('rulerCmField').hidden = true;
-  $('medInfo').title = 'El recuadro azul punteado es el producto (no el área de impresión, que es la verde del paso 2). Escribí su ancho o su alto y el recuadro se adapta a esa medida (solo ese lado). Después llevalo a los bordes del producto con las manijas o movelo agarrando la línea: con 🔗 mantiene la forma y la medida, y se ajusta la escala.';
+  $('medInfo').title = 'El recuadro azul punteado es el producto (no el área de impresión, que es la verde del paso 2). Escribí su ancho o su alto: el primer número da la escala (si te equivocaste, escribí el bueno en el mismo campo y se corrige) y el otro adapta el recuadro de ese lado. Después llevalo a los bordes del producto con las manijas o movelo agarrando la línea: con 🔗 mantiene la forma y la medida, y se ajusta la escala.';
 }
 $('rulerCm').addEventListener('input', () => {
   /* si se borra la medida en pleno dibujo, el modo dibujo se cancela;
@@ -5573,20 +5573,35 @@ function resizeProporcional(s, corner, dxn, dyn, FW, FH, minPx = 20){
   return { x, y, w, h };
 }
 
-/* escribir el ancho o el alto: el recuadro del producto se adapta a esa medida, solo de ese lado (el otro
-   lado, la escala y el área quedan como estaban). Sin escala todavía (foto propia), ese número la da */
+/* escribir el ancho o el alto. El lado que da la escala (el primero que se anotó; si no, el largo) la corrige:
+   el recuadro queda donde está y pasa a medir eso, así un número mal puesto se arregla escribiendo el bueno
+   (antes la escala quedaba clavada en el primero y el recuadro se estiraba hasta el borde de la foto). El otro
+   lado adapta el recuadro a su medida, con la misma escala. Lo anotado a mano se respeta: al corregir la escala,
+   el otro lado (si se escribió) conserva su número. Sin escala todavía (foto propia), el primer número la da */
 function anclarMedida(lado){
   const A = state.auto, v = numCampo(lado === 'w' ? 'prodAncho' : 'prodAlto');
   if(!A || frame.hidden || !v) return;
   const {w:FW,h:FH} = frameRect(), k = cmPerPx();
-  if(!k){ A.ancla = { lado, cm: v }; recalibrarContorno(); contornoAjustado(); render(); return; }
-  if(Math.abs((lado === 'w' ? A.w*FW : A.h*FH)*k - v) < 0.005) return; // no cambió
+  const mide = (l, kk) => (l === 'w' ? A.w*FW : A.h*FH)*kk;
+  A.tecleado = Object.assign({}, A.tecleado, { [lado]: v });
+  const ladoEsc = A.ancla ? A.ancla.lado : (A.h*FH >= A.w*FW ? 'h' : 'w');
+  if(!k || lado === ladoEsc){
+    if(k && Math.abs(mide(lado, k) - v) < 0.005) return; // no cambió
+    A.ancla = { lado, cm: v }; recalibrarContorno(); // la escala nueva; el recuadro no se mueve
+    const otro = lado === 'w' ? 'h' : 'w', vo = A.tecleado[otro], k2 = cmPerPx();
+    if(vo && k2 && Math.abs(mide(otro, k2) - vo) >= 0.005){ ajustarLado(A, otro, vo, k2); recalibrarContorno(); }
+  } else {
+    if(Math.abs(mide(lado, k) - v) < 0.005) return; // no cambió
+    if(!A.ancla) A.ancla = { lado: ladoEsc, cm: Math.round(mide(ladoEsc, k)*1e4)/1e4 }; // la misma escala
+    ajustarLado(A, lado, v, k); recalibrarContorno();
+  }
+  contornoAjustado(); render();
+}
+/* lleva un lado del recuadro a una medida (desde su centro, sin salirse de la foto) */
+function ajustarLado(A, lado, v, k){
+  const {w:FW,h:FH} = frameRect();
   if(lado === 'w'){ const w = Math.min(1, v / k / FW); A.x = clamp(A.x + (A.w - w)/2, 0, 1 - w); A.w = w; }
   else { const h = Math.min(1, v / k / FH); A.y = clamp(A.y + (A.h - h)/2, 0, 1 - h); A.h = h; }
-  const vertical = A.h*FH >= A.w*FW;
-  const r4 = x => Math.round(x*1e4)/1e4;
-  A.ancla = vertical ? { lado:'h', cm: r4(A.h*FH*k) } : { lado:'w', cm: r4(A.w*FW*k) }; // la misma escala, sobre el recuadro nuevo
-  recalibrarContorno(); contornoAjustado(); render();
 }
 ['prodAncho', 'prodAlto'].forEach(id => {
   const lado = id === 'prodAncho' ? 'w' : 'h';
@@ -8014,6 +8029,7 @@ frame.addEventListener('pointerdown', e => {
   }
   if(e.target.dataset && e.target.dataset.auto && state.auto){
     const A = state.auto, k0 = cmPerPx();
+    A.tecleado = null; // se acomoda a mano: lo anotado antes ya no se sostiene solo
     active = { mode:'auto-resize', corner:e.target.dataset.auto, startPx:px, start:{ x:A.x, y:A.y, w:A.w, h:A.h },
       real: k0 ? { w: A.w*FW*k0, h: A.h*FH*k0 } : null }; // lo que mide el producto al empezar
     frame.setPointerCapture(e.pointerId); e.preventDefault(); return;
