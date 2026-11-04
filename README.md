@@ -172,7 +172,11 @@ arrastra desde adentro (no cambia de tamaño). Si se agranda o se achica, cambia
 medida (la del producto no: la escala es la misma) y abajo queda la sugerida («del
 proveedor», «de la descripción», «estimada» o «guardada») con «Volver a la
 sugerida». Si pasa de lo que imprime la técnica, el área se marca en ámbar y lo
-avisa. Donde el área y el recuadro del producto se tocan, se agarra el área.
+avisa. Donde el área y el recuadro del producto se tocan, se agarra el área. El área
+**no tiene tamaño mínimo**: se achica todo lo que haga falta (un logo de 1 cm
+en una valija), y con zoom, al detalle; si queda chica en pantalla, las manijas
+salen por fuera de las esquinas y se sigue moviendo agarrándola del medio. Al
+dibujarla, solo un clic sin arrastrar no marca nada.
 
 **El área también se escribe**, como el producto: son dos campos, **ancho × alto**
 (en cm o mm, según la unidad del paso 3), con el **🔗** en el medio. Escribir un

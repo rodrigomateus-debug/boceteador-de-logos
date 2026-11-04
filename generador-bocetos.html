@@ -408,6 +408,11 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .handle.br{bottom:calc(-8px/var(--Z)); right:calc(-8px/var(--Z))}
 #bocetoModal .logoItem.selected{outline-width:calc(1.5px/var(--Z))}
 #bocetoModal #zone{border-width:calc(2px/var(--Z))}
+/* área chica en pantalla: las manijas quedan por fuera de las esquinas y el área se sigue agarrando para moverla */
+#bocetoModal #zone.chica .handle.tl{top:calc(-15px/var(--Z)); left:calc(-15px/var(--Z))}
+#bocetoModal #zone.chica .handle.tr{top:calc(-15px/var(--Z)); right:calc(-15px/var(--Z))}
+#bocetoModal #zone.chica .handle.bl{bottom:calc(-15px/var(--Z)); left:calc(-15px/var(--Z))}
+#bocetoModal #zone.chica .handle.br{bottom:calc(-15px/var(--Z)); right:calc(-15px/var(--Z))}
 #bocetoModal .logoDelete{width:calc(26px/var(--Z)); height:calc(26px/var(--Z)); top:calc(-13px/var(--Z)); right:calc(-13px/var(--Z)); font-size:calc(15px/var(--Z)); border-width:calc(1.5px/var(--Z))}
 #bocetoModal .logoRotate{width:calc(26px/var(--Z)); height:calc(26px/var(--Z)); top:calc(-36px/var(--Z)); font-size:calc(14px/var(--Z)); border-width:calc(1.5px/var(--Z))}
 #bocetoModal #measureChip{font-size:calc(11.5px/var(--Z)); padding:calc(4px/var(--Z)) calc(12px/var(--Z))}
@@ -4790,6 +4795,7 @@ function render(){
     const k = cmPerPx(), tz = tecnicaElegida();
     $('zoneLbl').textContent = 'Área de impresión' + (tz ? ' · ' + tz : '') + (k ? ' · ' + fmtPair(z.w*FW*k, z.h*FH*k) : '');
     zoneEl.classList.toggle('lbl-arriba', z.y + z.h > 0.93); // abajo no entra: la etiqueta va arriba
+    zoneEl.classList.toggle('chica', Math.min(z.w*FW, z.h*FH)*state.zoom < 44); // las manijas van por fuera, así se puede mover
     const zs = state.zonaSug, cambio = !!(zs && k && (Math.abs(zs.w - z.w) > 0.003 || Math.abs(zs.h - z.h) > 0.003));
     $('zoneRef').hidden = !cambio;
     if(cambio){ $('zoneRefLbl').textContent = 'Sugerida (' + zs.de + ')'; $('zoneRefOut').textContent = fmtPair(zs.w*FW*k, zs.h*FH*k); }
@@ -5455,8 +5461,8 @@ function syncProdLock(){
 }
 $('prodLockBtn').addEventListener('click', () => { if(state.auto){ state.auto.anclada = !state.auto.anclada; render(); } });
 /* agrandar o achicar sin deformar: desde la esquina (o el lado) opuesto, manda el cambio más grande */
-function resizeProporcional(s, corner, dxn, dyn, FW, FH){
-  const r = (s.w*FW) / (s.h*FH), c = resizeRect(s, corner, dxn, dyn, 20/FW, 20/FH);
+function resizeProporcional(s, corner, dxn, dyn, FW, FH, minPx = 20){
+  const r = (s.w*FW) / (s.h*FH), c = resizeRect(s, corner, dxn, dyn, minPx/FW, minPx/FH);
   let wpx = c.w*FW, hpx = c.h*FH;
   const horiz = /[lr]/.test(corner), vert = /[tb]/.test(corner);
   if(horiz && vert){ if(Math.abs(wpx - s.w*FW) >= Math.abs(hpx - s.h*FH)*r) hpx = wpx / r; else wpx = hpx * r; }
@@ -7776,8 +7782,9 @@ frame.addEventListener('pointermove', e => {
       y: clamp(s.y + dy/FH, 0, 1-s.h) };
   }
   else if(active.mode === 'zone-resize'){
-    if(state.zonaAnclada){ const r = resizeProporcional(active.start, active.corner, dx/FW, dy/FH, FW, FH); if(r) state.zone = r; } // 🔗: no se deforma
-    else state.zone = resizeRect(active.start, active.corner, dx/FW, dy/FH, 30/FW, 30/FH);
+    /* sin mínimo: un área chica (un logo de 1 cm en una valija) se achica todo lo que haga falta; con zoom, al detalle */
+    if(state.zonaAnclada){ const r = resizeProporcional(active.start, active.corner, dx/FW, dy/FH, FW, FH, ZONA_MIN_PX); if(r) state.zone = r; } // 🔗: no se deforma
+    else state.zone = resizeRect(active.start, active.corner, dx/FW, dy/FH, ZONA_MIN_PX/FW, ZONA_MIN_PX/FH);
   }
   else if(active.mode === 'auto-move'){
     const s = active.start;
@@ -7827,7 +7834,7 @@ frame.addEventListener('pointermove', e => {
   if(!active) return;
   if(active.mode === 'draw'){
     const {w:FW,h:FH} = frameRect();
-    if(state.zone.w*FW < 24 || state.zone.h*FH < 24){ state.zone = null; }
+    if(state.zone.w*FW*state.zoom < 3 || state.zone.h*FH*state.zoom < 3){ state.zone = null; } // un clic, no un área
     else exitDrawMode();
     setStepStates();
   }
@@ -7835,6 +7842,7 @@ frame.addEventListener('pointermove', e => {
   active = null; render();
 }));
 
+const ZONA_MIN_PX = 1; // el área de impresión: sin mínimo práctico (1 px de la foto, para que no llegue a cero)
 function resizeRect(s, corner, dxn, dyn, minW, minH){
   let {x,y,w,h} = s;
   if(corner.includes('l')){ const nx = clamp(x+dxn, 0, x+w-minW); w += x-nx; x = nx; }
