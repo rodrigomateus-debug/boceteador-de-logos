@@ -113,6 +113,16 @@ gratis la puerta abierta al **link compartible** de la fase 2.
 de fondo con IA, multi-logo por zona, 3D/AR. Todas las referencias los tienen,
 pero ninguno es necesario para validar el boceto visual.
 
+> **Actualización (noviembre 2026):** varios de estos ya están en
+> `generador-bocetos.html`: varios logos, quitar el fondo, modificar el logo con IA
+> y, ahora, **textos**. Decisión de diseño para todo lo que se agregue al boceto
+> (texto, formas, íconos): **es un logo más**. Se genera en el navegador como un SVG
+> en curvas y entra a la misma lista que los logos, así hereda mover, medir en cm,
+> pintar con HEX o Pantone, las hojas de la ficha y el paquete del taller (que lo
+> toma como curvas del cliente). El texto pasa las letras a curvas con opentype.js
+> (nunca `<text>`: el taller no necesita la tipografía) y guarda lo que dice y con
+> qué tipografía, para seguir editándolo. Siguen: formas, íconos y texto en arco.
+
 ---
 
 ## 5. Standalone + embebible con una sola base de código
@@ -172,7 +182,7 @@ Costo estimado del MVP en producción: **~USD 0–5/mes** (free tiers).
 | **1 — MVP** (este diseño) | Catálogo, editor, export PNG/PDF, admin de productos y zonas, modo embed |
 | **2 — Compartir** | Link compartible por boceto (`/b/{id}`) con botón "Aprobar", envío por mail, historial de bocetos |
 | **3 — Cotización** | Técnicas de aplicación por zona, precio por cantidad/tamaño, markup del revendedor (como la captura de referencia) |
-| **4 — Producción y escala** | Archivo de producción con medidas reales, cuentas de vendedores/revendedores, catálogo por API de proveedores, quita de fondo IA, texto/clipart |
+| **4 — Producción y escala** | Archivo de producción con medidas reales, cuentas de vendedores/revendedores, catálogo por API de proveedores, quita de fondo IA, ~~texto~~ (hecho)/clipart |
 
 ## 9. Sistema de diseño visual
 

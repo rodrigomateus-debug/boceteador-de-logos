@@ -8,7 +8,7 @@ se abren directo en el navegador, sin instalación.
 
 | Archivo | Qué es |
 |---|---|
-| **`generador-bocetos.html`** | ⭐ **La app principal.** Generador de bocetos (formulario + ficha A4 de producción en vivo) con el boceteador "Cargá tu logo" integrado como modal: subís la foto del producto, marcás el área, aplicás el logo (tinte —blanco, negro, grabado o **un color a elección**, con código HEX o Pantone del mismo buscador de la ficha—, opacidad, rotación, **quitar el fondo o cualquier color** —blanco, negro, uno del selector o tomado con el cuentagotas tocando el logo— y **✨ Modificar logo con IA**) y la ficha se completa sola (foto compuesta, logo, medidas, técnica, posición). El lienzo del boceteador ocupa toda la altura de la pantalla. La vista previa de la ficha tiene zoom (botones arriba a la derecha o Ctrl + rueda; «1:1» muestra el tamaño real de impresión para revisar la calidad de la foto). Acepta logos en PNG, JPG, SVG, PDF y .ai de Illustrator (guardados con compatibilidad PDF, que es el default). Trae de **formas.shop** el nombre, el color, las fotos y las medidas del producto, y lo mide solo sobre la foto (ver «Traer de formas.shop»). Imprime a PDF y descarga HTML. |
+| **`generador-bocetos.html`** | ⭐ **La app principal.** Generador de bocetos (formulario + ficha A4 de producción en vivo) con el boceteador "Cargá tu logo" integrado como modal: subís la foto del producto, marcás el área, aplicás el logo (tinte —blanco, negro, grabado o **un color a elección**, con código HEX o Pantone del mismo buscador de la ficha—, opacidad, rotación, **quitar el fondo o cualquier color** —blanco, negro, uno del selector o tomado con el cuentagotas tocando el logo— y **✨ Modificar logo con IA**) sumás **textos en curvas con la tipografía que quieras** (ver «Textos») y la ficha se completa sola (foto compuesta, logo, medidas, técnica, posición). El lienzo del boceteador ocupa toda la altura de la pantalla. La vista previa de la ficha tiene zoom (botones arriba a la derecha o Ctrl + rueda; «1:1» muestra el tamaño real de impresión para revisar la calidad de la foto). Acepta logos en PNG, JPG, SVG, PDF y .ai de Illustrator (guardados con compatibilidad PDF, que es el default). Trae de **formas.shop** el nombre, el color, las fotos y las medidas del producto, y lo mide solo sobre la foto (ver «Traer de formas.shop»). Imprime a PDF y descarga HTML. |
 | `boceteador.html` | El boceteador standalone (versión previa a la integración; el modal del generador es su evolución). |
 | `cotizador-formas.html` | Maqueta funcional del cotizador (fase 3 del roadmap): técnica, cantidades, desglose de precio y markup. |
 | `DESIGN.md` | Documento de diseño: flujos, modelo de datos, sistema de diseño Formas, roadmap. |
@@ -53,7 +53,45 @@ taller»**: los colores de impresión y «📎 Adjuntar original del cliente».
 Con **varios logos**, las manijas, ⟳ y × se ven solo en el elegido, la barra va del
 lado donde tapa menos a los otros y un logo nuevo va en el lugar libre del área
 (o, si está llena, justo debajo del anterior, no encima). La medida del logo se
-corre al costado si tapaba la etiqueta del área.
+corre al costado si tapaba la etiqueta del área. Si se enciman, **«Capa: ⬆ Traer
+adelante · ⬇ Enviar atrás»** (debajo de las miniaturas) elige cuál va arriba; no
+cambia el orden de las hojas de la ficha.
+
+### Textos
+
+En el paso 3, **«＋ Texto»** agrega un texto al boceto. Es un logo más: se mueve,
+se agranda, se rota, se mide en cm, se pinta (Blanco, Negro, Grabado o Un color con
+HEX o Pantone), cuenta para «¿Cómo se imprimen estos logos?» y va a la ficha y al
+paquete del taller igual que los logos. Arranca como «Tu texto» en Montserrat
+Negrita, negro, o blanco si el área cae sobre una parte oscura del producto.
+
+En la barra sobre la foto, **«Texto»** abre lo que dice (se escribe ahí mismo y el
+boceto se actualiza al instante; con Enter, otro renglón), la **tipografía**, el
+**grosor**, el **espacio entre letras** y, con varios renglones, la **alineación** y
+el **espacio entre renglones**. Al editarlo, la letra queda del mismo tamaño y
+crece el largo; si así no entra en el área, se achica hasta entrar. Con un texto
+elegido, el recuadro de arriba del paso 3 también abre su edición. Un texto no
+tiene Fondo, Recortar, IA ni «Full color»: se arma acá, limpio y de un color.
+
+- **Tipografías**: 32 de Google Fonts en 5 grupos (palo seco, con serif, display,
+  manuscritas y máquina de escribir), cada una con su letra en la lista. Se bajan
+  recién al usarlas (de fontsource por jsDelivr, con unpkg de respaldo).
+- **La tipografía del cliente**: «Subir la tipografía del cliente» acepta .ttf,
+  .otf o .woff (.woff2 no: hay que pedir el .ttf u .otf). Queda guardada en el
+  navegador y **viaja al taller** como adjunto del texto que la usa (deja de viajar
+  si se cambia por otra).
+- **Va en curvas**: las letras se pasan a curvas en el navegador (opentype.js),
+  así que el taller no necesita tener la tipografía. En el paquete, el texto sale
+  «con sus curvas originales» (repintado a la tinta elegida, con su Pantone como
+  tinta directa) y su SVG va como original del cliente.
+- **Lo que hay que mirar**: «Este texto», en el panel, dice la tipografía y el
+  **alto de las mayúsculas** en mm (para saber si la técnica lo imprime), y avisa si
+  la tipografía no tiene alguna letra del texto (por ejemplo, la «ñ» en una
+  tipografía del cliente), que no saldría.
+
+Al guardar una plantilla, el texto sigue siendo editable al abrirla. Con la
+tipografía del cliente, en otra computadora el texto se ve igual, pero para
+editarlo hay que volver a subir la tipografía (el boceteador lo avisa).
 
 En los colores (de la ficha y de «Un color»), **cambiar el HEX a mano suelta el
 Pantone** que había: así al taller no le llega un Pantone que ya no corresponde.
@@ -607,6 +645,8 @@ credencial en Google Cloud. Cada usuario también puede pegar otro con el botón
 - [x] Boceteador: área de impresión + logo con medidas reales (regla o medida exacta)
 - [x] Generador integrado (boceteador como modal, ficha A4 autocompletada)
 - [x] Ejecutivos en desplegable, multi-color de impresión (HEX/Pantone), barras de medida arrastrables, Nuevo boceto / Limpiar
+- [x] Textos en curvas con tipografía a elección (y la del cliente), y capas
+- [ ] Formas (rectángulo, círculo, estrella, escudo…) e íconos
 - [ ] Fase 2 — Links compartibles y aprobación del cliente
 - [ ] Fase 3 — Cotización conectada (ver `cotizador-formas.html`)
 - [ ] Fase 4 — Archivos de producción, cuentas, catálogo por API

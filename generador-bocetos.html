@@ -550,6 +550,41 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .logoChip{width:48px; height:48px; border-radius:10px; border:1.5px solid var(--formas-gray-200); background:#fff; padding:3px; cursor:pointer; flex:none}
 #bocetoModal .logoChip img{width:100%; height:100%; object-fit:contain; display:block}
 #bocetoModal .logoChip[aria-pressed="true"]{border-color:var(--formas-navy); box-shadow:0 0 0 2.5px color-mix(in srgb, var(--formas-lime) 55%, transparent)}
+/* agregar logo o texto, y las capas */
+#bocetoModal .agregarRow{display:flex; gap:8px; margin-top:10px}
+#bocetoModal .agregarRow .btn{flex:1; width:auto; margin:0; padding:9px 12px; font-size:13px}
+#bocetoModal .agregarRow .btn[hidden]{display:none}
+#bocetoModal .capasRow{display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:8px}
+#bocetoModal .capasRow .label{margin-right:2px; letter-spacing:.08em}
+#bocetoModal .capasRow button{width:auto; margin:0; padding:5px 10px; border:1.5px solid var(--formas-gray-200); border-radius:9px; background:#fff; font-family:var(--font-primary); font-size:12px; font-weight:600; color:var(--formas-navy); cursor:pointer}
+#bocetoModal .capasRow button:hover:not(:disabled){background:var(--formas-gray-50)}
+#bocetoModal .capasRow button:disabled{opacity:.4; cursor:default}
+/* el menú «Texto» de la barra */
+#bocetoModal #lbPopTexto textarea{display:block; width:100%; box-sizing:border-box; min-height:54px; max-height:140px; resize:vertical; margin:0; padding:8px 10px; border:1.5px solid var(--formas-gray-200); border-radius:10px; font-family:var(--font-primary); font-size:14px; line-height:1.35; color:var(--formas-ink); background:#fff}
+#bocetoModal #lbPopTexto textarea:focus{outline:none; border-color:var(--formas-navy)}
+#bocetoModal #lbPopTexto .txtTit{margin-top:12px}
+#bocetoModal #lbPopTexto .txtTit span{text-transform:none; letter-spacing:0; color:var(--formas-ink)}
+#bocetoModal #txtFuentes{max-height:184px; overflow:auto; padding:4px; border:1px solid var(--border-subtle); border-radius:10px}
+#bocetoModal #txtFuentes:focus{outline:none}
+#bocetoModal .txtGrupo{padding:8px 8px 3px; font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--text-muted)}
+#bocetoModal .txtFuente{display:block; width:100%; margin:0; padding:5px 8px; border:none; border-radius:8px; background:none; text-align:left; font-size:17px; font-weight:400; line-height:1.3; color:var(--formas-ink); cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+#bocetoModal .txtFuente:hover{background:var(--formas-gray-50)}
+#bocetoModal .txtFuente[aria-selected="true"]{background:var(--formas-gray-100); box-shadow:inset 3px 0 0 var(--formas-navy)}
+#bocetoModal .txtSubir{display:block; width:100%; margin:8px 0 0; padding:7px 10px; border:1.5px dashed var(--formas-gray-200); border-radius:10px; background:#fff; text-align:left; font-family:var(--font-primary); font-size:12px; font-weight:600; color:var(--formas-navy); cursor:pointer}
+#bocetoModal .txtSubir:hover{border-color:var(--formas-navy)}
+#bocetoModal .txtSubir small{font-weight:400; color:var(--text-muted)}
+#bocetoModal .txtFila{margin-top:12px}
+#bocetoModal .txtFila .lbPopTit, #bocetoModal .txtRango .lbPopTit{display:block}
+#bocetoModal .txtFila .seg{margin-top:0; flex-wrap:wrap}
+#bocetoModal .txtFila .seg button{flex:1 0 auto; padding:6px 8px}
+#bocetoModal .txtRango{display:block; margin-top:12px}
+#bocetoModal .txtRango input{width:100%; margin:0; accent-color:var(--formas-navy)}
+#bocetoModal .txtRango b{color:var(--formas-ink); letter-spacing:0}
+#bocetoModal .txtNota{margin-top:12px; font-size:11.5px; line-height:1.45; color:var(--text-muted)}
+#bocetoModal .txtNota div + div{margin-top:4px}
+#bocetoModal .txtNota .mal{color:#A33A00; font-weight:600}
+#bocetoModal #lbPopColor .seg.sinFull{grid-template-columns:repeat(4, minmax(0, 1fr))}
+#bocetoModal #lbPopColor .seg button[hidden]{display:none}
 /* botón del generador para abrir el boceteador */
 .btn-boceto{display:block; width:100%; margin-top:6px; padding:11px 12px; border:none; border-radius:10px; background:var(--lime); color:var(--navy); font:inherit; font-size:13px; font-weight:700; cursor:pointer}
 .btn-boceto:hover{filter:brightness(1.05)}
@@ -1150,6 +1185,24 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         </div>
         <!-- la barra del logo: va pegada al logo elegido, sobre la foto (se esconde al arrastrarlo, al marcar el área y con «Ocultar guías») -->
         <div id="logoBar" role="toolbar" aria-label="Herramientas del logo" hidden>
+          <button type="button" class="lbBtn" id="lbTexto" aria-expanded="false" aria-controls="lbPopTexto" title="Editar el texto: lo que dice, la tipografía, el grosor y el espaciado" hidden><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg><span>Texto</span></button>
+          <div class="lbPop" id="lbPopTexto" hidden>
+            <div class="lbPopTit">Texto</div>
+            <textarea id="txtTexto" rows="2" maxlength="200" placeholder="Escribí el texto" aria-label="Texto" spellcheck="true"></textarea>
+            <div class="lbPopTit txtTit">Tipografía · <span id="txtFuenteNom"></span></div>
+            <div id="txtFuentes" role="listbox" aria-label="Tipografía" tabindex="-1"></div>
+            <button type="button" class="txtSubir" id="txtSubirFuente" title="La tipografía de la marca del cliente: el texto se arma con ella y el archivo viaja al taller">⬆ Subir la tipografía del cliente <small>.ttf, .otf o .woff</small></button>
+            <input type="file" id="txtFuenteInput" accept=".ttf,.otf,.woff,font/ttf,font/otf,font/woff" hidden>
+            <div class="txtFila" id="txtPesoFila"><span class="lbPopTit">Grosor</span><div class="seg" id="txtPeso"></div></div>
+            <div class="txtFila" id="txtAlinFila" hidden><span class="lbPopTit">Alineación</span><div class="seg" id="txtAlin">
+              <button type="button" data-alin="left" aria-pressed="false">Izquierda</button>
+              <button type="button" data-alin="center" aria-pressed="true">Centro</button>
+              <button type="button" data-alin="right" aria-pressed="false">Derecha</button>
+            </div></div>
+            <label class="txtRango"><span class="lbPopTit">Entre letras · <b id="txtEspVal">0</b></span><input type="range" id="txtEsp" min="-50" max="400" step="10" value="0"></label>
+            <label class="txtRango" id="txtInterlFila" hidden><span class="lbPopTit">Entre renglones · <b id="txtInterlVal">1,2</b></span><input type="range" id="txtInterl" min="0.8" max="2" step="0.05" value="1.2"></label>
+            <div class="txtNota" id="txtNota"></div>
+          </div>
           <button type="button" class="lbBtn" id="removeWhiteBtn" aria-label="Quitar fondo" title="Quitar fondo: borra el fondo o cualquier color del logo (blanco, negro, uno a elección o tomado con el cuentagotas)"><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg><span>Fondo</span><b class="lbOk" id="lbFondoN" hidden aria-hidden="true">✓</b></button>
           <button type="button" class="lbBtn" id="cropEditBtn" title="Recortar el logo a mano"><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg><span>Recortar</span></button>
           <i class="lbSep"></i>
@@ -1178,7 +1231,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             <div class="lbPopTit">Opacidad · <span id="opacityVal">100%</span></div>
             <input type="range" id="logoOpacity" min="10" max="100" value="100" aria-label="Opacidad del logo">
           </div>
-          <i class="lbSep"></i>
+          <i class="lbSep" id="lbSepIa"></i>
           <button type="button" class="lbBtn lbIa" id="iaLogoBtn" aria-label="Modificar el logo con IA" title="Pedile a la IA un cambio en este logo: sacar un texto, cambiar un color, redibujarlo prolijo…"><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0l1.58 6.14a2 2 0 0 0 1.44 1.44l6.14 1.58a.5.5 0 0 1 0 .96l-6.14 1.58a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"/></svg><span>IA</span></button>
         </div>
         <div id="frameWrap">
@@ -1327,13 +1380,23 @@ html,body{margin:0;padding:0;background:#EDEDF2}
       <!-- Paso 3: logo -->
       <div class="card step locked" id="step3">
         <div class="step-head"><span class="step-num">3</span><h2>Logo y colores</h2></div>
-        <label class="upload-tile" for="logoInput">
+        <label class="upload-tile" for="logoInput" id="logoTile">
           <span class="thumb slot" id="logoThumb">◐</span>
           <span class="txt" id="logoTxt">Elegir logo<small>PNG sin fondo recomendado · también SVG, JPG, PDF o AI</small></span>
         </label>
         <input type="file" id="logoInput" accept="image/png,image/jpeg,image/svg+xml,image/webp,.pdf,.ai,application/pdf" hidden>
         <div class="logoChips" id="logoChips" hidden></div>
-        <button class="btn btn-secondary" type="button" id="addLogoBtn" style="margin-top:10px" hidden>＋ Agregar otro logo</button>
+        <!-- con varios logos o textos encimados, cuál va arriba (no cambia el orden de las hojas) -->
+        <div class="capasRow" id="capasRow" hidden>
+          <span class="label">Capa</span>
+          <button type="button" id="capaArriba" title="Que quede por encima de los demás">⬆ Traer adelante</button>
+          <button type="button" id="capaAbajo" title="Que quede por debajo de los demás">⬇ Enviar atrás</button>
+        </div>
+        <div class="agregarRow">
+          <button class="btn btn-secondary" type="button" id="addLogoBtn" hidden>＋ Otro logo o imagen</button>
+          <button class="btn btn-secondary" type="button" id="addTextoBtn" title="Un texto con la tipografía que quieras: va en curvas al taller">＋ Texto</button>
+        </div>
+        <div class="note" id="textoNote" hidden>⚠ <span id="textoNoteTxt"></span></div>
         <div class="field" id="unitField" hidden>
           <span class="label" style="letter-spacing:.08em">Unidad de las medidas</span>
           <div class="seg" style="margin-top:0">
@@ -1355,7 +1418,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <!-- lo que se le hizo al logo elegido, cada cosa con su Deshacer (las herramientas están en la barra
              que aparece sobre el logo, en la foto) -->
         <div id="cambiosBox" hidden>
-          <div class="label" style="margin-top:14px;letter-spacing:.08em">Cambios en este logo</div>
+          <div class="label" style="margin-top:14px;letter-spacing:.08em" id="cambiosTit">Cambios en este logo</div>
           <div id="cambiosLista" tabindex="-1"></div>
         </div>
         <div class="note" id="jpgNote" hidden>⚠ <span>El logo parece tener fondo (no es transparente): sobre productos oscuros, o en Blanco, Negro o Un color, se ve el rectángulo.</span> <button type="button" id="jpgQuitar">Quitar el fondo</button></div>
@@ -4941,6 +5004,11 @@ function render(){
       }
     } else { $('logoWcm').disabled = false; $('logoHcm').disabled = false; }
   } else { chip.hidden = true; $('logoReadout').hidden = true; }
+  if(L && L.tipo === 'texto' && L.gen){ // el alto de las letras acompaña mientras se agranda o se achica
+    const fila = $('txtCambioAlto'), alto = textoAltura(L);
+    if(fila) fila.textContent = 'En curvas · ' + etiquetaFuente(L.gen) + (alto ? ' · ' + alto : '');
+    if(!$('lbPopTexto').hidden) notaTexto(L);
+  }
 
   syncRulerBtn();
   if(false){ // la regla queda solo por dentro (da la escala): lo que se ve y se ajusta es el recuadro del producto
@@ -7129,7 +7197,8 @@ $('adjInput').addEventListener('change', async e => {
   syncAdjuntos();
 });
 
-function loadLogoSrc(url, name, isJpg, file){
+/* extra: lo que trae un logo generado acá (un texto: tipo, gen, genSvg…, su tinte y qué hacer al terminar) */
+function loadLogoSrc(url, name, isJpg, file, extra){
   const probe = new Image();
   probe.onload = () => {
     if(!(probe.naturalWidth > 0 && probe.naturalHeight > 0)){
@@ -7142,6 +7211,8 @@ function loadLogoSrc(url, name, isJpg, file){
     let logo;
     if(pendingAdd || !state.logos.length){
       logo = { src:url, name, isJpg:!!isJpg, aspect, crop, useTrim:true, fullW:probe.naturalWidth, fullH:probe.naturalHeight, whiteRemoved:false, bgRemove:null, tint:'original', opacity:1, cmW:0, cmH:0, rot:0, x:0, y:0, w:0, h:0, el:null, img:null };
+      if(extra){ const { listo, ...datos } = extra; Object.assign(logo, datos); }
+      logo.z = siguienteCapa(); // lo nuevo va arriba de todo
       makeLogoEl(logo);
       placeInZone(logo, state.logos.length);
       state.logos.push(logo);
@@ -7154,13 +7225,14 @@ function loadLogoSrc(url, name, isJpg, file){
       logo.fullW = probe.naturalWidth; logo.fullH = probe.naturalHeight;
       logo.whiteRemoved = false; logo.bgRemove = null; logo.iaPrev = null;
       logo.tint = 'original'; logo.opacity = 1;
+      sacarTexto(logo);
       const {w:FW,h:FH} = frameRect();
       logo.h = (logo.w*FW / aspect) / FH;
     }
     pendingAdd = false;
     if(state.rulerVisible){ state.rulerVisible = false; syncRulerBtn(); } // con el logo, solo queda el área
     if(file) guardarOriginalDelLogo(logo, file);
-    rebuildLogo(logo, () => { syncLogoUI(); setStepStates(); render(); });
+    rebuildLogo(logo, () => { syncLogoUI(); setStepStates(); render(); if(extra && extra.listo) extra.listo(logo); });
   };
   probe.src = url;
 }
@@ -7299,6 +7371,7 @@ $('undoDeleteBtn').addEventListener('click', () => {
   makeLogoEl(logo);
   const idx = Math.min(entry.index, state.logos.length);
   state.logos.splice(idx, 0, logo);
+  ordenarCapas(); // vuelve a su capa, no arriba de todo
   state.sel = idx;
   rebuildLogo(logo, () => { syncUndoUI(); syncLogoUI(); setStepStates(); render(); });
 });
@@ -7338,24 +7411,41 @@ function syncLogoUI(){
     chips.appendChild(b);
   });
   $('addLogoBtn').hidden = !state.logos.length;
-  if(L !== barLogo){ barLogo = L; cerrarPopsBarra(); } // otro logo: sus menús arrancan cerrados
+  if(L !== barLogo){ barLogo = L; txtAviso = ''; cerrarPopsBarra(); } // otro logo: sus menús arrancan cerrados
   $('logoCmFields').hidden = !state.logos.length;
   $('unitField').hidden = !state.logos.length;
   $('lockAspectBtn').hidden = state.mode === 'product';
+  /* un texto tiene su propia herramienta (Texto) y no tiene fondo, recorte ni IA: se arma acá, ya limpio.
+     «Full color» tampoco: es de un solo color, el que se elija */
+  const esTexto = !!L && L.tipo === 'texto';
   const btn = $('removeWhiteBtn');
-  btn.hidden = !L;
-  $('iaLogoBtn').hidden = !L;
+  btn.hidden = !L || esTexto;
+  $('iaLogoBtn').hidden = !L || esTexto;
+  $('lbSepIa').hidden = !L || esTexto;
+  $('lbTexto').hidden = !esTexto;
+  document.querySelector('#tintSeg [data-tint="original"]').hidden = esTexto;
+  $('tintSeg').classList.toggle('sinFull', esTexto);
+  $('cambiosTit').textContent = esTexto ? 'Este texto' : 'Cambios en este logo';
+  const capas = enCapas(), iCapa = capas.indexOf(L);
+  $('capasRow').hidden = !L || state.logos.length < 2;
+  $('capaArriba').disabled = iCapa === capas.length - 1;
+  $('capaAbajo').disabled = iCapa <= 0;
   if(L){
     btn.disabled = false;
     const sp = quitarSpec(L), n = sp ? sp.colors.length : 0;
     $('lbFondoN').hidden = !n; // ✓: ya se le quitó el fondo
     btn.setAttribute('aria-label', n ? 'Fondo: ' + n + (n === 1 ? ' color borrado' : ' colores borrados') : 'Quitar fondo');
     $('logoThumb').innerHTML = L.img && L.img.src ? `<img src="${L.img.src}" alt="">` : '◐';
-    $('logoTxt').innerHTML = `${L.name}<small>clic para reemplazar este logo</small>`;
+    if(esTexto){ // lo escrito va como texto, nunca como HTML
+      $('logoTxt').textContent = L.name;
+      const s = document.createElement('small'); s.textContent = 'clic para editarlo (también con «Texto», en la barra sobre la foto)';
+      $('logoTxt').appendChild(s);
+    } else $('logoTxt').innerHTML = `${L.name}<small>clic para reemplazar este logo</small>`;
     medirOpaco(L);
     const conFondo = !!(opacoDe.get(L) || {}).opaco && !quitarSpec(L); // trae fondo y todavía no se le quitó
     $('jpgNote').hidden = !conFondo; $('lbOpacoNote').hidden = !conFondo;
-    $('cropEditBtn').hidden = false;
+    $('cropEditBtn').hidden = esTexto;
+    if(esTexto && !$('lbPopTexto').hidden) syncTextoPop();
     syncAdjuntos();
     $('logoOpacity').value = Math.round(L.opacity*100);
     $('opacityVal').textContent = Math.round(L.opacity*100) + '%';
@@ -7396,36 +7486,46 @@ function syncOpacBtn(op){
   $('lbOpacTxt').textContent = op < 100 ? 'Opacidad ' + op + ' %' : 'Opacidad';
   $('lbOpac').setAttribute('aria-label', 'Opacidad ' + op + ' %');
 }
+/* los menús de la barra: [menú, botón que lo abre] */
+const POPS_BARRA = { color: ['lbPopColor', 'lbColor'], opac: ['lbPopOpac', 'lbOpac'], texto: ['lbPopTexto', 'lbTexto'] };
+const popAbierto = () => Object.keys(POPS_BARRA).find(k => !$(POPS_BARRA[k][0]).hidden) || null;
 function cerrarPopsBarra(){
   if(panPopInput && $('logoBar').contains(panPopInput)) cerrarPantonePop(); // la lista de Pantone del menú no queda suelta
-  ['lbPopColor', 'lbPopOpac'].forEach(id => $(id).hidden = true);
-  ['lbColor', 'lbOpac'].forEach(id => $(id).setAttribute('aria-expanded', 'false'));
+  Object.values(POPS_BARRA).forEach(([pop, boton]) => { $(pop).hidden = true; $(boton).setAttribute('aria-expanded', 'false'); });
 }
-function abrirPopBarra(cual){
-  const pop = $(cual === 'color' ? 'lbPopColor' : 'lbPopOpac'), abrir = pop.hidden;
+/* forzar: abrirlo aunque ya esté abierto (si no, el botón lo abre y lo cierra) */
+function abrirPopBarra(cual, forzar){
+  const pop = $(POPS_BARRA[cual][0]), abrir = pop.hidden || forzar;
   cerrarPopsBarra();
   if(!abrir) return;
   pop.hidden = false;
-  $(cual === 'color' ? 'lbColor' : 'lbOpac').setAttribute('aria-expanded', 'true');
-  if(cual === 'color'){ const L = selLogo(); if(L && L.tint === 'custom') drawTintColor(L, true); }
+  $(POPS_BARRA[cual][1]).setAttribute('aria-expanded', 'true');
+  const L = selLogo();
+  if(cual === 'color' && L && L.tint === 'custom') drawTintColor(L, true);
+  if(cual === 'texto' && L && L.tipo === 'texto'){
+    syncTextoPop(); prepararFuenteCliente(L);
+    const elegida = $('txtFuentes').querySelector('[aria-selected="true"]'), lista = $('txtFuentes');
+    if(elegida) lista.scrollTop = Math.max(0, elegida.offsetTop - lista.offsetTop - 30); // la lista abre mostrando la elegida
+  }
   posLogoBar(); // ya se sabe cuánto mide el menú: abre para el lado donde entra
-  /* el foco entra al menú: la opción elegida, o el control de la opacidad */
-  const f = cual === 'color' ? (pop.querySelector('#tintSeg [aria-pressed="true"]') || pop.querySelector('#tintSeg button')) : $('logoOpacity');
+  /* el foco entra al menú: la opción elegida, lo escrito, o el control de la opacidad */
+  const f = cual === 'color' ? (pop.querySelector('#tintSeg [aria-pressed="true"]') || pop.querySelector('#tintSeg button'))
+    : cual === 'texto' ? $('txtTexto') : $('logoOpacity');
   if(f) f.focus();
 }
 $('lbColor').addEventListener('click', () => abrirPopBarra('color'));
 $('lbOpac').addEventListener('click', () => abrirPopBarra('opac'));
 /* Esc (desde el document, ver closeBocetoModal): primero cierra el menú abierto y vuelve a su botón, o sale de «Marcar área» */
 window.__bocetoEsc = () => {
-  const abierto = ['lbPopColor', 'lbPopOpac'].find(id => !$(id).hidden);
-  if(abierto){ cerrarPopsBarra(); $(abierto === 'lbPopColor' ? 'lbColor' : 'lbOpac').focus(); return true; }
+  const abierto = popAbierto();
+  if(abierto){ cerrarPopsBarra(); $(POPS_BARRA[abierto][1]).focus(); return true; }
   if(state.drawMode){ exitDrawMode(); return true; }
   return false;
 };
 window.__bocetoCerrarPops = cerrarPopsBarra;
 /* tocar fuera de la barra (y de la lista de Pantone) cierra sus menús */
 document.addEventListener('pointerdown', e => {
-  if($('lbPopColor').hidden && $('lbPopOpac').hidden) return;
+  if(!popAbierto()) return;
   if($('logoBar').contains(e.target) || (panPop && panPop.contains(e.target))) return;
   cerrarPopsBarra();
 }, true);
@@ -7477,10 +7577,19 @@ function syncCambios(){
   box.innerHTML = '';
   if(!L) return;
   const filas = [];
+  const esTexto = L.tipo === 'texto' && !!L.gen;
+  /* un texto: con qué tipografía está y qué alto tienen las letras (el color va en la barra, es suyo) */
+  if(esTexto){
+    const alto = textoAltura(L);
+    filas.push({ dato: true, id: 'txtCambioAlto', txt: 'En curvas · ' + etiquetaFuente(L.gen) + (alto ? ' · ' + alto : ''), de: 'el texto',
+      acc: [['Editar', () => abrirPopBarra('texto', true)]] });
+    if(L.faltan && L.faltan.length) filas.push({ txt: 'La tipografía no tiene ' + L.faltan.map(c => '«' + c + '»').join(', ') + ': esas letras no salen', de: 'la tipografía',
+      acc: [['Cambiarla', () => abrirPopBarra('texto', true)]] });
+  }
   const sp = quitarSpec(L), n = sp ? sp.colors.length : 0;
   if(n) filas.push({ txt: 'Fondo: ' + n + (n === 1 ? ' color borrado' : ' colores borrados'), de: 'el fondo',
     acc: [['Editar', () => $('removeWhiteBtn').click()], ['Deshacer', () => aplicarQuitar(L, [], QUITAR_TOL)]] });
-  if(L.crop && L.crop.trimmed){
+  if(L.crop && L.crop.trimmed && !esTexto){
     const activo = L.useTrim !== false;
     if(activo && !L.crop.manual) filas.push({ dato: true, txt: 'Se recortaron solos los márgenes vacíos: la medida es la del logo real', de: 'el recorte',
       acc: [['Usar el archivo entero', alternarRecorte]] });
@@ -7488,13 +7597,13 @@ function syncCambios(){
       acc: [[activo ? 'Deshacer' : 'Volver a recortar', alternarRecorte]] });
   }
   if(L.iaPrev) filas.push({ txt: 'Modificado con IA: revisá que siga fiel al original', de: 'la IA', acc: [['Volver al original', volverOriginalIa]] });
-  if(L.tint && L.tint !== 'original'){
+  if(L.tint && L.tint !== 'original' && !esTexto){
     const c = L.tint === 'custom' && L.tintColor ? ' · ' + nombreTinte(L.tintColor) : '';
     filas.push({ txt: 'Color: ' + TINT_NOMBRE[L.tint] + c, de: 'el color', acc: [['Deshacer', () => document.querySelector('#tintSeg button[data-tint="original"]').click()]] });
   }
   if(L.opacity < 1) filas.push({ txt: 'Opacidad: ' + Math.round(L.opacity*100) + ' %', de: 'la opacidad', acc: [['Deshacer', () => {
     $('logoOpacity').value = 100; $('logoOpacity').dispatchEvent(new Event('input')); }]] });
-  if(!filas.some(f => !f.dato)){
+  if(!filas.some(f => !f.dato) && !esTexto){
     const v = document.createElement('div'); v.className = 'cambioVacio';
     v.textContent = 'Todavía sin cambios. Las herramientas están en la barra pegada al logo, en la foto: Fondo, Recortar, Color, Opacidad e IA.';
     box.appendChild(v);
@@ -7502,6 +7611,7 @@ function syncCambios(){
   filas.forEach(f => {
     const row = document.createElement('div'); row.className = 'cambio' + (f.dato ? ' dato' : '');
     const t = document.createElement('span'); t.textContent = f.txt;
+    if(f.id) t.id = f.id;
     row.appendChild(t);
     f.acc.forEach(([lbl, fn]) => {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = lbl;
@@ -7923,6 +8033,418 @@ $('logoOpacity').addEventListener('input', () => {
   render();
 });
 
+/* ---------- texto en curvas ----------
+   Un texto es un logo más: se arma como un SVG con las letras pasadas a curvas (opentype.js) y entra a la
+   misma lista que los logos, así se mueve, se mide, se pinta (HEX o Pantone) y va al paquete del taller
+   igual que ellos, como curvas del cliente. Lo que dice y con qué tipografía queda en L.gen, para editarlo.
+   Las tipografías se bajan de fontsource (las de Google Fonts, en .woff) recién al usarlas. */
+const OPENTYPE_URLS = ['https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js', 'https://unpkg.com/opentype.js@1.3.4/dist/opentype.min.js'];
+const FONTSOURCE_V = '5.3.0';
+// [id en fontsource, nombre, grupo, grosores que trae]
+const FUENTES = [
+  ['montserrat', 'Montserrat', 'sans', [300, 400, 500, 600, 700, 800, 900]],
+  ['poppins', 'Poppins', 'sans', [300, 400, 500, 600, 700, 800, 900]],
+  ['roboto', 'Roboto', 'sans', [300, 400, 500, 600, 700, 800, 900]],
+  ['open-sans', 'Open Sans', 'sans', [300, 400, 500, 600, 700, 800]],
+  ['lato', 'Lato', 'sans', [300, 400, 700, 900]],
+  ['raleway', 'Raleway', 'sans', [300, 400, 500, 600, 700, 800, 900]],
+  ['nunito', 'Nunito', 'sans', [300, 400, 500, 600, 700, 800, 900]],
+  ['work-sans', 'Work Sans', 'sans', [300, 400, 500, 600, 700, 800, 900]],
+  ['oswald', 'Oswald', 'sans', [300, 400, 500, 600, 700]],
+  ['playfair-display', 'Playfair Display', 'serif', [400, 500, 600, 700, 800, 900]],
+  ['merriweather', 'Merriweather', 'serif', [300, 400, 500, 600, 700, 800, 900]],
+  ['lora', 'Lora', 'serif', [400, 500, 600, 700]],
+  ['roboto-slab', 'Roboto Slab', 'serif', [300, 400, 500, 600, 700, 800, 900]],
+  ['cinzel', 'Cinzel', 'serif', [400, 500, 600, 700, 800, 900]],
+  ['bebas-neue', 'Bebas Neue', 'display', [400]],
+  ['anton', 'Anton', 'display', [400]],
+  ['archivo-black', 'Archivo Black', 'display', [400]],
+  ['abril-fatface', 'Abril Fatface', 'display', [400]],
+  ['alfa-slab-one', 'Alfa Slab One', 'display', [400]],
+  ['righteous', 'Righteous', 'display', [400]],
+  ['bungee', 'Bungee', 'display', [400]],
+  ['black-ops-one', 'Black Ops One', 'display', [400]],
+  ['pacifico', 'Pacifico', 'script', [400]],
+  ['dancing-script', 'Dancing Script', 'script', [400, 500, 600, 700]],
+  ['great-vibes', 'Great Vibes', 'script', [400]],
+  ['lobster', 'Lobster', 'script', [400]],
+  ['caveat', 'Caveat', 'script', [400, 500, 600, 700]],
+  ['satisfy', 'Satisfy', 'script', [400]],
+  ['kaushan-script', 'Kaushan Script', 'script', [400]],
+  ['permanent-marker', 'Permanent Marker', 'script', [400]],
+  ['courier-prime', 'Courier Prime', 'mono', [400, 700]],
+  ['space-mono', 'Space Mono', 'mono', [400, 700]],
+];
+const GRUPOS_FUENTE = [['cliente', 'Del cliente'], ['sans', 'Palo seco'], ['serif', 'Con serif'], ['display', 'Display'], ['script', 'Manuscritas'], ['mono', 'Máquina de escribir']];
+const PESO_NOMBRE = { 100: 'Finísima', 200: 'Extrafina', 300: 'Fina', 400: 'Normal', 500: 'Media', 600: 'Semi', 700: 'Negrita', 800: 'Extra', 900: 'Black' };
+const TEXTO_NUEVO = { texto: 'Tu texto', fuente: 'montserrat', fuenteNom: 'Montserrat', peso: 700, alin: 'center', esp: 0, interl: 1.2 };
+const urlsFuente = (id, peso) => ['https://cdn.jsdelivr.net/npm/', 'https://unpkg.com/'].map(cdn =>
+  cdn + '@fontsource/' + id + '@' + FONTSOURCE_V + '/files/' + id + '-latin-' + peso + '-normal.woff');
+const pesoCercano = (pesos, p) => pesos.reduce((a, b) => Math.abs(b - p) < Math.abs(a - p) ? b : a, pesos[0]);
+const nombrePeso = p => PESO_NOMBRE[Math.min(900, Math.max(100, Math.round(p / 100) * 100))] || String(p);
+const esFuenteCliente = id => String(id || '').startsWith('cli:');
+// la del cliente ya trae su grosor en el nombre («Corporativa Bold»)
+const etiquetaFuente = g => esFuenteCliente(g.fuente) ? g.fuenteNom : g.fuenteNom + ' ' + nombrePeso(g.peso);
+const recorteTexto = (t, n) => { const s = String(t || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+const nombreTexto = g => 'Texto «' + recorteTexto(g.texto, 28) + '»';
+// el archivo que va al taller: sin caracteres que rompan un zip o una carpeta
+const archivoTexto = g => ('Texto ' + recorteTexto(g.texto, 32) + ' - ' + etiquetaFuente(g))
+  .replace(/[\\/:*?"<>|«»…]+/g, ' ').replace(/\s+/g, ' ').trim() + '.svg';
+
+/* las letras pasadas a curvas: un solo <path> y ningún <text>, así el taller no necesita la tipografía.
+   Cuerpo de 100 unidades; los renglones se alinean por su ancho tipográfico, como en cualquier editor.
+   Devuelve el SVG, lo que mide la tinta (en unidades), la altura de las mayúsculas y las letras que la
+   tipografía no tiene (salen en blanco o como un cuadrado). null si no hay nada que dibujar. */
+function textoEnCurvas(font, g){
+  const T = 100, k = T / font.unitsPerEm;
+  const opts = { kerning: true, tracking: g.esp || 0 };
+  const sobra = (g.esp || 0) / 1000 * T; // el interletrado que queda después de la última letra no ocupa lugar
+  const lineas = String(g.texto || '').replace(/\r/g, '').split('\n');
+  const anchos = lineas.map(l => l ? font.forEachGlyph(l, 0, 0, T, opts, () => {}) - sobra : 0);
+  const ancho = Math.max(0, ...anchos);
+  const salto = (g.interl || 1.2) * T, base = font.ascender * k;
+  let d = '', x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+  lineas.forEach((l, i) => {
+    if(!l.trim()) return;
+    const x = g.alin === 'left' ? 0 : g.alin === 'right' ? ancho - anchos[i] : (ancho - anchos[i]) / 2;
+    const p = font.getPath(l, x, base + i * salto, T, opts), b = p.getBoundingBox();
+    if(!(b.x2 > b.x1) || !(b.y2 > b.y1)) return; // solo espacios, o letras sin dibujo
+    d += p.toPathData(2);
+    x1 = Math.min(x1, b.x1); y1 = Math.min(y1, b.y1); x2 = Math.max(x2, b.x2); y2 = Math.max(y2, b.y2);
+  });
+  if(!d) return null;
+  const faltan = [...new Set([...String(g.texto)].filter(c => c.trim() && !font.charToGlyphIndex(c)))];
+  const os2 = font.tables && font.tables.os2;
+  let cap = os2 && os2.sCapHeight > 0 ? os2.sCapHeight * k : 0;
+  if(!cap){ const bh = font.getPath('H', 0, 0, T).getBoundingBox(); cap = bh.y1 < 0 ? -bh.y1 : T * 0.7; }
+  const aire = T * 0.08, vb = [x1 - aire, y1 - aire, x2 - x1 + 2 * aire, y2 - y1 + 2 * aire].map(v => +v.toFixed(2));
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb.join(' ') + '" width="' + vb[2] + '" height="' + vb[3] + '">'
+    + '<title>' + esc('Texto en curvas: ' + recorteTexto(g.texto, 80) + ' · ' + etiquetaFuente(g)) + '</title>'
+    + '<path fill="#000000" d="' + d + '"/></svg>';
+  return { svg, w: x2 - x1, h: y2 - y1, cap, faltan };
+}
+/* fin del texto en curvas (lo de arriba no toca la página: lo prueba test_texto.mjs) */
+
+/* tipografías: cada una se baja una sola vez; las que sube el cliente quedan guardadas en el navegador
+   (IndexedDB, como los originales) y viajan al taller como adjunto del texto */
+const fuentesP = new Map();
+const fuentesCliente = new Map(); // 'cli:<id>' → { clave, id, nombre, peso, font, adj }
+const fuenteDe = id => FUENTES.find(f => f[0] === id);
+async function bajarFuente(urls){
+  for(const u of urls){
+    try{
+      const r = await fetch(u);
+      if(r.ok) return window.opentype.parse(await r.arrayBuffer());
+    }catch(e){}
+  }
+  throw new Error('fuente');
+}
+function registrarFuenteCliente(id, buf, archivo, adj){
+  const font = window.opentype.parse(buf); // si no es una tipografía, falla acá
+  const n = font.names || {}, en = o => (o && (o.en || Object.values(o)[0])) || '';
+  const nombre = en(n.fullName) || en(n.fontFamily) || String(archivo || 'Tipografía del cliente').replace(/\.[^.]+$/, '');
+  const os2 = font.tables && font.tables.os2;
+  const F = { clave: 'cli:' + id, id, nombre, peso: (os2 && os2.usWeightClass) || 400, font, adj: adj || null };
+  fuentesCliente.set(F.clave, F);
+  try{ const ff = new FontFace('fx-cli-' + id, buf.slice(0)); document.fonts.add(ff); ff.load().catch(() => {}); }catch(e){}
+  txtListaHecha = false; // la lista suma la del cliente
+  return F;
+}
+async function fuenteCliente(clave){
+  if(fuentesCliente.has(clave)) return fuentesCliente.get(clave);
+  const id = clave.slice(4), rec = await archGet(id);
+  if(!rec || !rec.blob) throw new Error('fuente-cliente');
+  const i = rec.info || {};
+  return registrarFuenteCliente(id, await rec.blob.arrayBuffer(), i.name, { id, name: i.name || 'tipografia', type: i.type || '', size: i.size || 0 });
+}
+async function cargarFuente(g){
+  await cargarLib(OPENTYPE_URLS, () => window.opentype);
+  if(esFuenteCliente(g.fuente)) return (await fuenteCliente(g.fuente)).font;
+  const f = fuenteDe(g.fuente) || FUENTES[0], peso = pesoCercano(f[3], g.peso || 400), clave = f[0] + '@' + peso;
+  if(!fuentesP.has(clave)) fuentesP.set(clave, bajarFuente(urlsFuente(f[0], peso)).catch(e => { fuentesP.delete(clave); throw e; }));
+  return fuentesP.get(clave);
+}
+/* el SVG en curvas y la imagen que se ve (normalizada igual que un SVG subido: así el paquete del taller
+   ubica las curvas exactamente donde están en el boceto) */
+async function generarTexto(g){
+  const r = textoEnCurvas(await cargarFuente(g), g);
+  if(!r) return null;
+  const url = await normalizeSvg(new File([r.svg], archivoTexto(g), { type: 'image/svg+xml' }));
+  return { url, svg: r.svg, box: { w: r.w, h: r.h }, cap: r.cap, faltan: r.faltan };
+}
+/* un texto nuevo arranca negro, o blanco si el área cae sobre una parte oscura del producto */
+function tinteParaTexto(){
+  const z = state.zone, NW = photo.naturalWidth, NH = photo.naturalHeight;
+  if(!z || !NW) return 'black';
+  try{
+    const n = 24, c = document.createElement('canvas'); c.width = n; c.height = n;
+    const g = c.getContext('2d');
+    g.drawImage(photo, z.x*NW, z.y*NH, Math.max(1, z.w*NW), Math.max(1, z.h*NH), 0, 0, n, n);
+    const d = g.getImageData(0, 0, n, n).data;
+    let s = 0, cnt = 0;
+    for(let i = 0; i < d.length; i += 4){ if(d[i+3] < 128) continue; s += 0.2126*d[i] + 0.7152*d[i+1] + 0.0722*d[i+2]; cnt++; }
+    return cnt && s / cnt < 100 ? 'white' : 'black';
+  }catch(e){ return 'black'; } // foto de otro sitio sin permiso para leerla
+}
+async function agregarTexto(){
+  const b = $('addTextoBtn');
+  if(frame.hidden || b.disabled) return;
+  const g = { ...TEXTO_NUEVO };
+  const t0 = b.textContent;
+  b.disabled = true; b.textContent = '⏳ Armando el texto…';
+  $('textoNote').hidden = true;
+  try{
+    const r = await generarTexto(g);
+    pendingAdd = true;
+    loadLogoSrc(r.url, nombreTexto(g), false, null, {
+      tipo: 'texto', gen: g, genOk: { ...g }, genSvg: r.svg, genBox: r.box, genCap: r.cap, faltan: r.faltan, tint: tinteParaTexto(),
+      listo: () => { abrirPopBarra('texto', true); $('txtTexto').select(); },
+    });
+  }catch(e){
+    $('textoNoteTxt').textContent = 'No se pudo bajar la tipografía: revisá la conexión a internet y probá de nuevo.';
+    $('textoNote').hidden = false;
+  }finally{ b.disabled = false; b.textContent = t0; }
+}
+$('addTextoBtn').addEventListener('click', agregarTexto);
+/* con un texto elegido, el recuadro de arriba del paso 3 abre su edición (no reemplaza el texto por un archivo) */
+$('logoTile').addEventListener('click', e => {
+  const L = selLogo();
+  if(L && L.tipo === 'texto'){ e.preventDefault(); abrirPopBarra('texto', true); }
+});
+
+/* rehacer el texto al editarlo: el tamaño de la letra y el centro quedan donde estaban (crece o se achica
+   el largo). Una generación a la vez; si mientras tanto se siguió escribiendo, se hace otra al terminar */
+let txtTimer = 0, txtBusy = false, txtOtra = null, txtAviso = '';
+function regenerarTexto(L){ clearTimeout(txtTimer); txtTimer = setTimeout(() => rehacerTexto(L), 90); }
+async function rehacerTexto(L){
+  if(txtBusy){ txtOtra = L; return; }
+  txtBusy = true;
+  const g = { ...L.gen };
+  try{
+    const r = await generarTexto(g);
+    if(!r){ txtAviso = 'Con esa tipografía no se dibuja ninguna letra de este texto: probá otra.'; L.gen = { ...L.genOk }; }
+    else if(state.logos.includes(L)){ txtAviso = ''; await ponerTexto(L, g, r); }
+  }catch(e){
+    L.gen = { ...L.genOk }; // queda lo último que se pudo armar
+    txtAviso = e && e.message === 'fuente-cliente'
+      ? 'La tipografía del cliente no está guardada en esta computadora: subila de nuevo para editar este texto.'
+      : 'No se pudo bajar la tipografía: revisá la conexión a internet y probá de nuevo.';
+  }
+  txtBusy = false;
+  if(selLogo() === L){ syncTextoPop(); syncCambios(); }
+  if(txtOtra){ const o = txtOtra; txtOtra = null; rehacerTexto(o); }
+}
+async function ponerTexto(L, g, r){
+  const probe = await cargarImagen(r.url);
+  const crop = computeTrim(probe), aspect = crop.w / crop.h;
+  const {w:FW, h:FH} = frameRect();
+  const pxU = L.genBox && L.genBox.w && L.w ? L.w*FW / L.genBox.w : 0; // px de pantalla por unidad: la letra no cambia de tamaño
+  const cmU = state.mode === 'logo' && L.cmW > 0 && L.genBox && L.genBox.w ? L.cmW / L.genBox.w : 0;
+  const cx = L.x + L.w/2, cy = L.y + L.h/2, z = state.zone, eps = 0.004;
+  const enArea = !!z && L.x >= z.x - eps && L.y >= z.y - eps && L.x + L.w <= z.x + z.w + eps && L.y + L.h <= z.y + z.h + eps;
+  Object.assign(L, { src: r.url, crop, useTrim: true, fullW: probe.naturalWidth, fullH: probe.naturalHeight, aspect,
+    genOk: g, genSvg: r.svg, genBox: r.box, genCap: r.cap, faltan: r.faltan, name: nombreTexto(g) });
+  const w0 = pxU ? pxU * r.box.w : L.w*FW;
+  let w = w0, h = w / aspect;
+  /* si con la misma letra ya no entra en el área de impresión (o en la foto), se achica hasta entrar */
+  const maxW = z ? z.w*FW : FW, maxH = z ? z.h*FH : FH;
+  if(w > maxW){ w = maxW; h = w / aspect; }
+  if(h > maxH){ h = maxH; w = h * aspect; }
+  L.w = w/FW; L.h = h/FH;
+  L.x = clamp(cx - L.w/2, 0, Math.max(0, 1 - L.w));
+  L.y = clamp(cy - L.h/2, 0, Math.max(0, 1 - L.h));
+  if(enArea){ // estaba adentro del área: sigue adentro (un renglón más no lo saca por abajo)
+    L.x = clamp(L.x, z.x, Math.max(z.x, z.x + z.w - L.w));
+    L.y = clamp(L.y, z.y, Math.max(z.y, z.y + z.h - L.h));
+  }
+  if(cmU){ L.cmW = cmU * r.box.w * (w / w0); L.cmH = L.cmW / aspect; } // con la medida exacta, la medida acompaña
+  await new Promise(res => rebuildLogo(L, res));
+  syncLogoUI(); setStepStates(); render();
+}
+/* el SVG del texto se guarda como «original del cliente» recién al aplicar (no en cada letra que se escribe) */
+async function asegurarOriginalTexto(L){
+  if(L.tipo !== 'texto' || !L.genSvg || (L.origId && L.origDe === L.genSvg)) return;
+  const r = await registrarArchivo(new File([L.genSvg], archivoTexto(L.genOk || L.gen), { type: 'image/svg+xml' }));
+  if(r){ L.origId = r.id; L.origInfo = r.info; L.origDe = L.genSvg; }
+}
+/* un archivo puesto en lugar de un texto: deja de ser texto */
+function sacarTexto(L){
+  ['tipo', 'gen', 'genOk', 'genSvg', 'genBox', 'genCap', 'faltan', 'origDe'].forEach(k => { delete L[k]; });
+}
+/* altura de las mayúsculas en cm (lo que importa para saber si la técnica la imprime), o null sin escala */
+function alturaMayuscula(L){
+  if(!L || !L.genBox || !L.genBox.w || !L.genCap) return null;
+  const m = medidaWH(L);
+  return m && m.w > 0 ? L.genCap * m.w / L.genBox.w : null;
+}
+const fmtMm = cm => (cm*10).toLocaleString('es-AR', { maximumFractionDigits: cm < 0.5 ? 1 : 0 }) + ' mm';
+function textoAltura(L){
+  const cap = alturaMayuscula(L);
+  return cap ? 'mayúsculas de ' + fmtMm(cap) + ' de alto' : '';
+}
+
+/* ---- el menú «Texto» de la barra ---- */
+let txtListaHecha = false, txtObs = null;
+const previaCargada = new Set();
+function cargarPrevia(id){ // cada tipografía de la lista se ve con su letra (se baja al aparecer en pantalla)
+  if(previaCargada.has(id) || esFuenteCliente(id)) return;
+  const f = fuenteDe(id);
+  if(!f) return;
+  previaCargada.add(id);
+  try{
+    const ff = new FontFace('fx-' + id, 'url(' + urlsFuente(id, pesoCercano(f[3], 400))[0] + ')');
+    document.fonts.add(ff);
+    ff.load().catch(() => previaCargada.delete(id));
+  }catch(e){ previaCargada.delete(id); }
+}
+function pintarFuentes(L){
+  const box = $('txtFuentes');
+  if(!txtListaHecha){
+    txtListaHecha = true;
+    box.innerHTML = '';
+    if(txtObs) txtObs.disconnect();
+    txtObs = 'IntersectionObserver' in window
+      ? new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){ cargarPrevia(e.target.dataset.f); txtObs.unobserve(e.target); } }), { root: box, rootMargin: '80px' })
+      : null;
+    GRUPOS_FUENTE.forEach(([gr, tit]) => {
+      const items = gr === 'cliente' ? [...fuentesCliente.values()].map(F => [F.clave, F.nombre]) : FUENTES.filter(f => f[2] === gr).map(f => [f[0], f[1]]);
+      if(!items.length) return;
+      const h = document.createElement('div'); h.className = 'txtGrupo'; h.textContent = tit;
+      box.appendChild(h);
+      items.forEach(([id, nom]) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'txtFuente'; b.setAttribute('role', 'option');
+        b.dataset.f = id; b.textContent = nom; b.title = nom;
+        b.style.fontFamily = "'fx-" + (esFuenteCliente(id) ? 'cli-' + id.slice(4) : id) + "', var(--font-primary)";
+        b.onclick = () => elegirFuente(id);
+        box.appendChild(b);
+        if(!esFuenteCliente(id)){ if(txtObs) txtObs.observe(b); else cargarPrevia(id); }
+      });
+    });
+  }
+  box.querySelectorAll('.txtFuente').forEach(b => b.setAttribute('aria-selected', String(!!L && b.dataset.f === L.gen.fuente)));
+}
+const pesosDe = g => esFuenteCliente(g.fuente) ? [g.peso || 400] : ((fuenteDe(g.fuente) || [0, 0, 0, [400]])[3]);
+function pintarPesos(L){
+  const box = $('txtPeso'), ps = pesosDe(L.gen);
+  $('txtPesoFila').hidden = ps.length < 2;
+  if(box.dataset.f !== L.gen.fuente){ // los botones se rehacen solo al cambiar de tipografía (así no se pierde el foco)
+    box.dataset.f = L.gen.fuente;
+    box.innerHTML = '';
+    ps.forEach(p => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.dataset.p = p; b.textContent = nombrePeso(p); b.style.fontWeight = p;
+      b.onclick = () => { const X = selLogo(); if(!X || X.tipo !== 'texto') return; X.gen.peso = p; cambioTexto(X); };
+      box.appendChild(b);
+    });
+  }
+  box.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.p === L.gen.peso)));
+}
+function notaTexto(L){
+  const box = $('txtNota');
+  box.textContent = '';
+  const linea = (txt, mal) => { const s = document.createElement('div'); s.textContent = txt; if(mal) s.className = 'mal'; box.appendChild(s); };
+  if(txtAviso) linea(txtAviso, true);
+  if(L.faltan && L.faltan.length) linea('Esta tipografía no tiene ' + L.faltan.map(c => '«' + c + '»').join(', ') + ': esas letras no salen. Probá otra.', true);
+  const alto = textoAltura(L);
+  linea('Va al taller en curvas: no hace falta tener la tipografía.' + (alto ? ' Con ' + alto + '.' : ''));
+}
+function syncTextoPop(){
+  const L = selLogo();
+  if(!L || L.tipo !== 'texto' || !L.gen) return;
+  const g = L.gen;
+  if(document.activeElement !== $('txtTexto')) $('txtTexto').value = g.texto;
+  $('txtFuenteNom').textContent = etiquetaFuente(g);
+  pintarFuentes(L); pintarPesos(L);
+  const varias = String(g.texto).trim().includes('\n');
+  $('txtAlinFila').hidden = !varias; $('txtInterlFila').hidden = !varias;
+  document.querySelectorAll('#txtAlin button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.alin === (g.alin || 'center'))));
+  $('txtEsp').value = g.esp || 0;
+  $('txtEspVal').textContent = (g.esp > 0 ? '+' : '') + (g.esp || 0);
+  $('txtInterl').value = g.interl || 1.2;
+  $('txtInterlVal').textContent = (g.interl || 1.2).toLocaleString('es-AR', { maximumFractionDigits: 2 });
+  notaTexto(L);
+}
+function cambioTexto(L){ txtAviso = ''; syncTextoPop(); regenerarTexto(L); }
+const textoElegido = () => { const L = selLogo(); return L && L.tipo === 'texto' && L.gen ? L : null; };
+$('lbTexto').addEventListener('click', () => abrirPopBarra('texto'));
+$('txtTexto').addEventListener('input', () => {
+  const L = textoElegido();
+  if(!L) return;
+  const v = $('txtTexto').value;
+  if(!v.trim()){ txtAviso = 'Escribí algo: sin texto queda el anterior (para sacarlo, la × del texto).'; notaTexto(L); return; }
+  L.gen.texto = v;
+  cambioTexto(L);
+});
+function elegirFuente(id){
+  const L = textoElegido();
+  if(!L) return;
+  const F = esFuenteCliente(id) ? fuentesCliente.get(id) : null, f = F ? null : fuenteDe(id);
+  if(!F && !f) return;
+  L.gen.fuente = id;
+  L.gen.fuenteNom = F ? F.nombre : f[1];
+  L.gen.peso = F ? F.peso : pesoCercano(f[3], L.gen.peso || 400);
+  /* la tipografía del cliente viaja al taller adjunta al texto que la usa (y deja de viajar si se cambia) */
+  const deCliente = new Set([...fuentesCliente.values()].map(x => x.id));
+  L.adjuntos = (L.adjuntos || []).filter(x => !deCliente.has(x.id) || (F && x.id === F.id));
+  if(F && F.adj && !L.adjuntos.some(x => x.id === F.id)) L.adjuntos.push({ ...F.adj });
+  syncAdjuntos();
+  cambioTexto(L);
+}
+document.querySelectorAll('#txtAlin button').forEach(b => b.addEventListener('click', () => {
+  const L = textoElegido();
+  if(!L) return;
+  L.gen.alin = b.dataset.alin;
+  cambioTexto(L);
+}));
+$('txtEsp').addEventListener('input', () => { const L = textoElegido(); if(!L) return; L.gen.esp = +$('txtEsp').value; cambioTexto(L); });
+$('txtInterl').addEventListener('input', () => { const L = textoElegido(); if(!L) return; L.gen.interl = +$('txtInterl').value; cambioTexto(L); });
+$('txtSubirFuente').addEventListener('click', () => { $('txtFuenteInput').value = ''; $('txtFuenteInput').click(); });
+$('txtFuenteInput').addEventListener('change', async e => {
+  const L = textoElegido(), f = e.target.files[0];
+  if(!L || !f) return;
+  const avisar = t => { txtAviso = t; notaTexto(L); };
+  if(/\.woff2$/i.test(f.name)){ avisar('Los .woff2 no se pueden leer acá: pedí la tipografía en .ttf u .otf.'); return; }
+  try{
+    await cargarLib(OPENTYPE_URLS, () => window.opentype);
+    const buf = await f.arrayBuffer();
+    window.opentype.parse(buf); // antes de guardarla: que sea una tipografía
+    const reg = await registrarArchivo(f);
+    const id = reg ? reg.id : nuevoIdArch();
+    const F = registrarFuenteCliente(id, buf, f.name, reg ? { id: reg.id, name: reg.info.name, type: reg.info.type, size: reg.info.size } : null);
+    elegirFuente(F.clave);
+  }catch(err){
+    avisar(err && err.message === 'cdn'
+      ? 'No se pudo bajar la herramienta de tipografías: revisá la conexión a internet.'
+      : 'No se pudo leer «' + f.name + '» como tipografía. Probá con el .ttf o el .otf.');
+  }
+});
+/* un texto de una plantilla guardada con la tipografía del cliente: se la busca en el navegador al abrir su menú */
+async function prepararFuenteCliente(L){
+  if(!esFuenteCliente(L.gen.fuente) || fuentesCliente.has(L.gen.fuente)) return;
+  try{ await cargarLib(OPENTYPE_URLS, () => window.opentype); await fuenteCliente(L.gen.fuente); }
+  catch(e){ txtAviso = 'La tipografía del cliente no está guardada en esta computadora: subila de nuevo para editar este texto.'; }
+  if(selLogo() === L) syncTextoPop();
+}
+
+/* ---- capas: con logos o textos encimados, cuál va arriba. Es aparte del orden de la lista (que es el de
+   las hojas de la ficha): z más alto, más arriba ---- */
+const siguienteCapa = () => state.logos.reduce((m, l) => Math.max(m, l.z || 0), 0) + 1;
+const enCapas = () => state.logos.slice().sort((a, b) => (a.z || 0) - (b.z || 0));
+function ordenarCapas(){ enCapas().forEach(l => { if(l.el) frame.appendChild(l.el); }); }
+function moverCapa(dir){
+  const L = selLogo();
+  if(!L) return;
+  const orden = enCapas(), i = orden.indexOf(L), j = i + dir;
+  if(j < 0 || j >= orden.length) return;
+  [orden[i], orden[j]] = [orden[j], orden[i]];
+  orden.forEach((l, k) => { l.z = k + 1; });
+  ordenarCapas(); syncLogoUI(); render();
+}
+$('capaArriba').addEventListener('click', () => moverCapa(1));
+$('capaAbajo').addEventListener('click', () => moverCapa(-1));
+
 /* ---------- dibujo del área ---------- */
 $('drawZoneBtn').addEventListener('click', () => state.drawMode ? exitDrawMode() : enterDrawMode());
 function enterDrawMode(){
@@ -7980,8 +8502,8 @@ function posLogoBar(){
     : clamp(abajo, techo, Math.max(techo, piso - bh)); // no entra de ningún lado: lo más cerca posible
   bar.style.left = Math.round(left - card.left) + 'px';
   bar.style.top = Math.round(top - card.top) + 'px';
-  const pop = [$('lbPopColor'), $('lbPopOpac')].find(x => !x.hidden);
-  if(pop) ubicarPop(pop, top, bh, top >= er.top + er.height/2, left, card);
+  const pop = popAbierto();
+  if(pop) ubicarPop($(POPS_BARRA[pop][0]), top, bh, top >= er.top + er.height/2, left, card);
 }
 /* el menú abre hacia el lado contrario al logo; si de ese lado no entra entero, se achica con scroll (y solo
    si ni así tiene lugar, abre del otro lado). A lo ancho sale de su botón, sin pasarse de la tarjeta */
@@ -8235,7 +8757,7 @@ function composeFoto(){
   c.width = NW; c.height = NH;
   const ctx = c.getContext('2d');
   ctx.drawImage(photo, 0, 0, NW, NH);
-  state.logos.forEach(l => {
+  enCapas().forEach(l => { // en el orden de las capas: lo de arriba se pinta último
     ctx.save();
     ctx.globalAlpha = l.opacity;
     const cx = (l.x + l.w/2)*FW*K, cy = (l.y + l.h/2)*FH*K;
@@ -8341,7 +8863,8 @@ function composeUnion(opts){
   const c = document.createElement('canvas');
   c.width = Math.max(1, Math.round(bb.w*S)); c.height = Math.max(1, Math.round(bb.h*S));
   const ctx = c.getContext('2d');
-  state.logos.forEach((l, i) => {
+  enCapas().forEach(l => { // en el orden de las capas; las fuentes de producción van por su lugar en la lista
+    const i = state.logos.indexOf(l);
     ctx.save();
     ctx.globalAlpha = opts.plena ? 1 : l.opacity; // el arte de producción va siempre al 100%
     ctx.translate(((l.x + l.w/2)*FW - bb.x)*S, ((l.y + l.h/2)*FH - bb.y)*S);
@@ -8429,6 +8952,8 @@ $('unirClose').addEventListener('click', () => { $('unirModal').hidden = true; u
 
 async function aplicarBoceto(unir){
   state.unirLogos = !!unir;
+  // los textos guardan su SVG en curvas como original recién ahora (no en cada letra que se escribió)
+  await Promise.all(state.logos.map(asegurarOriginalTexto));
   // los originales se registran en segundo plano al cargar el logo: se espera a que terminen
   await Promise.all(state.logos.map(l => l.origP).filter(Boolean));
   const principal = state.logos[0];
@@ -8528,7 +9053,13 @@ window.__bocetoSnapshot = () => {
       whiteRemoved:l.whiteRemoved, bgRemove: l.bgRemove ? { colors:l.bgRemove.colors.slice(), tol:l.bgRemove.tol } : undefined, tint:l.tint, tintColor: l.tintColor ? { ...l.tintColor } : undefined, opacity:l.opacity,
       cmW:l.cmW, cmH:l.cmH, rot:l.rot, x:l.x, y:l.y, w:l.w, h:l.h,
       origId: l.origId || undefined, origInfo: l.origInfo || undefined, iaMod: (l.iaPrev || l.iaMod) ? true : undefined,
-      adjuntos: (l.adjuntos && l.adjuntos.length) ? l.adjuntos.map(x => ({ ...x })) : undefined })),
+      adjuntos: (l.adjuntos && l.adjuntos.length) ? l.adjuntos.map(x => ({ ...x })) : undefined,
+      z: l.z || undefined,
+      // un texto: lo que dice y con qué tipografía (para seguir editándolo) y sus curvas (para el taller)
+      tipo: l.tipo || undefined, gen: l.tipo === 'texto' && l.genOk ? { ...l.genOk } : undefined,
+      genSvg: l.genSvg || undefined, genBox: l.genBox ? { ...l.genBox } : undefined, genCap: l.genCap || undefined,
+      faltan: (l.faltan && l.faltan.length) ? l.faltan.slice() : undefined,
+      origTexto: (l.origId && l.genSvg && l.origDe === l.genSvg) ? true : undefined })),
   };
 };
 window.__bocetoRestore = data => {
@@ -8592,10 +9123,13 @@ window.__bocetoRestore = data => {
     setUnit(data.unit === 'mm' ? 'mm' : 'cm');
     (data.logos || []).forEach(ld => {
       const logo = { ...ld, el:null, img:null };
+      if(logo.tipo === 'texto' && logo.gen){ logo.genOk = { ...logo.gen }; if(logo.origTexto) logo.origDe = logo.genSvg; }
+      delete logo.origTexto;
       makeLogoEl(logo);
       state.logos.push(logo);
       rebuildLogo(logo, () => { syncLogoUI(); render(); });
     });
+    ordenarCapas();
     state.sel = state.logos.length ? clamp(data.sel >= 0 ? data.sel : 0, 0, state.logos.length-1) : -1;
     setMode(data.mode === 'product' ? 'product' : 'logo'); // en producto, sin recuadro guardado se arma uno
     if(state.zone) exitDrawMode(); // normaliza el texto del botón de área
