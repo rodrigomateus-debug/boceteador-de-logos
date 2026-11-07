@@ -98,13 +98,23 @@ alto de un texto van siempre juntos (con o sin 🔗): las letras no se deforman.
   navegador y **viaja al taller** como adjunto del texto que la usa (deja de viajar
   si se cambia por otra); el LEEME aclara que no hace falta para producir, porque el
   texto ya va en curvas. Subir la misma dos veces no la repite en la lista. Si es una
-  tipografía variable (un solo archivo con todos los grosores), avisa que sale en su
-  grosor de fábrica y que conviene pedir el del grosor que va.
-- **Va en curvas**: las letras se pasan a curvas en el navegador (opentype.js), con
-  sus ligaduras (fi, fl), así que el taller no necesita tener la tipografía. En el
-  paquete, el texto sale «con sus curvas originales» (repintado a la tinta elegida,
-  con su Pantone como tinta directa) y su SVG va como referencia, rotulado «texto en
-  curvas armado en el boceteador».
+  **tipografía variable** (un solo archivo con todos los grosores), ofrece los
+  grosores que tiene, como las de la lista.
+- **Va en curvas, bien armado**: las letras las arma **HarfBuzz** (harfbuzzjs, el
+  mismo motor con el que el navegador dibuja el texto): con el **kerning** de cada
+  tipografía (la «AV», la «To» o la «LT» quedan juntas como en cualquier programa de
+  diseño), sus ligaduras (fi, fl) y, en las manuscritas, las formas que se unen entre
+  sí. Después se pasan a curvas, así que el taller no necesita tener la tipografía.
+  En el paquete, el texto sale «con sus curvas originales» (repintado a la tinta
+  elegida, con su Pantone como tinta directa) y su SVG va como referencia, rotulado
+  «texto en curvas armado en el boceteador». HarfBuzz (≈450 KB) se baja la primera
+  vez que se agrega un texto.
+- **Letras que se tocan, en un solo contorno**: en las manuscritas las letras se
+  enciman donde se unen, y algunas letras vienen en dos piezas que se pisan (una Ç).
+  En pantalla y en PDF eso no se nota, pero el corte de vinilo o láser corta cada
+  pieza y el bordado puntea dos veces lo encimado. Por eso esas letras se unen en una
+  sola figura (con paper.js, que se baja solo si hace falta). Si no se pudo (sin
+  conexión), el paquete avisa que hay que soldarlas antes de producir.
 - **Lo pegado se limpia**: los tabuladores de Excel y los saltos de Word quedan
   como espacios o renglones, los acentos que vienen sueltos (al pegar desde una Mac o
   un PDF) se pegan a su letra y los caracteres invisibles se sacan.
@@ -113,7 +123,10 @@ alto de un texto van siempre juntos (con o sin 🔗): las letras no se deforman.
   falta», en el boceto y en el taller—, queda su lugar vacío y se avisa en el menú,
   en «Este texto», al aplicar (pide confirmación) y en la revisión del paquete.
 - **Lo que hay que mirar**: «Este texto», en el panel, dice la tipografía y el
-  **alto de las mayúsculas** en mm (para saber si la técnica lo imprime).
+  **alto de la letra** en mm (para saber si la técnica lo imprime): el de las
+  mayúsculas si el texto tiene alguna; si es todo en minúsculas («www.marca.com.ar»),
+  el de la x, que en una manuscrita es la mitad o menos. Se mide en el dibujo de la
+  tipografía (el dato que trae a veces no coincide) y va como dato en el paquete.
 - **«Tu texto» sin cambiar**: al aplicar, pregunta si va así (casi siempre es un
   olvido).
 - **Textos blancos**: las miniaturas y el recuadro del paso 3 los muestran sobre gris

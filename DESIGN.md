@@ -119,9 +119,11 @@ pero ninguno es necesario para validar el boceto visual.
 > (texto, formas, íconos): **es un logo más**. Se genera en el navegador como un SVG
 > en curvas y entra a la misma lista que los logos, así hereda mover, medir en cm,
 > pintar con HEX o Pantone, las hojas de la ficha y el paquete del taller (que lo
-> toma como curvas del cliente). El texto pasa las letras a curvas con opentype.js
-> (nunca `<text>`: el taller no necesita la tipografía) y guarda lo que dice y con
-> qué tipografía, para seguir editándolo. Siguen: formas, íconos y texto en arco.
+> toma como curvas del cliente). El texto arma las letras con HarfBuzz (harfbuzzjs:
+> kerning, ligaduras y las uniones de las manuscritas, como el navegador), las pasa a
+> curvas (nunca `<text>`: el taller no necesita la tipografía), une con paper.js las
+> que se enciman (vinilo, láser, bordado) y guarda lo que dice y con qué tipografía,
+> para seguir editándolo. Siguen: formas, íconos y texto en arco.
 
 ---
 

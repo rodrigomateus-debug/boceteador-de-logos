@@ -2932,6 +2932,8 @@ async function revisarPaquete(){
         const d = Math.round(L.px / (L.cm / 2.54));
         if(d < 300){ aviso('dpi-' + nom, '"' + nom + '" queda a ' + d + ' dpi a tamaño real (lo ideal son 300): se puede ver pixelado.'); dpiAvisado = true; }
       }
+      if(L.letra) r.info.push('"' + nom + '": las ' + L.letra.que + ' miden ' + String(L.letra.mm).replace('.', ',') + ' mm de alto' + (L.letra.que === 'minúsculas' ? ' (la altura de la x)' : '') + '.');
+      if(L.encimados) aviso('encimados-' + nom, '"' + nom + '" tiene letras que se tocan y no se pudieron unir en un solo contorno: en vinilo, láser o bordado hay que soldarlas antes de producir.');
       if(L.faltan && L.faltan.length) aviso('faltan-' + nom, '"' + nom + '": la tipografía no tiene ' + L.faltan.map(c => '«' + c + '»').join(', ') + ': esas letras no están en el arte (quedan en blanco). Confirmá con el cliente o cambiá la tipografía en el boceteador.');
       if(an && an.textoVivo) aviso('texto-' + nom, '"' + nom + '" tiene textos sin convertir a curvas: si el taller no tiene esa tipografía, la letra puede cambiar.');
       if(an && an.degrade && perfil.plena) aviso('degrade-' + nom, '"' + nom + '" tiene degradés: en ' + perfil.nombre + ' no se pueden reproducir tal cual.');
@@ -8144,11 +8146,14 @@ $('logoOpacity').addEventListener('input', () => {
 });
 
 /* ---------- texto en curvas ----------
-   Un texto es un logo más: se arma como un SVG con las letras pasadas a curvas (opentype.js) y entra a la
-   misma lista que los logos, así se mueve, se mide, se pinta (HEX o Pantone) y va al paquete del taller
-   igual que ellos, como curvas del cliente. Lo que dice y con qué tipografía queda en L.gen, para editarlo.
-   Las tipografías se bajan de fontsource (las de Google Fonts, en .woff) recién al usarlas. */
-const OPENTYPE_URLS = ['https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/dist/opentype.min.js', 'https://unpkg.com/opentype.js@1.3.4/dist/opentype.min.js'];
+   Un texto es un logo más: se arma como un SVG con las letras pasadas a curvas y entra a la misma lista que
+   los logos, así se mueve, se mide, se pinta (HEX o Pantone) y va al paquete del taller igual que ellos,
+   como curvas del cliente. Lo que dice y con qué tipografía queda en L.gen, para editarlo.
+   Las letras las arma HarfBuzz (harfbuzzjs: el mismo motor con el que el navegador dibuja el texto, con el
+   kerning y las ligaduras de cada tipografía); las que se enciman las une paper.js. Las tipografías se
+   bajan de fontsource (las de Google Fonts, en .woff) recién al usarlas. */
+const HARFBUZZ_URLS = ['https://cdn.jsdelivr.net/npm/harfbuzzjs@1.6.3/dist/index.mjs', 'https://unpkg.com/harfbuzzjs@1.6.3/dist/index.mjs'];
+const PAPER_URLS = ['https://cdn.jsdelivr.net/npm/paper@0.12.18/dist/paper-core.min.js', 'https://unpkg.com/paper@0.12.18/dist/paper-core.min.js'];
 const FONTSOURCE_V = '5.3.0';
 // [id en fontsource, nombre, grupo, grosores que trae]
 const FUENTES = [
@@ -8193,10 +8198,11 @@ const urlsFuente = (id, peso) => ['https://cdn.jsdelivr.net/npm/', 'https://unpk
 const pesoCercano = (pesos, p) => pesos.reduce((a, b) => Math.abs(b - p) < Math.abs(a - p) ? b : a, pesos[0]);
 const nombrePeso = p => PESO_NOMBRE[Math.min(900, Math.max(100, Math.round(p / 100) * 100))] || String(p);
 const esFuenteCliente = id => String(id || '').startsWith('cli:');
-// la del cliente ya trae su grosor en el nombre («Corporativa Bold»); la de un solo grosor no lo necesita
+// la del cliente ya trae su grosor en el nombre («Corporativa Bold»), salvo la variable, que tiene todos;
+// la de un solo grosor no lo necesita
 const etiquetaFuente = g => {
   const f = FUENTES.find(x => x[0] === g.fuente);
-  return esFuenteCliente(g.fuente) || (f && f[3].length === 1) ? g.fuenteNom : g.fuenteNom + ' ' + nombrePeso(g.peso);
+  return (esFuenteCliente(g.fuente) && !g.variable) || (f && f[3].length === 1) ? g.fuenteNom : g.fuenteNom + ' ' + nombrePeso(g.peso);
 };
 const recorteTexto = (t, n) => { const s = String(t || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
 const nombreTexto = g => 'Texto «' + recorteTexto(g.texto, 28) + '»';
@@ -8214,44 +8220,114 @@ const limpiarTexto = t => String(t || '').normalize('NFC')
   .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');
 
 /* las letras pasadas a curvas: un solo <path> y ningún <text>, así el taller no necesita la tipografía.
-   Cuerpo de 100 unidades; los renglones se alinean por su ancho tipográfico, como en cualquier editor.
-   Una letra que la tipografía no tiene NO se dibuja (sería el cuadrado de «letra que falta», en el boceto
-   y en el taller): queda su lugar vacío y se avisa en `faltan`.
-   Devuelve el SVG, lo que mide la tinta (en unidades), la altura de las mayúsculas y las letras que faltan.
-   null si no hay nada que dibujar. */
-function textoEnCurvas(font, g){
-  const T = 100, k = T / font.unitsPerEm;
-  // features: sin esto, opentype.js apaga las ligaduras (fi, fl) al recibir opciones
-  const opts = { kerning: true, tracking: g.esp || 0, features: { liga: true, rlig: true } };
-  const sobra = (g.esp || 0) / 1000 * T; // el interletrado que queda después de la última letra no ocupa lugar
-  const texto = limpiarTexto(g.texto);
-  const lineas = texto.split('\n');
-  const anchos = lineas.map(l => l ? font.forEachGlyph(l, 0, 0, T, opts, () => {}) - sobra : 0);
-  const ancho = Math.max(0, ...anchos);
-  const salto = (g.interl || 1.2) * T, base = font.ascender * k;
-  let d = '', x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
-  lineas.forEach((l, i) => {
-    if(!l.trim()) return;
-    const x = g.alin === 'left' ? 0 : g.alin === 'right' ? ancho - anchos[i] : (ancho - anchos[i]) / 2;
-    font.forEachGlyph(l, x, base + i * salto, T, opts, (gl, gx, gy, gs) => {
-      if(!gl.index) return; // la letra que falta
-      const p = gl.getPath(gx, gy, gs, opts, font), b = p.getBoundingBox();
-      if(!(b.x2 > b.x1) || !(b.y2 > b.y1)) return; // un espacio
-      d += p.toPathData(2);
-      x1 = Math.min(x1, b.x1); y1 = Math.min(y1, b.y1); x2 = Math.max(x2, b.x2); y2 = Math.max(y2, b.y2);
+   m es el «motor» de la tipografía (HarfBuzz, ver crearMotor): m.forma(renglón) devuelve las letras ya
+   ubicadas, con su kerning, sus ligaduras y, en las manuscritas, las formas que se unen entre sí, igual que
+   las dibuja el navegador. Todo en unidades de la tipografía, con y hacia arriba. Cuerpo de 100 en el SVG;
+   los renglones se alinean por su ancho tipográfico, como en cualquier editor.
+   Una letra que la tipografía no tiene NO se dibuja (sería el cuadrado de «letra que falta»): queda su lugar
+   vacío y se avisa en `faltan`.
+   Las letras que se enciman (las de una manuscrita que se unen, o una Ç armada con dos piezas) se juntan en un
+   solo contorno con unir(): en el taller el corte de vinilo o láser y la digitalización del bordado ven una
+   sola figura. Sin unir() (o sin nada que unir) van tal cual; porUnir dice cuántos grupos lo necesitaban.
+   Devuelve el SVG, lo que mide la tinta, el alto de las mayúsculas y de las minúsculas (la x) y las letras que
+   faltan. null si no hay nada que dibujar. */
+function textoEnCurvas(m, g, unir){
+  const T = 100, k = T / m.upem, tr = (g.esp || 0) / 1000 * m.upem; // el interletrado, en unidades de la tipografía
+  const texto = limpiarTexto(g.texto), lineas = texto.split('\n');
+  const formas = lineas.map(l => l.trim() ? m.forma(l) : []);
+  // el interletrado que quedaría después de la última letra no ocupa lugar
+  const anchos = formas.map(f => f.length ? f.reduce((a, x) => a + x.ax, 0) + tr * (f.length - 1) : 0);
+  const ancho = Math.max(0, ...anchos), salto = (g.interl || 1.2) * m.upem;
+  const glifos = [];
+  formas.forEach((f, i) => {
+    let x = g.alin === 'left' ? 0 : g.alin === 'right' ? ancho - anchos[i] : (ancho - anchos[i]) / 2;
+    const base = m.asc + i * salto; // línea de base del renglón, hacia abajo
+    f.forEach(gl => {
+      if(gl.gid){ // el glifo 0 es la letra que falta
+        const ox = x + (gl.dx || 0), oy = base - (gl.dy || 0);
+        const cmds = m.contorno(gl.gid).map(c => ({ type: c.type, values: c.values.map((v, j) => j % 2 ? (oy - v) * k : (ox + v) * k) }));
+        const caja = cmds.length ? cajaCurvas(cmds) : null;
+        if(caja && caja.x2 > caja.x1 && caja.y2 > caja.y1) glifos.push({ d: pathDe(cmds), caja, encimado: contornoEncimado(cmds) });
+      }
+      x += gl.ax + tr;
     });
   });
-  if(!d) return null;
-  const faltan = [...new Set([...texto].filter(c => c.trim() && !font.charToGlyphIndex(c)))];
-  const os2 = font.tables && font.tables.os2;
-  let cap = os2 && os2.sCapHeight > 0 ? os2.sCapHeight * k : 0;
-  if(!cap){ const bh = font.getPath('H', 0, 0, T).getBoundingBox(); cap = bh.y1 < 0 ? -bh.y1 : T * 0.7; }
+  if(!glifos.length) return null;
+  const grupos = gruposQueSeTocan(glifos);
+  const porUnir = grupos.filter(gr => gr.length > 1 || gr[0].encimado).length;
+  let d = '';
+  grupos.forEach(gr => { d += unir && (gr.length > 1 || gr[0].encimado) ? unir(gr.map(x => x.d)) : gr.map(x => x.d).join(''); });
+  const x1 = Math.min(...glifos.map(x => x.caja.x1)), y1 = Math.min(...glifos.map(x => x.caja.y1));
+  const x2 = Math.max(...glifos.map(x => x.caja.x2)), y2 = Math.max(...glifos.map(x => x.caja.y2));
+  const faltan = [...new Set([...texto].filter(c => c.trim() && !m.tiene(c)))];
   const aire = T * 0.08, vb = [x1 - aire, y1 - aire, x2 - x1 + 2 * aire, y2 - y1 + 2 * aire].map(v => +v.toFixed(2));
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb.join(' ') + '" width="' + vb[2] + '" height="' + vb[3] + '">'
     + '<title>' + esc('Texto en curvas: ' + recorteTexto(texto, 80) + ' · ' + etiquetaFuente(g)) + '</title>'
     + '<path fill="#000000" d="' + d + '"/></svg>';
-  return { svg, w: x2 - x1, h: y2 - y1, cap, faltan };
+  return { svg, w: x2 - x1, h: y2 - y1, cap: m.cap * k, xAlto: m.xAlto * k, faltan, porUnir, unido: !!(unir && porUnir) };
+}
+const pathDe = cmds => cmds.map(c => c.type + c.values.map(v => +v.toFixed(2)).join(' ')).join('');
+/* la caja de un dibujo con curvas, exacta: los puntos de control de una curva quedan afuera de la tinta y no
+   cuentan; sí los extremos de cada curva */
+function cajaCurvas(cmds){
+  let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity, px = 0, py = 0, sx = 0, sy = 0;
+  const pt = (x, y) => { if(x < x1) x1 = x; if(x > x2) x2 = x; if(y < y1) y1 = y; if(y > y2) y2 = y; };
+  const raices = (a, b, c) => { // a t² + b t + c = 0, en (0, 1)
+    if(Math.abs(a) < 1e-12) return Math.abs(b) < 1e-12 ? [] : [-c / b];
+    const disc = b*b - 4*a*c;
+    return disc < 0 ? [] : [(-b + Math.sqrt(disc)) / (2*a), (-b - Math.sqrt(disc)) / (2*a)];
+  };
+  for(const c of cmds){
+    const v = c.values;
+    if(c.type === 'M'){ px = sx = v[0]; py = sy = v[1]; pt(px, py); }
+    else if(c.type === 'L'){ px = v[0]; py = v[1]; pt(px, py); }
+    else if(c.type === 'Q'){
+      const [cx, cy, x, y] = v;
+      for(const [p0, p1, p2] of [[px, cx, x], [py, cy, y]]){
+        const den = p0 - 2*p1 + p2;
+        if(Math.abs(den) > 1e-12){ const t = (p0 - p1) / den; if(t > 0 && t < 1){ const mt = 1 - t; pt(mt*mt*px + 2*mt*t*cx + t*t*x, mt*mt*py + 2*mt*t*cy + t*t*y); } }
+      }
+      px = x; py = y; pt(px, py);
+    }
+    else if(c.type === 'C'){
+      const [c1x, c1y, c2x, c2y, x, y] = v;
+      for(const [p0, p1, p2, p3] of [[px, c1x, c2x, x], [py, c1y, c2y, y]]){
+        raices(p3 - 3*p2 + 3*p1 - p0, 2*(p2 - 2*p1 + p0), p1 - p0).filter(t => t > 0 && t < 1).forEach(t => {
+          const mt = 1 - t, b = (q0, q1, q2, q3) => mt*mt*mt*q0 + 3*mt*mt*t*q1 + 3*mt*t*t*q2 + t*t*t*q3;
+          pt(b(px, c1x, c2x, x), b(py, c1y, c2y, y));
+        });
+      }
+      px = x; py = y; pt(px, py);
+    }
+    else if(c.type === 'Z'){ px = sx; py = sy; }
+  }
+  return { x1, y1, x2, y2 };
+}
+/* ¿la letra tiene partes que se enciman? (una Ç armada con la C y la cedilla, o una tipografía variable).
+   Los huecos (el ojo de la o) quedan adentro de su contorno: esos no cuentan */
+function contornoEncimado(cmds){
+  const partes = [];
+  cmds.forEach(c => { if(c.type === 'M') partes.push([]); if(partes.length) partes[partes.length - 1].push(c); });
+  const cajas = partes.map(cajaCurvas);
+  const dentro = (a, b) => a.x1 >= b.x1 && a.x2 <= b.x2 && a.y1 >= b.y1 && a.y2 <= b.y2;
+  for(let i = 0; i < cajas.length; i++) for(let j = i + 1; j < cajas.length; j++){
+    const a = cajas[i], b = cajas[j];
+    const se = Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1) > 0.01 && Math.min(a.y2, b.y2) - Math.max(a.y1, b.y1) > 0.01;
+    if(se && !dentro(a, b) && !dentro(b, a)) return true;
+  }
+  return false;
+}
+/* las letras que se tocan (sus cajas se enciman), juntas: se unen de a grupos, no todo el texto */
+function gruposQueSeTocan(glifos){
+  const jefe = glifos.map((_, i) => i), raiz = i => jefe[i] === i ? i : (jefe[i] = raiz(jefe[i]));
+  for(let i = 0; i < glifos.length; i++) for(let j = i + 1; j < glifos.length; j++){
+    const a = glifos[i].caja, b = glifos[j].caja;
+    if(Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1) > 0.01 && Math.min(a.y2, b.y2) - Math.max(a.y1, b.y1) > 0.01) jefe[raiz(j)] = raiz(i);
+  }
+  const grupos = new Map();
+  glifos.forEach((x, i) => { const r = raiz(i); if(!grupos.has(r)) grupos.set(r, []); grupos.get(r).push(x); });
+  return [...grupos.values()];
 }
 /* fin del texto en curvas (lo de arriba no toca la página: lo prueba test_texto.mjs) */
 
@@ -8265,18 +8341,103 @@ const conTiempo = (p, ms) => new Promise((res, rej) => {
   const t = setTimeout(() => rej(new Error('lenta')), ms);
   p.then(v => { clearTimeout(t); res(v); }, e => { clearTimeout(t); rej(e); });
 });
-const cargarOpentype = () => conTiempo(cargarLib(OPENTYPE_URLS, () => window.opentype), 20000);
+/* HarfBuzz es un módulo con su WebAssembly al lado: se importa recién al primer texto, con un CDN de respaldo */
+let hbP = null;
+function cargarHarfbuzz(){
+  if(!hbP) hbP = conTiempo((async () => {
+    for(const u of HARFBUZZ_URLS){ try{ return await import(u); }catch(e){} }
+    throw new Error('cdn');
+  })(), 25000).catch(e => { hbP = null; throw e; });
+  return hbP;
+}
+const cargarPaper = () => conTiempo(cargarLib(PAPER_URLS, () => window.paper), 20000);
+/* las letras que se tocan, en un solo contorno (paper.js; ver textoEnCurvas) */
+let paperListo = false;
+function unirContornos(ds){
+  const P = window.paper;
+  if(!paperListo){ P.setup(new P.Size(1, 1)); paperListo = true; }
+  let u = null;
+  for(const d of ds){
+    const p = new P.CompoundPath({ pathData: d, insert: false });
+    p.fillRule = 'nonzero';
+    u = u ? u.unite(p, { insert: false }) : p.unite(new P.Path({ insert: false }), { insert: false });
+  }
+  return u ? u.getPathData(null, 2) : ds.join('');
+}
 async function bajarFuente(urls){
   let lenta = false;
   for(const u of urls){ // cada CDN tiene 10 s; si uno no contesta, se prueba el otro
     const ctl = new AbortController(), t = setTimeout(() => { lenta = true; ctl.abort(); }, 10000);
     try{
       const r = await fetch(u, { signal: ctl.signal });
-      if(r.ok) return window.opentype.parse(await r.arrayBuffer());
+      if(r.ok) return await r.arrayBuffer();
     }catch(e){}
     finally{ clearTimeout(t); }
   }
   throw new Error(lenta ? 'lenta' : 'fuente');
+}
+/* HarfBuzz lee .ttf y .otf; un .woff (el de fontsource, o el que suba el cliente) se descomprime antes, tabla
+   por tabla (cada una viene comprimida con zlib). Un .woff2 no: lo avisa quien lo pide */
+const firmaDe = buf => { const d = new DataView(buf); return buf.byteLength < 4 ? '' : String.fromCharCode(d.getUint8(0), d.getUint8(1), d.getUint8(2), d.getUint8(3)); };
+async function woffASfnt(buf){
+  if(firmaDe(buf) !== 'wOFF') return buf;
+  const d = new DataView(buf), n = d.getUint16(12), tablas = [];
+  for(let i = 0; i < n; i++){
+    const o = 44 + i * 20;
+    tablas.push({ tag: d.getUint32(o), off: d.getUint32(o + 4), comp: d.getUint32(o + 8), orig: d.getUint32(o + 12), suma: d.getUint32(o + 16) });
+  }
+  const datos = [];
+  for(const t of tablas){
+    const crudo = new Uint8Array(buf, t.off, t.comp);
+    datos.push(t.comp < t.orig
+      ? new Uint8Array(await new Response(new Blob([crudo]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer())
+      : crudo);
+  }
+  let largo = 12 + 16 * n;
+  const offs = datos.map(x => { const o = largo; largo += (x.length + 3) & ~3; return o; });
+  const out = new Uint8Array(largo), w = new DataView(out.buffer);
+  let p2 = 1, e = 0;
+  while(p2 * 2 <= n){ p2 *= 2; e++; }
+  w.setUint32(0, d.getUint32(4)); w.setUint16(4, n); w.setUint16(6, p2 * 16); w.setUint16(8, e); w.setUint16(10, n * 16 - p2 * 16);
+  tablas.forEach((t, i) => {
+    const o = 12 + i * 16;
+    w.setUint32(o, t.tag); w.setUint32(o + 4, t.suma); w.setUint32(o + 8, offs[i]); w.setUint32(o + 12, datos[i].length);
+    out.set(datos[i], offs[i]);
+  });
+  return out.buffer;
+}
+/* el «motor» de una tipografía en un grosor: lo que usa textoEnCurvas (forma, contorno, tiene, alturas) y sus
+   datos (nombre, grosor, ejes de una variable). Falla con 'ilegible' si no es una tipografía */
+async function crearMotor(buf, peso){
+  const firma = firmaDe(buf);
+  if(firma === 'wOF2') throw new Error('woff2');
+  if(!['wOFF', 'OTTO', 'true', 'ttcf'].includes(firma) && firma !== String.fromCharCode(0, 1, 0, 0)) throw new Error('ilegible');
+  const hb = await cargarHarfbuzz();
+  const face = new hb.Face(new hb.Blob(await woffASfnt(buf)));
+  const font = new hb.Font(face), ejes = face.getAxisInfos() || {};
+  if(!font.nominalGlyph(65) && !font.nominalGlyph(97)) throw new Error('ilegible'); // sin «A» ni «a»: no sirve para escribir
+  if(ejes.wght && peso) font.setVariations([new hb.Variation('wght', clamp(peso, ejes.wght.min, ejes.wght.max))]);
+  const arriba = cp => { const gid = font.nominalGlyph(cp), e = gid ? font.glyphExtents(gid) : null; return e && e.yBearing > 0 ? e.yBearing : 0; };
+  const os2 = face.referenceTable('OS/2'), h = font.hExtents();
+  return {
+    upem: face.upem, asc: h.ascender,
+    // el alto medido en el dibujo de la H y de la x (el dato que trae la tipografía a veces no coincide)
+    cap: arriba(72) || font.getMetricPositionWithFallback(hb.MetricsTag.CAP_HEIGHT) || face.upem * 0.7,
+    xAlto: arriba(120) || font.getMetricPositionWithFallback(hb.MetricsTag.X_HEIGHT) || face.upem * 0.5,
+    forma(linea){
+      const b = new hb.Buffer();
+      b.addText(linea); b.guessSegmentProperties();
+      hb.shape(font, b);
+      const pos = b.getGlyphPositions();
+      return b.getGlyphInfos().map((x, i) => ({ gid: x.codepoint, ax: pos[i].xAdvance, dx: pos[i].xOffset, dy: pos[i].yOffset }));
+    },
+    contorno: gid => font.glyphToJson(gid),
+    tiene: ch => !!font.nominalGlyph(ch.codePointAt(0)),
+    // la familia «tipográfica» (16) es «Montserrat»; la 1, en una variable, suele ser la de su grosor de fábrica («Montserrat Thin»)
+    familia: face.getName(16, 'en') || face.getName(1, 'en') || '', nombre: face.getName(4, 'en') || face.getName(1, 'en') || '',
+    peso: os2 && os2.length > 5 ? (os2[4] << 8 | os2[5]) : 400,
+    wght: ejes.wght ? { min: ejes.wght.min, max: ejes.wght.max, base: ejes.wght.default } : null,
+  };
 }
 /* qué le decimos al vendedor cuando no se pudo armar el texto */
 function mensajeTexto(e){
@@ -8286,15 +8447,16 @@ function mensajeTexto(e){
     : m === 'fuente' || m === 'cdn' ? 'No se pudo bajar la tipografía: revisá la conexión a internet y probá de nuevo.'
     : 'No se pudo armar el texto con esa tipografía: probá con otra.';
 }
-const nombreDeFuente = (font, archivo) => {
-  const n = font.names || {}, en = o => (o && (o.en || Object.values(o)[0])) || '';
-  return en(n.fullName) || en(n.fontFamily) || String(archivo || 'Tipografía del cliente').replace(/\.[^.]+$/, '');
-};
-function registrarFuenteCliente(id, buf, archivo, adj){
-  const font = window.opentype.parse(buf); // si no es una tipografía, falla acá
-  const os2 = font.tables && font.tables.os2;
-  const F = { clave: 'cli:' + id, id, nombre: nombreDeFuente(font, archivo), peso: (os2 && os2.usWeightClass) || 400, font, adj: adj || null,
-    variable: !!(font.tables && font.tables.fvar), sinGuardar: !adj };
+/* la tipografía del cliente: sus bytes quedan en memoria (y en IndexedDB, para la próxima); una variable
+   ofrece los grosores que tiene */
+const PESOS_VARIABLE = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+async function registrarFuenteCliente(id, buf, archivo, adj){
+  const m = await crearMotor(buf);
+  const F = { clave: 'cli:' + id, id, buf, adj: adj || null, sinGuardar: !adj,
+    variable: !!m.wght, pesos: m.wght ? PESOS_VARIABLE.filter(p => p >= m.wght.min && p <= m.wght.max) : null,
+    // una variable se llama por su familia («Montserrat»); el nombre completo es el de su grosor de fábrica («Montserrat Thin»)
+    nombre: (m.wght ? m.familia : m.nombre) || String(archivo || 'Tipografía del cliente').replace(/\.[^.]+$/, ''),
+    peso: m.wght ? clamp(400, m.wght.min, m.wght.max) : m.peso };
   fuentesCliente.set(F.clave, F);
   try{ const ff = new FontFace('fx-cli-' + id, buf.slice(0)); document.fonts.add(ff); ff.load().catch(() => {}); }catch(e){}
   txtListaHecha = false; // la lista suma la del cliente
@@ -8310,22 +8472,33 @@ async function fuenteCliente(clave){
 const fuentesListas = new Set(); // las ya bajadas: cambiar a una de estas es instantáneo
 const claveFuente = g => { const f = fuenteDe(g.fuente) || FUENTES[0]; return f[0] + '@' + pesoCercano(f[3], g.peso || 400); };
 const fuenteBajada = g => esFuenteCliente(g.fuente) ? fuentesCliente.has(g.fuente) : fuentesListas.has(claveFuente(g));
-async function cargarFuente(g){
-  await cargarOpentype();
-  if(esFuenteCliente(g.fuente)) return (await fuenteCliente(g.fuente)).font;
+const motores = new Map(); // un motor por tipografía y grosor
+async function cargarMotor(g){
+  if(esFuenteCliente(g.fuente)){
+    const F = await fuenteCliente(g.fuente), clave = F.clave + '@' + (F.variable ? g.peso : '');
+    if(!motores.has(clave)) motores.set(clave, crearMotor(F.buf, F.variable ? g.peso : 0).catch(e => { motores.delete(clave); throw e; }));
+    return motores.get(clave);
+  }
   const f = fuenteDe(g.fuente) || FUENTES[0], peso = pesoCercano(f[3], g.peso || 400), clave = claveFuente(g);
   if(!fuentesP.has(clave)) fuentesP.set(clave, bajarFuente(urlsFuente(f[0], peso))
-    .then(font => { fuentesListas.add(clave); return font; })
+    .then(buf => crearMotor(buf))
+    .then(m => { fuentesListas.add(clave); return m; })
     .catch(e => { fuentesP.delete(clave); throw e; }));
   return fuentesP.get(clave);
 }
 /* el SVG en curvas y la imagen que se ve (normalizada igual que un SVG subido: así el paquete del taller
-   ubica las curvas exactamente donde están en el boceto) */
+   ubica las curvas exactamente donde están en el boceto). Si hay letras que se tocan, se baja paper.js y se
+   unen; si no se puede (sin conexión), van tal cual y el paquete lo avisa */
 async function generarTexto(g){
-  const r = textoEnCurvas(await cargarFuente(g), g);
+  const m = await cargarMotor(g);
+  let r = textoEnCurvas(m, g, null);
   if(!r) return null;
+  if(r.porUnir){
+    try{ await cargarPaper(); r = textoEnCurvas(m, g, unirContornos); }
+    catch(e){ /* sin unir: igual sirve para el boceto */ }
+  }
   const url = await normalizeSvg(new File([r.svg], archivoTexto(g), { type: 'image/svg+xml' }));
-  return { url, svg: r.svg, box: { w: r.w, h: r.h }, cap: r.cap, faltan: r.faltan };
+  return { url, svg: r.svg, box: { w: r.w, h: r.h }, cap: r.cap, xAlto: r.xAlto, faltan: r.faltan, encimados: !!(r.porUnir && !r.unido) };
 }
 /* un texto nuevo arranca negro, o blanco si el área cae sobre una parte oscura del producto */
 function tinteParaTexto(){
@@ -8354,7 +8527,7 @@ async function agregarTexto(){
     /* entra siempre como elemento nuevo, sin tocar pendingAdd: si mientras bajaba la tipografía se pidió un
        logo con «＋ Otro logo», ese logo también se agrega (no reemplaza al texto) */
     loadLogoSrc(r.url, nombreTexto(g), false, null, {
-      tipo: 'texto', gen: g, genOk: { ...g }, genSvg: r.svg, genBox: r.box, genCap: r.cap, faltan: r.faltan, tint: tinteParaTexto(),
+      tipo: 'texto', gen: g, genOk: { ...g }, genSvg: r.svg, genBox: r.box, genCap: r.cap, genX: r.xAlto, faltan: r.faltan, encimados: r.encimados, tint: tinteParaTexto(),
       listo: L => { fijarEscalaTexto(L); abrirPopBarra('texto', true); $('txtTexto').select(); },
     });
   }catch(e){
@@ -8429,7 +8602,7 @@ async function ponerTexto(L, g, r){
   const cx = L.x + L.w/2, cy = L.y + L.h/2, z = state.zone, eps = 0.004;
   const enArea = !!z && L.x >= z.x - eps && L.y >= z.y - eps && L.x + L.w <= z.x + z.w + eps && L.y + L.h <= z.y + z.h + eps;
   Object.assign(L, { src: r.url, crop, useTrim: true, fullW: probe.naturalWidth, fullH: probe.naturalHeight, aspect,
-    genOk: g, genSvg: r.svg, genBox: r.box, genCap: r.cap, faltan: r.faltan, name: nombreTexto(g) });
+    genOk: g, genSvg: r.svg, genBox: r.box, genCap: r.cap, genX: r.xAlto, faltan: r.faltan, encimados: r.encimados, name: nombreTexto(g) });
   const w0 = esc ? esc * r.box.w * FW : L.w*FW;
   let w = w0, h = w / aspect;
   /* si con esa letra no entra en el área de impresión (o en la foto), se achica hasta entrar */
@@ -8457,18 +8630,22 @@ async function asegurarOriginalTexto(L){
 }
 /* un archivo puesto en lugar de un texto: deja de ser texto */
 function sacarTexto(L){
-  ['tipo', 'gen', 'genOk', 'genSvg', 'genBox', 'genCap', 'genEsc', 'genCmEsc', 'faltan', 'origDe', 'txtAviso', 'txtFallo'].forEach(k => { delete L[k]; });
+  ['tipo', 'gen', 'genOk', 'genSvg', 'genBox', 'genCap', 'genX', 'genEsc', 'genCmEsc', 'faltan', 'encimados', 'origDe', 'txtAviso', 'txtFallo'].forEach(k => { delete L[k]; });
 }
-/* altura de las mayúsculas en cm (lo que importa para saber si la técnica la imprime), o null sin escala */
-function alturaMayuscula(L){
-  if(!L || !L.genBox || !L.genBox.w || !L.genCap) return null;
+/* el alto de la letra (lo que importa para saber si la técnica la imprime), medido en el dibujo de la tipografía:
+   el de las mayúsculas si el texto tiene alguna; si es todo en minúsculas, el de la x (en una manuscrita, la
+   mitad o menos que una mayúscula). null sin escala */
+function alturaLetra(L){
+  if(!L || !L.gen || !L.genBox || !L.genBox.w || !L.genCap) return null;
   const m = medidaWH(L);
-  return m && m.w > 0 ? L.genCap * m.w / L.genBox.w : null;
+  if(!(m && m.w > 0)) return null;
+  const mayus = /\p{Lu}/u.test(L.gen.texto) || !L.genX;
+  return { cm: (mayus ? L.genCap : L.genX) * m.w / L.genBox.w, que: mayus ? 'mayúsculas' : 'minúsculas' };
 }
-const fmtMm = cm => (cm*10).toLocaleString('es-AR', { maximumFractionDigits: cm < 0.5 ? 1 : 0 }) + ' mm';
+const fmtMm = cm => (cm*10).toLocaleString('es-AR', { maximumFractionDigits: cm < 1 ? 1 : 0 }) + ' mm'; // menos de 1 cm, con un decimal (como en el paquete)
 function textoAltura(L){
-  const cap = alturaMayuscula(L);
-  return cap ? 'mayúsculas de ' + fmtMm(cap) + ' de alto' : '';
+  const a = alturaLetra(L);
+  return a ? a.que + ' de ' + fmtMm(a.cm) + ' de alto' : '';
 }
 const textoFaltan = L => 'La tipografía no tiene ' + L.faltan.map(c => '«' + c + '»').join(', ');
 
@@ -8529,7 +8706,10 @@ $('txtFuentes').addEventListener('keydown', e => {
   ops[k].tabIndex = 0; ops[k].focus();
 });
 $('txtListo').addEventListener('click', () => { cerrarPopsBarra(); $('lbTexto').focus(); });
-const pesosDe = g => esFuenteCliente(g.fuente) ? [g.peso || 400] : ((fuenteDe(g.fuente) || [0, 0, 0, [400]])[3]);
+const pesosDe = g => {
+  if(esFuenteCliente(g.fuente)){ const F = fuentesCliente.get(g.fuente); return F && F.variable ? F.pesos : [g.peso || 400]; }
+  return (fuenteDe(g.fuente) || [0, 0, 0, [400]])[3];
+};
 function pintarPesos(L){
   const box = $('txtPeso'), ps = pesosDe(L.gen);
   $('txtPesoFila').hidden = ps.length < 2;
@@ -8553,11 +8733,11 @@ function notaTexto(L){
   if(L.txtAviso) linea(L.txtAviso, true);
   if(L.faltan && L.faltan.length) linea(textoFaltan(L) + ': esas letras quedan en blanco, en el boceto y en el taller. Borralas o elegí otra tipografía.', true);
   const F = esFuenteCliente(L.gen.fuente) ? fuentesCliente.get(L.gen.fuente) : null;
-  if(F && F.variable) linea('Es una tipografía variable: sale en su grosor de fábrica. Pedile al cliente el .ttf u .otf del grosor que va.', true);
   if(F && F.sinGuardar) linea('No se pudo guardar esta tipografía en el navegador: se usa ahora, pero no viaja al taller ni queda para la próxima.', true);
   av.hidden = !av.firstChild;
-  const alto = alturaMayuscula(L);
-  linea((alto ? 'Las mayúsculas miden ' + fmtMm(alto) + ' de alto. ' : '') + 'Va al taller en curvas: no hace falta tener la tipografía.');
+  const a = alturaLetra(L);
+  linea((a ? 'Las ' + a.que + ' miden ' + fmtMm(a.cm) + ' de alto' + (a.que === 'minúsculas' ? ' (la altura de la x)' : '') + '. ' : '')
+    + 'Va al taller en curvas: no hace falta tener la tipografía.');
 }
 function syncTextoPop(){
   const L = textoElegido();
@@ -8594,7 +8774,8 @@ function elegirFuente(id, L = textoElegido()){
   if(!F && !f) return;
   L.gen.fuente = id;
   L.gen.fuenteNom = F ? F.nombre : f[1];
-  L.gen.peso = F ? F.peso : pesoCercano(f[3], L.gen.peso || 400);
+  L.gen.peso = F ? (F.variable ? pesoCercano(F.pesos, L.gen.peso || F.peso) : F.peso) : pesoCercano(f[3], L.gen.peso || 400);
+  L.gen.variable = !!(F && F.variable); // una variable del cliente muestra el grosor en el nombre
   /* la tipografía del cliente viaja al taller adjunta al texto que la usa (y deja de viajar si se cambia) */
   const deCliente = new Set([...fuentesCliente.values()].map(x => x.id));
   L.adjuntos = (L.adjuntos || []).filter(x => !deCliente.has(x.id) || (F && x.id === F.id));
@@ -8617,28 +8798,27 @@ $('txtFuenteInput').addEventListener('change', async e => {
   const avisar = t => { L.txtAviso = t; if(selLogo() === L) notaTexto(L); };
   if(/\.woff2$/i.test(f.name)){ avisar('Los .woff2 no se pueden leer acá: pedí la tipografía en .ttf u .otf.'); return; }
   try{
-    await cargarOpentype();
     const buf = await f.arrayBuffer();
-    let font;
-    try{ font = window.opentype.parse(buf); }catch(err){ throw new Error('ilegible'); }
+    const m = await crearMotor(buf); // antes de guardarla: que sea una tipografía
     // la misma tipografía subida otra vez: se usa la que ya está (no se duplica en la lista)
-    const nombre = nombreDeFuente(font, f.name);
-    let F = [...fuentesCliente.values()].find(x => x.nombre === nombre);
+    const nombre = (m.wght ? m.familia : m.nombre) || '';
+    let F = nombre ? [...fuentesCliente.values()].find(x => x.nombre === nombre) : null;
     if(!F){
       const reg = await registrarArchivo(f);
-      F = registrarFuenteCliente(reg ? reg.id : nuevoIdArch(), buf, f.name, reg ? { id: reg.id, name: reg.info.name, type: reg.info.type, size: reg.info.size } : null);
+      F = await registrarFuenteCliente(reg ? reg.id : nuevoIdArch(), buf, f.name, reg ? { id: reg.id, name: reg.info.name, type: reg.info.type, size: reg.info.size } : null);
     }
     elegirFuente(F.clave, L);
   }catch(err){
-    avisar(err && err.message === 'ilegible'
-      ? 'No se pudo leer «' + f.name + '»: puede estar dañado o no ser una tipografía. Pedile al cliente el archivo de nuevo (.ttf u .otf).'
+    const m = err && err.message;
+    avisar(m === 'woff2' ? 'Los .woff2 no se pueden leer acá: pedí la tipografía en .ttf u .otf.'
+      : m === 'ilegible' ? 'No se pudo leer «' + f.name + '»: puede estar dañado o no ser una tipografía. Pedile al cliente el archivo de nuevo (.ttf u .otf).'
       : mensajeTexto(err));
   }
 });
 /* un texto de una plantilla guardada con la tipografía del cliente: se la busca en el navegador al abrir su menú */
 async function prepararFuenteCliente(L){
   if(!esFuenteCliente(L.gen.fuente) || fuentesCliente.has(L.gen.fuente)) return;
-  try{ await cargarOpentype(); await fuenteCliente(L.gen.fuente); }
+  try{ await fuenteCliente(L.gen.fuente); }
   catch(e){ L.txtAviso = mensajeTexto(e); }
   if(selLogo() === L) syncTextoPop();
 }
@@ -9218,6 +9398,8 @@ const fichaArte = l => ({
   tinteColor: (l.tint === 'custom' && l.tintColor) ? { hex: l.tintColor.hex, nom: l.tintColor.nom || '', pant: l.tintColor.pant || '' } : null,
   geo: GEO_ENTERO,
   texto: l.tipo === 'texto' ? true : undefined, // armado en el boceteador (no lo mandó el cliente)
+  letra: (a => a ? { mm: +(a.cm*10).toFixed(1), que: a.que } : undefined)(l.tipo === 'texto' ? alturaLetra(l) : null),
+  encimados: l.tipo === 'texto' && l.encimados ? true : undefined,
   faltan: (l.tipo === 'texto' && l.faltan && l.faltan.length) ? l.faltan.slice() : undefined,
 });
 $('unirClose').addEventListener('click', () => { $('unirModal').hidden = true; unirCache = null; });
@@ -9332,7 +9514,8 @@ window.__bocetoSnapshot = () => {
       z: l.z || undefined,
       // un texto: lo que dice y con qué tipografía (para seguir editándolo) y sus curvas (para el taller)
       tipo: l.tipo || undefined, gen: l.tipo === 'texto' && l.genOk ? { ...l.genOk } : undefined,
-      genSvg: l.genSvg || undefined, genBox: l.genBox ? { ...l.genBox } : undefined, genCap: l.genCap || undefined,
+      genSvg: l.genSvg || undefined, genBox: l.genBox ? { ...l.genBox } : undefined, genCap: l.genCap || undefined, genX: l.genX || undefined,
+      encimados: l.encimados || undefined,
       genEsc: l.genEsc || undefined, genCmEsc: l.genCmEsc || undefined, // el tamaño de letra elegido
       faltan: (l.faltan && l.faltan.length) ? l.faltan.slice() : undefined,
       origTexto: (l.origId && l.genSvg && l.origDe === l.genSvg) ? true : undefined })),
