@@ -65,10 +65,20 @@ HEX o Pantone), cuenta para «¿Cómo se imprimen estos logos?» y va a la ficha
 paquete del taller igual que los logos. Arranca como «Tu texto» en Montserrat
 Negrita, negro, o blanco si el área cae sobre una parte oscura del producto.
 
-En la barra sobre la foto, **«Texto»** abre lo que dice (se escribe ahí mismo y el
-boceto se actualiza al instante; con Enter, otro renglón), la **tipografía**, el
-**grosor**, el **espacio entre letras** y, con varios renglones, la **alineación** y
-el **espacio entre renglones**. Al editarlo, la letra queda del tamaño elegido y
+En la barra sobre la foto, **«Texto»** (o un doble clic sobre el texto) abre lo que
+dice (se escribe ahí mismo y el boceto se actualiza al instante; con Enter, otro
+renglón), la **tipografía**, el **grosor** (Fina, Normal, Media, Seminegrita, Negrita,
+Extranegrita, Ultranegrita: los que tenga), el **espacio entre letras** y, con varios
+renglones, la **alineación** y el **espacio entre renglones** («Normal», «Más juntas
+(−20)», «Más separadas (+100)»).
+
+El menú está en dos columnas (lo que dice y la tipografía | el resto), así entra
+entero sin scroll. **Nunca se abre encima del texto**: va abajo o arriba de la
+barra, y si de ese lado no entra, al costado del texto (aunque tape un rato el panel
+de los pasos). En el celular es una **hoja abajo**, con «Listo» para cerrarla; el
+texto queda a la vista arriba, con la barra encima. Con el teclado: Tab entra a la
+lista de tipografías y sale en un paso, ↑ ↓ (y Inicio, Fin, RePág, AvPág) la
+recorren y Enter elige. Al editarlo, la letra queda del tamaño elegido y
 crece el largo; si así no entra en el área, se achica hasta entrar, y si después se
 acorta, **vuelve a su tamaño** («ACME» → «ACME Distribuidora S.R.L.» → «ACME»). El
 tamaño elegido es el de cuando se creó, se agrandó a mano o se escribió su medida.
@@ -104,6 +114,12 @@ alto de un texto van siempre juntos (con o sin 🔗): las letras no se deforman.
   en «Este texto», al aplicar (pide confirmación) y en la revisión del paquete.
 - **Lo que hay que mirar**: «Este texto», en el panel, dice la tipografía y el
   **alto de las mayúsculas** en mm (para saber si la técnica lo imprime).
+- **«Tu texto» sin cambiar**: al aplicar, pregunta si va así (casi siempre es un
+  olvido).
+- **Textos blancos**: las miniaturas y el recuadro del paso 3 los muestran sobre gris
+  oscuro, y en la ficha (y en el PDF para Corel) el recuadro «Logo a imprimir» va
+  gris oscuro si su arte es blanco y el fondo elegido es claro: blanco sobre blanco
+  no se ve. Vale también para un logo en Blanco.
 - **Colores de impresión**: un texto (o un logo) en Blanco, Negro o Un color suma
   ese color a la lista del paso 3. Si todo es de un color, la lista son esos colores
   (un texto negro ya no queda como «Blanco», el de la ficha nueva); si hay un logo a

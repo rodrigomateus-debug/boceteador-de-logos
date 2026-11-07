@@ -115,14 +115,17 @@ assert.equal(T.archivoTexto(gen({ texto: 'A/B: "c"?' })), 'Texto A B c - Montser
 assert.ok(!/[\\/:*?"<>|«»…]/.test(T.archivoTexto(gen({ texto: 'x'.repeat(50) + '<>|' }))));
 // la tipografía del cliente ya trae el grosor en su nombre
 assert.equal(T.etiquetaFuente({ fuente: 'cli:a1', fuenteNom: 'Corporativa Bold', peso: 700 }), 'Corporativa Bold');
-assert.equal(T.etiquetaFuente({ fuente: 'lato', fuenteNom: 'Lato', peso: 900 }), 'Lato Black');
+assert.equal(T.etiquetaFuente({ fuente: 'lato', fuenteNom: 'Lato', peso: 900 }), 'Lato Ultranegrita');
+// la de un solo grosor, sin grosor en el nombre
+assert.equal(T.etiquetaFuente({ fuente: 'bebas-neue', fuenteNom: 'Bebas Neue', peso: 400 }), 'Bebas Neue');
 
 // grosores: el más cercano que tenga la tipografía
 assert.equal(T.pesoCercano([400, 700], 650), 700);
 assert.equal(T.pesoCercano([300, 400], 900), 400);
 assert.equal(T.pesoCercano([400], 700), 400);
 assert.equal(T.nombrePeso(400), 'Normal');
-assert.equal(T.nombrePeso(950), 'Black');
+assert.equal(T.nombrePeso(950), 'Ultranegrita');
+assert.equal(T.nombrePeso(600), 'Seminegrita');
 
 // el catálogo: ids únicos, grupos conocidos, grosores ordenados y la del texto nuevo disponible
 const ids = T.FUENTES.map(f => f[0]);
