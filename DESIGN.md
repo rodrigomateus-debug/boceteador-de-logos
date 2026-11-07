@@ -123,7 +123,9 @@ pero ninguno es necesario para validar el boceto visual.
 > kerning, ligaduras y las uniones de las manuscritas, como el navegador), las pasa a
 > curvas (nunca `<text>`: el taller no necesita la tipografía), une con paper.js las
 > que se enciman (vinilo, láser, bordado) y guarda lo que dice y con qué tipografía,
-> para seguir editándolo. Siguen: formas, íconos y texto en arco.
+> para seguir editándolo. Las formas (con su contorno en mm reales, como figura cerrada)
+> y los íconos (Material Design Icons, por Iconify) siguen la misma receta. Sigue: texto
+> en arco.
 
 ---
 

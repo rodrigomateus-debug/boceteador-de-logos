@@ -146,6 +146,36 @@ Al guardar una plantilla, el texto sigue siendo editable al abrirla. Con la
 tipografía del cliente, en otra computadora el texto se ve igual, pero para
 editarlo hay que volver a subir la tipografía (el boceteador lo avisa).
 
+### Formas e íconos
+
+Junto a «＋ Texto» están **«＋ Forma»** y **«＋ Ícono»**. Igual que un texto, son un
+logo más: se mueven, se rotan, se miden en cm, se pintan (Blanco, Negro, Grabado o Un
+color con HEX o Pantone), van a la ficha y al paquete del taller **en curvas**, se
+siguen pudiendo editar desde una plantilla y nacen negros, o blancos sobre una parte
+oscura del producto. Se editan con el recuadro de arriba del paso 3, con un doble
+clic sobre ellos o con su botón en la barra («Forma» o «Ícono»).
+
+- **Formas**: rectángulo (con las esquinas rectas, redondeadas o del todo redondas),
+  círculo, triángulo, rombo, hexágono, estrella (de 4 a 12 puntas), escudo, corazón y
+  línea. **Con relleno o solo el contorno**, con el **grosor en mm reales** (de 0,2 a
+  10 mm): el borde es una figura cerrada con el mismo grosor en todo su recorrido, no
+  una línea, así el vinilo, el láser o el bordado la toman tal cual. **El ancho y el
+  alto van sueltos**: se estira desde una esquina o se escribe la medida (un
+  rectángulo de 10 × 2 cm), y la forma se rehace con esa proporción (el contorno no se
+  deforma). Al cambiar de forma sin haberla estirado, toma la proporción de la nueva
+  (de rectángulo a círculo da un círculo). La línea es siempre llena: su grosor es su
+  alto.
+- **Íconos**: los de **Material Design Icons** (más de 7000, licencia Apache 2.0,
+  libres para trabajos comerciales), con **categorías** (Básicos, Contacto y redes,
+  Comida y bebida, Deportes, Naturaleza, Trabajo, Celebración, Salud, Transporte,
+  Flechas) y un **buscador en castellano** (las palabras más pedidas se traducen:
+  «corazón», «café», «auto»…; también acepta inglés). Los llenos van primero: los de
+  línea fina se pierden en una tampografía o un bordado chicos. «Ícono», en la barra,
+  lo cambia por otro con el mismo alto. Los de marcas (WhatsApp, Instagram…) son de
+  sus dueños: van sin cambiarles la forma, para indicar la cuenta. Se bajan del
+  servicio de Iconify (con dos servidores de respaldo); lo que llega se usa solo si es
+  dibujo (nada de scripts ni enlaces).
+
 En los colores (de la ficha y de «Un color»), **cambiar el HEX a mano suelta el
 Pantone** que había: así al taller no le llega un Pantone que ya no corresponde.
 
@@ -699,7 +729,8 @@ credencial en Google Cloud. Cada usuario también puede pegar otro con el botón
 - [x] Generador integrado (boceteador como modal, ficha A4 autocompletada)
 - [x] Ejecutivos en desplegable, multi-color de impresión (HEX/Pantone), barras de medida arrastrables, Nuevo boceto / Limpiar
 - [x] Textos en curvas con tipografía a elección (y la del cliente), y capas
-- [ ] Formas (rectángulo, círculo, estrella, escudo…) e íconos
+- [x] Formas (rectángulo, círculo, estrella, escudo…) con relleno o contorno en mm, e íconos
+- [ ] Texto en arco
 - [ ] Fase 2 — Links compartibles y aprobación del cliente
 - [ ] Fase 3 — Cotización conectada (ver `cotizador-formas.html`)
 - [ ] Fase 4 — Archivos de producción, cuentas, catálogo por API
