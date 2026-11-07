@@ -68,26 +68,50 @@ Negrita, negro, o blanco si el área cae sobre una parte oscura del producto.
 En la barra sobre la foto, **«Texto»** abre lo que dice (se escribe ahí mismo y el
 boceto se actualiza al instante; con Enter, otro renglón), la **tipografía**, el
 **grosor**, el **espacio entre letras** y, con varios renglones, la **alineación** y
-el **espacio entre renglones**. Al editarlo, la letra queda del mismo tamaño y
-crece el largo; si así no entra en el área, se achica hasta entrar. Con un texto
-elegido, el recuadro de arriba del paso 3 también abre su edición. Un texto no
-tiene Fondo, Recortar, IA ni «Full color»: se arma acá, limpio y de un color.
+el **espacio entre renglones**. Al editarlo, la letra queda del tamaño elegido y
+crece el largo; si así no entra en el área, se achica hasta entrar, y si después se
+acorta, **vuelve a su tamaño** («ACME» → «ACME Distribuidora S.R.L.» → «ACME»). El
+tamaño elegido es el de cuando se creó, se agrandó a mano o se escribió su medida.
+Con un texto elegido, el recuadro de arriba del paso 3 también abre su edición
+(aunque estén las guías ocultas). Un texto no tiene Fondo, Recortar, IA ni «Full
+color»: se arma acá, limpio y de un color. En «medida exacta del logo», el ancho y el
+alto de un texto van siempre juntos (con o sin 🔗): las letras no se deforman.
 
 - **Tipografías**: 32 de Google Fonts en 5 grupos (palo seco, con serif, display,
   manuscritas y máquina de escribir), cada una con su letra en la lista. Se bajan
-  recién al usarlas (de fontsource por jsDelivr, con unpkg de respaldo).
+  recién al usarlas (de fontsource por jsDelivr, con unpkg de respaldo); mientras
+  baja, la línea «Tipografía» dice «⏳ bajando…». Si un CDN no contesta en 10 s se
+  prueba el otro, y si la conexión está colgada se avisa y «＋ Texto» vuelve a
+  quedar disponible (nunca queda trabado).
 - **La tipografía del cliente**: «Subir la tipografía del cliente» acepta .ttf,
   .otf o .woff (.woff2 no: hay que pedir el .ttf u .otf). Queda guardada en el
   navegador y **viaja al taller** como adjunto del texto que la usa (deja de viajar
-  si se cambia por otra).
-- **Va en curvas**: las letras se pasan a curvas en el navegador (opentype.js),
-  así que el taller no necesita tener la tipografía. En el paquete, el texto sale
-  «con sus curvas originales» (repintado a la tinta elegida, con su Pantone como
-  tinta directa) y su SVG va como original del cliente.
+  si se cambia por otra); el LEEME aclara que no hace falta para producir, porque el
+  texto ya va en curvas. Subir la misma dos veces no la repite en la lista. Si es una
+  tipografía variable (un solo archivo con todos los grosores), avisa que sale en su
+  grosor de fábrica y que conviene pedir el del grosor que va.
+- **Va en curvas**: las letras se pasan a curvas en el navegador (opentype.js), con
+  sus ligaduras (fi, fl), así que el taller no necesita tener la tipografía. En el
+  paquete, el texto sale «con sus curvas originales» (repintado a la tinta elegida,
+  con su Pantone como tinta directa) y su SVG va como referencia, rotulado «texto en
+  curvas armado en el boceteador».
+- **Lo pegado se limpia**: los tabuladores de Excel y los saltos de Word quedan
+  como espacios o renglones, los acentos que vienen sueltos (al pegar desde una Mac o
+  un PDF) se pegan a su letra y los caracteres invisibles se sacan.
+- **Letras que la tipografía no tiene** (una «ł» o un «★», o la «ñ» en una
+  tipografía del cliente): **no se dibujan** —antes salía el cuadrado de «letra que
+  falta», en el boceto y en el taller—, queda su lugar vacío y se avisa en el menú,
+  en «Este texto», al aplicar (pide confirmación) y en la revisión del paquete.
 - **Lo que hay que mirar**: «Este texto», en el panel, dice la tipografía y el
-  **alto de las mayúsculas** en mm (para saber si la técnica lo imprime), y avisa si
-  la tipografía no tiene alguna letra del texto (por ejemplo, la «ñ» en una
-  tipografía del cliente), que no saldría.
+  **alto de las mayúsculas** en mm (para saber si la técnica lo imprime).
+- **Colores de impresión**: un texto (o un logo) en Blanco, Negro o Un color suma
+  ese color a la lista del paso 3. Si todo es de un color, la lista son esos colores
+  (un texto negro ya no queda como «Blanco», el de la ficha nueva); si hay un logo a
+  todo color, sus colores quedan y se suman los otros.
+- **Aplicar y Descargar PNG esperan al texto**: si se toca enseguida de escribir o
+  de elegir una tipografía que está bajando, esperan a que el texto esté al día (el
+  botón dice «⏳ Terminando el texto…»). Si el último cambio no se pudo armar (sin
+  conexión), no aplica: muestra el texto con su aviso.
 
 Al guardar una plantilla, el texto sigue siendo editable al abrirla. Con la
 tipografía del cliente, en otra computadora el texto se ve igual, pero para

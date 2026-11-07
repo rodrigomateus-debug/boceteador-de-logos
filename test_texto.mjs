@@ -8,31 +8,37 @@ const html = fs.readFileSync(new URL('./generador-bocetos.html', import.meta.url
 const i = html.indexOf('const OPENTYPE_URLS'), j = html.indexOf('/* fin del texto en curvas', i);
 assert.ok(i >= 0 && j > i, 'no encontré el bloque del texto en curvas');
 const T = new Function(html.slice(i, j)
-  + 'return { FUENTES, GRUPOS_FUENTE, TEXTO_NUEVO, urlsFuente, pesoCercano, nombrePeso, etiquetaFuente, nombreTexto, archivoTexto, textoEnCurvas };')();
+  + 'return { FUENTES, GRUPOS_FUENTE, TEXTO_NUEVO, urlsFuente, pesoCercano, nombrePeso, etiquetaFuente, nombreTexto, archivoTexto, limpiarTexto, textoEnCurvas };')();
 
 /* tipografía de mentira: 1000 unidades por eme, cada letra avanza 600 y dibuja un rectángulo de 500 de
-   ancho y 700 de alto (el alto de las mayúsculas); no tiene «✓» */
-const rects = (text, x, y, size, opts) => {
-  const k = size / 1000, out = [];
-  for (const ch of text) {
-    if (ch.trim()) out.push([x, y - 700 * k, x + 500 * k, y]);
-    x += 600 * k + ((opts && opts.tracking) || 0) / 1000 * size;
-  }
-  return { out, x };
-};
+   ancho y 700 de alto (el alto de las mayúsculas); no tiene «✓» ni «★» (su glifo es el 0, el de «letra
+   que falta»). Se dibuja letra por letra, como opentype.js */
+const FALTA = new Set(['✓', '★']);
+const rectPath = rs => ({
+  getBoundingBox: () => rs.length
+    ? { x1: Math.min(...rs.map(r => r[0])), y1: Math.min(...rs.map(r => r[1])), x2: Math.max(...rs.map(r => r[2])), y2: Math.max(...rs.map(r => r[3])) }
+    : { x1: NaN, y1: NaN, x2: NaN, y2: NaN },
+  toPathData: () => rs.map(r => `M${r[0]} ${r[1]}H${r[2]}V${r[3]}H${r[0]}Z`).join(''),
+});
+const opcionesVistas = [];
 const font = {
   unitsPerEm: 1000, ascender: 800, descender: -200,
   tables: { os2: { sCapHeight: 700 } },
-  charToGlyphIndex: c => (c === '✓' ? 0 : 1),
-  forEachGlyph: (text, x, y, size, opts, cb) => { for (const _ of text) cb(); return rects(text, x, y, size, opts).x; },
-  getPath: (text, x, y, size, opts) => {
-    const { out } = rects(text, x, y, size, opts);
-    return {
-      getBoundingBox: () => out.length
-        ? { x1: Math.min(...out.map(r => r[0])), y1: Math.min(...out.map(r => r[1])), x2: Math.max(...out.map(r => r[2])), y2: Math.max(...out.map(r => r[3])) }
-        : { x1: NaN, y1: NaN, x2: NaN, y2: NaN },
-      toPathData: () => out.map(r => `M${r[0]} ${r[1]}H${r[2]}V${r[3]}H${r[0]}Z`).join(''),
-    };
+  charToGlyphIndex: c => (FALTA.has(c) ? 0 : 1),
+  forEachGlyph(text, x, y, size, opts, cb) {
+    opcionesVistas.push(opts);
+    const k = size / 1000;
+    for (const ch of text) {
+      const glifo = { index: FALTA.has(ch) ? 0 : 1, getPath: (gx, gy, gs) => rectPath(ch.trim() ? [[gx, gy - 700 * gs / 1000, gx + 500 * gs / 1000, gy]] : []) };
+      cb(glifo, x, y, size, opts);
+      x += 600 * k + ((opts && opts.tracking) || 0) / 1000 * size;
+    }
+    return x;
+  },
+  getPath(text, x, y, size) { // solo para el alto de la H, cuando falta sCapHeight
+    const rs = [];
+    for (const ch of text) { rs.push([x, y - 700 * size / 1000, x + 500 * size / 1000, y]); x += 600 * size / 1000; }
+    return rectPath(rs);
   },
 };
 const gen = o => ({ ...T.TEXTO_NUEVO, ...o });
@@ -74,8 +80,30 @@ assert.deepEqual(xsDe(T.textoEnCurvas(font, gen({ texto: 'AB\nA', alin: 'right',
 // sin nada que dibujar: null (el editor se queda con el texto anterior)
 assert.equal(T.textoEnCurvas(font, gen({ texto: '   ' })), null);
 assert.equal(T.textoEnCurvas(font, gen({ texto: '\n \n' })), null);
-// las letras que la tipografía no tiene se avisan, una vez cada una
+// las letras que la tipografía no tiene se avisan, una vez cada una, y NO se dibujan (serían el cuadrado de
+// «letra que falta» en el boceto y en el taller): queda su lugar vacío
 assert.deepEqual(T.textoEnCurvas(font, gen({ texto: 'Sí ✓ ✓' })).faltan, ['✓']);
+assert.deepEqual(xsDe(T.textoEnCurvas(font, gen({ texto: 'A★B' })).svg), [0, 120]);
+assert.equal(T.textoEnCurvas(font, gen({ texto: '★✓' })), null); // ninguna letra que se pueda dibujar
+// las ligaduras quedan prendidas (opentype.js las apaga si recibe opciones sin «features»)
+assert.ok(opcionesVistas.every(o => o.features && o.features.liga && o.features.rlig && o.kerning));
+
+// lo escrito se limpia antes de dibujar
+const ch = n => String.fromCharCode(n);
+assert.equal(T.limpiarTexto('A' + ch(9) + 'B'), 'A B');                   // tabulador pegado de Excel: espacio
+assert.equal(T.limpiarTexto('A' + ch(11) + 'B'), 'A B');                  // salto de línea de Word
+assert.equal(T.limpiarTexto('A' + ch(13) + ch(10) + 'B' + ch(13) + 'C'), 'A' + ch(10) + 'B' + ch(10) + 'C');
+assert.equal(T.limpiarTexto('A' + ch(0x2028) + 'B'), 'A' + ch(10) + 'B');
+assert.equal(T.limpiarTexto('Cafe' + ch(0x301)), 'Caf' + ch(0xe9));        // acento suelto (Mac, PDF): pegado a su letra
+assert.equal(T.limpiarTexto('A' + ch(1) + ch(0x200b) + ch(0xfeff) + 'B'), 'AB'); // de control e invisibles: afuera
+assert.equal(T.limpiarTexto('A' + ch(0xd800) + 'B'), 'AB');               // medio emoji suelto: afuera
+assert.equal(T.limpiarTexto('😀'), '😀');                                   // un emoji entero queda (y se avisa si falta)
+assert.equal(T.limpiarTexto('A' + ch(0xa0) + 'B'), 'A B');
+// y se dibuja limpio: el tabulador ya no es un cuadrado, el acento suelto es una sola letra
+assert.deepEqual(xsDe(T.textoEnCurvas(font, gen({ texto: 'A' + ch(9) + 'B' })).svg), [0, 120]);
+assert.deepEqual(T.textoEnCurvas(font, gen({ texto: 'A' + ch(9) + 'B' })).faltan, []);
+assert.equal(xsDe(T.textoEnCurvas(font, gen({ texto: 'Cafe' + ch(0x301) })).svg).length, 4);
+assert.ok(!/[\u0000-\u0008]/.test(T.textoEnCurvas(font, gen({ texto: 'A' + ch(1) + 'B' })).svg));
 // sin sCapHeight, el alto de las mayúsculas sale de la H
 r = T.textoEnCurvas({ ...font, tables: { os2: { sCapHeight: 0 } } }, gen({ texto: 'A' }));
 assert.equal(r.cap, 70);
