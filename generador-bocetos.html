@@ -208,7 +208,7 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #zoneRef .val{font-size:12px;color:var(--text-muted)}
 #bocetoModal #zone.lbl-arriba .zoneLbl{top:auto;bottom:100%;border-radius:calc(6px/var(--Z)) calc(6px/var(--Z)) 0 0}
 #bocetoModal #zone.no-dim{box-shadow:none}
-#bocetoModal .logoItem{position:absolute;cursor:move;z-index:4}
+#bocetoModal .logoItem{position:absolute;cursor:move;z-index:4;min-width:calc(1px/var(--Z, 1));min-height:calc(1px/var(--Z, 1))} /* una línea de menos de un píxel igual se ve */
 #bocetoModal .logoItem img{width:100%;height:100%;display:block;pointer-events:none}
 #bocetoModal .logoItem.selected{outline:1.5px solid var(--sheet-accent);outline-offset:1px}
 #bocetoModal .handle{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--sheet-accent);border:2.5px solid #fff;box-shadow:0 1px 4px rgba(11,11,35,.35);z-index:5;touch-action:none}
@@ -336,6 +336,7 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .aplicarBtns .btn{flex:1;margin:0}
 #bocetoModal .aplicarFalta{font-size:12px;color:#7A5600}
 #bocetoModal .aplicarAviso{font-size:12px;font-weight:600;line-height:1.35;color:#8A1F11;background:#FDECE8;border-radius:10px;padding:7px 10px}
+#bocetoModal .aplicarAviso.tinta{color:#5C4300;background:#FFF6DB}
 #bocetoModal .mode-opt{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px;border:1.5px solid var(--border-subtle);border-radius:12px;background:var(--surface-page);cursor:pointer;font-family:var(--font-primary);text-align:left;transition:border-color .15s, box-shadow .15s}
 #bocetoModal .mode-opt:hover{border-color:var(--formas-navy)}
 #bocetoModal .mode-opt[aria-pressed="true"]{border-color:var(--formas-navy);background:var(--surface-sunken);box-shadow:0 0 0 2.5px color-mix(in srgb,var(--sheet-accent) 55%, transparent)}
@@ -416,7 +417,12 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #zone.chica .handle.bl{bottom:calc(-15px/var(--Z)); left:calc(-15px/var(--Z))}
 #bocetoModal #zone.chica .handle.br{bottom:calc(-15px/var(--Z)); right:calc(-15px/var(--Z))}
 #bocetoModal .logoDelete{width:calc(26px/var(--Z)); height:calc(26px/var(--Z)); top:calc(-13px/var(--Z)); right:calc(-13px/var(--Z)); font-size:calc(15px/var(--Z)); border-width:calc(1.5px/var(--Z))}
+#bocetoModal .logoItem.xAbajo .logoDelete{top:auto; bottom:calc(-13px/var(--Z))}
+#bocetoModal .logoItem.xIzq .logoDelete{right:auto; left:calc(-13px/var(--Z))}
 #bocetoModal .logoItem.chico .logoDelete{top:calc(-36px/var(--Z)); right:calc(-36px/var(--Z))}
+#bocetoModal .logoItem.chico.xAbajo .logoDelete{top:auto; bottom:calc(-36px/var(--Z))}
+#bocetoModal .logoItem.chico.xIzq .logoDelete{right:auto; left:calc(-36px/var(--Z))}
+#bocetoModal .logoItem.chico.xMedio .logoDelete{top:50%; margin-top:calc(-13px/var(--Z))}
 #bocetoModal .logoRotate{width:calc(26px/var(--Z)); height:calc(26px/var(--Z)); top:calc(-36px/var(--Z)); font-size:calc(14px/var(--Z)); border-width:calc(1.5px/var(--Z))}
 #bocetoModal #measureChip{font-size:calc(11.5px/var(--Z)); padding:calc(4px/var(--Z)) calc(12px/var(--Z))}
 #bocetoModal #rulerLine{height:calc(14px/var(--Z)); margin-top:calc(-7px/var(--Z))}
@@ -1208,6 +1214,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           <button type="button" class="bm-close" id="unirClose" aria-label="Cancelar">×</button>
         </div>
         <p class="cm-hint">Elegí según cómo lo va a producir el taller: la ficha se arma distinto en cada caso.</p>
+        <div class="note mal" id="unirTintaNote" role="alert" hidden>⚠ <span id="unirTintaTxt"></span></div>
         <div class="mode-row">
           <button type="button" class="mode-opt" id="unirSi" aria-pressed="false">
             <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1227,7 +1234,6 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             <span class="t"><span id="unirNoTit">Una hoja por logo</span><small id="unirNoTxt">Se imprimen por separado (distinta técnica, posición o película): cada hoja lleva su logo y su medida.</small></span>
           </button>
         </div>
-        <div class="note mal" id="unirTintaNote" hidden>⚠ <span id="unirTintaTxt"></span></div>
         <div class="note" id="unirEscalaNote" hidden>⚠ <span id="unirEscalaTxt"></span></div>
       </div>
     </div>
@@ -1498,12 +1504,12 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <div class="field-row" id="logoCmFields" hidden>
           <div class="field">
             <span class="label" style="letter-spacing:.08em">Ancho del logo</span>
-            <div class="suffix-wrap"><input type="number" id="logoWcm" placeholder="Ancho" min="0.1" max="200" step="0.1"><span class="suffix">cm</span></div>
+            <div class="suffix-wrap"><input type="text" inputmode="decimal" autocomplete="off" id="logoWcm" placeholder="Ancho" aria-label="Ancho"><span class="suffix">cm</span></div>
           </div>
           <button type="button" class="lockBtn" id="lockAspectBtn" aria-pressed="false" title="Proporción desanclada — clic para anclar">🔗</button>
           <div class="field">
             <span class="label" style="letter-spacing:.08em">Alto del logo</span>
-            <div class="suffix-wrap"><input type="number" id="logoHcm" placeholder="Alto" min="0.1" max="200" step="0.1"><span class="suffix">cm</span></div>
+            <div class="suffix-wrap"><input type="text" inputmode="decimal" autocomplete="off" id="logoHcm" placeholder="Alto" aria-label="Alto"><span class="suffix">cm</span></div>
           </div>
         </div>
         <!-- lo que se le hizo al logo elegido, cada cosa con su Deshacer (las herramientas están en la barra
@@ -1543,6 +1549,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         </div>
         <div class="aplicarFalta" id="aplicarFalta" hidden></div>
         <div class="aplicarAviso" id="aplicarAviso" role="status" hidden></div>
+        <div class="aplicarAviso tinta" id="tintaAviso" role="status" hidden></div>
       </div>
 
     </div>
@@ -2527,8 +2534,9 @@ function medidaCm(s){
   if(!(v > 0)) return null;
   return (m[2] || 'cm').toLowerCase() === 'mm' ? v / 10 : v;
 }
-const fmtCmTxt = v => (Math.round(v * 100) / 100).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fmtCmCorto = v => String(Math.round(v * 10) / 10).replace('.', ',');
+const fmtCmTxt = v => v > 0 && v < 0.1 ? (Math.round(v * 1000) / 1000).toLocaleString('es-AR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+  : (Math.round(v * 100) / 100).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); // menos de 1 mm: con un decimal más
+const fmtCmCorto = v => String(v > 0 && v < 0.1 ? Math.round(v * 100) / 100 : Math.round(v * 10) / 10).replace('.', ',');
 const CRC_T = (() => { const t = new Uint32Array(256); for(let n = 0; n < 256; n++){ let c = n; for(let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
 function crc32(b){ let c = 0xFFFFFFFF; for(let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
 /* el PNG lleva su resolución adentro (chunk pHYs): así Photoshop, Illustrator o Corel lo
@@ -2643,7 +2651,15 @@ function hexACmyk(hex){
   return [(1 - r - k) / (1 - k), (1 - g - k) / (1 - k), (1 - b - k) / (1 - k), k].map(v => Math.round(v * 1000) / 1000);
 }
 const rgbACmyk = (r, g, b) => hexACmyk('#' + [r, g, b].map(v => Math.round(v).toString(16).padStart(2, '0')).join(''));
-const nombrePantone = p => /^pantone/i.test(p) ? p.trim().replace(/^pantone\s*/i, 'PANTONE ') : 'PANTONE ' + p.trim();
+/* «485c», «485 C» y «pantone 485  c» son la misma tinta: salían como tintas directas distintas en el PDF */
+const nombrePantone = p => {
+  const cod = String(p || '').trim().replace(/^pantone\s*/i, '').replace(/\s+/g, ' '), m = cod.match(/^(\d{2,5})\s*([a-zA-Z]{1,3})$/);
+  return 'PANTONE ' + (m ? m[1] + ' ' + m[2].toUpperCase() : cod);
+};
+/* dos pinturas son la misma tinta si van a la misma plancha: la misma tinta directa o el mismo color. El nombre
+   que se le haya puesto al color no cuenta (un «Negro» y un «Un color #000000» son el mismo K 100; un «Azul»
+   #1E78DC y un #1E78DC sin nombre, también) */
+const claveTinta = P => !P ? null : P.spot ? 'spot:' + P.spot.toUpperCase() : 'cmyk:' + P.cmyk.map(v => Math.round(v * 100)).join(',');
 /* la tinta con la que sale un logo a un color; null = sus colores originales */
 function pinturaDe(L, negro){
   const t = L ? L.tinte : 'original';
@@ -2744,29 +2760,59 @@ function repintarForm(doc, ref, P, cs, resPadre, vistos){
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const SVG_DIBUJO = new Set(['svg', 'g', 'path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'defs', 'lineargradient', 'radialgradient',
   'stop', 'clippath', 'mask', 'use', 'symbol', 'title', 'desc', 'text', 'tspan', 'textpath', 'style', 'image', 'pattern', 'marker', 'switch']);
+// elementos de SVG que no dibujan nada: sacarlos no cambia el arte
+const SVG_SIN_DIBUJO = new Set(['script', 'metadata', 'animate', 'animatemotion', 'animatetransform', 'set', 'mpath', 'discard', 'view', 'cursor', 'handler', 'listener']);
+/* en CSS, una referencia hacia afuera del archivo: url(…), image-set(…), etc. que no apunten a «#algo» de adentro
+   ni a un dato incrustado (data:), y los @import. Las de adentro quedan tal cual, con o sin comillas: sacarlas
+   dejaba sin relleno a un logo con el degradé puesto como fill:url('#g') */
+const CSS_AFUERA = /(?:url|(?:-webkit-)?image-set|image|cross-fade|src)\(\s*(?!['"]?\s*(?:#|data:))[^)]*\)/gi;
+const cssAdentro = t => t.replace(/@import[^;]*;?/gi, '').replace(CSS_AFUERA, 'none');
+const cssSinEscapes = t => t.replace(/\\([0-9a-fA-F]{1,6})\s?/g, (m, h) => { const c = parseInt(h, 16); return c > 0 && c <= 0x10FFFF ? String.fromCodePoint(c) : ''; }).replace(/\\([^\n])/g, '$1');
+function cssLimpio(t){
+  const a = cssAdentro(t);
+  if(!t.includes('\\')) return a;
+  // con escapes («\75rl(», «@\69mport») se puede esconder una referencia: si al leerlos aparece una, va el texto leído y limpio
+  const leido = cssSinEscapes(t), b = cssAdentro(leido);
+  return b !== leido ? b : a;
+}
+/* devuelve { el, perdio }: el mismo árbol, limpio, y si hubo que sacar algo que SÍ dibujaba (HTML incrustado con
+   foreignObject, un elemento que no conocemos). En ese caso las curvas ya no son las del boceto: quien llama
+   vectoriza lo que se ve y avisa, en vez de mandar al taller un logo distinto diciendo «curvas originales» */
 function sanearSvg(raiz){
   const quitar = [];
+  let perdio = false;
   const mirar = el => {
+    const deImagen = /^(image|feimage)$/i.test(el.localName || '');
     for(const at of [...el.attributes]){
       const n = at.name.toLowerCase(), v = at.value.replace(/\s+/g, '');
-      const enlace = n === 'href' || n.endsWith(':href');
-      if(n.startsWith('on') || (enlace && !(v.startsWith('#') || /^data:image\/(png|jpe?g|gif|webp)[;,]/i.test(v))) || /javascript:|data:text\/html|vbscript:/i.test(v)) el.removeAttributeNode(at);
+      if(n.startsWith('on') || n === 'xml:base' || /javascript:|data:text\/html|vbscript:/i.test(v)) el.removeAttributeNode(at);
+      else if(n === 'href' || n.endsWith(':href')){
+        // adentro del archivo («#algo»), o una imagen incrustada (se carga como imagen: ahí nada se ejecuta)
+        if(!(v.startsWith('#') || (deImagen && /^data:image\//i.test(v)))) el.removeAttributeNode(at);
+      }
+      else if(at.value.includes('(')){ const limpio = cssLimpio(at.value); if(limpio !== at.value) at.value = limpio; } // fill, mask, style…: sin pedidos hacia afuera
     }
-    if(el.localName === 'style') el.textContent = el.textContent.replace(/@import[^;]*;?/gi, '').replace(/url\(\s*['"]?(?!#)[^)]*\)/gi, 'none');
+    if((el.localName || '').toLowerCase() === 'style') el.textContent = cssLimpio(el.textContent);
     for(const h of [...el.children]){
       const nombre = (h.localName || '').toLowerCase(), svg = h.namespaceURI === SVG_NS;
-      if(svg && nombre === 'a'){ // un dibujo envuelto en un enlace: queda el dibujo, sin el enlace
+      if(svg && nombre === 'a'){
+        /* un dibujo envuelto en un enlace: queda el dibujo, sin el enlace. El <a> hace también de grupo: lo que
+           lleva encima (transform, fill, class, style, opacity) pasa al grupo que lo reemplaza */
         const g = el.ownerDocument.createElementNS(SVG_NS, 'g');
+        for(const at of [...h.attributes]){
+          if(/^(?:xlink:)?(?:href|title|show|actuate|type|role|arcrole)$|^(?:target|download|ping|rel|hreflang|referrerpolicy)$/i.test(at.name)) continue;
+          try{ g.setAttributeNS(at.namespaceURI, at.name, at.value); }catch(e){}
+        }
         while(h.firstChild) g.appendChild(h.firstChild);
         h.replaceWith(g); mirar(g);
       }
-      else if(!svg || !(SVG_DIBUJO.has(nombre) || nombre === 'filter' || /^fe[a-z]/.test(nombre))) quitar.push(h);
-      else mirar(h);
+      else if(svg && (SVG_DIBUJO.has(nombre) || nombre === 'filter' || /^fe[a-z]/.test(nombre))) mirar(h);
+      else { quitar.push(h); if(svg && !SVG_SIN_DIBUJO.has(nombre)) perdio = true; } // de otro espacio de nombres (Inkscape, RDF) no dibuja nada
     }
   };
   mirar(raiz);
   quitar.forEach(h => h.remove());
-  return raiz;
+  return { el: raiz, perdio };
 }
 async function curvasDelOriginal(out, blob, tipo, L){
   const { PDFDocument } = window.PDFLib;
@@ -2774,7 +2820,8 @@ async function curvasDelOriginal(out, blob, tipo, L){
   if(tipo === 'svg'){
     const url = await window.__normalizeSvg(blob);
     const svgTxt = decodeURIComponent(url.slice(url.indexOf(',') + 1));
-    const el = sanearSvg(new DOMParser().parseFromString(svgTxt, 'image/svg+xml').documentElement);
+    const san = sanearSvg(new DOMParser().parseFromString(svgTxt, 'image/svg+xml').documentElement), el = san.el;
+    if(san.perdio) throw new Error('saneado'); // tenía algo que no es dibujo vectorial: se vectoriza lo que se ve, y se avisa
     const W = parseFloat(el.getAttribute('width')), H = parseFloat(el.getAttribute('height'));
     if(W !== L.fullW || H !== L.fullH) throw new Error('mapa');
     await ensureJsPdf();
@@ -3057,7 +3104,7 @@ async function revisarPaquete(){
       const La = logos[ia], Lb = logos[ib];
       if(!La || !Lb || !(f > 0.02)) return;
       const Pa = pinturaDe(La, r.negro), Pb = pinturaDe(Lb, r.negro);
-      if(!Pa || !Pb || Pa.nombre !== Pb.nombre) return;
+      if(!Pa || !Pb || claveTinta(Pa) !== claveTinta(Pb)) return;
       const na = (r.logos[ia] || {}).nom || La.nombre || 'un elemento', nb = (r.logos[ib] || {}).nom || Lb.nombre || 'otro';
       aviso('tapado-' + ia + '-' + ib, '"' + na + '" va encima de "' + nb + '" y los dos salen con la misma tinta (' + Pa.nombre + '): en el arte '
         + (f > 0.9 ? 'queda tapado, no se ve' : 'se pegan en una sola mancha donde se pisan') + ', aunque en el mockup se distingan. Para que se lea tiene que ir calado o con otra tinta: resolvelo en el boceteador o avisale al taller.');
@@ -4957,7 +5004,7 @@ window.__applyBoceto = res => {
 const $ = id => document.getElementById(id);
 const frame = $('frame'), photo = $('photo'), zoneEl = $('zone');
 const chip = $('measureChip');
-const fmtCm = n => n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtCm = n => n > 0 && n < 0.1 ? n.toLocaleString('es-AR',{minimumFractionDigits:3,maximumFractionDigits:3}) : n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); // una línea de 0,2 mm no es «0,02 cm»
 
 /* Estado en coordenadas normalizadas (0–1) relativas al frame */
 const state = {
@@ -5127,7 +5174,34 @@ function render(){
     l.img.style.opacity = l.opacity;
     l.el.classList.toggle('selected', i === state.sel);
     l.el.classList.toggle('chico', Math.min(l.w*FW, l.h*FH)*state.zoom < 44); // la × va por fuera: en una línea tapaba las dos manijas de la punta
+    l.el.classList.remove('xAbajo', 'xIzq', 'xMedio');
   });
+  /* …por fuera es arriba a la derecha. Si justo ahí está «Ocultar guías» (en el celular, con el elemento en la
+     franja de arriba del área) o más de la mitad queda fuera de la foto, se prueba arriba a la izquierda, a los
+     costados y, al final, abajo: si no, tocar la × escondía las guías en vez de quitar. (Abajo va último: ahí
+     suele estar la barra del elemento) */
+  const Lx = selLogo();
+  if(Lx && !frame.classList.contains('clean')){
+    const xEl = Lx.el.querySelector('.logoDelete'), w1 = $('frameWrap').getBoundingClientRect(), w2 = frame.getBoundingClientRect();
+    // lo que se ve de la foto (lo que sale de ahí queda recortado)
+    const wr = { left: Math.max(w1.left, w2.left), top: Math.max(w1.top, w2.top), right: Math.min(w1.right, w2.right), bottom: Math.min(w1.bottom, w2.bottom) };
+    const c = $('cleanToggle').hidden ? null : $('cleanToggle').getBoundingClientRect();
+    const libre = () => {
+      const x = xEl.getBoundingClientRect();
+      if(!x.width) return true;
+      if(c && x.left < c.right + 6 && x.right > c.left - 6 && x.top < c.bottom + 6 && x.bottom > c.top - 6) return false;
+      return x.top >= wr.top - x.height/2 && x.bottom <= wr.bottom + x.height/2 && x.left >= wr.left - x.width/2 && x.right <= wr.right + x.width/2;
+    };
+    // en uno chico va por fuera (arriba, al costado, abajo); en uno grande, sobre una esquina (pegado al borde de arriba de la foto, la de abajo)
+    const lugares = Lx.el.classList.contains('chico') ? [[], ['xIzq'], ['xMedio'], ['xMedio', 'xIzq'], ['xAbajo'], ['xAbajo', 'xIzq']] : [[], ['xIzq'], ['xAbajo'], ['xAbajo', 'xIzq']];
+    let hay = false;
+    for(const clases of lugares){
+      Lx.el.classList.remove('xAbajo', 'xIzq', 'xMedio');
+      if(clases.length) Lx.el.classList.add(...clases);
+      if(libre()){ hay = true; break; }
+    }
+    if(!hay) Lx.el.classList.remove('xAbajo', 'xIzq', 'xMedio'); // ningún lugar libre: donde iba
+  }
 
   const L = selLogo();
   if(L){
@@ -5163,8 +5237,8 @@ function render(){
       $('logoWcm').disabled = noScale;
       $('logoHcm').disabled = noScale;
       if(m){
-        if(document.activeElement !== $('logoWcm')) $('logoWcm').value = (m.w*unitK()).toFixed(2);
-        if(document.activeElement !== $('logoHcm')) $('logoHcm').value = (m.h*unitK()).toFixed(2);
+        if(document.activeElement !== $('logoWcm')) $('logoWcm').value = campoMedida(m.w*unitK());
+        if(document.activeElement !== $('logoHcm')) $('logoHcm').value = campoMedida(m.h*unitK());
       }
     } else { $('logoWcm').disabled = false; $('logoHcm').disabled = false; }
   } else { chip.hidden = true; $('logoReadout').hidden = true; }
@@ -5268,6 +5342,7 @@ function render(){
   sincronizarTecnica();
   syncPaso2();
   posLogoBar();
+  syncTintaAviso();
 }
 
 /* paso 2: si la medida y el área salieron solas y no hay nada que mirar, queda una línea de resumen;
@@ -5372,8 +5447,8 @@ function loadPhotoSrc(url, name, opts){
     if(opts.iaNote) $('photoIaNoteTxt').textContent = opts.iaNote;
     $('emptyState').hidden = true;
     frame.hidden = false;
-    $('photoThumb').innerHTML = `<img src="${url}" alt="">`;
-    $('photoTxt').innerHTML = `${photoName || 'Foto del producto'}<small>clic para cambiar la foto</small>`;
+    $('photoThumb').innerHTML = `<img src="${esc(url)}" alt="">`;
+    $('photoTxt').innerHTML = `${esc(photoName) || 'Foto del producto'}<small>clic para cambiar la foto</small>`; // el nombre del archivo, escapado
     state.zone = null;
     if(!opts.conservarLogos){ // al cambiar de foto por la técnica, los logos siguen (se reubican después)
       state.logos.forEach(l => l.el.remove());
@@ -7113,7 +7188,7 @@ $('lockAspectBtn').addEventListener('click', () => {
   const L = selLogo();
   if(state.lockAspect && L && L.cmW > 0){
     L.cmH = L.cmW / L.aspect;
-    $('logoHcm').value = (L.cmH*unitK()).toFixed(2);
+    $('logoHcm').value = campoMedida(L.cmH*unitK());
   }
   syncLockUI(); render();
 });
@@ -7124,17 +7199,20 @@ function setUnit(u){
   $('unitCm').setAttribute('aria-pressed', u === 'cm');
   $('unitMm').setAttribute('aria-pressed', u === 'mm');
   document.querySelectorAll('#logoCmFields .suffix').forEach(s => s.textContent = u);
-  [$('logoWcm'), $('logoHcm')].forEach(i => { i.min = u === 'mm' ? 1 : 0.1; i.max = u === 'mm' ? 2000 : 200; });
   syncLogoUI(); render();
 }
 $('unitCm').addEventListener('click', () => setUnit('cm'));
 $('unitMm').addEventListener('click', () => setUnit('mm'));
 
+/* los campos de medida son de texto y se leen con numCampo (coma o punto): un campo «numérico» depende del
+   idioma del navegador, y con Chrome en inglés «2,5» quedaba en 25 sin aviso */
+// lo que se muestra en el campo: dos decimales; menos de 0,1 (una línea fina), tres
+const campoMedida = v => +v.toFixed(v > 0 && v < 0.1 ? 3 : 2);
 /* en modo producto, tipear una medida redimensiona el logo seleccionado (exacto) */
 function applyTypedCm(axis){
   const k = cmPerPx(), L = selLogo();
   if(!k || !L) return;
-  const v = parseFloat(axis === 'w' ? $('logoWcm').value : $('logoHcm').value) / unitK();
+  const v = numCampo(axis === 'w' ? 'logoWcm' : 'logoHcm') / unitK();
   if(!(v > 0)) return;
   const {w:FW,h:FH} = frameRect();
   let wPx = axis === 'w' ? v/k : (v/k) * L.aspect;
@@ -7148,7 +7226,10 @@ function applyTypedCm(axis){
   /* sin mínimo de pantalla que lo deforme: antes el lado chico se estiraba a 8 px y una web en una lapicera
      quedaba con las letras estiradas y una medida falsa. Lo que se escribe es lo que mide (con zoom se ve) */
   const chico = Math.min(wPx, hPx);
-  if(chico < 0.5){ wPx *= 0.5/chico; hPx *= 0.5/chico; } // solo para que no llegue a cero
+  /* solo para que no llegue a cero. En una forma, cada lado por su cuenta: una línea de 8 cm × 0,2 mm sobre un
+     producto de 40 cm mide un tercio de píxel de alto, y agrandar los dos lados la dejaba de 19,6 cm × 0,5 mm */
+  if(L.tipo === 'forma'){ wPx = Math.max(wPx, 0.02); hPx = Math.max(hPx, 0.02); }
+  else if(chico < 0.5){ wPx *= 0.5/chico; hPx *= 0.5/chico; }
   const cx = L.x + L.w/2, cy = L.y + L.h/2;
   L.w = wPx/FW; L.h = hPx/FH;
   L.x = clamp(cx - L.w/2, 0, Math.max(0, 1 - L.w));
@@ -7173,10 +7254,10 @@ $('logoWcm').addEventListener('input', () => {
   const L = selLogo();
   if(state.mode === 'product'){ applyTypedCm('w'); return; }
   if(!L) return;
-  L.cmW = (parseFloat($('logoWcm').value) / unitK()) || 0;
+  L.cmW = (numCampo('logoWcm') / unitK()) || 0;
   if(((state.lockAspect && L.tipo !== 'forma') || sinDeformar(L)) && L.cmW > 0){
     L.cmH = L.cmW / L.aspect;
-    $('logoHcm').value = (L.cmH*unitK()).toFixed(2);
+    $('logoHcm').value = campoMedida(L.cmH*unitK());
   }
   fijarEscalaTexto(L);
   formaConMedida(L);
@@ -7186,10 +7267,10 @@ $('logoHcm').addEventListener('input', () => {
   const L = selLogo();
   if(state.mode === 'product'){ applyTypedCm('h'); return; }
   if(!L) return;
-  L.cmH = (parseFloat($('logoHcm').value) / unitK()) || 0;
+  L.cmH = (numCampo('logoHcm') / unitK()) || 0;
   if(((state.lockAspect && L.tipo !== 'forma') || sinDeformar(L)) && L.cmH > 0){
     L.cmW = L.cmH * L.aspect;
-    $('logoWcm').value = (L.cmW*unitK()).toFixed(2);
+    $('logoWcm').value = campoMedida(L.cmW*unitK());
   }
   fijarEscalaTexto(L);
   formaConMedida(L);
@@ -7264,7 +7345,7 @@ async function normalizeSvg(file){
 function loadLogo(file){
   if(esEps(file)){ alert(MSG_EPS); $('logoInput').value = ''; pendingAdd = false; return; }
   if(esVector(file)){
-    $('logoTxt').innerHTML = `Procesando ${file.name}…<small>convirtiendo el vector a imagen</small>`;
+    $('logoTxt').innerHTML = `Procesando ${esc(file.name)}…<small>convirtiendo el vector a imagen</small>`;
     rasterizeVectorFile(file)
       .then(data => loadLogoSrc(data, file.name, false, file))
       .catch(err => {
@@ -7351,6 +7432,19 @@ function placeInZone(logo, idx, adentro){
         logo.x = clamp(z.x + (z.w - lw)/2, 0, 1 - lw); logo.y = y;
         return;
       }
+    } else {
+      /* sin franja abajo ni arriba (un área ancha y baja, como la de una lapicera): al costado de lo que hay,
+         pegado, como se arma «ícono + número». Antes el número nacía encima del ícono */
+      const der = Math.max(...otros.map(o => o.x + o.w)), izq = Math.min(...otros.map(o => o.x)), sep = Math.min(0.012, z.w * 0.03);
+      const lado = [{ x0: Math.max(der + sep, z.x), x1: z.x + z.w, aLaDer: true }, { x0: z.x, x1: Math.min(izq - sep, z.x + z.w), aLaDer: false }]
+        .map(b => Object.assign(b, { wpx: (b.x1 - b.x0)*FW })).filter(b => b.wpx >= zw*0.15).sort((a, b) => b.wpx - a.wpx)[0];
+      if(lado && lado.wpx >= w*.35){
+        if(w > lado.wpx){ w = lado.wpx; h = w/logo.aspect; }
+        logo.w = w/FW; logo.h = h/FH; logo.rot = 0;
+        logo.x = lado.aLaDer ? lado.x0 : lado.x1 - logo.w;
+        logo.y = clamp(z.y + (z.h - logo.h)/2, z.y, Math.max(z.y, z.y + z.h - logo.h));
+        return;
+      }
     }
   }
   let [w, h] = nace();
@@ -7359,9 +7453,18 @@ function placeInZone(logo, idx, adentro){
   logo.w = w/FW; logo.h = h/FH;
   logo.x = clamp(z.x + (z.w - logo.w)/2 + off, 0, 1-logo.w);
   logo.y = clamp(z.y + (z.h - logo.h)/2 + off, 0, 1-logo.h);
-  if(adentro){ // nunca nace afuera del área (la cascada lo podía sacar)
-    logo.x = clamp(logo.x, z.x, Math.max(z.x, z.x + z.w - logo.w));
-    logo.y = clamp(logo.y, z.y, Math.max(z.y, z.y + z.h - logo.h));
+  if(adentro){
+    /* nunca nace afuera del área. Con el área ocupada, de varios lugares adentro va al que menos pisa a lo que
+       ya está (y nunca justo encima de otro: quedaba tapado y no se lo podía agarrar) */
+    const lx = Math.max(0, z.w - logo.w), ly = Math.max(0, z.h - logo.h);
+    let mejor = null;
+    for(const fy of [0.5, 0.12, 0.88]) for(const fx of [0.5, 0.12, 0.88, 0.3, 0.7, 0, 1]){
+      const x = z.x + lx*fx, y = z.y + ly*fy;
+      const pisa = otros.reduce((t, o) => t + Math.max(0, Math.min(x + logo.w, o.x + o.w) - Math.max(x, o.x)) * Math.max(0, Math.min(y + logo.h, o.y + o.h) - Math.max(y, o.y)), 0)
+        + (otros.some(o => Math.abs(o.x - x) < 0.004 && Math.abs(o.y - y) < 0.004) ? 1 : 0);
+      if(!mejor || pisa < mejor.pisa - 1e-9) mejor = { x, y, pisa };
+    }
+    logo.x = mejor.x; logo.y = mejor.y;
   }
   logo.rot = 0;
 }
@@ -7431,6 +7534,14 @@ function loadLogoSrc(url, name, isJpg, file, extra){
       logo.z = siguienteCapa(); // lo nuevo va arriba de todo
       makeLogoEl(logo);
       placeInZone(logo, state.logos.length, !!extra);
+      if(extra && (logo.tint === 'black' || logo.tint === 'white')){
+        const tono = o => o.tint === 'white' ? 'white' : (o.tint === 'black' || o.tint === 'engrave') ? 'black'
+          : o.tint === 'custom' && o.tintColor ? ((n => (0.2126 * (n >> 16 & 255) + 0.7152 * (n >> 8 & 255) + 0.0722 * (n & 255)) / 255 < 0.5)(parseInt(String(o.tintColor.hex || '').replace('#', '').slice(0, 6), 16) || 0) ? 'black' : 'white') : null;
+        const pisa = o => Math.max(0, Math.min(logo.x + logo.w, o.x + o.w) - Math.max(logo.x, o.x)) * Math.max(0, Math.min(logo.y + logo.h, o.y + o.h) - Math.max(logo.y, o.y)) / (logo.w * logo.h || 1);
+        // solo cuenta una forma llena (un texto o un aro tienen poca tinta: lo de arriba se ve igual)
+        const placa = state.logos.filter(o => o.tipo === 'forma' && o.gen && (o.gen.relleno !== false || o.lleno) && pisa(o) > 0.5).sort((a, b) => (b.z || 0) - (a.z || 0))[0];
+        if(placa && tono(placa) === logo.tint) logo.tint = logo.tint === 'black' ? 'white' : 'black';
+      }
       state.logos.push(logo);
       state.sel = state.logos.length - 1;
     } else {
@@ -7604,7 +7715,7 @@ function mostrarUndoFlota(){
   $('undoFlota').hidden = false;
   clearTimeout(undoFlotaT); undoFlotaT = setTimeout(ocultarUndoFlota, 8000);
 }
-$('undoFlotaBtn').addEventListener('click', () => { ocultarUndoFlota(); $('undoDeleteBtn').click(); });
+$('undoFlotaBtn').addEventListener('click', () => { ocultarUndoFlota(); $('undoDeleteBtn').click(); if(deletedLogos.length) mostrarUndoFlota(); });
 $('undoDeleteBtn').addEventListener('click', () => {
   const entry = deletedLogos.pop();
   if(!entry){ syncUndoUI(); return; }
@@ -7678,10 +7789,17 @@ function syncLogoUI(){
   const del = queEs(L).del;
   $('logoBar').setAttribute('aria-label', 'Herramientas ' + del);
   document.querySelector('#lbPopColor .lbPopTit').textContent = 'Color ' + del;
+  { // las ayudas que decían «el logo» con un texto, una forma o un ícono elegido
+    const el = queEs(L).el, lo = L && L.tipo === 'forma' ? 'la' : 'lo';
+    $('alignH').title = 'Centrar ' + el + ' horizontalmente en el área'; $('alignV').title = 'Centrar ' + el + ' verticalmente en el área';
+    document.querySelector('#tintSeg [data-tint="custom"]').title = 'Pintar ' + el + ' de un solo color a elección: HEX o Pantone';
+    state.logos.forEach(l => { const r = l.el && l.el.querySelector('.logoRotate'); if(r) r.title = 'Rotá ' + queEs(l).el; });
+  }
   $('lbColor').title = 'Color ' + del; $('lbOpac').title = 'Opacidad ' + del;
   $('logoOpacity').setAttribute('aria-label', 'Opacidad ' + del);
   const rot = document.querySelectorAll('#logoCmFields .label');
   rot[0].textContent = 'Ancho ' + del; rot[1].textContent = 'Alto ' + del;
+  $('logoWcm').setAttribute('aria-label', 'Ancho ' + del); $('logoHcm').setAttribute('aria-label', 'Alto ' + del);
   document.querySelector('#logoReadout .label').textContent = queEs(L).aplicado;
   $('addLogoBtn').textContent = state.logos.some(l => !esGenerado(l)) ? '＋ Otro logo o imagen' : '＋ Logo o imagen';
   state.logos.forEach(l => { // la × y la imagen de cada uno dicen qué son
@@ -7706,7 +7824,7 @@ function syncLogoUI(){
       $('logoTxt').textContent = L.name;
       const s = document.createElement('small'); s.textContent = L.tipo === 'icono' ? 'clic para cambiarlo' : L.tipo === 'forma' ? 'clic para editarla' : 'clic para editarlo';
       $('logoTxt').appendChild(s);
-    } else $('logoTxt').innerHTML = `${L.name}<small>clic para reemplazar este logo</small>`;
+    } else $('logoTxt').innerHTML = `${esc(L.name)}<small>clic para reemplazar este logo</small>`; // el nombre del archivo, escapado
     medirOpaco(L);
     const conFondo = !!(opacoDe.get(L) || {}).opaco && !quitarSpec(L); // trae fondo y todavía no se le quitó
     $('jpgNote').hidden = !conFondo; $('lbOpacoNote').hidden = !conFondo;
@@ -7730,8 +7848,8 @@ function syncLogoUI(){
     // grabado no lleva color específico: se oculta el selector de colores del paso 4
     document.getElementById('bcColoresField').hidden = (state.logos[0] || {}).tint === 'engrave';
     if(state.mode === 'logo'){ // sin pisar el campo donde se está escribiendo (al teclear 2.5 quedaba 52)
-      if(document.activeElement !== $('logoWcm')) $('logoWcm').value = L.cmW > 0 ? +(L.cmW*unitK()).toFixed(2) : '';
-      if(document.activeElement !== $('logoHcm')) $('logoHcm').value = L.cmH > 0 ? +(L.cmH*unitK()).toFixed(2) : '';
+      if(document.activeElement !== $('logoWcm')) $('logoWcm').value = L.cmW > 0 ? campoMedida(L.cmW*unitK()) : '';
+      if(document.activeElement !== $('logoHcm')) $('logoHcm').value = L.cmH > 0 ? campoMedida(L.cmH*unitK()) : '';
     }
   } else {
     $('tintCustom').hidden = true;
@@ -7801,6 +7919,7 @@ $('lbOpac').addEventListener('click', () => abrirPopBarra('opac'));
 window.__bocetoEsc = () => {
   if(!$('unirModal').hidden){ $('unirClose').click(); $('applyBtn').focus(); return true; } // la pregunta de cómo se imprimen: se cierra ella, no el editor
   if(cerrarIconos()) return true;
+  if(!$('cropModal').hidden){ $('cropClose').click(); return true; } // el recorte manual: se cierra él, no el editor
   const abierto = popAbierto();
   if(abierto){ cerrarPopsBarra(); $(POPS_BARRA[abierto][1]).focus(); return true; }
   if(state.drawMode){ exitDrawMode(); return true; }
@@ -8422,7 +8541,8 @@ function textoEnCurvas(m, g, unir){
   // el interletrado que quedaría después de la última letra no ocupa lugar
   const anchos = formas.map(f => f.length ? f.reduce((a, x) => a + x.ax, 0) + tr * (f.length - 1) : 0);
   const ancho = Math.max(0, ...anchos), salto = (g.interl || 1.2) * m.upem;
-  const glifos = [];
+  const glifos = [], memo = m.encimadoDe || (m.encimadoDe = new Map()); // por letra: no cambia con la posición
+  const encimado = (gid, cmds) => { if(!memo.has(gid)) memo.set(gid, contornoEncimado(cmds)); return memo.get(gid); };
   formas.forEach((f, i) => {
     let x = g.alin === 'left' ? 0 : g.alin === 'right' ? ancho - anchos[i] : (ancho - anchos[i]) / 2;
     const base = m.asc + i * salto; // línea de base del renglón, hacia abajo
@@ -8431,7 +8551,7 @@ function textoEnCurvas(m, g, unir){
         const ox = x + (gl.dx || 0), oy = base - (gl.dy || 0);
         const cmds = m.contorno(gl.gid).map(c => ({ type: c.type, values: c.values.map((v, j) => j % 2 ? (oy - v) * k : (ox + v) * k) }));
         const caja = cmds.length ? cajaCurvas(cmds) : null;
-        if(caja && caja.x2 > caja.x1 && caja.y2 > caja.y1) glifos.push({ d: pathDe(cmds), caja, encimado: contornoEncimado(cmds) });
+        if(caja && caja.x2 > caja.x1 && caja.y2 > caja.y1) glifos.push({ d: pathDe(cmds), caja, encimado: encimado(gl.gid, cmds) });
       }
       x += gl.ax + tr;
     });
@@ -8449,7 +8569,7 @@ function textoEnCurvas(m, g, unir){
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" data-exacto="1" viewBox="' + vb.join(' ') + '" width="' + vb[2] + '" height="' + vb[3] + '">'
     + '<title>' + esc('Texto en curvas: ' + recorteTexto(texto, 80) + ' · ' + etiquetaFuente(g)) + '</title>'
     + '<path fill="#000000" d="' + d + '"/></svg>';
-  return { svg, w: x2 - x1, h: y2 - y1, cap: m.cap * k, xAlto: m.xAlto * k, faltan, porUnir, unido: !!(unir && porUnir), ink: { x1, y1, x2, y2 }, vb };
+  return { svg, w: x2 - x1, h: y2 - y1, cap: m.cap * k, xAlto: m.xAlto * k, num: (m.num || m.cap) * k, faltan, porUnir, unido: !!(unir && porUnir), ink: { x1, y1, x2, y2 }, vb };
 }
 const pathDe = cmds => cmds.map(c => c.type + c.values.map(v => +v.toFixed(2)).join(' ')).join('');
 /* la caja de un dibujo con curvas, exacta: los puntos de control de una curva quedan afuera de la tinta y no
@@ -8532,21 +8652,38 @@ function contornoEncimado(cmds){
       const d3 = qx * (s[1] - t[1]) - qy * (s[0] - t[0]), d4 = qx * (s[3] - t[1]) - qy * (s[2] - t[0]);
       // se cruzan de lado a lado (tocarse en una punta no es encimarse)
       if(((d1 > 1e-7 && d2 < -1e-7) || (d1 < -1e-7 && d2 > 1e-7)) && ((d3 > 1e-7 && d4 < -1e-7) || (d3 < -1e-7 && d4 > 1e-7))) return true;
+      /* dos trazos distintos con un pedazo de borde en común (uno apoyado en el otro): para cortar son dos
+         piezas con un corte en el medio, así que también se unen */
+      if(s[4] !== t[4]){
+        const ls = Math.hypot(rx, ry) || 1;
+        if(Math.abs(d1) < 1e-6 * ls && Math.abs(d2) < 1e-6 * ls){
+          const u1 = ((t[0] - s[0]) * rx + (t[1] - s[1]) * ry) / (ls * ls), u2 = ((t[2] - s[0]) * rx + (t[3] - s[1]) * ry) / (ls * ls);
+          if((Math.min(1, Math.max(u1, u2)) - Math.max(0, Math.min(u1, u2))) * ls > 0.05) return true;
+        }
+      }
     }
   }
   if(polis.length < 2) return false;
-  /* sin cruces: cada trazo va al revés que el que lo contiene (lleno, hueco, lleno…). Si va en el mismo sentido,
-     son dos llenos encimados */
-  const giro = polis.map(p => Math.sign(areaFirmada(p)));
-  for(let i = 0; i < polis.length; i++){
-    const medio = [(polis[i][0][0] + polis[i][1][0]) / 2, (polis[i][0][1] + polis[i][1][1]) / 2];
-    let papa = -1, areaPapa = Infinity;
-    for(let j = 0; j < polis.length; j++){
-      if(j === i || !puntoAdentro(medio, polis[j])) continue;
-      const a = Math.abs(areaFirmada(polis[j]));
-      if(a < areaPapa){ areaPapa = a; papa = j; }
+  /* sin cruces de lado a lado igual puede haber dos llenos encimados (uno metido en el otro, o montado con los
+     bordes en la misma recta). Se mira un punto apenas adentro de cada tramo: en una letra bien armada, la
+     cantidad de vueltas que le da todo el dibujo es 0 (hueco) o 1 (lleno); 2 es tinta sobre tinta */
+  const vueltas = q => {
+    let w = 0;
+    for(const p of polis) for(let a = 0, n = p.length; a < n; a++){
+      const u = p[a], v = p[(a + 1) % n], lado = (v[0] - u[0]) * (q[1] - u[1]) - (q[0] - u[0]) * (v[1] - u[1]);
+      if(u[1] <= q[1]){ if(v[1] > q[1] && lado > 0) w++; }
+      else if(v[1] <= q[1] && lado < 0) w--;
     }
-    if(papa >= 0 && giro[papa] && giro[i] === giro[papa]) return true;
+    return w;
+  };
+  for(const p of polis){
+    const giro = Math.sign(areaFirmada(p)) || 1;
+    for(let a = 0, n = p.length; a < n; a++){
+      const u = p[a], v = p[(a + 1) % n], dx = v[0] - u[0], dy = v[1] - u[1], l = Math.hypot(dx, dy);
+      if(l < 0.3) continue;
+      // un pelo hacia adentro del trazo (a su izquierda si gira en positivo)
+      if(Math.abs(vueltas([(u[0] + v[0]) / 2 - dy / l * 0.03 * giro, (u[1] + v[1]) / 2 + dx / l * 0.03 * giro])) >= 2) return true;
+    }
   }
   return false;
 }
@@ -8575,8 +8712,9 @@ const FORMA_NUEVA = { forma: 'rect', relleno: true, grosorMm: 1, esquinas: 0, pu
 const formaDe = id => FORMAS.find(f => f[0] === id) || FORMAS[0];
 const conContorno = g => !g.relleno && g.forma !== 'linea';
 const mmTxt = v => String(+(+v).toFixed(1)).replace('.', ',') + ' mm';
-const nombreForma = g => formaDe(g.forma)[1] + (conContorno(g) ? ' · contorno de ' + mmTxt(g.grosorMm) : '');
-const archivoForma = g => ('Forma ' + formaDe(g.forma)[1] + (conContorno(g) ? ' - contorno ' + mmTxt(g.grosorMm) : ''))
+// (llena: se pidió con contorno, pero con ese grosor no queda hueco: el nombre y el archivo no dicen «contorno»)
+const nombreForma = (g, llena) => formaDe(g.forma)[1] + (!conContorno(g) ? '' : llena ? ' · llena (el contorno de ' + mmTxt(g.grosorMm) + ' no deja hueco)' : ' · contorno de ' + mmTxt(g.grosorMm));
+const archivoForma = (g, llena) => ('Forma ' + formaDe(g.forma)[1] + (!conContorno(g) ? '' : llena ? ' - llena' : ' - contorno ' + mmTxt(g.grosorMm)))
   .replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() + '.svg';
 const K_ARCO = 0.5522847498; // un cuarto de círculo con una curva
 const cmM = (x, y) => ({ type: 'M', values: [x, y] }), cmL = (x, y) => ({ type: 'L', values: [x, y] });
@@ -8652,20 +8790,31 @@ function bordeAdentro(pts, t){
   const n = pts.length, s = areaFirmada(pts) > 0 ? 1 : -1;
   const lados = pts.map((p, i) => {
     const q = pts[(i + 1) % n], l = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1, d = [(q[0] - p[0]) / l, (q[1] - p[1]) / l];
-    return { d, nn: [-d[1] * s, d[0] * s] };
+    return { d, l, nn: [-d[1] * s, d[0] * s] };
   });
-  const cruda = [];
+  const cruda = [], cuerda = []; // cuerda[i]: si el tramo que sale de cruda[i] es un pedacito de arco, su centro (el vértice); si es un lado corrido, null
   pts.forEach((p, i) => {
     const l1 = lados[(i - 1 + n) % n], l2 = lados[i];
     const cr = (l1.d[0] * l2.d[1] - l1.d[1] * l2.d[0]) * s, k = 1 + l1.d[0] * l2.d[0] + l1.d[1] * l2.d[1];
-    if(cr >= -1e-9 && k > 1e-6) cruda.push([p[0] + (l1.nn[0] + l2.nn[0]) * t / k, p[1] + (l1.nn[1] + l2.nn[1]) * t / k]); // saliente: en punta
+    if(cr >= -1e-9 && k > 1e-6){ // saliente: los dos lados corridos se cortan en punta
+      /* …salvo que la punta caiga más allá de donde termina uno de los dos lados (una punta aguda con un lado
+         corto: la estrella estirada, con un contorno grueso). Ahí ese lado no llega a aportar nada y el otro
+         sigue de largo hasta toparse con lo que venga (el arco de la entrante siguiente): van los dos lados
+         corridos enteros, y lo que sobra lo saca el recorte de abajo. Antes la paralela se cortaba en esa punta
+         y la cadena quedaba abierta: la forma salía llena aunque el hueco entraba */
+      const largo = t * cr / k; // de la punta de la paralela al vértice, medido sobre cada lado
+      if(largo > l1.l * (1 - 1e-9) || largo > l2.l * (1 - 1e-9)){
+        cruda.push([p[0] + l1.nn[0] * t, p[1] + l1.nn[1] * t], [p[0] + l2.nn[0] * t, p[1] + l2.nn[1] * t]); cuerda.push(null, null);
+      }
+      else { cruda.push([p[0] + (l1.nn[0] + l2.nn[0]) * t / k, p[1] + (l1.nn[1] + l2.nn[1]) * t / k]); cuerda.push(null); }
+    }
     else { // entrante (o media vuelta): un arco de radio t alrededor del vértice
       const a1 = Math.atan2(l1.nn[1], l1.nn[0]);
       let da = Math.atan2(l2.nn[1], l2.nn[0]) - a1;
       while(da > Math.PI) da -= 2 * Math.PI;
       while(da < -Math.PI) da += 2 * Math.PI;
       const pasos = Math.max(1, Math.ceil(Math.abs(da) / (Math.PI / 24)));
-      for(let j = 0; j <= pasos; j++){ const a = a1 + da * j / pasos; cruda.push([p[0] + Math.cos(a) * t, p[1] + Math.sin(a) * t]); }
+      for(let j = 0; j <= pasos; j++){ const a = a1 + da * j / pasos; cruda.push([p[0] + Math.cos(a) * t, p[1] + Math.sin(a) * t]); cuerda.push(j < pasos ? p : null); }
     }
   });
   // cada tramo de la paralela, cortado en sus cruces con los otros
@@ -8704,10 +8853,16 @@ function bordeAdentro(pts, t){
     for(let j = 0; j + 1 < ps.length; j++){
       const a = ps[j], b = ps[j + 1];
       if(Math.hypot(b[0] - a[0], b[1] - a[1]) < 1e-7) continue;
-      const mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], dm = dist(mid);
+      let mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+      /* un pedacito de arco es una cuerda: su medio queda un pelo adentro del arco de verdad. Se mira el punto
+         del arco (a t justo del vértice), no el de la cuerda: así la prueba es exacta también ahí */
+      const c = cuerda[i];
+      if(c){ const r = Math.hypot(mid[0] - c[0], mid[1] - c[1]) || 1; mid = [c[0] + (mid[0] - c[0]) * t / r, c[1] + (mid[1] - c[1]) * t / r]; }
+      const dm = dist(mid);
       /* de verdad a t del borde: ni más cerca (otro lado lo pisa) ni más lejos (un tramo que se metió para
-         adentro, más allá de donde termina su lado). El medio de un tramo de arco queda un pelo adentro */
-      if(puntoAdentro(mid, pts) && dm > t * 0.995 && dm < t * (1 + 1e-7) + 1e-7) tramos.push({ a, b, usado: false });
+         adentro, más allá de donde termina su lado). Sin margen: con el 0,5 % que había, pasaba el pedacito
+         que sobra más allá de una punta y la cadena se iba por ahí (la forma salía llena sin serlo) */
+      if(puntoAdentro(mid, pts) && dm > t * (1 - 1e-6) - 1e-7 && dm < t * (1 + 1e-7) + 1e-7) tramos.push({ a, b, usado: false });
     }
   }
   /* los tramos que quedaron, encadenados en contornos cerrados. Cada tramo sigue donde terminó el anterior; si
@@ -8825,13 +8980,15 @@ function formaEnCurvas(g){
   const asp = Math.max(0.001, Math.min(1000, g.aspecto || formaDe(g.forma)[2])); // una línea de 20 cm × 0,2 mm es 1000:1
   const W = asp >= 1 ? 1000 : 1000 * asp, H = W / asp; // el lado largo en 1000: una línea vertical no pide una imagen enorme
   const fuera = contornoForma(g, W, H);
-  let d = pathDe(fuera), lleno = false;
+  let d = pathDe(fuera), lleno = false, hueco = 0;
   if(conContorno(g)){
     const t = g.anchoMm > 0 ? (g.grosorMm || 1) / g.anchoMm * W : 0.04 * Math.min(W, H);
     const huecos = t < Math.min(W, H) / 2 ? huecoForma(g, W, H, t) : null;
     if(huecos){
       const sentido = areaFirmada(aplanar(fuera)); // el hueco va al revés que el de afuera: así queda vacío
       huecos.forEach(h => { d += pathDe(areaFirmada(aplanar(h)) * sentido > 0 ? invertirContorno(h) : h); });
+      // el lado más corto del hueco más grande: si es de décimas de milímetro, impreso se tapa
+      hueco = Math.max(...huecos.map(h => { const c = cajaCurvas(h); return Math.min(c.x2 - c.x1, c.y2 - c.y1); }));
     } else lleno = true;
   }
   const ink = cajaCurvas(fuera), aire = 0.01 * Math.max(W, H);
@@ -8839,7 +8996,7 @@ function formaEnCurvas(g){
   // data-exacto: la medida sale de esta geometría (ink), no de sondear los píxeles (ver normalizeSvg)
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" data-exacto="1" viewBox="' + vb.join(' ') + '" width="' + vb[2] + '" height="' + vb[3] + '">'
     + '<title>Forma en curvas: ' + nombreForma(g) + '</title><path fill="#000000" d="' + d + '"/></svg>';
-  return { svg, w: W, h: H, ink, vb, lleno };
+  return { svg, w: W, h: H, ink, vb, lleno, hueco };
 }
 /* dónde cae la tinta (ink, en unidades del SVG) dentro de la imagen de fullW × fullH que lo muestra entero (vb) */
 function recorteExacto(ink, vb, fullW, fullH){
@@ -8914,27 +9071,83 @@ const ICONOS_ES = {
   seguridad: 'shield', alarma: 'alarm-light', policia: 'police-badge', bombero: 'fire-truck',
   nandu: 'bird', pajaro: 'bird', ave: 'bird', gota: 'water', lluvia: 'weather-rainy', viento: 'weather-windy',
   boxeo: 'boxing', ciclismo: 'bike', pesca: 'fish',
+  // más rubros y cosas de todos los días (las que no daban nada en la tercera revisión)
+  escribania: 'file-sign', contrato: 'file-sign', firma: 'draw', lavadero: 'car-wash', remiseria: 'taxi', remis: 'taxi', flete: 'truck',
+  mudanza: 'truck', transporte: 'truck', logistica: 'truck-fast', camioneta: 'car-pickup', bondi: 'bus', corralon: 'wall', ladrillo: 'wall',
+  albanil: 'wall', cemento: 'wall', hormigon: 'wall', constructora: 'hard-hat', libreria: 'book', zapateria: 'shoe-formal', floreria: 'flower',
+  vivero: 'sprout', cerveceria: 'beer', birra: 'beer', vinoteca: 'bottle-wine', bodega: 'bottle-wine', fernet: 'glass-cocktail',
+  hamburgueseria: 'hamburger', rotiseria: 'food', choripan: 'sausage', seguro: 'shield-check', colegio: 'school', universidad: 'school',
+  facultad: 'school', kinesiologia: 'human-handsup', kinesiologo: 'human-handsup', nutricionista: 'food-apple', nutricion: 'food-apple',
+  tatuaje: 'needle', imprenta: 'printer', cerrajero: 'key', cerrajeria: 'key', arquitecto: 'floor-plan', arquitectura: 'floor-plan',
+  mineria: 'pickaxe', paddle: 'tennis', padel: 'tennis', celu: 'cellphone', sustentable: 'leaf', ecologico: 'leaf', aniversario: 'cake',
+  peso: 'currency-usd', enfermera: 'medical-bag', enfermero: 'medical-bag', doctora: 'doctor', muela: 'tooth', maquillaje: 'lipstick',
+  estetica: 'spa', una: 'hand-back-right', pareja: 'human-male-female', reunion: 'account-group', destornillador: 'screwdriver',
+  taladro: 'screwdriver', rodillo: 'format-paint', pintureria: 'format-paint', ferreteria: 'tools', enchufe: 'power-plug', foco: 'lightbulb',
+  calefaccion: 'radiator', estufa: 'radiator', heladera: 'fridge', lavarropas: 'washing-machine', canilla: 'faucet', gasista: 'fire',
+  joyeria: 'diamond-stone', laboratorio: 'flask', psicologa: 'brain', psicologo: 'brain', psicologia: 'brain', fotografia: 'camera',
+  fotografo: 'camera', ganaderia: 'cow', petroleo: 'oil', horario: 'clock', arbolito: 'pine-tree', pascua: 'egg-easter', premio: 'trophy',
+  ojo: 'eye', corte: 'content-cut', pelo: 'hair-dryer', secador: 'hair-dryer', grua: 'crane', aire: 'air-conditioner',
+  acondicionado: 'air-conditioner', codigo: 'barcode', barra: 'barcode', estacion: 'gas-station', servicio: 'gas-station', argentina: 'flag-variant',
 };
+/* frases hechas: ya sin conectores ni acentos, tal como quedan al buscarlas */
+const ICONOS_FRASES = { 'ano nuevo': 'firework', 'fin ano': 'firework', 'dia madre': 'flower', 'dia padre': 'tie', 'dia nino': 'human-child',
+  'san valentin': 'heart', 'primeros auxilios': 'medical-bag', 'redes sociales': 'share-variant', 'medio ambiente': 'leaf',
+  'recursos humanos': 'account-group', 'atencion cliente': 'headset', 'punto venta': 'store' };
+// marcas que sí están (para corregir un error de tipeo: «instagran»)
+const ICONOS_MARCAS = ['whatsapp', 'instagram', 'facebook', 'youtube', 'linkedin', 'twitter', 'telegram', 'spotify', 'pinterest'];
 /* palabras que no dicen nada para buscar («copa de vino» es «copa vino») */
 const ICONOS_NADA = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'y', 'e', 'o', 'con', 'para', 'en', 'un', 'una', 'al', 'por']);
 /* marcas que Material Design Icons no tiene: se dice, en vez de «no hay íconos» */
-const ICONOS_SIN_MARCA = { tiktok: 'TikTok', threads: 'Threads', mercadolibre: 'Mercado Libre', mercadopago: 'Mercado Pago' };
+const ICONOS_SIN_MARCA = { tiktok: 'TikTok', threads: 'Threads', mercadolibre: 'Mercado Libre', mercadopago: 'Mercado Pago', pedidosya: 'PedidosYa',
+  rappi: 'Rappi', uber: 'Uber', nike: 'Nike', adidas: 'Adidas', visa: 'Visa', mastercard: 'Mastercard', ypf: 'YPF', cocacola: 'Coca-Cola' };
 const sinAcentos = s => String(s || '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 /* lo que se le pregunta al buscador (que está en inglés), en orden, hasta que algo dé resultados: la frase
    entera traducida y, si tiene varias palabras, cada una por separado (la más larga primero). Los plurales se
    buscan por su singular («tijeras», «camiones») */
+const palabrasIcono = q => { // lo escrito, sin acentos ni conectores («copa de vino» es «copa vino»)
+  const ps = sinAcentos(q).split(/[^a-z0-9-]+/).filter(Boolean);
+  return ps.some(p => !ICONOS_NADA.has(p)) ? ps.filter(p => !ICONOS_NADA.has(p)) : ps;
+};
+const traduceIcono = p => ICONOS_ES[p] || (p.length > 4 && p.endsWith('es') && ICONOS_ES[p.slice(0, -2)]) || (p.length > 3 && p.endsWith('s') && ICONOS_ES[p.slice(0, -1)]) || null;
 function consultasIcono(q){
-  let ps = sinAcentos(q).split(/[^a-z0-9-]+/).filter(Boolean);
-  if(ps.some(p => !ICONOS_NADA.has(p))) ps = ps.filter(p => !ICONOS_NADA.has(p));
-  const trad = p => ICONOS_ES[p] || (p.length > 4 && p.endsWith('es') && ICONOS_ES[p.slice(0, -2)]) || (p.length > 3 && p.endsWith('s') && ICONOS_ES[p.slice(0, -1)]) || p;
-  const ts = [...new Set(ps.map(trad))];
+  const ps = palabrasIcono(q);
+  if(ICONOS_FRASES[ps.join(' ')]) return [ICONOS_FRASES[ps.join(' ')]];
+  const ts = [...new Set(ps.map(p => traduceIcono(p) || p))];
   const out = ts.length ? [ts.join(' ')] : [];
-  if(ts.length > 1) [...ts].sort((a, b) => b.length - a.length).forEach(t => { if(!out.includes(t)) out.push(t); });
+  /* palabra por palabra, solo con las que dicen algo: una suelta de menos de 4 letras que no está en el
+     diccionario («año» → «ano», «día» → «dia», «ya») traía cualquier cosa (piano, dial, yahoo) */
+  if(ts.length > 1) ps.map(p => traduceIcono(p) || (p.length >= 4 ? p : null)).filter(Boolean).sort((a, b) => b.length - a.length).forEach(t => { if(!out.includes(t)) out.push(t); });
   return out;
+}
+/* cuántas letras hay que tocar para pasar de una palabra a otra (cambiar, sacar, poner o dar vuelta dos) */
+function distLetras(a, b){
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for(let j = 1; j <= b.length; j++) d[0][j] = j;
+  for(let i = 1; i <= a.length; i++) for(let j = 1; j <= b.length; j++){
+    d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    if(i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+  }
+  return d[a.length][b.length];
+}
+/* un error de tipeo («telefno», «instagran», «estreya»): la palabra conocida más parecida. Devuelve
+   { consulta, dice } (qué buscar y cómo decirlo) o null. Solo se usa cuando lo escrito no dio nada */
+function correccionIcono(q){
+  const conocidas = [...Object.keys(ICONOS_ES), ...ICONOS_MARCAS];
+  let cambio = false;
+  const ps = palabrasIcono(q).map(p => {
+    if(traduceIcono(p) || ICONOS_MARCAS.includes(p) || p.length < 5) return p;
+    const tope = p.length >= 7 ? 2 : 1;
+    let mejor = null, dm = tope + 1;
+    for(const k of conocidas){ if(Math.abs(k.length - p.length) > tope) continue; const d = distLetras(p, k); if(d < dm){ dm = d; mejor = k; } }
+    if(mejor){ cambio = true; return mejor; }
+    return p;
+  });
+  return cambio ? { consulta: [...new Set(ps.map(p => traduceIcono(p) || p))].join(' '), dice: ps.join(' ') } : null;
 }
 const traducirBusqueda = q => consultasIcono(q)[0] || '';
 function sinIconosPara(q){
-  const marca = sinAcentos(q).split(/[^a-z0-9]+/).map(p => ICONOS_SIN_MARCA[p]).find(Boolean);
+  const ps = sinAcentos(q).split(/[^a-z0-9]+/).filter(Boolean); // «tik tok», «mercado libre» y «coca-cola» también
+  const marca = [...ps, ps.join(''), ...ps.slice(1).map((p, i) => ps[i] + p)].map(p => ICONOS_SIN_MARCA[p]).find(Boolean);
   return marca ? 'El logo de ' + marca + ' no está entre estos íconos: subilo con «＋ Logo o imagen».'
     : 'No hay íconos para «' + String(q).trim() + '». Probá con una palabra más general («comida» en vez de «milanesa») o en inglés. Si es el logo de una marca, subilo con «＋ Logo o imagen».';
 }
@@ -8942,15 +9155,17 @@ function sinIconosPara(q){
    cual (un «x:script» o un «SCRIPT» no lo son), sin eventos, enlaces, estilos ni caracteres escondidos */
 const ICONO_ETIQUETAS = new Set(['path', 'g', 'circle', 'rect', 'ellipse', 'line', 'polyline', 'polygon', 'defs', 'clipPath', 'mask']);
 const iconoSeguro = body => typeof body === 'string' && body.length < 20000
-  && !/<!|<\?|&#|\son[a-z]+\s*=|href|url\s*\(|javascript:|style\s*=/i.test(body)
+  && !/<!|<\?|&#|[\s\/"']on[a-z]+\s*=|href|url\s*\(|javascript:|style\s*=/i.test(body)
   && [...body.matchAll(/<\s*\/?\s*([^\s>\/]*)/g)].every(m => ICONO_ETIQUETAS.has(m[1]));
-const nombreIcono = g => 'Ícono «' + String(g.icono).split(':').pop() + '»';
-const archivoIcono = g => 'Icono ' + String(g.icono).split(':').pop() + ' (Material Design Icons).svg';
+// el nombre del ícono, solo con letras, números y guiones (en una plantilla tocada podía traer «../» o «<»)
+const idIcono = g => String((g && g.icono) || '').split(':').pop().replace(/[^a-z0-9-]/gi, '').slice(0, 60) || 'icono';
+const nombreIcono = g => 'Ícono «' + idIcono(g) + '»';
+const archivoIcono = g => 'Icono ' + idIcono(g) + ' (Material Design Icons).svg';
 /* el ícono en un SVG de un color (el negro se repinta con el color elegido, como un logo) */
 function iconoEnSvg(dato, g){
   const w = +dato.width > 0 ? +dato.width : 24, h = +dato.height > 0 ? +dato.height : 24; // números, o 24
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '">'
-    + '<title>Ícono en curvas: ' + String(g.icono).split(':').pop() + ' (Material Design Icons, Apache 2.0)</title>'
+    + '<title>Ícono en curvas: ' + idIcono(g) + ' (Material Design Icons, Apache 2.0)</title>'
     + '<g fill="#000000">' + String(dato.body).replace(/currentColor/g, '#000000') + '</g></svg>';
   return { svg, w, h };
 }
@@ -8966,7 +9181,7 @@ const QUE_ES = {
   icono: { del: 'del ícono', Este: 'Este ícono', el: 'el ícono', aplicado: 'Ícono aplicado', quitar: 'Quitar este ícono' },
 };
 /* cómo se lo nombra entre comillas: lo que dice el texto, el nombre del ícono o de la forma (sin repetir «Texto», «Ícono») */
-const apodo = l => l.tipo === 'texto' && l.gen ? recorteTexto(l.gen.texto, 28) : l.tipo === 'icono' && l.gen ? String(l.gen.icono).split(':').pop() : (l.name || '');
+const apodo = l => l.tipo === 'texto' && l.gen ? recorteTexto(l.gen.texto, 28) : l.tipo === 'icono' && l.gen ? idIcono(l.gen) : l.tipo === 'forma' && l.gen ? formaDe(l.gen.forma)[1] : (l.name || '');
 const queEs = l => (l && QUE_ES[l.tipo]) || { del: 'del logo', Este: 'Cambios en este logo', el: 'el logo', aplicado: 'Logo aplicado', quitar: 'Quitar este logo' };
 
 /* tipografías: cada una se baja una sola vez; las que sube el cliente quedan guardadas en el navegador
@@ -9020,10 +9235,12 @@ let hbP = null, hbN = 0;
 function cargarHarfbuzz(){
   if(!hbP) hbP = (async () => {
     const de = f => HARFBUZZ_URLS.map(u => u.replace('index.mjs', f));
-    const [idx, pega, wasm] = await Promise.all([bajar(de('index.mjs'), 12000), bajar(de('harfbuzz.js'), 12000), bajar(de('harfbuzz.wasm'), 20000)]);
     const A = 'import createHarfBuzz from "./harfbuzz.js";', B = 'init(await createHarfBuzz());';
-    const fuente = new TextDecoder().decode(idx);
-    if(!fuente.includes(A) || !fuente.includes(B)) throw new Error('cdn');
+    // cada archivo se mira al bajar: si un CDN manda otra cosa o el archivo a medias, se le pide al otro
+    const texto = que => buf => { const t = new TextDecoder().decode(buf); if(!que.every(q => t.includes(q))) throw new Error('raro'); return t; };
+    const esWasm = buf => { if(!WebAssembly.validate(buf)) throw new Error('raro'); return buf; };
+    const [fuente, pega, wasm] = await Promise.all([bajar(de('index.mjs'), 12000, 3000, texto([A, B])),
+      bajar(de('harfbuzz.js'), 12000, 3000, texto(['createHarfBuzz'])), bajar(de('harfbuzz.wasm'), 20000, 3000, esWasm)]);
     const clave = '__fxHb' + (++hbN);
     const uPega = URL.createObjectURL(new Blob([pega], { type: 'text/javascript' }));
     const uIdx = URL.createObjectURL(new Blob([fuente
@@ -9050,17 +9267,30 @@ let paperListo = false;
 function unirContornos(ds){
   const P = window.paper;
   if(!paperListo){ P.setup(new P.Size(1, 1)); paperListo = true; }
-  let u = null;
-  for(const d of ds){
-    const p = new P.CompoundPath({ pathData: d, insert: false });
-    p.fillRule = 'nonzero';
-    u = u ? u.unite(p, { insert: false }) : p.unite(new P.Path({ insert: false }), { insert: false });
+  let ps = ds.map(d => { const p = new P.CompoundPath({ pathData: d, insert: false }); p.fillRule = 'nonzero'; return p; });
+  if(!ps.length) return '';
+  /* de a pares, cada letra con su vecina, y después los pares entre sí. Una atrás de otra (lo unido hasta ahí
+     con la letra siguiente) cada unión repasaba todo lo anterior: un texto manuscrito de 150 letras trababa la
+     pantalla medio segundo por tecla, y uno de 400 tardaba dos minutos */
+  if(ps.length === 1) ps = [ps[0].unite(new P.Path({ insert: false }), { insert: false })]; // una sola letra que se pisa a sí misma
+  while(ps.length > 1){
+    const sig = [];
+    for(let k = 0; k < ps.length; k += 2) sig.push(k + 1 < ps.length ? ps[k].unite(ps[k + 1], { insert: false }) : ps[k]);
+    ps = sig;
   }
-  return u ? u.getPathData(null, 2) : ds.join('');
+  return ps[0].getPathData(null, 2);
 }
 /* HarfBuzz lee .ttf y .otf; un .woff (el de fontsource, o el que suba el cliente) se descomprime antes, tabla
    por tabla (cada una viene comprimida con zlib). Un .woff2 no: lo avisa quien lo pide */
 const firmaDe = buf => { const d = new DataView(buf); return buf.byteLength < 4 ? '' : String.fromCharCode(d.getUint8(0), d.getUint8(1), d.getUint8(2), d.getUint8(3)); };
+/* ¿lo que bajó es una tipografía entera? Un CDN puede contestar «200» con otra cosa (el portal de un wifi, un
+   filtro de la empresa) o con el archivo a medias: eso cuenta como que ese CDN falló, y se le pide al otro */
+const esFuente = buf => {
+  const f = firmaDe(buf);
+  if(!(['wOFF', 'OTTO', 'true', 'ttcf'].includes(f) || f === String.fromCharCode(0, 1, 0, 0))) throw new Error('raro');
+  if(f === 'wOFF' && new DataView(buf).getUint32(8) !== buf.byteLength) throw new Error('cortado'); // el .woff dice cuánto mide
+  return buf;
+};
 async function woffASfnt(buf){
   if(firmaDe(buf) !== 'wOFF') return buf;
   const d = new DataView(buf), n = d.getUint16(12), tablas = [];
@@ -9108,6 +9338,7 @@ async function crearMotor(buf, peso){
     // el alto medido en el dibujo de la H y de la x (el dato que trae la tipografía a veces no coincide)
     cap: arriba(72) || font.getMetricPositionWithFallback(hb.MetricsTag.CAP_HEIGHT) || face.upem * 0.7,
     xAlto: arriba(120) || font.getMetricPositionWithFallback(hb.MetricsTag.X_HEIGHT) || face.upem * 0.5,
+    num: Math.max(arriba(48), arriba(49), arriba(55), arriba(56)), // el 0, el 1, el 7 y el 8: en Pacifico miden dos tercios de una mayúscula
     forma(linea, sinLigaduras){
       const b = new hb.Buffer();
       b.addText(linea); b.guessSegmentProperties();
@@ -9169,7 +9400,7 @@ async function cargarMotor(g){
     return motores.get(clave);
   }
   const f = fuenteDe(g.fuente) || FUENTES[0], peso = pesoCercano(f[3], g.peso || 400), clave = claveFuente(g);
-  if(!fuentesP.has(clave)) fuentesP.set(clave, bajar(urlsFuente(f[0], peso))
+  if(!fuentesP.has(clave)) fuentesP.set(clave, bajar(urlsFuente(f[0], peso), 10000, 3000, esFuente)
     .then(buf => crearMotor(buf))
     .then(m => { fuentesListas.add(clave); return m; })
     .catch(e => { fuentesP.delete(clave); throw e; }));
@@ -9178,13 +9409,15 @@ async function cargarMotor(g){
 /* el SVG en curvas y la imagen que se ve (normalizada igual que un SVG subido: así el paquete del taller
    ubica las curvas exactamente donde están en el boceto). Si hay letras que se tocan, se baja paper.js y se
    unen; si no se puede (sin conexión), van tal cual y el paquete lo avisa */
+let paperSinSuerte = 0;
 async function generarTexto(g, esperarUnion){
   const m = await cargarMotor(g);
   let r = textoEnCurvas(m, g, null);
   if(!r) return null;
   if(r.porUnir){
     if(!window.paper){
-      if(esperarUnion){ try{ await conTiempo(cargarPaper(), 12000); }catch(e){} }
+      // (si ya se lo esperó hace un momento y no llegó, no se lo vuelve a esperar: «Aplicar» tardaba 24 s en vez de 12)
+      if(esperarUnion && Date.now() - paperSinSuerte > 60000){ try{ await conTiempo(cargarPaper(), 10000); }catch(e){ paperSinSuerte = Date.now(); } }
       else cargarPaper().catch(() => {}); // llega después: el texto se ve ya, sin unir, y se rehace solo
     }
     if(window.paper){
@@ -9193,7 +9426,7 @@ async function generarTexto(g, esperarUnion){
     }
   }
   const url = await normalizeSvg(new File([r.svg], archivoTexto(g), { type: 'image/svg+xml' }));
-  return { url, svg: r.svg, box: { w: r.w, h: r.h }, ink: r.ink, vb: r.vb, cap: r.cap, xAlto: r.xAlto, faltan: r.faltan, encimados: !!(r.porUnir && !r.unido) };
+  return { url, svg: r.svg, box: { w: r.w, h: r.h }, ink: r.ink, vb: r.vb, cap: r.cap, xAlto: r.xAlto, num: r.num, faltan: r.faltan, encimados: !!(r.porUnir && !r.unido) };
 }
 alLlegarPaper = ok => {
   if(ok) state.logos.forEach(l => { if(l.tipo === 'texto' && l.encimados) regenerar(l); });
@@ -9226,7 +9459,7 @@ async function agregarTexto(){
     /* entra siempre como elemento nuevo, sin tocar pendingAdd: si mientras bajaba la tipografía se pidió un
        logo con «＋ Otro logo», ese logo también se agrega (no reemplaza al texto) */
     loadLogoSrc(r.url, nombreTexto(g), false, null, {
-      tipo: 'texto', gen: g, genOk: { ...g }, genSvg: r.svg, genBox: r.box, genCap: r.cap, genX: r.xAlto, faltan: r.faltan, encimados: r.encimados, tint: tinteParaTexto(),
+      tipo: 'texto', gen: g, genOk: { ...g }, genSvg: r.svg, genBox: r.box, genCap: r.cap, genX: r.xAlto, genNum: r.num, faltan: r.faltan, encimados: r.encimados, tint: tinteParaTexto(),
       ink: r.ink, vb: r.vb,
       listo: L => { fijarEscalaTexto(L); abrirPopBarra('texto', true); $('txtTexto').select(); },
     });
@@ -9307,9 +9540,10 @@ async function ponerTexto(L, g, r){
   if(!L.genEsc) L.genEsc = esc;
   if(cmEsc && !L.genCmEsc) L.genCmEsc = cmEsc;
   const cx = L.x + L.w/2, cy = L.y + L.h/2, z = state.zone, eps = 0.004;
+  const antes = { x: L.x, y: L.y, w: L.w, h: L.h };
   const enArea = !!z && L.x >= z.x - eps && L.y >= z.y - eps && L.x + L.w <= z.x + z.w + eps && L.y + L.h <= z.y + z.h + eps;
   Object.assign(L, { src: r.url, crop, useTrim: true, fullW: probe.naturalWidth, fullH: probe.naturalHeight, aspect,
-    genOk: g, genSvg: r.svg, genBox: r.box, genCap: r.cap, genX: r.xAlto, faltan: r.faltan, encimados: r.encimados, name: nombreTexto(g) });
+    genOk: g, genSvg: r.svg, genBox: r.box, genCap: r.cap, genX: r.xAlto, genNum: r.num, faltan: r.faltan, encimados: r.encimados, name: nombreTexto(g) });
   const w0 = esc ? esc * r.box.w * FW : L.w*FW;
   let w = w0, h = w / aspect;
   /* si con esa letra no entra en el área de impresión (o en la foto), se achica hasta entrar */
@@ -9323,6 +9557,17 @@ async function ponerTexto(L, g, r){
     L.x = clamp(L.x, z.x, Math.max(z.x, z.x + z.w - L.w));
     L.y = clamp(L.y, z.y, Math.max(z.y, z.y + z.h - L.h));
   }
+  /* si al crecer desde el centro pasa a pisar a un vecino que antes no pisaba (el ícono que tiene al lado, en una
+     lapicera), crece para el otro lado: queda apoyado donde estaba, y si así no entra se achica hasta entrar */
+  const pisa = (a, b) => a.x < b.x + b.w - eps && a.x + a.w > b.x + eps && a.y < b.y + b.h - eps && a.y + a.h > b.y + eps;
+  // (un vecino de costado: ya compartían la altura. Si lo pisa por abajo, porque se agregó un renglón, no se corre)
+  const vecino = state.logos.find(o => o !== L && !(o.rot || 0) && !pisa(antes, o) && pisa(L, o) && antes.y < o.y + o.h - eps && antes.y + antes.h > o.y + eps);
+  if(vecino && !(L.rot || 0)){
+    const aLaIzq = vecino.x + vecino.w/2 < antes.x + antes.w/2;
+    const libre = aLaIzq ? (z && enArea ? z.x + z.w : 1) - antes.x : antes.x + antes.w - (z && enArea ? z.x : 0);
+    if(L.w > libre && libre > 0){ const k2 = libre / L.w; L.w *= k2; L.h *= k2; w *= k2; L.y = clamp(cy - L.h/2, 0, Math.max(0, 1 - L.h)); }
+    L.x = aLaIzq ? antes.x : antes.x + antes.w - L.w;
+  }
   if(cmEsc){ L.cmW = cmEsc * r.box.w * (w / w0); L.cmH = L.cmW / aspect; } // con la medida exacta, la medida acompaña
   await new Promise(res => rebuildLogo(L, res));
   syncLogoUI(); setStepStates(); render();
@@ -9331,14 +9576,14 @@ async function ponerTexto(L, g, r){
    Si no se puede guardar, el texto queda sin original: el paquete vectoriza lo que se ve, nunca un texto viejo */
 async function asegurarOriginal(L){
   if(!esGenerado(L) || !L.genSvg || (L.origId && L.origDe === L.genSvg)) return;
-  const g = L.genOk || L.gen, nombre = L.tipo === 'forma' ? archivoForma(g) : L.tipo === 'icono' ? archivoIcono(g) : archivoTexto(g);
+  const g = L.genOk || L.gen, nombre = L.tipo === 'forma' ? archivoForma(g, L.lleno) : L.tipo === 'icono' ? archivoIcono(g) : archivoTexto(g);
   const r = await registrarArchivo(new File([L.genSvg], nombre, { type: 'image/svg+xml' }));
   if(r){ L.origId = r.id; L.origInfo = r.info; L.origDe = L.genSvg; }
   else{ L.origId = null; L.origInfo = null; L.origDe = null; }
 }
 /* un archivo puesto en lugar de un texto: deja de ser texto */
 function sacarTexto(L){
-  ['tipo', 'gen', 'genOk', 'genSvg', 'genBox', 'genCap', 'genX', 'genEsc', 'genCmEsc', 'faltan', 'encimados', 'origDe', 'txtAviso', 'txtFallo'].forEach(k => { delete L[k]; });
+  ['tipo', 'gen', 'genOk', 'genSvg', 'genBox', 'genCap', 'genX', 'genNum', 'genEsc', 'genCmEsc', 'faltan', 'encimados', 'origDe', 'txtAviso', 'txtFallo'].forEach(k => { delete L[k]; });
 }
 /* el alto de la letra (lo que importa para saber si la técnica la imprime), medido en el dibujo de la tipografía:
    el de las mayúsculas si el texto tiene alguna; si es todo en minúsculas, el de la x (en una manuscrita, la
@@ -9349,7 +9594,7 @@ function alturaLetra(L){
   if(!(m && m.w > 0)) return null;
   /* un teléfono o un «2025» son todo números: miden como las mayúsculas, no como la x */
   const mayus = /\p{Lu}/u.test(L.gen.texto), numeros = !mayus && /\p{Nd}/u.test(L.gen.texto), altas = mayus || numeros || !L.genX;
-  return { cm: (altas ? L.genCap : L.genX) * m.w / L.genBox.w, que: numeros ? 'números' : altas ? 'mayúsculas' : 'minúsculas' };
+  return { cm: (numeros ? (L.genNum || L.genCap) : altas ? L.genCap : L.genX) * m.w / L.genBox.w, que: numeros ? 'números' : altas ? 'mayúsculas' : 'minúsculas' };
 }
 const fmtMm = cm => (cm*10).toLocaleString('es-AR', { maximumFractionDigits: cm < 1 ? 1 : 0 }) + ' mm'; // menos de 1 cm, con un decimal (como en el paquete)
 function textoAltura(L){
@@ -9458,7 +9703,8 @@ function syncTextoPop(){
   if(!L) return;
   const g = L.gen;
   if(document.activeElement !== $('txtTexto')) $('txtTexto').value = g.texto;
-  $('txtFuenteNom').textContent = etiquetaFuente(g) + ((L.txtP || L.txtTimer) && !fuenteBajada(g) ? ' · ⏳ bajando…' : '');
+  $('txtFuenteNom').textContent = etiquetaFuente(g) + (esFuenteCliente(g.fuente) ? ' (del cliente)' : '') // una «Montserrat» del cliente no es la de la lista
+    + ((L.txtP || L.txtTimer) && !fuenteBajada(g) ? ' · ⏳ bajando…' : '');
   pintarFuentes(L); pintarPesos(L);
   const varias = String(g.texto).trim().includes('\n');
   $('txtAlinFila').hidden = !varias; $('txtInterlFila').hidden = !varias;
@@ -9549,7 +9795,7 @@ function editarElemento(L){
 async function generarForma(g){
   const r = formaEnCurvas(g);
   const url = await normalizeSvg(new File([r.svg], archivoForma(g), { type: 'image/svg+xml' }));
-  return { url, svg: r.svg, box: { w: r.w, h: r.h }, ink: r.ink, vb: r.vb, lleno: r.lleno };
+  return { url, svg: r.svg, box: { w: r.w, h: r.h }, ink: r.ink, vb: r.vb, lleno: r.lleno, huecoMm: g.anchoMm > 0 && r.hueco > 0 ? r.hueco / r.w * g.anchoMm : 0 };
 }
 /* una forma o un ícono, rehecho: la forma conserva su caja (se armó con esa proporción); un ícono nuevo
    conserva el alto (y entra en el área) */
@@ -9562,7 +9808,7 @@ async function ponerFigura(L, g, r){
   const {w:FW, h:FH} = frameRect();
   const cx = L.x + L.w/2, cy = L.y + L.h/2;
   Object.assign(L, { src: r.url, crop, useTrim: true, fullW: probe.naturalWidth, fullH: probe.naturalHeight, aspect,
-    genOk: g, genSvg: r.svg, genBox: r.box, lleno: !!r.lleno, name: L.tipo === 'forma' ? nombreForma(g) : nombreIcono(g) });
+    genOk: g, genSvg: r.svg, genBox: r.box, lleno: !!r.lleno, huecoMm: r.huecoMm || 0, name: L.tipo === 'forma' ? nombreForma(g, r.lleno) : nombreIcono(g) });
   if(L.tipo === 'icono'){
     let h = L.h*FH, w = h*aspect;
     const z = state.zone, maxW = z ? z.w*FW : FW;
@@ -9647,6 +9893,7 @@ function syncFormaPop(){
   $('formaPuntasFila').hidden = g.forma !== 'estrella';
   $('formaPuntas').value = g.puntas || 5; $('formaPuntasVal').textContent = g.puntas || 5;
   $('formaNota').textContent = (conContorno(g) && L.lleno ? 'Con ' + mmTxt(g.grosorMm) + ' de contorno no queda hueco: la forma va llena. Achicá el grosor o agrandá la forma. ' : '')
+    + (conContorno(g) && !L.lleno && L.huecoMm > 0 && L.huecoMm < 0.6 ? 'El hueco queda de ' + mmTxt(+L.huecoMm.toFixed(1) || 0.1) + ': impreso se tapa. Achicá el grosor o dejala llena. ' : '')
     + (conContorno(g) && !(g.anchoMm > 0) ? 'Todavía sin medida: el grosor del contorno es aproximado. ' : '')
     + (g.forma === 'linea' ? 'El grosor de la línea es su alto: escribilo en el panel (o estirala desde una esquina).'
       : 'Para cambiar el ancho y el alto, estirala desde una esquina o escribí la medida en el panel.');
@@ -9710,6 +9957,7 @@ async function datosIconos(nombres){
   return nombres.map(n => iconosDatos.get(n) || null);
 }
 async function generarIcono(g){
+  if(!/^mdi:[a-z0-9-]+$/.test(String(g.icono))) throw new Error('icono');
   const [dato] = await datosIconos([g.icono]);
   if(!dato) throw new Error('icono');
   const r = iconoEnSvg(dato, g);
@@ -9761,8 +10009,18 @@ async function buscarIconos(q){
       ns = (d.icons || []).filter(x => /^mdi:[a-z0-9-]+$/.test(x)).sort((a, b) => /-outline$/.test(a) - /-outline$/.test(b));
       if(ns.length) break;
     }
+    let dice = '';
+    if(!ns.length){ // ¿un error de tipeo? Se busca la palabra conocida más parecida, y se dice
+      const c = correccionIcono(q);
+      if(c){
+        const d = await iconify('/search?query=' + encodeURIComponent(c.consulta) + '&prefixes=mdi&limit=96');
+        if(n !== iconoBusqN) return;
+        ns = (d.icons || []).filter(x => /^mdi:[a-z0-9-]+$/.test(x)).sort((a, b) => /-outline$/.test(a) - /-outline$/.test(b));
+        if(ns.length) dice = 'No hay íconos para «' + q.trim() + '»: estos son los de «' + c.dice + '».';
+      }
+    }
     grilla.removeAttribute('aria-busy');
-    pintarIconos(ns, ns.length ? '' : sinIconosPara(q));
+    pintarIconos(ns, ns.length ? dice : sinIconosPara(q));
   }catch(e){ if(n === iconoBusqN){ grilla.removeAttribute('aria-busy'); pintarIconos([], mensajeTexto(e)); } }
 }
 async function pintarIconos(nombres, aviso){
@@ -10147,7 +10405,7 @@ function resizeRect(s, corner, dxn, dyn, minW, minH){
 /* el logo siempre mantiene su proporción: nunca se deforma */
 /* el mínimo al achicar con las manijas: 8 px en el lado LARGO, parejo. Con un mínimo por lado (eran 20 px), un
    texto largo y bajito (una web de 3 cm en una lapicera) saltaba a 18 cm con solo tocar una manija */
-const LADO_MIN = 8;
+const LADO_MIN = 8, CORTO_MIN = 3; // …y 3 px en el corto: un texto largo no queda en medio píxel de alto
 function resizeLogo(a, cur, FW, FH){
   const s = a.start, L = a.logo;
   const sx = s.x*FW, sy = s.y*FH, sw = s.w*FW, sh = s.h*FH;
@@ -10172,6 +10430,7 @@ function resizeLogo(a, cur, FW, FH){
     let w = sw*k, h = esLinea ? sh : w/asp; // la línea rotada también: solo el largo
     const aspR = w / h;
     if(Math.max(w, h) < LADO_MIN){ const f = LADO_MIN / Math.max(w, h); w *= f; if(!esLinea) h *= f; }
+    if(!esLinea && Math.min(w, h) < CORTO_MIN){ const f = CORTO_MIN / Math.min(w, h); w *= f; h *= f; }
     if(w > FW){ w = FW; if(!esLinea) h = w/aspR; }
     if(h > FH){ h = FH; w = h*aspR; }
     L.x = clamp((cx-w/2)/FW, 0, Math.max(0, 1-w/FW));
@@ -10189,6 +10448,7 @@ function resizeLogo(a, cur, FW, FH){
   let w = Math.max((cur.x - anchor.x) * dirX, 1);
   let h = w / asp;
   if(Math.max(w, h) < LADO_MIN){ const f = LADO_MIN / Math.max(w, h); w *= f; h *= f; }
+  if(Math.min(w, h) < CORTO_MIN){ const f = CORTO_MIN / Math.min(w, h); w *= f; h *= f; }
   const maxW = dirX > 0 ? (FW - anchor.x) : anchor.x;
   const maxH = dirY > 0 ? (FH - anchor.y) : anchor.y;
   if(w > maxW){ w = maxW; h = w/asp; }
@@ -10392,20 +10652,31 @@ function solapes(){
   }
   return out;
 }
-/* la tinta con la que sale cada uno (como en el paquete: en láser todo lo de un color es el mismo «negro») */
-function tintaDe(l){
-  const laser = /l[aá]ser/i.test(tecnicaElegida() || '') && state.logos.every(x => x.tint && x.tint !== 'original');
-  if(!l.tint || l.tint === 'original') return null;
-  if(laser || l.tint === 'engrave' || l.tint === 'black') return 'negro';
-  if(l.tint === 'white') return 'blanco';
-  return l.tintColor ? ((l.tintColor.pant || '').trim().toLowerCase() || String(l.tintColor.hex).toLowerCase()) : null;
-}
+/* la tinta con la que sale cada uno, igual que la calcula el paquete (pinturaDe y claveTinta): en láser todo lo
+   de un color es el mismo «negro» */
+const todoLaser = () => /l[aá]ser/i.test(tecnicaElegida() || '') && state.logos.every(x => x.tint && x.tint !== 'original');
+const pinturaEd = l => (!l.tint || l.tint === 'original') ? null : pinturaDe({ tinte: l.tint, tinteColor: l.tintColor }, todoLaser());
+// «el texto «ACME»», «la forma «Rectángulo»», «logo.png»: sin comillas adentro de comillas
+const nombrar = l => esGenerado(l) ? queEs(l).el + ' «' + apodo(l) + '»' : '«' + (l.name || 'logo') + '»';
 function avisoMismaTinta(){
   for(const [a, b] of solapes()){
-    const A = state.logos[a], B = state.logos[b], t = tintaDe(A);
-    if(t && t === tintaDe(B)) return '«' + (A.name || 'un elemento') + '» va encima de «' + (B.name || 'otro') + '» y los dos salen con la misma tinta: impresos, no se distinguen (aunque acá se vean). Cambiale el color a uno de los dos, o avisale al taller que va calado.';
+    const A = state.logos[a], B = state.logos[b], P = pinturaEd(A);
+    if(!P || claveTinta(P) !== claveTinta(pinturaEd(B))) continue;
+    const quien = nombrar(A).replace(/^./, c => c.toUpperCase()) + ' va encima de ' + nombrar(B);
+    return todoLaser()
+      ? 'En grabado láser todo sale del mismo tono: ' + quien.replace(/^./, c => c.toLowerCase()) + ' y, grabados, no se van a distinguir (acá se ven por la sombra). Separalos o sacá uno; si la idea es que vaya calado, dejalo así y anotalo en las observaciones de la ficha.'
+      : quien + ' y los dos salen con la misma tinta (' + P.nombre + '): impresos no se distinguen, aunque acá se vean. Cambiale el color a uno, separalos, o si va calado dejalo así y anotalo en las observaciones de la ficha.';
   }
   return '';
+}
+/* el mismo aviso, antes de aplicar: junto a «Aplicar», un momento después de que las cosas se quedan quietas
+   (mirar qué se pisa cuesta dibujar cada elemento: no se hace en cada movimiento) */
+var tintaAvisoT = 0; // var: render() puede llamar a syncTintaAviso antes de que se llegue a esta línea
+function syncTintaAviso(){
+  clearTimeout(tintaAvisoT);
+  const poner = t => { $('tintaAviso').hidden = !t; $('tintaAviso').textContent = t ? '⚠ ' + t : ''; };
+  if(frame.hidden || state.logos.length < 2){ poner(''); return; }
+  tintaAvisoT = setTimeout(() => { if(!active && !frame.hidden) poner(avisoMismaTinta()); }, 400);
 }
 let unirCache = null;
 function abrirUnirModal(){
@@ -10594,7 +10865,7 @@ window.__bocetoSnapshot = () => {
       z: l.z || undefined,
       // un texto: lo que dice y con qué tipografía (para seguir editándolo) y sus curvas (para el taller)
       tipo: l.tipo || undefined, gen: esGenerado(l) && l.genOk ? { ...l.genOk } : undefined,
-      genSvg: l.genSvg || undefined, genBox: l.genBox ? { ...l.genBox } : undefined, genCap: l.genCap || undefined, genX: l.genX || undefined,
+      genSvg: l.genSvg || undefined, genBox: l.genBox ? { ...l.genBox } : undefined, genCap: l.genCap || undefined, genX: l.genX || undefined, genNum: l.genNum || undefined,
       encimados: l.encimados || undefined,
       genEsc: l.genEsc || undefined, genCmEsc: l.genCmEsc || undefined, // el tamaño de letra elegido
       faltan: (l.faltan && l.faltan.length) ? l.faltan.slice() : undefined,
@@ -10632,8 +10903,8 @@ window.__bocetoRestore = data => {
     $('emptyState').hidden = true;
     frame.hidden = false;
     photoName = data.photoName || '';
-    $('photoThumb').innerHTML = `<img src="${data.photoSrc}" alt="">`;
-    $('photoTxt').innerHTML = `${photoName || 'Foto del producto'}<small>clic para cambiar la foto</small>`;
+    $('photoThumb').innerHTML = `<img src="${esc(data.photoSrc)}" alt="">`; // viene de una plantilla: escapado
+    $('photoTxt').innerHTML = `${esc(photoName) || 'Foto del producto'}<small>clic para cambiar la foto</small>`;
     $('cleanToggle').hidden = false;
     frame.classList.remove('clean');
     $('cleanToggle').setAttribute('aria-pressed', 'false');

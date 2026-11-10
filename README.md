@@ -116,15 +116,21 @@ alto de un texto van siempre juntos (con o sin 🔗): las letras no se deforman.
   «texto en curvas armado en el boceteador». HarfBuzz (≈450 KB) se baja la primera
   vez que se agrega un texto, con `fetch` y el módulo armado desde la memoria: si la
   descarga se corta a mitad de camino, **el próximo «＋ Texto» anda sin recargar la
-  página** (importado directo de la URL, el navegador lo recordaba como roto).
+  página** (importado directo de la URL, el navegador lo recordaba como roto). Lo que
+  baja **se mira antes de darlo por bueno** (que sea una tipografía entera, un
+  WebAssembly válido): si un CDN contesta con otra cosa —el portal de un wifi, un
+  filtro de la empresa, el archivo a medias—, cuenta como que falló y se le pide al
+  otro.
 - **Letras que se tocan, en un solo contorno**: en las manuscritas las letras se
   enciman donde se unen, y hay letras cuyo dibujo se pisa a sí mismo: una Ç en dos
   piezas y, sobre todo, las **tipografías variables** (la del cliente suele serlo),
   donde la A son dos patas y un travesaño encimados (en Montserrat variable, 56 de
   82 letras). En pantalla y en PDF eso no se nota, pero el corte de vinilo o láser
   corta cada pieza y el bordado puntea dos veces lo encimado. Se detecta **tramo
-  contra tramo** (no por las cajas, que dejaban pasar el travesaño de la A) y esas
-  letras se unen en una sola figura con paper.js. **paper.js no frena al texto**: si
+  contra tramo** (no por las cajas, que dejaban pasar el travesaño de la A; también
+  dos trazos montados sin cruzarse, o apoyados por un borde) y esas letras se unen en
+  una sola figura con paper.js. Se mira una vez por letra y tipografía, no en cada
+  tecla. **paper.js no frena al texto**: si
   todavía no llegó, el texto se ve ya, sin unir, y se rehace solo cuando llega; al
   aplicar se lo espera unos segundos. Si no se pudo (sin conexión), el paquete avisa
   que hay que soldarlas antes de producir.
@@ -139,7 +145,8 @@ alto de un texto van siempre juntos (con o sin 🔗): las letras no se deforman.
   **alto de la letra** en mm (para saber si la técnica lo imprime): el de las
   mayúsculas si el texto tiene alguna; si es todo en minúsculas («www.marca.com.ar»),
   el de la x, que en una manuscrita es la mitad o menos; un teléfono o un «2026»
-  («Los números miden…») miden como las mayúsculas. Se mide en el dibujo de la
+  dicen **el alto de sus números** («Los números miden…»), medido en el 0, el 1, el 7
+  y el 8 (en Pacifico miden dos tercios de una mayúscula). Se mide en el dibujo de la
   tipografía (el dato que trae a veces no coincide) y va como dato en el paquete.
 - **«Tu texto» sin cambiar**: al aplicar, pregunta si va así (casi siempre es un
   olvido).
@@ -178,7 +185,10 @@ clic sobre ellos o con su botón en la barra («Forma» o «Ícono»).
   afuera (en una punta entrante, como entre dos puntas de una estrella, dobla con un
   arco): el grosor es el pedido en todo el recorrido, también en el corazón, la
   estrella gruesa o una forma muy estirada (medido en el PDF del taller: 2 mm ± 0,03).
-  Si con ese grosor **no queda hueco**, la forma va llena y el menú lo dice. El
+  En una estrella muy alta y gruesa el hueco puede quedar en dos o tres pedazos: es lo
+  que queda a más del grosor del borde. Si con ese grosor **no queda hueco**, la
+  forma va llena, el menú lo dice y el nombre y el archivo dicen «llena» (no
+  «contorno»); si el hueco queda de décimas de milímetro, avisa que impreso se tapa. El
   contorno **se rehace cuando cambia la medida** (se corrigió la escala del producto,
   se agrandó la forma): siempre mide lo que dice. **El ancho y el alto van sueltos**:
   se estira desde una esquina o se escribe la medida (un rectángulo de 10 × 2 cm, con
@@ -188,22 +198,30 @@ clic sobre ellos o con su botón en la barra («Forma» o «Ícono»).
   adentro** (el círculo se achica hasta entrar). La línea es siempre llena: su grosor es su
   alto, y **desde las puntas solo cambia de largo** (un pulso torpe no la engorda).
   La medida de textos y formas sale **de su geometría**, no de mirar los píxeles: una
-  línea de 0,5 mm mide 0,5 mm.
+  línea de 0,5 mm mide 0,5 mm, y una de 0,2 mm sobre un producto de 40 cm (un tercio
+  de píxel en pantalla) también: lo escrito es lo que mide, y las medidas de menos de
+  1 mm se muestran con un decimal más. Los campos de ancho y alto aceptan **coma o
+  punto** con el navegador en cualquier idioma.
 - **Íconos**: los de **Material Design Icons** (más de 7000, licencia Apache 2.0,
   libres para trabajos comerciales), con **categorías** (Básicos, Contacto y redes,
   Comida y bebida, Deportes, Naturaleza, Trabajo, Celebración, Salud, Transporte,
-  Flechas) y un **buscador en castellano**: unas 330 palabras de vendedor se
+  Flechas) y un **buscador en castellano**: unas 450 palabras de vendedor se
   traducen (el servicio está en inglés), con los rubros («peluquería», «abogado»,
-  «inmobiliaria», «farmacia», «parrilla»), los regalos empresariales («lapicera»,
-  «mochila», «paraguas») y los apodos («wsp», «e-mail»). Entiende **frases** («copa
-  de vino», «camión de reparto»: saca los conectores y, si la frase entera no da
-  nada, busca palabra por palabra) y **plurales** («tijeras»). Mientras busca dice
-  «Buscando…»; si no hay nada, sugiere una palabra más general, y si es una marca que
-  no está (TikTok) dice que se suba como logo. Una búsqueda que tarda **no pisa** a la
+  «inmobiliaria», «ferretería», «escribanía», «parrilla»), los regalos empresariales
+  («lapicera», «mochila», «paraguas») y los apodos («wsp», «celu», «birra»). Entiende
+  **frases** («copa de vino», «camión de reparto»: saca los conectores y, si la frase
+  entera no da nada, busca palabra por palabra, sin las sueltas de menos de 4 letras
+  que no conoce: «año» traía un piano), **frases hechas** («año nuevo», «día de la
+  madre»), **plurales** («tijeras») y **errores de tipeo** («telefno», «instagran»: si
+  lo escrito no da nada, muestra los de la palabra conocida más parecida y lo dice).
+  Mientras busca dice «Buscando…»; si no hay nada, sugiere una palabra más general, y
+  si es una marca que no está (TikTok, Mercado Libre, Visa) dice que se suba como
+  logo. Una búsqueda que tarda **no pisa** a la
   categoría que se eligió mientras tanto. Los llenos van primero: los de línea fina
   se pierden en una tampografía o un bordado chicos. «Ícono», en la barra, lo cambia
-  por otro con el mismo alto. Nace de un tercio del lado corto del área, y nunca de
-  menos de 28 px en pantalla (en el área de una lapicera no se podía ni agarrar). Los
+  por otro con el mismo alto. Nace de un tercio del lado corto del área, y no de menos
+  de 28 px en pantalla salvo que el área sea más baja que eso (ahí, del 80 % de su
+  alto). Los
   de marcas (WhatsApp, Instagram…) son de sus dueños: van sin cambiarles la forma,
   para indicar la cuenta. Se bajan del servicio de Iconify (con dos servidores de
   respaldo: si uno falla o lleva 2,5 s sin contestar, se le pide también al
@@ -213,23 +231,34 @@ clic sobre ellos o con su botón en la barra («Forma» o «Ícono»).
   buscador no cambia de lugar con cada búsqueda.
 
 **Dónde nacen**: un texto, una forma o un ícono nuevos nacen siempre **adentro del
-área de impresión**: en la franja libre (abajo o arriba de lo que ya está) o, con el
-área ocupada, en el medio, más chicos y corridos. (Un logo subido como archivo, con
-el área llena, sigue yendo abajo de los otros: se ve y se puede tocar.)
+área de impresión**: en la franja libre abajo o arriba de lo que ya está; si no hay
+(un área ancha y baja, como la de una lapicera), **al costado, pegados** (el ícono
+y, al lado, el número); y con el área ocupada, más chicos, en el lugar donde menos
+pisan a lo que hay, nunca justo encima de otro. Lo que nace sobre una placa llena
+del mismo tono va con el otro (un ícono negro sobre una placa negra no se veía). (Un
+logo subido como archivo, con el área llena, sigue yendo abajo de los otros: se ve y
+se puede tocar.)
 
 **Capas y tintas**: con varios elementos encimados, «Traer adelante / Enviar atrás»
 decide cuál va arriba, y **el PDF en curvas del taller los pinta en ese orden**
 (igual que el PNG y el mockup). Si dos elementos se pisan (tinta sobre tinta, medido
 en píxeles) y salen **con la misma tinta** —en láser, una placa y el texto encima—,
-impresos son una sola mancha aunque en el boceto se distingan: lo avisa la pregunta
-«¿Cómo se imprimen?» y lo pide tildar la revisión del paquete.
+impresos son una sola mancha aunque en el boceto se distingan: se avisa **junto a
+«Aplicar»** apenas pasa, arriba de los botones de «¿Cómo se imprimen?», y lo pide
+tildar la revisión del paquete. En láser el aviso no dice «cambiale el color» (todo
+sale del mismo tono): dice de separarlos o de anotar que va calado. El editor y el
+paquete comparan **la tinta, no el nombre del color** (`claveTinta`): la misma tinta
+directa o el mismo color. Un «Negro» y un «Un color #000000» son el mismo K 100; un
+Pantone escrito «485 C» o «485c» es la misma tinta directa.
 
 **A la vista**: el aviso de «se sale del área» (o «no entra») también va **junto a
 «Aplicar»**, y al aplicar así pregunta antes. En un elemento chico (una línea, un
-ícono), la × va por fuera para no tapar las manijas. Al quitar algo, el «Deshacer»
+ícono), la × va por fuera para no tapar las manijas (arriba a la derecha; si ahí
+está «Ocultar guías» o se sale de la foto, abajo). Al quitar algo, el «Deshacer»
 aparece unos segundos **sobre la foto** (en el celular, abajo de la pantalla), además
-del del paso 3; si lo quitado tenía un cambio a medio armar, vuelve con ese cambio.
-En «¿Cómo se imprimen?», Esc cierra la pregunta, no el editor. En el celular, con la hoja de
+del del paso 3; si lo quitado tenía un cambio a medio armar, vuelve con ese cambio, y
+si se quitaron varias cosas sigue a la vista para la anterior. En «¿Cómo se
+imprimen?» y en «Recorte manual», Esc cierra esa ventana, no el editor. En el celular, con la hoja de
 edición abierta, los botones de la barra no tapan lo que se edita.
 
 En los colores (de la ficha y de «Un color»), **cambiar el HEX a mano suelta el
@@ -593,7 +622,12 @@ etc.).
   PDF hay que importarlo a la página, y un `<script>` adentro del archivo del cliente
   (también disfrazado con otro espacio de nombres) se ejecutaba en la app, que guarda
   el acceso a Drive y la clave de IA. Solo quedan los elementos de dibujo de SVG, sin
-  manejadores de eventos ni enlaces hacia afuera. No sacar ese paso.
+  manejadores de eventos ni referencias hacia afuera (enlaces, `url(http…)`,
+  `@import`; las de adentro, `url(#degradé)` con o sin comillas, quedan). Un enlace
+  `<a>` que envuelve dibujo se cambia por un grupo **con sus atributos** (`transform`,
+  `fill`, `class`). Si hubo que sacar algo que sí dibujaba (HTML incrustado con
+  `foreignObject`), ese logo **se vectoriza desde lo que se ve y se avisa**, en vez de
+  decir «curvas originales» con un dibujo distinto. No sacar ese paso.
 
 ## Ramas y entornos de prueba
 

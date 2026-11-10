@@ -10,7 +10,7 @@ assert.ok(i >= 0 && j > i, 'no encontré el bloque del texto en curvas');
 const T = new Function(html.slice(i, j)
   + 'return { FUENTES, GRUPOS_FUENTE, TEXTO_NUEVO, urlsFuente, pesoCercano, nombrePeso, etiquetaFuente, nombreTexto, archivoTexto, limpiarTexto, textoEnCurvas, cajaCurvas, contornoEncimado, gruposQueSeTocan, leerKern,'
   + ' FORMAS, FORMA_NUEVA, formaEnCurvas, invertirContorno, bordeAdentro, recorteExacto, aplanar, areaFirmada, nombreForma, archivoForma,'
-  + ' ICONOS_CATEGORIAS, ICONOS_ES, traducirBusqueda, consultasIcono, sinIconosPara, iconoSeguro, iconoEnSvg, nombreIcono, archivoIcono };')();
+  + ' ICONOS_CATEGORIAS, ICONOS_ES, ICONOS_FRASES, traducirBusqueda, consultasIcono, correccionIcono, distLetras, sinIconosPara, iconoSeguro, iconoEnSvg, nombreIcono, archivoIcono };')();
 
 /* motor de mentira (como el de HarfBuzz): 1000 unidades por eme, cada letra avanza 600 (o lo que diga
    avance) y dibuja un rectángulo de 500 de ancho y 700 de alto (el alto de las mayúsculas; el de la x es 500);
@@ -90,6 +90,14 @@ assert.equal(T.contornoEncimado([...rect(0, 0, 10, 10), ...rect(3, 3, 7, 7)]), t
 const pata = (x0, x1) => [{ type: 'M', values: [x0, 0] }, { type: 'L', values: [x0 + 2, 0] }, { type: 'L', values: [x1 + 2, 20] }, { type: 'L', values: [x1, 20] }, { type: 'Z', values: [] }];
 assert.equal(T.contornoEncimado([...pata(0, 9), ...pata(18, 9), ...rect(3, 6, 17, 8)]), true);
 assert.equal(T.contornoEncimado(rect(0, 0, 10, 10)), false);
+// dos llenos montados con los bordes en la misma recta (no se cruzan de lado a lado), y dos apoyados por un lado
+assert.equal(T.contornoEncimado([...rect(0, 0, 10, 10), ...rect(5, 0, 15, 10)]), true);
+assert.equal(T.contornoEncimado([...rect(0, 0, 10, 10), ...rect(10, 2, 20, 8)]), true);
+// una isla adentro del hueco (◉: lleno, hueco, lleno) no está encimada; dos llenos separados, tampoco
+assert.equal(T.contornoEncimado([...rect(0, 0, 30, 30), ...hueco(5, 5, 25, 25), ...rect(10, 10, 20, 20)]), false);
+assert.equal(T.contornoEncimado([...rect(0, 0, 10, 10), ...rect(10.5, 0, 20, 10)]), false);
+// se mira una vez por letra y tipografía (no en cada tecla)
+const cuenta = motor(450); T.textoEnCurvas(cuenta, gen({ texto: 'AAAA' })); assert.equal(cuenta.encimadoDe.size, 1);
 // un lazo en un solo trazo (un moño) también
 assert.equal(T.contornoEncimado([{ type: 'M', values: [0, 0] }, { type: 'L', values: [10, 10] }, { type: 'L', values: [10, 0] }, { type: 'L', values: [0, 10] }, { type: 'Z', values: [] }]), true);
 // curvas de un .ttf (un solo punto de control): se aplanan igual
@@ -208,6 +216,19 @@ assert.equal(vert.h, 1000); assert.equal(vert.w, 20);
 /* el contorno: en un barrido de formas, proporciones y grosores, el borde mide el grosor pedido en todo el
    recorrido (ni más fino ni más grueso), el hueco no se cruza, queda adentro y va al revés que el de afuera.
    Si con ese grosor no queda hueco, la forma va llena (y lo dice), nunca con basura */
+/* cada hueco (puede haber más de uno: en una estrella muy alta y gruesa el hueco queda en pedazos) está a `t`
+   del borde de afuera en todo su recorrido, no se cruza, va al revés que el de afuera y queda adentro */
+function huecosBien(cs, t, caso) {
+  const fuera = denso(cs[0]), ka = T.cajaCurvas(cs[0]);
+  cs.slice(1).forEach((h, k) => {
+    const ds = denso(h).map(q => distPoli(q, fuera)), quien = caso + ' (hueco ' + (k + 1) + ' de ' + (cs.length - 1) + ')';
+    assert.ok(Math.min(...ds) > t * 0.97 && Math.max(...ds) < t * 1.03, quien + ': grosor ' + (Math.min(...ds) / t).toFixed(2) + '–' + (Math.max(...ds) / t).toFixed(2) + ' del pedido');
+    assert.equal(cruces(T.aplanar(h, 1)), 0, quien + ': el hueco se cruza');
+    assert.ok(T.areaFirmada(T.aplanar(cs[0])) * T.areaFirmada(T.aplanar(h)) < 0, quien + ': el hueco tiene que ir al revés');
+    const kd = T.cajaCurvas(h);
+    assert.ok(kd.x1 > ka.x1 && kd.x2 < ka.x2 && kd.y1 > ka.y1 && kd.y2 < ka.y2, quien + ': el hueco se sale');
+  });
+}
 let conHueco = 0, llenas = 0;
 for (const [id] of T.FORMAS) {
   if (id === 'linea') continue;
@@ -217,16 +238,47 @@ for (const [id] of T.FORMAS) {
     const cs = contornos(comandos(r.svg)), t = pct / 100 * r.w;
     if (r.lleno) { llenas++; assert.equal(cs.length, 1, caso + ': llena, pero con hueco'); continue; }
     conHueco++;
-    assert.equal(cs.length, 2, caso);
-    const fuera = denso(cs[0]), dentro = denso(cs[1]), ds = dentro.map(q => distPoli(q, fuera));
-    assert.ok(Math.min(...ds) > t * 0.97 && Math.max(...ds) < t * 1.03, caso + ': grosor ' + (Math.min(...ds) / t).toFixed(2) + '–' + (Math.max(...ds) / t).toFixed(2) + ' del pedido');
-    assert.equal(cruces(T.aplanar(cs[1], 1)), 0, caso + ': el hueco se cruza');
-    assert.ok(T.areaFirmada(T.aplanar(cs[0])) * T.areaFirmada(T.aplanar(cs[1])) < 0, caso + ': el hueco tiene que ir al revés');
-    const ka = T.cajaCurvas(cs[0]), kd = T.cajaCurvas(cs[1]);
-    assert.ok(kd.x1 > ka.x1 && kd.x2 < ka.x2 && kd.y1 > ka.y1 && kd.y2 < ka.y2, caso + ': el hueco se sale');
+    assert.ok(cs.length >= 2, caso);
+    huecosBien(cs, t, caso);
   }
 }
 assert.ok(conHueco > 150 && llenas > 30, conHueco + ' con hueco, ' + llenas + ' llenas');
+/* el hueco es TODO lo que queda a más del grosor del borde, y nada más: se mira punto por punto en una grilla.
+   Así se nota también una forma que sale llena sin serlo (pasaba con la estrella estirada: la punta de la
+   paralela caía más allá de un lado corto y la cadena del hueco quedaba abierta) */
+const adentroDe = (q, pts) => { let d = false; for (let a = 0, b = pts.length - 1; a < pts.length; b = a++) { const p = pts[a], r = pts[b]; if ((p[1] > q[1]) !== (r[1] > q[1]) && q[0] < (r[0] - p[0]) * (q[1] - p[1]) / (r[1] - p[1]) + p[0]) d = !d; } return d; };
+for (const [o, quiere] of [
+  [{ forma: 'estrella', aspecto: 1.6, grosorMm: 3, anchoMm: 30 }, 'hueco'], [{ forma: 'estrella', aspecto: 1.6, grosorMm: 4, anchoMm: 30 }, 'hueco'],
+  [{ forma: 'estrella', aspecto: 1.6, grosorMm: 4.5, anchoMm: 30 }, 'hueco'], [{ forma: 'estrella', aspecto: 1.6, puntas: 12, grosorMm: 1.6, anchoMm: 30 }, 'hueco'],
+  [{ forma: 'estrella', aspecto: 1.6, puntas: 12, grosorMm: 2.4, anchoMm: 30 }, 'hueco'], [{ forma: 'estrella', aspecto: 3, puntas: 7, grosorMm: 1.8, anchoMm: 30 }, 'hueco'],
+  [{ forma: 'estrella', aspecto: 0.4, puntas: 8, grosorMm: 4, anchoMm: 30 }, 'hueco'], [{ forma: 'estrella', aspecto: 1, puntas: 12, grosorMm: 5.8, anchoMm: 30 }, 'hueco'],
+  [{ forma: 'estrella', aspecto: 0.2, puntas: 12, grosorMm: 6, anchoMm: 30 }, 'hueco'], // muy alta: el hueco queda en tres pedazos
+  [{ forma: 'escudo', aspecto: 1.6, grosorMm: 3, anchoMm: 30 }, 'hueco'], [{ forma: 'corazon', aspecto: 0.4, grosorMm: 6, anchoMm: 30 }, 'hueco'],
+  [{ forma: 'corazon', aspecto: 1.3, grosorMm: 7, anchoMm: 30 }, 'hueco'], [{ forma: 'hexagono', aspecto: 2.5, grosorMm: 4, anchoMm: 30 }, 'hueco'],
+  [{ forma: 'triangulo', aspecto: 0.5, grosorMm: 5, anchoMm: 30 }, 'hueco'], [{ forma: 'rombo', aspecto: 3, grosorMm: 3, anchoMm: 30 }, 'hueco'],
+  [{ forma: 'estrella', aspecto: 1.6, grosorMm: 5.6, anchoMm: 30 }, 'llena'], [{ forma: 'rombo', aspecto: 3, grosorMm: 4.9, anchoMm: 30 }, 'llena']]) {
+  const caso = JSON.stringify(o), r = forma({ ...o, relleno: false }), cs = contornos(comandos(r.svg)), t = o.grosorMm / o.anchoMm * r.w;
+  assert.equal(r.lleno ? 'llena' : 'hueco', quiere, caso);
+  if (!r.lleno) huecosBien(cs, t, caso);
+  const fuera = T.aplanar(cs[0], 40), huecos = cs.slice(1).map(c => T.aplanar(c, 8));
+  let mal = 0, total = 0;
+  for (let gy = 0; gy < 45; gy++) for (let gx = 0; gx < 45; gx++) {
+    const q = [(gx + 0.37) / 45 * r.w, (gy + 0.61) / 45 * r.h];
+    if (!adentroDe(q, fuera)) continue;
+    const d = distPoli(q, fuera), enHueco = huecos.some(h => adentroDe(q, h));
+    if (d > t * 1.04 + 1) { total++; if (!enHueco) mal++; }      // lejos del borde: tiene que ser hueco
+    else if (d < t * 0.96 - 1) { total++; if (enHueco) mal++; }  // cerca del borde: tiene que ser tinta
+  }
+  assert.ok(total > 50 && mal === 0, caso + ': ' + mal + ' de ' + total + ' puntos de la grilla no coinciden con el grosor pedido');
+}
+// al engrosar, una vez que va llena no vuelve a tener hueco (antes había bandas de «llena» en el medio)
+for (const o of [{ forma: 'estrella', aspecto: 1.6 }, { forma: 'estrella', aspecto: 2, puntas: 12 }, { forma: 'estrella', aspecto: 0.625, puntas: 8 }, { forma: 'corazon', aspecto: 1.1 }, { forma: 'escudo', aspecto: 2 }]) {
+  let yaLlena = 0;
+  for (let g = 0.4; g <= 12.01; g += 0.2) {
+    const r = forma({ ...o, relleno: false, grosorMm: +g.toFixed(1), anchoMm: 30 });
+    if (r.lleno) yaLlena = yaLlena || g; else assert.ok(!yaLlena, JSON.stringify(o) + ': con ' + g.toFixed(1) + ' mm tiene hueco y con ' + (+yaLlena).toFixed(1) + ' iba llena');
+  }
+}
 // casos que fallaban: el corazón (lazo en la punta desde el 4 %), la estrella gruesa, formas estiradas, el óvalo
 for (const [o, min] of [[{ forma: 'corazon', aspecto: 1.1, grosorMm: 6.7, anchoMm: 30 }, 2], [{ forma: 'estrella', aspecto: 1.05, grosorMm: 4, anchoMm: 20 }, 2],
   [{ forma: 'triangulo', aspecto: 80 / 13, grosorMm: 2, anchoMm: 80 }, 2], [{ forma: 'elipse', aspecto: 4, grosorMm: 1, anchoMm: 80 }, 2]])
@@ -287,6 +339,20 @@ assert.deepEqual(T.consultasIcono('niños'), ['human-child']);
 assert.deepEqual(T.consultasIcono('x'), ['x']);
 assert.deepEqual(T.consultasIcono('y'), ['y']); // sola, no se descarta
 assert.deepEqual(T.consultasIcono('   '), []);
+// frases hechas; y una palabra suelta de menos de 4 letras que no se conoce no se busca sola (traía piano por «año»)
+assert.deepEqual(T.consultasIcono('Año nuevo'), ['firework']);
+assert.deepEqual(T.consultasIcono('día de la madre'), ['flower']);
+assert.deepEqual(T.consultasIcono('pedidos ya'), ['pedidos ya', 'pedidos']);
+assert.deepEqual(T.consultasIcono('aire acondicionado'), ['air-conditioner']);
+// errores de tipeo: la palabra conocida más parecida (solo como último recurso); una palabra bien escrita no se toca
+assert.deepEqual(T.correccionIcono('telefno'), { consulta: 'phone', dice: 'telefono' });
+assert.deepEqual(T.correccionIcono('instagran'), { consulta: 'instagram', dice: 'instagram' });
+assert.deepEqual(T.correccionIcono('estreya'), { consulta: 'star', dice: 'estrella' });
+assert.deepEqual(T.correccionIcono('wathsapp'), { consulta: 'whatsapp', dice: 'whatsapp' });
+assert.equal(T.correccionIcono('teléfono'), null); assert.equal(T.correccionIcono('zzzqqq'), null); assert.equal(T.correccionIcono('sol'), null);
+assert.equal(T.distLetras('casa', 'caso'), 1); assert.equal(T.distLetras('ab', 'ba'), 1); assert.equal(T.distLetras('telefno', 'telefono'), 1);
+assert.ok(/Mercado Libre/.test(T.sinIconosPara('mercado libre')) && /TikTok/.test(T.sinIconosPara('tik tok')) && /Coca-Cola/.test(T.sinIconosPara('coca cola')));
+for (const k of Object.keys(T.ICONOS_FRASES)) assert.ok(/^[a-z0-9 -]+$/.test(k), 'frase: ' + k);
 // ninguna palabra del diccionario lleva acento ni mayúscula (se buscan ya sin acentos)
 for (const k of Object.keys(T.ICONOS_ES)) assert.ok(/^[a-z0-9-]+$/.test(k), 'clave del diccionario: ' + k);
 // una marca que no está entre los íconos se dice
