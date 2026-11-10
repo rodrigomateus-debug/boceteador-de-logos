@@ -170,7 +170,7 @@ editarlo hay que volver a subir la tipografía (el boceteador lo avisa).
 
 ### Formas e íconos
 
-Junto a «＋ Texto» están **«＋ Forma»** y **«＋ Ícono»**. Igual que un texto, son un
+Junto a «＋ Texto» están **«＋ Forma»** y **«＋ Ícono»** (y «＋ QR», más abajo). Igual que un texto, son un
 logo más: se mueven, se rotan, se miden en cm, se pintan (Blanco, Negro, Grabado o Un
 color con HEX o Pantone), van a la ficha y al paquete del taller **en curvas**, se
 siguen pudiendo editar desde una plantilla y nacen negros, o blancos sobre una parte
@@ -284,6 +284,15 @@ como siempre. El menú del texto, cuando el texto es tan ancho como la foto, se 
 pegado al borde del editor tapando apenas la punta (antes quedaba cortado abajo). En
 el celular «Ocultar guías» va arriba de la foto, no encima.
 
+**Tocar afuera deselecciona**: un toque en la foto donde no hay ningún elemento (o en
+el gris de alrededor) deja sin elegir. Se van la barra, las manijas y la medida, el
+boceto se ve limpio, y con otro toque se elige el que sea. Los botones de la foto
+(zoom, centrar, deshacer) no deseleccionan. Sin ninguno elegido el recuadro del paso 3
+dice «Ninguno elegido», Supr y las flechas no hacen nada, «Aplicar» anda igual y un
+archivo nuevo se agrega (no reemplaza a nadie). En el celular el navegador «imanta» el
+toque al elemento que tenga a un dedo de distancia: para deseleccionar hay que tocar
+un poco más lejos.
+
 **Teclado**: los elementos de la foto toman el foco (al tocarlos o con Tab). Con las
 **flechas** se mueven de a un píxel de pantalla (con Mayús, de a diez), **Supr** los
 quita, **Ctrl+D** los duplica (también «Duplicar», en la barra del elemento y en el
@@ -392,6 +401,45 @@ foto, la escala y el área del producto nuevo, y **los logos siguen puestos** co
 su medida real, en el área nueva (si no entran, el paso 3 lo avisa). Si la hoja
 tenía aplicado el boceto de otro producto (otro nombre u otro color), esa foto se
 saca y el aviso lo dice: se abre el boceto y se aplica de nuevo.
+
+### QR
+
+**«＋ QR»** arma un código QR con el link (o el texto) que se le pegue. Es un logo
+más: se mueve, se agranda y se achica desde las esquinas (siempre cuadrado), se rota,
+se mide en cm, se pinta (Negro, Blanco, Grabado o Un color con HEX o Pantone), va a la
+ficha y al paquete del taller **en curvas** y se sigue editando desde una plantilla.
+Se edita con su botón «QR» de la barra, con un doble clic o con el recuadro de arriba
+del paso 3.
+
+- **El link** se pega en el menú y el QR se rehace mientras se escribe (Enter es
+  «Listo»). Hasta 600 caracteres. El QR es el más chico en el que entra, con corrección
+  de errores media (M); los acentos y la ñ van en UTF-8. A «marca.com.ar/promo» le
+  ofrece agregarle «https://» (sin eso hay celulares que no lo abren como link).
+- **Sin link no se aplica**. Al nacer se ve un QR de muestra (leído dice «QR de
+  muestra: falta pegarle el link»); «Aplicar» y «Descargar PNG» lo frenan, lo eligen y
+  abren su menú.
+- **Sin fondo o con fondo**. «Sin fondo» son solo los cuadraditos, sobre el producto,
+  del color que se elija. «Con fondo» es para un producto oscuro con tinta clara: se
+  imprime el fondo, con el margen de 4 cuadraditos que pide la norma, y los cuadraditos
+  quedan del color del producto. Así el celular ve lo de siempre, oscuro sobre claro
+  (un QR claro sobre fondo oscuro hay lectores que no lo toman). Sobre una parte
+  oscura del producto nace en blanco y con fondo. Al pasar de uno a otro el código
+  queda del mismo tamaño y en su lugar (la caja crece o se achica por el margen) y la
+  tinta acompaña si estaba en negro o en blanco. El menú avisa las combinaciones que
+  dan un QR al revés.
+- **El tamaño de los cuadraditos**, que es lo que decide si se lee, se ve en el menú y
+  en «Este QR» («29 × 29 cuadraditos de 1,4 mm») y acompaña al agrandarlo. Por debajo
+  de 0,4 mm avisa que puede no leerse (`QR_MM_MIN`: es un valor prudente, a ajustar
+  con el taller por técnica). Sin fondo, recuerda dejarle libre el margen.
+- **Para el taller**: un solo trazado, con los cuadraditos que se tocan unidos en
+  contornos cerrados (sin bordes repetidos: un plotter no los corta dos veces), el link
+  en el título del SVG para cotejarlo, y en el PDF en curvas a medida real. El LEEME
+  del paquete le dice cuántos cuadraditos tiene, cuánto miden y **qué link tiene que
+  abrir** al probarlo con el celular; si miden menos de 0,4 mm, la revisión antes de
+  mandar lo avisa. Se puede **calar** en una placa como cualquier otro elemento.
+- El codificador es **qrcode-generator** (licencia MIT), por CDN con dos de respaldo,
+  y se baja recién al tocar «＋ QR». El dibujo (`qrTrazado`, `qrEnCurvas`) se arma acá
+  y lo prueba `test_texto.mjs`, cuadradito por cuadradito.
 
 ### Área de impresión sugerida
 
@@ -865,6 +913,7 @@ credencial en Google Cloud. Cada usuario también puede pegar otro con el botón
 - [x] Textos en curvas con tipografía a elección (y la del cliente), y capas
 - [x] Formas (rectángulo, círculo, estrella, escudo…) con relleno o contorno en mm, e íconos
 - [x] Calar una forma con lo que tiene encima, deshacer / rehacer, duplicar y teclado
+- [x] QR en curvas con el link que se le pegue (sin fondo o con el fondo impreso) y tocar afuera para deseleccionar
 - [ ] Texto en arco
 - [ ] Fase 2 — Links compartibles y aprobación del cliente
 - [ ] Fase 3 — Cotización conectada (ver `cotizador-formas.html`)

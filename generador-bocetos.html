@@ -584,6 +584,7 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .agregarRow{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; margin-top:10px}
 #bocetoModal .agregarRow .btn{flex:1; width:auto; margin:0; padding:9px 12px; font-size:13px}
 #bocetoModal .agregarRow .btn[hidden]{display:none}
+#bocetoModal .agregarRow #addLogoBtn{grid-column:1 / -1} /* con el QR son cinco: «Otro logo» va a lo ancho y el resto queda de a dos */
 #bocetoModal .capasRow{display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:8px}
 #bocetoModal .capasRow .label{margin-right:2px; letter-spacing:.08em}
 #bocetoModal .capasRow button{width:auto; margin:0; padding:5px 10px; border:1.5px solid var(--formas-gray-200); border-radius:9px; background:#fff; font-family:var(--font-primary); font-size:12px; font-weight:600; color:var(--formas-navy); cursor:pointer}
@@ -605,8 +606,8 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
     max-height:52vh !important; border-radius:18px 18px 0 0; padding:12px 16px 16px; z-index:140; box-shadow:0 -12px 40px rgba(11,11,35,.22)}
   #bocetoModal .txtListo{display:block; width:auto; margin:0 0 8px; padding:6px 14px; border:none; border-radius:999px; background:var(--formas-navy); color:#fff; font-family:var(--font-primary); font-size:12.5px; font-weight:700; cursor:pointer}
 }
-#bocetoModal #lbPopTexto textarea{display:block; width:100%; box-sizing:border-box; min-height:54px; max-height:140px; resize:vertical; margin:0; padding:8px 10px; border:1.5px solid var(--formas-gray-200); border-radius:10px; font-family:var(--font-primary); font-size:16px; line-height:1.35; color:var(--formas-ink); background:#fff}
-#bocetoModal #lbPopTexto textarea:focus{outline:none; border-color:var(--formas-navy)}
+#bocetoModal #lbPopTexto textarea, #bocetoModal #lbPopQr textarea{display:block; width:100%; box-sizing:border-box; min-height:54px; max-height:140px; resize:vertical; margin:0; padding:8px 10px; border:1.5px solid var(--formas-gray-200); border-radius:10px; font-family:var(--font-primary); font-size:16px; line-height:1.35; color:var(--formas-ink); background:#fff}
+#bocetoModal #lbPopTexto textarea:focus, #bocetoModal #lbPopQr textarea:focus{outline:none; border-color:var(--formas-navy)}
 #bocetoModal #lbPopTexto .txtTit{margin-top:12px}
 #bocetoModal #lbPopTexto .txtTit span{text-transform:none; letter-spacing:0; color:var(--formas-ink)}
 #bocetoModal #txtFuentes{max-height:140px; overflow:auto; padding:4px; border:1px solid var(--border-subtle); border-radius:10px}
@@ -632,6 +633,9 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #lbPopColor .seg.sinFull{grid-template-columns:repeat(4, minmax(0, 1fr))}
 /* el menú «Forma» */
 #bocetoModal #lbPopForma{width:min(380px, calc(100vw - 40px))}
+#bocetoModal #lbPopQr{width:min(360px, calc(100vw - 40px))}
+#bocetoModal #lbPopQr textarea{word-break:break-all}
+#bocetoModal #lbPopQr .qrMal{color:#8A4B00; font-weight:600}
 #bocetoModal .formaGrilla{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px}
 #bocetoModal .formaGrilla button{display:flex; flex-direction:column; align-items:center; gap:4px; width:auto; margin:0; padding:8px 4px 6px; border:1.5px solid var(--formas-gray-200); border-radius:10px; background:#fff; font-family:var(--font-primary); font-size:11.5px; font-weight:600; color:var(--formas-ink); cursor:pointer}
 #bocetoModal .formaGrilla button img{width:34px; height:28px; object-fit:contain}
@@ -1314,6 +1318,17 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             <div class="txtNota" id="formaNota" aria-live="polite"></div>
           </div>
           <button type="button" class="lbBtn" id="lbIcono" title="Cambiar el ícono por otro" hidden><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="m12 3 2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg><span>Ícono</span></button>
+          <button type="button" class="lbBtn" id="lbQr" aria-expanded="false" aria-controls="lbPopQr" title="Editar el QR: el link, y si va sin fondo o con el fondo impreso" hidden><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3z"/><path d="M18 18h3v3"/><path d="M21 14v1"/><path d="M14 20v1"/></svg><span>QR</span></button>
+          <div class="lbPop lbPopGrande" id="lbPopQr" role="dialog" aria-label="Editar el QR" hidden>
+            <div class="txtCab"><label class="lbPopTit" for="qrTexto">Link o texto del QR</label><button type="button" class="txtListo" id="qrListo">Listo</button></div>
+            <textarea id="qrTexto" rows="2" maxlength="600" placeholder="Pegá acá el link: https://…" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby="qrNota"></textarea>
+            <button type="button" class="txtSubir" id="qrHttps" hidden>＋ Agregarle «https://» adelante <small>· sin eso hay celulares que no lo abren como link</small></button>
+            <div class="txtFila"><span class="lbPopTit" id="qrFondoTit">Fondo</span><div class="seg" id="qrFondo" role="group" aria-labelledby="qrFondoTit">
+              <button type="button" data-fondo="0" aria-pressed="true" title="Solo los cuadraditos, sobre el producto">Sin fondo</button>
+              <button type="button" data-fondo="1" aria-pressed="false" title="Se imprime el fondo y los cuadraditos quedan del color del producto: para un producto oscuro con tinta clara">Con fondo</button>
+            </div></div>
+            <div class="txtNota" id="qrNota" aria-live="polite"></div>
+          </div>
           <button type="button" class="lbBtn" id="removeWhiteBtn" aria-label="Quitar fondo" title="Quitar fondo: borra el fondo o cualquier color del logo (blanco, negro, uno a elección o tomado con el cuentagotas)"><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg><span>Fondo</span><b class="lbOk" id="lbFondoN" hidden aria-hidden="true">✓</b></button>
           <button type="button" class="lbBtn" id="cropEditBtn" title="Recortar el logo a mano"><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg><span>Recortar</span></button>
           <i class="lbSep"></i>
@@ -1511,6 +1526,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           <button class="btn btn-secondary" type="button" id="addTextoBtn" title="Un texto con la tipografía que quieras: va en curvas al taller">＋ Texto</button>
           <button class="btn btn-secondary" type="button" id="addFormaBtn" title="Rectángulo, círculo, estrella, escudo… con relleno o solo el contorno: va en curvas al taller">＋ Forma</button>
           <button class="btn btn-secondary" type="button" id="addIconoBtn" title="Un ícono (teléfono, mail, redes, comida, deportes…): va en curvas al taller">＋ Ícono</button>
+          <button class="btn btn-secondary" type="button" id="addQrBtn" title="Un código QR con el link que le pegues: va en curvas al taller">＋ QR</button>
         </div>
         <div class="note" id="textoNote" role="status" aria-live="polite" hidden>⚠ <span id="textoNoteTxt"></span></div>
         <div class="field" id="unitField" hidden>
@@ -3103,6 +3119,11 @@ async function revisarPaquete(){
         if(d < 300){ aviso('dpi-' + nom, '"' + nom + '" queda a ' + d + ' dpi a tamaño real (lo ideal son 300): se puede ver pixelado.'); dpiAvisado = true; }
       }
       if(L.letra) r.info.push('"' + nom + '": ' + (L.letra.que === 'números' ? 'los ' : 'las ') + L.letra.que + ' miden ' + String(L.letra.mm).replace('.', ',') + ' mm de alto' + (L.letra.que === 'minúsculas' ? ' (la altura de la x)' : '') + '.');
+      if(L.qr){
+        r.info.push('"' + nom + '": QR de ' + L.qr.n + ' × ' + L.qr.n + ' cuadraditos' + (L.qr.mm ? ' de ' + String(L.qr.mm).replace('.', ',') + ' mm' : '') + (L.qr.fondo ? ', con el fondo impreso (los cuadraditos quedan del color del producto)' : '')
+          + '. Probarlo con el celular antes de producir: tiene que abrir ' + L.qr.link);
+        if(L.qr.chico) aviso('qr-chico-' + nom, '"' + nom + '": los cuadraditos del QR miden ' + String(L.qr.mm).replace('.', ',') + ' mm: impreso puede no leerse. Agrandalo o acortá el link en el boceteador.');
+      }
       if(L.encimados) aviso('encimados-' + nom, '"' + nom + '" tiene letras que se tocan y no se pudieron unir en un solo contorno: en vinilo, láser o bordado hay que soldarlas antes de producir.');
       if(L.faltan && L.faltan.length) aviso('faltan-' + nom, '"' + nom + '": la tipografía no tiene ' + L.faltan.map(c => '«' + c + '»').join(', ') + ': esas letras no están en el arte (quedan en blanco). Confirmá con el cliente o cambiá la tipografía en el boceteador.');
       if(an && an.textoVivo) aviso('texto-' + nom, '"' + nom + '" tiene textos sin convertir a curvas: si el taller no tiene esa tipografía, la letra puede cambiar.');
@@ -3324,7 +3345,7 @@ async function armarPaquete(reps, conOriginales){
           dir.file(n, lg.rec.blob);
           const armado = lg.L.generado || (lg.L.texto ? 'texto' : null); // (las hojas de antes decían texto: true)
           archivos.push({ nombre: n, que: armado
-            ? ({ texto: 'TEXTO EN CURVAS armado', forma: 'FORMA EN CURVAS armada', icono: 'ÍCONO EN CURVAS (Material Design Icons, licencia Apache 2.0) armado' }[armado] || 'EN CURVAS, armado')
+            ? ({ texto: 'TEXTO EN CURVAS armado', forma: 'FORMA EN CURVAS armada', icono: 'ÍCONO EN CURVAS (Material Design Icons, licencia Apache 2.0) armado', qr: 'QR EN CURVAS armado' }[armado] || 'EN CURVAS, armado')
               + ' en el boceteador (no lo mandó el cliente): va en negro y sin medida real, como referencia; para producir, el arte a medida de esta carpeta'
             : lg.vector
             ? 'EN CURVAS: archivo tal cual lo mandó el cliente' + (curvas ? ', como referencia' : ', usarlo escalado a ' + (r.sinMedida ? 'la medida que se confirme' : fmtCmTxt(r.artW) + ' × ' + fmtCmTxt(r.artH) + ' cm') + (r.logos.length > 1 ? ' (en el conjunto, ubicado como en el mockup)' : ''))
@@ -5293,6 +5314,11 @@ function render(){
     if(fila) fila.textContent = 'En curvas · ' + etiquetaFuente(L.gen) + (alto ? ' · ' + alto : '');
     if(!$('lbPopTexto').hidden) notaTexto(L);
   }
+  if(L && L.tipo === 'qr' && L.gen){ // el tamaño de los cuadraditos acompaña mientras se agranda o se achica
+    const fila = $('qrCambio');
+    if(fila) fila.textContent = qrResumen(L);
+    if(!$('lbPopQr').hidden) notaQr(L);
+  }
 
   syncRulerBtn();
   if(false){ // la regla queda solo por dentro (da la escala): lo que se ve y se ajusta es el recuadro del producto
@@ -5616,7 +5642,7 @@ function setMode(m){
   $('modeLogo').setAttribute('aria-pressed', m === 'logo');
   $('modeProduct').setAttribute('aria-pressed', m === 'product');
   $('rulerField').hidden = m !== 'product';
-  $('logoCmFields').hidden = !state.logos.length;
+  $('logoCmFields').hidden = !selLogo();
   $('unitField').hidden = !state.logos.length;
   $('lockAspectBtn').hidden = m === 'product';
   if(!frame.hidden){
@@ -7286,7 +7312,7 @@ function applyTypedCm(axis){
 }
 /* en «medida exacta», un texto o un ícono no se deforman (el otro lado acompaña siempre); una forma va con su
    ancho y su alto, y en pantalla toma esa proporción */
-const sinDeformar = L => L.tipo === 'texto' || L.tipo === 'icono' || (L.tipo === 'forma' && esCalada(L.gen));
+const sinDeformar = L => L.tipo === 'texto' || L.tipo === 'icono' || L.tipo === 'qr' || (L.tipo === 'forma' && esCalada(L.gen));
 function formaConMedida(L){
   if(L.tipo !== 'forma' || esCalada(L.gen) || !(L.cmW > 0 && L.cmH > 0)) return;
   const {w:FW, h:FH} = frameRect(), cx = L.x + L.w/2, cy = L.y + L.h/2, asp = L.cmW / L.cmH;
@@ -7572,7 +7598,7 @@ function loadLogoSrc(url, name, isJpg, file, extra){
     let logo;
     /* un texto (extra) entra siempre como nuevo y no toca pendingAdd: si mientras se armaba se pidió un logo
        con «＋ Otro logo», ese logo también se agrega (antes reemplazaba al texto recién creado) */
-    if(extra || pendingAdd || !state.logos.length){
+    if(extra || pendingAdd || !selLogo()){
       logo = { src:url, name, isJpg:!!isJpg, aspect, crop, useTrim:true, fullW:probe.naturalWidth, fullH:probe.naturalHeight, whiteRemoved:false, bgRemove:null, tint:'original', opacity:1, cmW:0, cmH:0, rot:0, x:0, y:0, w:0, h:0, el:null, img:null };
       if(extra){ const { listo, ink, vb, ...datos } = extra; Object.assign(logo, datos); }
       logo.z = siguienteCapa(); // lo nuevo va arriba de todo
@@ -7805,6 +7831,16 @@ function selectLogo(i){
   state.sel = i;
   syncLogoUI(); render();
 }
+/* ninguno elegido: se va la barra, las manijas y lo del panel que es de un elemento. El boceto se ve limpio y
+   con un toque se elige otro */
+function deseleccionar(){
+  const L = selLogo();
+  if(!L) return;
+  state.sel = -1;
+  // el foco no queda en el elemento: al volver a la ventana, el navegador se lo devolvía y quedaba elegido de nuevo
+  if(L.el && document.activeElement === L.el) L.el.blur();
+  syncLogoUI(); render();
+}
 
 /* refleja el logo seleccionado en todos los controles del paso 3 */
 function syncLogoUI(){
@@ -7826,8 +7862,9 @@ function syncLogoUI(){
   });
   $('addLogoBtn').hidden = !state.logos.length;
   if(L !== barLogo){ barLogo = L; cerrarPopsBarra(); } // otro logo: sus menús arrancan cerrados
-  $('logoCmFields').hidden = !state.logos.length;
+  $('logoCmFields').hidden = !L; // el ancho y el alto son de un elemento: sin ninguno elegido no van
   $('unitField').hidden = !state.logos.length;
+  $('alignH').disabled = $('alignV').disabled = !L;
   $('lockAspectBtn').hidden = state.mode === 'product';
   /* un texto, una forma o un ícono tienen su propia herramienta (Texto, Forma, Ícono) y no tienen fondo, recorte
      ni IA: se arman acá, ya limpios. «Full color» tampoco: son de un solo color, el que se elija */
@@ -7839,6 +7876,7 @@ function syncLogoUI(){
   $('lbTexto').hidden = !esTexto;
   $('lbForma').hidden = !(esGen && L.tipo === 'forma' && !esCalada(L.gen));
   $('lbIcono').hidden = !(esGen && L.tipo === 'icono');
+  $('lbQr').hidden = !(esGen && L.tipo === 'qr');
   document.querySelector('#tintSeg [data-tint="original"]').hidden = esGen;
   $('tintSeg').classList.toggle('sinFull', esGen);
   $('cambiosTit').textContent = queEs(L).Este;
@@ -7892,6 +7930,7 @@ function syncLogoUI(){
     $('cropEditBtn').hidden = esGen;
     if(esTexto && !$('lbPopTexto').hidden) syncTextoPop();
     if(esGen && L.tipo === 'forma' && !$('lbPopForma').hidden) syncFormaPop();
+    if(esGen && L.tipo === 'qr' && !$('lbPopQr').hidden) syncQrPop();
     syncAdjuntos();
     $('logoOpacity').value = Math.round(L.opacity*100);
     $('opacityVal').textContent = Math.round(L.opacity*100) + '%';
@@ -7915,7 +7954,9 @@ function syncLogoUI(){
   } else {
     $('tintCustom').hidden = true;
     $('logoThumb').innerHTML = '◐'; $('logoThumb').classList.remove('oscuro');
-    $('logoTxt').innerHTML = 'Elegir logo<small>PNG sin fondo recomendado · también SVG, JPG, PDF o AI</small>';
+    $('logoTxt').innerHTML = state.logos.length
+      ? 'Ninguno elegido<small>tocá un elemento en la foto para editarlo, o hacé clic acá para sumar un logo</small>'
+      : 'Elegir logo<small>PNG sin fondo recomendado · también SVG, JPG, PDF o AI</small>';
     $('jpgNote').hidden = true; $('lbOpacoNote').hidden = true;
     $('cropEditBtn').hidden = true;
     syncAdjuntos();
@@ -7933,7 +7974,7 @@ function syncOpacBtn(op){
   $('lbOpac').setAttribute('aria-label', 'Opacidad ' + op + ' %');
 }
 /* los menús de la barra: [menú, botón que lo abre] */
-const POPS_BARRA = { color: ['lbPopColor', 'lbColor'], opac: ['lbPopOpac', 'lbOpac'], texto: ['lbPopTexto', 'lbTexto'], forma: ['lbPopForma', 'lbForma'] };
+const POPS_BARRA = { color: ['lbPopColor', 'lbColor'], opac: ['lbPopOpac', 'lbOpac'], texto: ['lbPopTexto', 'lbTexto'], forma: ['lbPopForma', 'lbForma'], qr: ['lbPopQr', 'lbQr'] };
 const esCelular = () => window.matchMedia('(max-width:600px)').matches;
 const esHoja = pop => pop.classList.contains('lbPopGrande') && esCelular(); // los menús del texto y de la forma, en el celular, son una hoja abajo
 const popAbierto = () => Object.keys(POPS_BARRA).find(k => !$(POPS_BARRA[k][0]).hidden) || null;
@@ -7963,6 +8004,7 @@ function abrirPopBarra(cual, forzar){
     if(elegida) lista.scrollTop = Math.max(0, elegida.offsetTop - lista.offsetTop - 30); // la lista abre mostrando la elegida
   }
   if(cual === 'forma' && L && L.tipo === 'forma') syncFormaPop(); // antes de ubicarlo: así se sabe cuánto mide
+  if(cual === 'qr' && L && L.tipo === 'qr') syncQrPop();
   $('logoBar').classList.toggle('conHoja', esHoja(pop)); // con la hoja abierta, los botones de la barra no tapan lo que se edita
   if(esHoja(pop) && L && L.el){ // la hoja tapa la mitad de abajo: el texto se lleva a la mitad de arriba
     const body = bocetoModal.querySelector('.bm-body'), r = L.el.getBoundingClientRect();
@@ -7973,7 +8015,7 @@ function abrirPopBarra(cual, forzar){
   if($('logoBar').hidden){ cerrarPopsBarra(); return; } // el elemento no se ve (zoom): no queda un menú suelto
   /* el foco entra al menú: la opción elegida, lo escrito, o el control de la opacidad */
   const f = cual === 'color' ? (pop.querySelector('#tintSeg [aria-pressed="true"]') || pop.querySelector('#tintSeg button'))
-    : cual === 'texto' ? $('txtTexto') : cual === 'forma' ? ($('formaGrilla').querySelector('[aria-pressed="true"]') || $('formaGrilla').querySelector('button')) : $('logoOpacity');
+    : cual === 'texto' ? $('txtTexto') : cual === 'qr' ? $('qrTexto') : cual === 'forma' ? ($('formaGrilla').querySelector('[aria-pressed="true"]') || $('formaGrilla').querySelector('button')) : $('logoOpacity');
   if(f) f.focus();
 }
 $('lbColor').addEventListener('click', () => abrirPopBarra('color'));
@@ -8046,6 +8088,7 @@ function syncCambios(){
   const esGen = esGenerado(L), esTexto = esGen && L.tipo === 'texto';
   if(esGen && L.tipo === 'forma') filas.push({ dato: true, txt: 'En curvas · ' + nombreForma(L.gen), de: 'la forma', acc: esCalada(L.gen) ? [] : [['Editar', () => editarElemento(L)]] });
   if(esGen && L.tipo === 'icono') filas.push({ dato: true, txt: 'En curvas · «' + L.gen.icono.split(':').pop() + '» · Material Design Icons (licencia Apache 2.0)', de: 'el ícono', acc: [['Cambiar', () => editarElemento(L)]] });
+  if(esGen && L.tipo === 'qr') filas.push({ dato: true, id: 'qrCambio', txt: qrResumen(L), de: 'el QR', acc: [['Editar', () => editarElemento(L)]] });
   /* un texto: con qué tipografía está y qué alto tienen las letras (el color va en la barra, es suyo) */
   if(esTexto){
     const alto = textoAltura(L);
@@ -8520,6 +8563,7 @@ $('logoOpacity').addEventListener('input', () => {
    bajan de fontsource (las de Google Fonts, en .woff) recién al usarlas. */
 const HARFBUZZ_URLS = ['https://cdn.jsdelivr.net/npm/harfbuzzjs@1.6.3/dist/index.mjs', 'https://unpkg.com/harfbuzzjs@1.6.3/dist/index.mjs'];
 const PAPER_URLS = ['https://cdn.jsdelivr.net/npm/paper@0.12.18/dist/paper-core.min.js', 'https://unpkg.com/paper@0.12.18/dist/paper-core.min.js'];
+const QR_URLS = ['https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js', 'https://unpkg.com/qrcode-generator@1.4.4/qrcode.js', 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'];
 const FONTSOURCE_V = '5.3.0';
 // [id en fontsource, nombre, grupo, grosores que trae]
 const FUENTES = [
@@ -9245,19 +9289,93 @@ function iconoEnSvg(dato, g){
     + '<g fill="#000000">' + String(dato.body).replace(/currentColor/g, '#000000') + '</g></svg>';
   return { svg, w, h };
 }
+
+/* ---------- QR ----------
+   Qué cuadraditos van oscuros lo decide el codificador (qrcode-generator, que se baja al usarlo: ver cargarQr).
+   Acá se arma el dibujo que va al taller: los cuadraditos que se tocan van unidos en contornos cerrados, sin
+   bordes repetidos (de a un cuadradito, un plotter cortaría dos veces cada borde compartido).
+   Va sin fondo (solo los cuadraditos, sobre el producto) o con el fondo impreso (g.fondo), que es lo que pide un
+   producto oscuro con tinta clara: se imprime el fondo, con el margen de la norma, y los cuadraditos quedan del
+   color del producto. Así el celular ve lo de siempre, oscuro sobre claro (un QR claro sobre fondo oscuro hay
+   lectores que no lo toman) */
+const QR_NUEVO = { texto: '', fondo: false };
+const QR_MUESTRA = 'QR de muestra: falta pegarle el link'; // lo que dice el QR mientras no se le puso nada
+const QR_MARGEN = 4;  // la «zona de silencio» de la norma: 4 cuadraditos libres alrededor
+const QR_PASO = 10;   // unidades del SVG por cuadradito
+const QR_LARGO = 600; // caracteres: más da un QR tan cargado que impreso chico no se lee
+const qrLimpio = t => String(t == null ? '' : t).replace(/^\s+|\s+$/g, '').slice(0, QR_LARGO);
+// «marca.com.ar/promo» sin «https://»: hay celulares que no lo abren como link
+const qrSinEsquema = t => /^[a-z0-9-]+(\.[a-z0-9-]+)+([\/?#]\S*)?$/i.test(qrLimpio(t));
+const nombreQr = g => 'QR «' + recorteTexto(qrLimpio(g.texto) || 'sin link', 28) + '»';
+const archivoQr = g => ('QR ' + recorteTexto(qrLimpio(g.texto).replace(/^[a-z][a-z0-9+.-]*:\/*/i, '') || 'sin link', 40) + (g.fondo ? ' - fondo impreso' : ''))
+  .replace(/[\\/:*?"<>|«»…#%&=]+/g, ' ').replace(/\s+/g, ' ').trim() + '.svg';
+/* mat[fila][columna] = oscuro. Devuelve el trazado (en cuadraditos × QR_PASO), cuántos cuadraditos tiene de lado
+   el código (n) y el dibujo entero (N: con el margen, si lleva el fondo impreso) */
+function qrTrazado(mat, fondo){
+  const n = mat.length, m = fondo ? QR_MARGEN : 0, N = n + 2 * m;
+  const tinta = (r, c) => { // ¿acá va tinta?
+    if(r < 0 || c < 0 || r >= N || c >= N) return false;
+    const rr = r - m, cc = c - m, osc = rr >= 0 && cc >= 0 && rr < n && cc < n && !!mat[rr][cc];
+    return fondo ? !osc : osc;
+  };
+  /* los bordes entre tinta y no tinta, cada uno con la tinta a su derecha. De una esquina salen uno o dos */
+  const sale = new Map();
+  const borde = (x1, y1, x2, y2, dir) => { const k = x1 * 1000 + y1; if(!sale.has(k)) sale.set(k, []); sale.get(k).push({ x: x2, y: y2, dir, usado: false }); };
+  for(let r = 0; r < N; r++) for(let c = 0; c < N; c++){
+    if(!tinta(r, c)) continue;
+    if(!tinta(r - 1, c)) borde(c, r, c + 1, r, 0);         // el de arriba, hacia la derecha
+    if(!tinta(r, c + 1)) borde(c + 1, r, c + 1, r + 1, 1); // el de la derecha, hacia abajo
+    if(!tinta(r + 1, c)) borde(c + 1, r + 1, c, r + 1, 2); // el de abajo, hacia la izquierda
+    if(!tinta(r, c - 1)) borde(c, r + 1, c, r, 3);         // el de la izquierda, hacia arriba
+  }
+  let d = '', contornos = 0;
+  for(const [k0, lista] of sale) for(const e0 of lista){
+    if(e0.usado) continue;
+    const pts = [[Math.floor(k0 / 1000), k0 % 1000]], dirs = [];
+    let e = e0;
+    do{
+      e.usado = true;
+      if(dirs.length && dirs[dirs.length - 1] === e.dir) pts[pts.length - 1] = [e.x, e.y]; // sigue derecho: es el mismo tramo
+      else { pts.push([e.x, e.y]); dirs.push(e.dir); }
+      const op = sale.get(e.x * 1000 + e.y) || [], dir = e.dir;
+      /* dos cuadraditos que se tocan solo por la punta: se dobla a la derecha, y cada uno cierra su propio
+         contorno (si no, quedaban unidos por un punto) */
+      e = op.find(o => o.dir === (dir + 1) % 4) || op[0];
+    }while(e && e !== e0);
+    pts.pop(); // el último es el del principio
+    if(dirs.length > 1 && dirs[0] === dirs[dirs.length - 1]) pts.shift(); // se arrancó a mitad de un tramo recto
+    if(pts.length < 4) continue;
+    contornos++;
+    let antes = pts[pts.length - 1];
+    d += 'M' + antes[0] * QR_PASO + ' ' + antes[1] * QR_PASO;
+    for(const p of pts.slice(0, -1)){ d += p[1] === antes[1] ? 'H' + p[0] * QR_PASO : 'V' + p[1] * QR_PASO; antes = p; }
+    d += 'Z';
+  }
+  return { d, n, N, contornos };
+}
+function qrEnCurvas(mat, g){
+  const t = qrTrazado(mat, !!g.fondo), W = t.N * QR_PASO, aire = 0.01 * W;
+  const vb = [-aire, -aire, W + 2 * aire, W + 2 * aire].map(v => +v.toFixed(2));
+  // data-exacto: la medida sale de esta geometría (ink), no de sondear los píxeles (ver normalizeSvg)
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" data-exacto="1" viewBox="' + vb.join(' ') + '" width="' + vb[2] + '" height="' + vb[3] + '">'
+    + '<title>' + escXml('QR en curvas: ' + (recorteTexto(qrLimpio(g.texto), 300) || 'sin link') + (g.fondo ? ' (con el fondo impreso: para producto oscuro)' : '')) + '</title>'
+    + '<path fill="#000000" d="' + t.d + '"/></svg>';
+  return { svg, w: W, h: W, ink: { x1: 0, y1: 0, x2: W, y2: W }, vb, cuadros: t.n, lado: t.N };
+}
 /* fin del texto en curvas (lo de arriba no toca la página: lo prueba test_texto.mjs) */
 
-/* lo que se arma acá (texto, forma, ícono) es un logo más, con su receta en L.gen: se rehace al editarlo y su
+/* lo que se arma acá (texto, forma, ícono, QR) es un logo más, con su receta en L.gen: se rehace al editarlo y su
    SVG en curvas va al taller. Cómo se nombra cada uno en la pantalla */
-const TIPOS_GENERADOS = ['texto', 'forma', 'icono'];
+const TIPOS_GENERADOS = ['texto', 'forma', 'icono', 'qr'];
 const esGenerado = l => !!l && TIPOS_GENERADOS.includes(l.tipo) && !!l.gen;
 const QUE_ES = {
   texto: { del: 'del texto', Este: 'Este texto', el: 'el texto', aplicado: 'Texto aplicado', quitar: 'Quitar este texto' },
   forma: { del: 'de la forma', Este: 'Esta forma', el: 'la forma', aplicado: 'Forma aplicada', quitar: 'Quitar esta forma' },
   icono: { del: 'del ícono', Este: 'Este ícono', el: 'el ícono', aplicado: 'Ícono aplicado', quitar: 'Quitar este ícono' },
+  qr: { del: 'del QR', Este: 'Este QR', el: 'el QR', aplicado: 'QR aplicado', quitar: 'Quitar este QR' },
 };
 /* cómo se lo nombra entre comillas: lo que dice el texto, el nombre del ícono o de la forma (sin repetir «Texto», «Ícono») */
-const apodo = l => l.tipo === 'texto' && l.gen ? recorteTexto(l.gen.texto, 28) : l.tipo === 'icono' && l.gen ? idIcono(l.gen) : l.tipo === 'forma' && l.gen ? nombreForma({ ...l.gen, relleno: true }) : (l.name || '');
+const apodo = l => l.tipo === 'texto' && l.gen ? recorteTexto(l.gen.texto, 28) : l.tipo === 'qr' && l.gen ? recorteTexto(qrLimpio(l.gen.texto) || 'sin link', 28) : l.tipo === 'icono' && l.gen ? idIcono(l.gen) : l.tipo === 'forma' && l.gen ? nombreForma({ ...l.gen, relleno: true }) : (l.name || '');
 const queEs = l => (l && QUE_ES[l.tipo]) || { del: 'del logo', Este: 'Cambios en este logo', el: 'el logo', aplicado: 'Logo aplicado', quitar: 'Quitar este logo' };
 
 /* tipografías: cada una se baja una sola vez; las que sube el cliente quedan guardadas en el navegador
@@ -9439,6 +9557,9 @@ function mensajeTexto(e, tipo){
     : m === 'fuente' || m === 'cdn' ? 'No se pudo bajar la tipografía: revisá la conexión a internet y probá de nuevo.'
     : m === 'iconos' ? 'No se pudieron bajar los íconos: revisá la conexión a internet y probá de nuevo.'
     : m === 'icono' ? 'No se encontró ese ícono: elegí otro.'
+    : m === 'qr-lib' ? 'No se pudo bajar el armador de QR: revisá la conexión a internet y probá de nuevo.'
+    : m === 'qr-largo' ? 'Es demasiado largo para un QR: acortá el link (un acortador de links sirve).'
+    : tipo === 'qr' ? 'No se pudo armar el QR: probá de nuevo.'
     : tipo === 'forma' ? 'No se pudo armar la forma: probá de nuevo.'
     : tipo === 'icono' ? 'No se pudo armar el ícono: probá de nuevo o elegí otro.'
     : 'No se pudo armar el texto con esa tipografía: probá con otra.';
@@ -9576,7 +9697,7 @@ function rehacer(L){
       L.txtOtra = false;
       const g = { ...L.gen };
       try{
-        const r = await (L.tipo === 'forma' ? generarForma(g) : L.tipo === 'icono' ? generarIcono(g) : generarTexto(g, L.txtUnir));
+        const r = await (L.tipo === 'forma' ? generarForma(g) : L.tipo === 'icono' ? generarIcono(g) : L.tipo === 'qr' ? generarQr(g) : generarTexto(g, L.txtUnir));
         if(r && state.logos.includes(L)){ L.txtAviso = ''; L.txtFallo = false; await (L.tipo === 'texto' ? ponerTexto(L, g, r) : ponerFigura(L, g, r)); }
         else if(!r){ // sin letras: queda lo último que se armó
           L.txtAviso = 'Con esa tipografía no se dibuja ninguna letra de este texto: probá otra.'; L.txtFallo = true;
@@ -9590,7 +9711,7 @@ function rehacer(L){
     }while(L.txtOtra);
   })().finally(() => {
     L.txtP = null;
-    if(selLogo() === L){ syncTextoPop(); syncFormaPop(); syncCambios(); }
+    if(selLogo() === L){ syncTextoPop(); syncFormaPop(); syncQrPop(); syncCambios(); }
   });
   if(selLogo() === L) syncTextoPop(); // «⏳ bajando» mientras baja una tipografía
   return L.txtP;
@@ -9652,7 +9773,7 @@ async function ponerTexto(L, g, r){
    Si no se puede guardar, el texto queda sin original: el paquete vectoriza lo que se ve, nunca un texto viejo */
 async function asegurarOriginal(L){
   if(!esGenerado(L) || !L.genSvg || (L.origId && L.origDe === L.genSvg)) return;
-  const g = L.genOk || L.gen, nombre = L.tipo === 'forma' ? archivoForma(g, L.lleno) : L.tipo === 'icono' ? archivoIcono(g) : archivoTexto(g);
+  const g = L.genOk || L.gen, nombre = L.tipo === 'forma' ? archivoForma(g, L.lleno) : L.tipo === 'icono' ? archivoIcono(g) : L.tipo === 'qr' ? archivoQr(g) : archivoTexto(g);
   const r = await registrarArchivo(new File([L.genSvg], nombre, { type: 'image/svg+xml' }));
   if(r){ L.origId = r.id; L.origInfo = r.info; L.origDe = L.genSvg; }
   else{ L.origId = null; L.origInfo = null; L.origDe = null; }
@@ -9880,11 +10001,26 @@ async function ponerFigura(L, g, r){
   const crop = r.ink ? recorteExacto(r.ink, r.vb, probe.naturalWidth, probe.naturalHeight) : computeTrim(probe);
   // una forma tiene la proporción con la que se armó (la del recorte trae el redondeo a píxeles: al estirarla
   // rotada varias veces, engordaba)
-  const aspect = L.tipo === 'forma' ? g.aspecto : crop.w / crop.h;
+  const aspect = L.tipo === 'forma' ? g.aspecto : L.tipo === 'qr' ? 1 : crop.w / crop.h;
   const {w:FW, h:FH} = frameRect();
   const cx = L.x + L.w/2, cy = L.y + L.h/2;
+  const teniaFondo = L.tipo === 'qr' && L.genOk ? !!L.genOk.fondo : null;
   Object.assign(L, { src: r.url, crop, useTrim: true, fullW: probe.naturalWidth, fullH: probe.naturalHeight, aspect,
-    genOk: g, genSvg: r.svg, genBox: r.box, lleno: !!r.lleno, huecoMm: r.huecoMm || 0, name: L.tipo === 'forma' ? nombreForma(g, r.lleno) : nombreIcono(g) });
+    genOk: g, genSvg: r.svg, genBox: r.box, lleno: !!r.lleno, huecoMm: r.huecoMm || 0,
+    name: L.tipo === 'forma' ? nombreForma(g, r.lleno) : L.tipo === 'qr' ? nombreQr(g) : nombreIcono(g) });
+  if(L.tipo === 'qr'){
+    /* al ponerle el fondo se suma su margen impreso (y al sacárselo, se va): el código queda del mismo tamaño y
+       en el mismo lugar; lo que cambia es la caja */
+    if(teniaFondo !== null && teniaFondo !== !!g.fondo){
+      const conMargen = r.cuadros + 2 * QR_MARGEN, k = g.fondo ? conMargen / r.cuadros : r.cuadros / conMargen;
+      let w = L.w*FW*k, h = L.h*FH*k;
+      const tope = Math.min(FW / w, FH / h, 1);
+      w *= tope; h *= tope;
+      L.w = w/FW; L.h = h/FH;
+      L.x = clamp(cx - L.w/2, 0, Math.max(0, 1 - L.w)); L.y = clamp(cy - L.h/2, 0, Math.max(0, 1 - L.h));
+      if(state.mode === 'logo' && L.cmW > 0){ L.cmW *= k * tope; L.cmH = L.cmW; }
+    }
+  }
   if(L.tipo === 'icono'){
     let h = L.h*FH, w = h*aspect;
     const z = state.zone, maxW = z ? z.w*FW : FW;
@@ -10006,6 +10142,143 @@ $('formaEsquinas').addEventListener('input', () => { const L = formaElegida(); i
 $('formaPuntas').addEventListener('input', () => { const L = formaElegida(); if(!L) return; L.gen.puntas = +$('formaPuntas').value; ajustarForma(L); });
 $('lbForma').addEventListener('click', () => abrirPopBarra('forma'));
 $('formaListo').addEventListener('click', () => { cerrarPopsBarra(); $('lbForma').focus(); });
+
+/* ---- QR ---- */
+const cargarQr = () => cargarLib(QR_URLS, () => typeof window.qrcode === 'function').catch(() => { throw new Error('qr-lib'); });
+function qrMatriz(texto){
+  const Q = window.qrcode;
+  Q.stringToBytes = Q.stringToBytesFuncs['UTF-8']; // los acentos y la ñ, en UTF-8: lo que esperan los celulares
+  const q = Q(0, 'M'); // el más chico en el que entra, con corrección de errores media
+  q.addData(texto);
+  q.make();
+  const n = q.getModuleCount();
+  return Array.from({ length: n }, (_, r) => Array.from({ length: n }, (_, c) => !!q.isDark(r, c)));
+}
+async function generarQr(g){
+  await cargarQr();
+  let mat;
+  try{ mat = qrMatriz(qrLimpio(g.texto) || QR_MUESTRA); }
+  catch(e){ throw new Error('qr-largo'); }
+  const r = qrEnCurvas(mat, g);
+  const url = await normalizeSvg(new File([r.svg], archivoQr(g), { type: 'image/svg+xml' }));
+  return { url, svg: r.svg, box: { w: r.w, h: r.h }, ink: r.ink, vb: r.vb, lado: r.lado, cuadros: r.cuadros };
+}
+function qrElegido(){ const L = selLogo(); return L && L.tipo === 'qr' && L.gen ? L : null; }
+/* cuántos cuadraditos tiene de lado el dibujo (con el margen, si lleva el fondo impreso) y cuántos el código.
+   Sale de la caja del dibujo, que se guarda con el boceto: así también se sabe en uno reabierto */
+const qrLado = L => L.genBox && L.genBox.w > 0 ? Math.round(L.genBox.w / QR_PASO) : 0;
+const qrCuadros = L => { const n = qrLado(L), g = L.genOk || L.gen; return n ? n - (g && g.fondo ? 2 * QR_MARGEN : 0) : 0; };
+/* cuánto mide cada cuadradito, en mm (es lo que decide si el celular lo lee): el ancho repartido entre los de su lado */
+function qrCuadradito(L){
+  const m = medidaWH(L), n = qrLado(L);
+  return m && m.w > 0 && n > 0 ? m.w * 10 / n : 0;
+}
+const QR_MM_MIN = 0.4; // por debajo de esto, impreso, los cuadraditos se empastan
+const qrMedida = L => { const mm = qrCuadradito(L), n = qrCuadros(L); return n ? n + ' × ' + n + ' cuadraditos' + (mm ? ' de ' + mmTxt(mm) : '') : ''; };
+function qrResumen(L){
+  const t = qrLimpio(L.gen.texto), med = qrMedida(L);
+  return 'En curvas · ' + (t ? recorteTexto(t, 46) : 'sin link todavía') + (med ? ' · ' + med : '') + (L.gen.fondo ? ' · con el fondo impreso' : ' · sin fondo');
+}
+/* ¿la tinta es clara? (true, false, o null si es a todo color y no se sabe) */
+function tintaClara(L){
+  if(L.tint === 'white') return true;
+  if(L.tint === 'black' || L.tint === 'engrave') return false;
+  if(L.tint !== 'custom' || !L.tintColor) return null;
+  const n = parseInt(String(L.tintColor.hex || '').replace('#', '').slice(0, 6), 16);
+  return isNaN(n) ? null : (0.2126 * (n >> 16 & 255) + 0.7152 * (n >> 8 & 255) + 0.0722 * (n & 255)) / 255 >= 0.5;
+}
+function notaQr(L){
+  const g = L.gen, t = qrLimpio(g.texto), ls = [], mm = qrCuadradito(L), clara = tintaClara(L);
+  if(L.txtAviso) ls.push([1, L.txtAviso]);
+  if(!t) ls.push([1, 'Pegá el link. Mientras tanto se ve un QR de muestra, que no se puede aplicar.']);
+  else {
+    const med = L.genOk && qrLimpio(L.genOk.texto) === t ? qrMedida(L) : '';
+    if(med) ls.push([0, med + '. Probalo con el celular antes de mandarlo a producir.']);
+    if(mm && mm < QR_MM_MIN) ls.push([1, 'Con cuadraditos de menos de ' + mmTxt(QR_MM_MIN) + ' puede no leerse: agrandalo o acortá el link.']);
+  }
+  if(g.fondo){
+    ls.push([0, 'Con fondo: se imprime el fondo (con su margen) y los cuadraditos quedan del color del producto. Es lo que va en un producto oscuro con tinta clara: el celular ve lo de siempre, oscuro sobre claro.']);
+    if(clara === false) ls.push([1, 'Con el fondo en una tinta oscura queda un QR al revés, que hay celulares que no leen: usá una tinta clara, o «Sin fondo».']);
+  } else {
+    ls.push([0, 'Sin fondo: solo los cuadraditos, sobre el producto. Dejale libre alrededor un margen de 4 cuadraditos' + (mm ? ' (' + mmTxt(mm * QR_MARGEN) + ')' : '') + '.']);
+    if(clara) ls.push([1, 'Con una tinta clara sobre un producto oscuro queda un QR al revés, que hay celulares que no leen: ahí conviene «Con fondo».']);
+  }
+  const box = $('qrNota');
+  box.innerHTML = '';
+  ls.forEach(([mal, tx]) => { const d = document.createElement('div'); if(mal) d.className = 'qrMal'; d.textContent = tx; box.appendChild(d); });
+}
+function syncQrPop(){
+  const L = qrElegido();
+  if(!L) return;
+  if(document.activeElement !== $('qrTexto')) $('qrTexto').value = L.gen.texto || ''; // sin pisar lo que se está escribiendo
+  document.querySelectorAll('#qrFondo button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.fondo === '1') === !!L.gen.fondo)));
+  $('qrHttps').hidden = !qrSinEsquema(L.gen.texto);
+  notaQr(L);
+}
+function cambioQr(L){
+  L.txtAviso = ''; L.txtFallo = false;
+  regenerar(L); syncQrPop(); syncCambios();
+}
+async function agregarQr(){
+  const b = $('addQrBtn');
+  if(frame.hidden || b.disabled) return;
+  const tint = tinteParaTexto(), g = { ...QR_NUEVO, fondo: tint === 'white' }, t0 = b.textContent; // sobre lo oscuro nace en blanco y con fondo
+  b.disabled = true; b.textContent = '⏳ Armando el QR…';
+  $('textoNote').hidden = true;
+  try{
+    const r = await generarQr(g);
+    loadLogoSrc(r.url, nombreQr(g), false, null, {
+      tipo: 'qr', gen: g, genOk: { ...g }, genSvg: r.svg, genBox: r.box, tint, ink: r.ink, vb: r.vb,
+      listo: L => {
+        // si al nacer sobre una placa se le cambió el tono (ver loadLogoSrc), el QR acompaña: tinta clara, fondo impreso
+        if((L.tint === 'white') !== !!L.gen.fondo){ L.gen.fondo = L.tint === 'white'; regenerar(L); }
+        abrirPopBarra('qr', true);
+      },
+    });
+  }catch(e){
+    $('textoNoteTxt').textContent = mensajeTexto(e, 'qr');
+    $('textoNote').hidden = false;
+  }finally{ b.disabled = false; b.textContent = t0; }
+}
+$('addQrBtn').addEventListener('click', agregarQr);
+$('lbQr').addEventListener('click', () => abrirPopBarra('qr'));
+$('qrListo').addEventListener('click', () => { cerrarPopsBarra(); $('lbQr').focus(); });
+$('qrTexto').addEventListener('input', () => {
+  const L = qrElegido();
+  if(!L) return;
+  L.gen.texto = $('qrTexto').value.slice(0, QR_LARGO);
+  cambioQr(L);
+});
+$('qrTexto').addEventListener('keydown', e => { // un link no lleva saltos de línea: Enter es «Listo»
+  if(e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); cerrarPopsBarra(); $('lbQr').focus(); }
+});
+$('qrHttps').addEventListener('click', () => {
+  const L = qrElegido();
+  if(!L) return;
+  L.gen.texto = 'https://' + qrLimpio(L.gen.texto);
+  $('qrTexto').value = L.gen.texto;
+  cambioQr(L);
+  $('qrTexto').focus();
+});
+document.querySelectorAll('#qrFondo button').forEach(b => b.addEventListener('click', () => {
+  const L = qrElegido(), fondo = b.dataset.fondo === '1';
+  if(!L || !!L.gen.fondo === fondo) return;
+  L.gen.fondo = fondo;
+  // la tinta acompaña si estaba en negro o en blanco: con fondo va clara (es para un producto oscuro); sin fondo, oscura
+  if(fondo && L.tint === 'black') L.tint = 'white'; else if(!fondo && L.tint === 'white') L.tint = 'black';
+  syncBocetoColorsFromTints();
+  cambioQr(L);
+  syncLogoUI();
+}));
+/* un QR sin link muestra uno de muestra: ese no va a la ficha ni a un PNG. Se lo elige y se abre su menú */
+function frenoQrSinLink(){
+  const L = state.logos.find(l => l.tipo === 'qr' && l.gen && !qrLimpio(l.gen.texto));
+  if(!L) return false;
+  selectLogo(state.logos.indexOf(L));
+  L.txtAviso = 'A este QR le falta el link: pegalo acá, o quitá el QR con su ×.';
+  editarElemento(L);
+  return true;
+}
 
 /* ---- íconos: Material Design Icons por el servicio de Iconify (tres servidores, por si uno no contesta) ---- */
 const ICONIFY = ['https://api.iconify.design', 'https://api.simplesvg.com', 'https://api.unisvg.com'];
@@ -10237,10 +10510,14 @@ async function histAplicar(f){
   // al rearmarse, un texto o una forma calculan de nuevo su caja: queda la de la foto
   f.logos.forEach(o => Object.assign(o.l, { x: o.x, y: o.y, w: o.w, h: o.h, cmW: o.cmW, cmH: o.cmH, genEsc: o.genEsc, genCmEsc: o.genCmEsc }));
   if(f.zone && state.zone) state.zone = { ...f.zone };
-  state.sel = state.logos.length ? clamp(f.sel, 0, state.logos.length - 1) : -1;
+  state.sel = state.logos.length && f.sel >= 0 ? clamp(f.sel, 0, state.logos.length - 1) : -1;
   ordenarCapas();
   syncBocetoColorsFromTints(); syncUndoUI(); syncLogoUI(); setStepStates(); render();
 }
+$('stageCol').addEventListener('click', e => {
+  if(e.target.closest('#frame, #logoBar, #zoomCtrls, #alignCtrls, #undoFlota, #emptyState, button, input, a, label')) return;
+  deseleccionar();
+});
 $('histUndo').addEventListener('click', () => histIr(true));
 $('histRedo').addEventListener('click', () => histIr(false));
 
@@ -10497,6 +10774,7 @@ frame.addEventListener('pointerdown', e => {
     }
   }
   zoneEl.classList.remove('faded');
+  deseleccionar(); // se tocó la foto, no un elemento
 
   const corner = e.target.dataset && e.target.dataset.corner;
   if(corner && e.target.parentElement === zoneEl && state.zone){
@@ -10751,6 +11029,7 @@ async function listoParaAplicar(){
     editarElemento(malo);
     return false;
   }
+  if(frenoQrSinLink()) return false;
   // «Tu texto» tal cual: casi seguro que se olvidó de escribirlo
   const sinEscribir = state.logos.filter(l => l.tipo === 'texto' && l.gen && l.gen.texto.trim() === TEXTO_NUEVO.texto);
   if(sinEscribir.length && !confirm((sinEscribir.length > 1 ? 'Hay ' + sinEscribir.length + ' textos que todavía dicen' : 'Hay un texto que todavía dice')
@@ -11079,6 +11358,8 @@ const fichaArte = l => ({
   z: l.z || 0, // su capa: el arte en curvas se pinta en ese orden
   generado: esGenerado(l) ? l.tipo : undefined, // texto, forma o ícono armado en el boceteador (no lo mandó el cliente)
   letra: (a => a ? { mm: +(a.cm*10).toFixed(1), que: a.que } : undefined)(l.tipo === 'texto' ? alturaLetra(l) : null),
+  // un QR: qué tiene que leer el taller al probarlo, y cuánto miden sus cuadraditos
+  qr: l.tipo === 'qr' && l.gen ? (mm => ({ link: qrLimpio(l.gen.texto), n: qrCuadros(l), mm: +mm.toFixed(2), fondo: !!l.gen.fondo, chico: mm > 0 && mm < QR_MM_MIN }))(qrCuadradito(l)) : undefined,
   encimados: l.tipo === 'texto' && l.encimados ? true : undefined,
   faltan: (l.tipo === 'texto' && l.faltan && l.faltan.length) ? l.faltan.slice() : undefined,
 });
@@ -11155,6 +11436,7 @@ async function aplicarBoceto(unir){
 $('downloadBtn').addEventListener('click', async () => {
   if(!state.logos.length) return;
   await generadosAlDia(); // el PNG con lo último que se escribió
+  if(frenoQrSinLink()) return;
   const name = productNameVal() || 'producto';
   const a = document.createElement('a');
   a.download = `boceto-${name.toLowerCase().replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'')||'producto'}.png`;
