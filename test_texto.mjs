@@ -10,7 +10,8 @@ assert.ok(i >= 0 && j > i, 'no encontré el bloque del texto en curvas');
 const T = new Function(html.slice(i, j)
   + 'return { FUENTES, GRUPOS_FUENTE, TEXTO_NUEVO, urlsFuente, pesoCercano, nombrePeso, etiquetaFuente, nombreTexto, archivoTexto, limpiarTexto, textoEnCurvas, cajaCurvas, contornoEncimado, gruposQueSeTocan, leerKern,'
   + ' FORMAS, FORMA_NUEVA, formaEnCurvas, invertirContorno, bordeAdentro, recorteExacto, aplanar, areaFirmada, nombreForma, archivoForma,'
-  + ' ICONOS_CATEGORIAS, ICONOS_ES, ICONOS_FRASES, traducirBusqueda, consultasIcono, correccionIcono, distLetras, sinIconosPara, iconoSeguro, iconoEnSvg, nombreIcono, archivoIcono };')();
+  + ' ICONOS_CATEGORIAS, ICONOS_ES, ICONOS_FRASES, traducirBusqueda, consultasIcono, correccionIcono, distLetras, sinIconosPara, iconoSeguro, iconoEnSvg, nombreIcono, archivoIcono,'
+  + ' QR_NUEVO, QR_MARGEN, QR_PASO, QR_LARGO, qrLimpio, qrSinEsquema, nombreQr, archivoQr, qrTrazado, qrEnCurvas };')();
 
 /* motor de mentira (como el de HarfBuzz): 1000 unidades por eme, cada letra avanza 600 (o lo que diga
    avance) y dibuja un rectángulo de 500 de ancho y 700 de alto (el alto de las mayúsculas; el de la x es 500);
@@ -387,4 +388,111 @@ assert.ok(ico.svg.includes('viewBox="0 0 24 24"') && !ico.svg.includes('currentC
 assert.equal(T.nombreIcono({ icono: 'mdi:coffee' }), 'Ícono «coffee»');
 assert.equal(T.archivoIcono({ icono: 'mdi:coffee' }), 'Icono coffee (Material Design Icons).svg');
 
-console.log('ok: texto, formas e íconos en curvas');
+/* ---------- QR: de los cuadraditos al dibujo ---------- */
+{
+  const P = T.QR_PASO;
+  // el trazado, en contornos de puntos (solo trae M, H, V y Z)
+  const contornosDe = d => d.split('Z').filter(Boolean).map(c => {
+    const pts = []; let x = 0, y = 0;
+    for(const m of c.matchAll(/([MHV])(-?\d+)(?: (-?\d+))?/g)){
+      if(m[1] === 'M'){ x = +m[2]; y = +m[3]; } else if(m[1] === 'H') x = +m[2]; else y = +m[2];
+      pts.push([x, y]);
+    }
+    assert.equal(c.replace(/[MHV]-?\d+(?: -?\d+)?/g, ''), '', 'el trazado del QR solo lleva M, H y V');
+    return pts;
+  });
+  const area = pts => pts.reduce((s, p, i) => { const q = pts[(i + 1) % pts.length]; return s + (p[0] * q[1] - q[0] * p[1]) / 2; }, 0);
+  // cuántas vueltas da el dibujo alrededor de un punto (≠ 0: adentro) y cuántos bordes cruza un rayo (impar: adentro)
+  const adentro = (cs, px, py) => {
+    let vueltas = 0, cruces = 0;
+    for(const pts of cs) pts.forEach((p, i) => {
+      const q = pts[(i + 1) % pts.length];
+      if(p[0] !== q[0] || p[0] < px) return; // solo los tramos verticales a la derecha del punto
+      const [y1, y2] = [p[1], q[1]];
+      if(Math.min(y1, y2) < py && py < Math.max(y1, y2)){ cruces++; vueltas += y2 > y1 ? 1 : -1; }
+    });
+    return { nonzero: vueltas !== 0, evenodd: cruces % 2 === 1 };
+  };
+  const revisar = (mat, oscuro, nombre) => {
+    const t = T.qrTrazado(mat, oscuro), cs = contornosDe(t.d), n = mat.length, m = oscuro ? T.QR_MARGEN : 0;
+    assert.equal(t.n, n); assert.equal(t.N, n + 2 * m); assert.equal(cs.length, t.contornos);
+    let tinta = 0;
+    for(let r = 0; r < t.N; r++) for(let c = 0; c < t.N; c++){
+      const rr = r - m, cc = c - m, osc = rr >= 0 && cc >= 0 && rr < n && cc < n && !!mat[rr][cc], va = oscuro ? !osc : osc;
+      if(va) tinta++;
+      const a = adentro(cs, (c + 0.5) * P, (r + 0.5) * P);
+      assert.equal(a.nonzero, va, nombre + ': el cuadradito ' + r + ',' + c + ' (regla «nonzero»)');
+      assert.equal(a.evenodd, va, nombre + ': el cuadradito ' + r + ',' + c + ' (regla «evenodd»)');
+    }
+    // la superficie del dibujo es la de los cuadraditos con tinta (los huecos restan: van al revés)
+    assert.equal(Math.abs(cs.reduce((s, pts) => s + area(pts), 0)), tinta * P * P, nombre + ': la superficie');
+    // ningún borde repetido (un plotter lo cortaría dos veces) y ningún punto de más en un tramo recto
+    const vistos = new Set();
+    for(const pts of cs) pts.forEach((p, i) => {
+      const q = pts[(i + 1) % pts.length], z = pts[(i + 2) % pts.length];
+      assert.ok((p[0] === q[0]) !== (p[1] === q[1]), nombre + ': cada tramo es horizontal o vertical');
+      assert.ok((p[0] === q[0]) !== (q[0] === z[0]), nombre + ': dos tramos seguidos doblan (no hay puntos de más)');
+      const paso = p[0] === q[0] ? [0, Math.sign(q[1] - p[1]) * P] : [Math.sign(q[0] - p[0]) * P, 0];
+      for(let x = p[0], y = p[1]; x !== q[0] || y !== q[1]; x += paso[0], y += paso[1]){
+        const k = [Math.min(x, x + paso[0]), Math.min(y, y + paso[1]), paso[0] ? 'h' : 'v'].join(',');
+        assert.ok(!vistos.has(k), nombre + ': el borde ' + k + ' está dos veces');
+        vistos.add(k);
+      }
+    });
+    return { t, cs };
+  };
+  // un cuadradito: un cuadrado
+  let q = revisar([[1]], false, 'uno');
+  assert.equal(q.cs.length, 1); assert.equal(q.cs[0].length, 4);
+  // dos pegados: un rectángulo de cuatro puntas (no dos cuadrados con un borde en común)
+  q = revisar([[1, 1], [0, 0]], false, 'dos pegados');
+  assert.equal(q.cs.length, 1); assert.equal(q.cs[0].length, 4);
+  // dos que se tocan por la punta: cada uno cierra su contorno
+  q = revisar([[1, 0], [0, 1]], false, 'en diagonal');
+  assert.equal(q.cs.length, 2);
+  q = revisar([[0, 1], [1, 0]], false, 'en la otra diagonal');
+  assert.equal(q.cs.length, 2);
+  // un aro: el hueco va en sentido contrario al de afuera
+  q = revisar([[1, 1, 1], [1, 0, 1], [1, 1, 1]], false, 'aro');
+  assert.equal(q.cs.length, 2);
+  assert.ok(Math.sign(area(q.cs[0])) === -Math.sign(area(q.cs[1])), 'el hueco, al revés');
+  // para producto oscuro: el fondo con su margen de 4, y el cuadradito queda de hueco
+  q = revisar([[1]], true, 'fondo impreso');
+  assert.equal(q.t.N, 9); assert.equal(q.cs.length, 2);
+  // sin nada oscuro: sin tinta en claro; el fondo entero en oscuro
+  assert.equal(T.qrTrazado([[0, 0], [0, 0]], false).d, '');
+  assert.equal(revisar([[0, 0], [0, 0]], true, 'fondo liso').cs.length, 1);
+  // matrices al voleo del tamaño de un QR de verdad (25 y 41 de lado), de las dos formas
+  let semilla = 12345;
+  const azar = () => (semilla = (semilla * 1103515245 + 12345) % 2147483648) / 2147483648;
+  for(const lado of [25, 41]) for(const oscuro of [false, true]) for(let k = 0; k < 3; k++){
+    const mat = Array.from({ length: lado }, () => Array.from({ length: lado }, () => azar() < 0.5));
+    revisar(mat, oscuro, 'al voleo ' + lado + (oscuro ? ' (fondo)' : ''));
+  }
+  // el SVG: su medida, el título con el link escapado y un solo trazado
+  const g = { ...T.QR_NUEVO, texto: '  https://marca.com.ar/promo?a=1&b=<2>  ' };
+  let s = T.qrEnCurvas([[1, 0], [0, 1]], g);
+  assert.equal(s.w, 2 * P); assert.equal(s.h, 2 * P); assert.equal(s.cuadros, 2); assert.equal(s.lado, 2);
+  assert.deepEqual(s.ink, { x1: 0, y1: 0, x2: 2 * P, y2: 2 * P });
+  assert.ok(s.svg.includes('data-exacto="1"') && s.svg.includes('<title>QR en curvas: https://marca.com.ar/promo?a=1&amp;b=&lt;2&gt;</title>'));
+  assert.equal((s.svg.match(/<path /g) || []).length, 1);
+  s = T.qrEnCurvas([[1, 0], [0, 1]], { ...g, fondo: true });
+  assert.equal(s.w, (2 + 2 * T.QR_MARGEN) * P); assert.equal(s.lado, 2 + 2 * T.QR_MARGEN); assert.equal(s.cuadros, 2);
+  assert.ok(s.svg.includes('con el fondo impreso'));
+  // nombres: el de la pantalla y el del archivo (sin nada que rompa un zip o una carpeta)
+  assert.equal(T.nombreQr(g), 'QR «https://marca.com.ar/promo?…»');
+  assert.equal(T.nombreQr({ texto: '' }), 'QR «sin link»');
+  assert.equal(T.archivoQr(g), 'QR marca.com.ar promo a 1 b 2.svg');
+  assert.equal(T.archivoQr({ texto: 'https://wa.me/5491145678900', fondo: true }), 'QR wa.me 5491145678900 - fondo impreso.svg');
+  assert.ok(!/[\\/:*?"<>|]/.test(T.archivoQr({ texto: 'mailto:juan@marca.com?subject=Hola' })));
+  // lo que se pega: sin los espacios ni los saltos de las puntas, y con tope
+  assert.equal(T.qrLimpio('\n  https://marca.com \n'), 'https://marca.com');
+  assert.equal(T.qrLimpio(null), '');
+  assert.equal(T.qrLimpio('x'.repeat(5000)).length, T.QR_LARGO);
+  // un dominio sin «https://»: se avisa. Lo que ya trae su esquema, o no es un link, no
+  for(const t of ['marca.com.ar', 'www.marca.com/promo?x=1', 'wa.me/5491145678900', ' tienda.marca.com ']) assert.ok(T.qrSinEsquema(t), t);
+  for(const t of ['https://marca.com', 'http://marca.com', 'hola', 'juan@marca.com', 'mailto:juan@marca.com', 'tel:+541145678900', 'WIFI:T:WPA;S:red;P:clave;;', 'Promo 2x1 en marca.com', ''])
+    assert.ok(!T.qrSinEsquema(t), t);
+}
+
+console.log('ok: texto, formas, íconos y QR en curvas');

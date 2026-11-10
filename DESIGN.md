@@ -116,7 +116,7 @@ pero ninguno es necesario para validar el boceto visual.
 > **Actualización (noviembre 2026):** varios de estos ya están en
 > `generador-bocetos.html`: varios logos, quitar el fondo, modificar el logo con IA
 > y, ahora, **textos**. Decisión de diseño para todo lo que se agregue al boceto
-> (texto, formas, íconos): **es un logo más**. Se genera en el navegador como un SVG
+> (texto, formas, íconos, QR): **es un logo más**. Se genera en el navegador como un SVG
 > en curvas y entra a la misma lista que los logos, así hereda mover, medir en cm,
 > pintar con HEX o Pantone, las hojas de la ficha y el paquete del taller (que lo
 > toma como curvas del cliente). El texto arma las letras con HarfBuzz (harfbuzzjs:
@@ -124,7 +124,9 @@ pero ninguno es necesario para validar el boceto visual.
 > curvas (nunca `<text>`: el taller no necesita la tipografía), une con paper.js las
 > que se enciman (vinilo, láser, bordado) y guarda lo que dice y con qué tipografía,
 > para seguir editándolo. Las formas (con su contorno en mm reales, como figura cerrada)
-> y los íconos (Material Design Icons, por Iconify) siguen la misma receta. Tres reglas
+> y los íconos (Material Design Icons, por Iconify) siguen la misma receta, y el QR
+> también (qrcode-generator dice qué cuadraditos van; el dibujo, con los que se tocan
+> unidos, se arma acá; sin fondo, o con el fondo impreso para un producto oscuro). Tres reglas
 > que salieron de revisar combinaciones: **lo que se ve es lo que va al taller** (el PDF
 > en curvas respeta las capas; dos elementos encimados con la misma tinta se avisan),
 > **la medida sale de la geometría** (no de mirar píxeles: el contorno es la paralela
