@@ -90,9 +90,10 @@ alto de un texto van siempre juntos (con o sin 🔗): las letras no se deforman.
 - **Tipografías**: 32 de Google Fonts en 5 grupos (palo seco, con serif, display,
   manuscritas y máquina de escribir), cada una con su letra en la lista. Se bajan
   recién al usarlas (de fontsource por jsDelivr, con unpkg de respaldo); mientras
-  baja, la línea «Tipografía» dice «⏳ bajando…». Si un CDN no contesta en 10 s se
-  prueba el otro, y si la conexión está colgada se avisa y «＋ Texto» vuelve a
-  quedar disponible (nunca queda trabado).
+  baja, la línea «Tipografía» dice «⏳ bajando…». Si un CDN falla o lleva 3 s sin
+  terminar, **se le pide también al otro y gana el que llega** (uno colgado no deja
+  esperando); si la conexión está caída se avisa y «＋ Texto» vuelve a quedar
+  disponible (nunca queda trabado).
 - **La tipografía del cliente**: «Subir la tipografía del cliente» acepta .ttf,
   .otf o .woff (.woff2 no: hay que pedir el .ttf u .otf). Queda guardada en el
   navegador y **viaja al taller** como adjunto del texto que la usa (deja de viajar
@@ -101,20 +102,32 @@ alto de un texto van siempre juntos (con o sin 🔗): las letras no se deforman.
   **tipografía variable** (un solo archivo con todos los grosores), ofrece los
   grosores que tiene, como las de la lista.
 - **Va en curvas, bien armado**: las letras las arma **HarfBuzz** (harfbuzzjs, el
-  mismo motor con el que el navegador dibuja el texto): con el **kerning** de cada
-  tipografía (la «AV», la «To» o la «LT» quedan juntas como en cualquier programa de
-  diseño), sus ligaduras (fi, fl) y, en las manuscritas, las formas que se unen entre
-  sí. Después se pasan a curvas, así que el taller no necesita tener la tipografía.
+  mismo motor con el que el navegador dibuja el texto): con el **kerning que trae
+  cada tipografía** (la «AV», la «To» o la «LT» quedan juntas como en cualquier
+  programa de diseño), sus ligaduras (fi, fl) y, en las manuscritas, las formas que
+  se unen entre sí. El kerning «viejo» (tabla `kern`), que es el único que traen
+  Righteous, Satisfy y Permanent Marker, lo lee el boceteador (el HarfBuzz que se baja
+  no lo trae). Las que **no traen kerning** en el archivo que se baja (Poppins, Open
+  Sans, Lobster y las de máquina de escribir) van sin él. **Con espacio entre letras
+  no hay ligaduras** (una «fi» pegada no se puede separar). Después se pasan a
+  curvas, así que el taller no necesita tener la tipografía.
   En el paquete, el texto sale «con sus curvas originales» (repintado a la tinta
   elegida, con su Pantone como tinta directa) y su SVG va como referencia, rotulado
   «texto en curvas armado en el boceteador». HarfBuzz (≈450 KB) se baja la primera
-  vez que se agrega un texto.
+  vez que se agrega un texto, con `fetch` y el módulo armado desde la memoria: si la
+  descarga se corta a mitad de camino, **el próximo «＋ Texto» anda sin recargar la
+  página** (importado directo de la URL, el navegador lo recordaba como roto).
 - **Letras que se tocan, en un solo contorno**: en las manuscritas las letras se
-  enciman donde se unen, y algunas letras vienen en dos piezas que se pisan (una Ç).
-  En pantalla y en PDF eso no se nota, pero el corte de vinilo o láser corta cada
-  pieza y el bordado puntea dos veces lo encimado. Por eso esas letras se unen en una
-  sola figura (con paper.js, que se baja solo si hace falta). Si no se pudo (sin
-  conexión), el paquete avisa que hay que soldarlas antes de producir.
+  enciman donde se unen, y hay letras cuyo dibujo se pisa a sí mismo: una Ç en dos
+  piezas y, sobre todo, las **tipografías variables** (la del cliente suele serlo),
+  donde la A son dos patas y un travesaño encimados (en Montserrat variable, 56 de
+  82 letras). En pantalla y en PDF eso no se nota, pero el corte de vinilo o láser
+  corta cada pieza y el bordado puntea dos veces lo encimado. Se detecta **tramo
+  contra tramo** (no por las cajas, que dejaban pasar el travesaño de la A) y esas
+  letras se unen en una sola figura con paper.js. **paper.js no frena al texto**: si
+  todavía no llegó, el texto se ve ya, sin unir, y se rehace solo cuando llega; al
+  aplicar se lo espera unos segundos. Si no se pudo (sin conexión), el paquete avisa
+  que hay que soldarlas antes de producir.
 - **Lo pegado se limpia**: los tabuladores de Excel y los saltos de Word quedan
   como espacios o renglones, los acentos que vienen sueltos (al pegar desde una Mac o
   un PDF) se pegan a su letra y los caracteres invisibles se sacan.
@@ -125,7 +138,8 @@ alto de un texto van siempre juntos (con o sin 🔗): las letras no se deforman.
 - **Lo que hay que mirar**: «Este texto», en el panel, dice la tipografía y el
   **alto de la letra** en mm (para saber si la técnica lo imprime): el de las
   mayúsculas si el texto tiene alguna; si es todo en minúsculas («www.marca.com.ar»),
-  el de la x, que en una manuscrita es la mitad o menos. Se mide en el dibujo de la
+  el de la x, que en una manuscrita es la mitad o menos; un teléfono o un «2026»
+  («Los números miden…») miden como las mayúsculas. Se mide en el dibujo de la
   tipografía (el dato que trae a veces no coincide) y va como dato en el paquete.
 - **«Tu texto» sin cambiar**: al aplicar, pregunta si va así (casi siempre es un
   olvido).
@@ -139,8 +153,9 @@ alto de un texto van siempre juntos (con o sin 🔗): las letras no se deforman.
   todo color, sus colores quedan y se suman los otros.
 - **Aplicar y Descargar PNG esperan al texto**: si se toca enseguida de escribir o
   de elegir una tipografía que está bajando, esperan a que el texto esté al día (el
-  botón dice «⏳ Terminando el texto…»). Si el último cambio no se pudo armar (sin
-  conexión), no aplica: muestra el texto con su aviso.
+  botón dice «⏳ Terminando…»). Si el último cambio no se pudo armar (sin
+  conexión), no aplica: muestra el texto con su aviso. **Una sola vez**: lo que se
+  ve es lo último que sí se armó, y con otro clic en «Aplicar» va eso.
 
 Al guardar una plantilla, el texto sigue siendo editable al abrirla. Con la
 tipografía del cliente, en otra computadora el texto se ve igual, pero para
@@ -158,23 +173,64 @@ clic sobre ellos o con su botón en la barra («Forma» o «Ícono»).
 - **Formas**: rectángulo (con las esquinas rectas, redondeadas o del todo redondas),
   círculo, triángulo, rombo, hexágono, estrella (de 4 a 12 puntas), escudo, corazón y
   línea. **Con relleno o solo el contorno**, con el **grosor en mm reales** (de 0,2 a
-  10 mm): el borde es una figura cerrada con el mismo grosor en todo su recorrido, no
-  una línea, así el vinilo, el láser o el bordado la toman tal cual. **El ancho y el
-  alto van sueltos**: se estira desde una esquina o se escribe la medida (un
-  rectángulo de 10 × 2 cm), y la forma se rehace con esa proporción (el contorno no se
-  deforma). Al cambiar de forma sin haberla estirado, toma la proporción de la nueva
-  (de rectángulo a círculo da un círculo). La línea es siempre llena: su grosor es su
-  alto.
+  10 mm): el borde es una figura cerrada, no una línea, así el vinilo, el láser o el
+  bordado la toman tal cual. El borde de adentro es **la paralela exacta** al de
+  afuera (en una punta entrante, como entre dos puntas de una estrella, dobla con un
+  arco): el grosor es el pedido en todo el recorrido, también en el corazón, la
+  estrella gruesa o una forma muy estirada (medido en el PDF del taller: 2 mm ± 0,03).
+  Si con ese grosor **no queda hueco**, la forma va llena y el menú lo dice. El
+  contorno **se rehace cuando cambia la medida** (se corrigió la escala del producto,
+  se agrandó la forma): siempre mide lo que dice. **El ancho y el alto van sueltos**:
+  se estira desde una esquina o se escribe la medida (un rectángulo de 10 × 2 cm, con
+  decimales), y la forma se rehace con esa proporción (el contorno no se deforma). Al
+  cambiar de forma sin haberla estirado, toma la proporción de la nueva (de
+  rectángulo a círculo da un círculo) y, si estaba adentro del área, **sigue
+  adentro** (el círculo se achica hasta entrar). La línea es siempre llena: su grosor es su
+  alto, y **desde las puntas solo cambia de largo** (un pulso torpe no la engorda).
+  La medida de textos y formas sale **de su geometría**, no de mirar los píxeles: una
+  línea de 0,5 mm mide 0,5 mm.
 - **Íconos**: los de **Material Design Icons** (más de 7000, licencia Apache 2.0,
   libres para trabajos comerciales), con **categorías** (Básicos, Contacto y redes,
   Comida y bebida, Deportes, Naturaleza, Trabajo, Celebración, Salud, Transporte,
-  Flechas) y un **buscador en castellano** (las palabras más pedidas se traducen:
-  «corazón», «café», «auto»…; también acepta inglés). Los llenos van primero: los de
-  línea fina se pierden en una tampografía o un bordado chicos. «Ícono», en la barra,
-  lo cambia por otro con el mismo alto. Los de marcas (WhatsApp, Instagram…) son de
-  sus dueños: van sin cambiarles la forma, para indicar la cuenta. Se bajan del
-  servicio de Iconify (con dos servidores de respaldo); lo que llega se usa solo si es
-  dibujo (nada de scripts ni enlaces).
+  Flechas) y un **buscador en castellano**: unas 330 palabras de vendedor se
+  traducen (el servicio está en inglés), con los rubros («peluquería», «abogado»,
+  «inmobiliaria», «farmacia», «parrilla»), los regalos empresariales («lapicera»,
+  «mochila», «paraguas») y los apodos («wsp», «e-mail»). Entiende **frases** («copa
+  de vino», «camión de reparto»: saca los conectores y, si la frase entera no da
+  nada, busca palabra por palabra) y **plurales** («tijeras»). Mientras busca dice
+  «Buscando…»; si no hay nada, sugiere una palabra más general, y si es una marca que
+  no está (TikTok) dice que se suba como logo. Una búsqueda que tarda **no pisa** a la
+  categoría que se eligió mientras tanto. Los llenos van primero: los de línea fina
+  se pierden en una tampografía o un bordado chicos. «Ícono», en la barra, lo cambia
+  por otro con el mismo alto. Nace de un tercio del lado corto del área, y nunca de
+  menos de 28 px en pantalla (en el área de una lapicera no se podía ni agarrar). Los
+  de marcas (WhatsApp, Instagram…) son de sus dueños: van sin cambiarles la forma,
+  para indicar la cuenta. Se bajan del servicio de Iconify (con dos servidores de
+  respaldo: si uno falla o lleva 2,5 s sin contestar, se le pide también al
+  siguiente; mientras bajan dice «Cargando los íconos…»); lo que llega se usa **solo
+  si es dibujo**: cada etiqueta tiene que estar en una lista corta (`path`, `g`,
+  `circle`…), sin eventos, enlaces ni estilos. La ventana tiene alto fijo: el
+  buscador no cambia de lugar con cada búsqueda.
+
+**Dónde nacen**: un texto, una forma o un ícono nuevos nacen siempre **adentro del
+área de impresión**: en la franja libre (abajo o arriba de lo que ya está) o, con el
+área ocupada, en el medio, más chicos y corridos. (Un logo subido como archivo, con
+el área llena, sigue yendo abajo de los otros: se ve y se puede tocar.)
+
+**Capas y tintas**: con varios elementos encimados, «Traer adelante / Enviar atrás»
+decide cuál va arriba, y **el PDF en curvas del taller los pinta en ese orden**
+(igual que el PNG y el mockup). Si dos elementos se pisan (tinta sobre tinta, medido
+en píxeles) y salen **con la misma tinta** —en láser, una placa y el texto encima—,
+impresos son una sola mancha aunque en el boceto se distingan: lo avisa la pregunta
+«¿Cómo se imprimen?» y lo pide tildar la revisión del paquete.
+
+**A la vista**: el aviso de «se sale del área» (o «no entra») también va **junto a
+«Aplicar»**, y al aplicar así pregunta antes. En un elemento chico (una línea, un
+ícono), la × va por fuera para no tapar las manijas. Al quitar algo, el «Deshacer»
+aparece unos segundos **sobre la foto** (en el celular, abajo de la pantalla), además
+del del paso 3; si lo quitado tenía un cambio a medio armar, vuelve con ese cambio.
+En «¿Cómo se imprimen?», Esc cierra la pregunta, no el editor. En el celular, con la hoja de
+edición abierta, los botones de la barra no tapan lo que se edita.
 
 En los colores (de la ficha y de «Un color»), **cambiar el HEX a mano suelta el
 Pantone** que había: así al taller no le llega un Pantone que ya no corresponde.
@@ -474,7 +530,8 @@ proveedor (por mail o WhatsApp) para que imprima sin preguntar nada:
 - Una carpeta por aplicación (`Hoja N - posición - técnica - medida`) con:
   - **`Arte en curvas - medida real.pdf`**: PDF vectorial del tamaño exacto del
     arte, con los logos ubicados como en el boceto (si van varios juntos, la
-    combinación lista para la película o el shablón, con rotaciones incluidas).
+    combinación lista para la película o el shablón, con rotaciones incluidas y
+    **en el orden de las capas** del boceto: lo de arriba se pinta último).
   - el **arte a medida real en PNG 300 dpi** (lleva los dpi adentro, así abre al
     tamaño justo en Corel/Illustrator/Photoshop);
   - el mockup y los **archivos originales del cliente** tal cual se subieron,
@@ -516,7 +573,8 @@ etc.).
   un tamaño de referencia para escalar.
 - **Lo dudoso** (logo que es una foto metida en un PDF, textos sin convertir a
   curvas, degradés en técnicas de tinta plana, baja resolución, vectorizado
-  automático…) hay que tildarlo como revisado y queda escrito en el LEEME.
+  automático, **dos elementos que se pisan con la misma tinta**…) hay que tildarlo
+  como revisado y queda escrito en el LEEME.
 
 ### Detalles para no romper
 
@@ -528,8 +586,14 @@ etc.).
 - Los PDF se rasterizan con fondo transparente: pdf.js pinta la hoja de blanco
   por defecto y el logo quedaba con un recuadro blanco.
 - JSZip, pdf-lib, imagetracerjs y svg2pdf.js se cargan recién al usarlos (con un
-  CDN de respaldo). Los nombres dentro del zip van sin tildes porque los
-  descompresores viejos de Windows los rompen.
+  CDN de respaldo; cada uno tiene 15 s: si uno no contesta, se prueba el otro). Los
+  nombres dentro del zip van sin tildes porque los descompresores viejos de Windows
+  los rompen.
+- **Un SVG se sanea antes de entrar al documento** (`sanearSvg`): para pasarlo a
+  PDF hay que importarlo a la página, y un `<script>` adentro del archivo del cliente
+  (también disfrazado con otro espacio de nombres) se ejecutaba en la app, que guarda
+  el acceso a Drive y la clave de IA. Solo quedan los elementos de dibujo de SVG, sin
+  manejadores de eventos ni enlaces hacia afuera. No sacar ese paso.
 
 ## Ramas y entornos de prueba
 

@@ -8,9 +8,9 @@ const html = fs.readFileSync(new URL('./generador-bocetos.html', import.meta.url
 const i = html.indexOf('const HARFBUZZ_URLS'), j = html.indexOf('/* fin del texto en curvas', i);
 assert.ok(i >= 0 && j > i, 'no encontré el bloque del texto en curvas');
 const T = new Function(html.slice(i, j)
-  + 'return { FUENTES, GRUPOS_FUENTE, TEXTO_NUEVO, urlsFuente, pesoCercano, nombrePeso, etiquetaFuente, nombreTexto, archivoTexto, limpiarTexto, textoEnCurvas, cajaCurvas, contornoEncimado, gruposQueSeTocan,'
-  + ' FORMAS, FORMA_NUEVA, formaEnCurvas, invertirContorno, insetPoligono, aplanar, areaFirmada, nombreForma, archivoForma,'
-  + ' ICONOS_CATEGORIAS, traducirBusqueda, iconoSeguro, iconoEnSvg, nombreIcono, archivoIcono };')();
+  + 'return { FUENTES, GRUPOS_FUENTE, TEXTO_NUEVO, urlsFuente, pesoCercano, nombrePeso, etiquetaFuente, nombreTexto, archivoTexto, limpiarTexto, textoEnCurvas, cajaCurvas, contornoEncimado, gruposQueSeTocan, leerKern,'
+  + ' FORMAS, FORMA_NUEVA, formaEnCurvas, invertirContorno, bordeAdentro, recorteExacto, aplanar, areaFirmada, nombreForma, archivoForma,'
+  + ' ICONOS_CATEGORIAS, ICONOS_ES, traducirBusqueda, consultasIcono, sinIconosPara, iconoSeguro, iconoEnSvg, nombreIcono, archivoIcono };')();
 
 /* motor de mentira (como el de HarfBuzz): 1000 unidades por eme, cada letra avanza 600 (o lo que diga
    avance) y dibuja un rectángulo de 500 de ancho y 700 de alto (el alto de las mayúsculas; el de la x es 500);
@@ -39,6 +39,7 @@ assert.deepEqual(r.faltan, []);
 // en curvas: un <path>, ningún <text>, y el título escapado
 assert.ok(/<path fill="#000000" d="M/.test(r.svg));
 assert.ok(!/<text[\s>]/.test(r.svg));
+assert.ok(r.svg.includes('data-exacto="1"') && r.ink.x2 - r.ink.x1 === r.w && r.vb.length === 4); // la medida sale de la geometría
 r = T.textoEnCurvas(font, gen({ texto: 'A<b>&"' }));
 assert.ok(r.svg.includes('A&lt;b&gt;&amp;&quot;'));
 assert.ok(!r.svg.includes('<b>'));
@@ -82,7 +83,17 @@ assert.deepEqual(T.cajaCurvas([{ type: 'M', values: [0, 0] }, { type: 'C', value
 // partes que se enciman (una Ç de dos piezas) sí; el hueco de una «o» (adentro) y la i con su punto (aparte) no
 const rect = (x1, y1, x2, y2) => [{ type: 'M', values: [x1, y1] }, { type: 'L', values: [x2, y1] }, { type: 'L', values: [x2, y2] }, { type: 'L', values: [x1, y2] }, { type: 'Z', values: [] }];
 assert.equal(T.contornoEncimado([...rect(0, 0, 10, 10), ...rect(5, 8, 12, 14)]), true);
-assert.equal(T.contornoEncimado([...rect(0, 0, 10, 10), ...rect(3, 3, 7, 7)]), false);
+const hueco = (x1, y1, x2, y2) => [{ type: 'M', values: [x1, y1] }, { type: 'L', values: [x1, y2] }, { type: 'L', values: [x2, y2] }, { type: 'L', values: [x2, y1] }, { type: 'Z', values: [] }];
+assert.equal(T.contornoEncimado([...rect(0, 0, 10, 10), ...hueco(3, 3, 7, 7)]), false); // el ojo de la o: al revés que su contorno
+assert.equal(T.contornoEncimado([...rect(0, 0, 10, 10), ...rect(3, 3, 7, 7)]), true);   // un lleno metido en otro lleno
+// la A de una tipografía variable: el travesaño cae entero dentro de la caja de las patas (mirando solo cajas, pasaba)
+const pata = (x0, x1) => [{ type: 'M', values: [x0, 0] }, { type: 'L', values: [x0 + 2, 0] }, { type: 'L', values: [x1 + 2, 20] }, { type: 'L', values: [x1, 20] }, { type: 'Z', values: [] }];
+assert.equal(T.contornoEncimado([...pata(0, 9), ...pata(18, 9), ...rect(3, 6, 17, 8)]), true);
+assert.equal(T.contornoEncimado(rect(0, 0, 10, 10)), false);
+// un lazo en un solo trazo (un moño) también
+assert.equal(T.contornoEncimado([{ type: 'M', values: [0, 0] }, { type: 'L', values: [10, 10] }, { type: 'L', values: [10, 0] }, { type: 'L', values: [0, 10] }, { type: 'Z', values: [] }]), true);
+// curvas de un .ttf (un solo punto de control): se aplanan igual
+assert.equal(T.aplanar([{ type: 'M', values: [0, 0] }, { type: 'Q', values: [50, 100, 100, 0] }], 2).length, 3);
 assert.equal(T.contornoEncimado([...rect(0, 0, 10, 10), ...rect(0, 12, 10, 14)]), false);
 // las letras que se tocan se unen de a grupos (una manuscrita); con unir() se juntan, sin unir() van tal cual
 const juntas = motor(450); // avanza menos de lo que mide: cada letra pisa a la siguiente
@@ -95,6 +106,21 @@ r = T.textoEnCurvas(juntas, gen({ texto: 'ABC DE' }), null);
 assert.equal(r.porUnir, 2); assert.equal(r.unido, false);
 assert.equal(xsDe(r.svg).length, 5); // sin unir: las 5 letras tal cual
 assert.equal(T.gruposQueSeTocan([{ caja: { x1: 0, y1: 0, x2: 10, y2: 10 } }, { caja: { x1: 20, y1: 0, x2: 30, y2: 10 } }, { caja: { x1: 9, y1: 5, x2: 21, y2: 6 } }]).length, 1);
+
+// el kerning viejo (tabla kern, formato 0): dos pares, uno negativo; otra versión u otro formato no se leen
+const kernTabla = pares => { const b = [0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, pares.length, 0, 0, 0, 0, 0, 0];
+  pares.forEach(([a, c, v]) => b.push(a >> 8, a & 255, c >> 8, c & 255, (v >> 8) & 255, v & 255));
+  const largo = b.length - 4; b[6] = largo >> 8; b[7] = largo & 255; return new Uint8Array(b); };
+const kv = T.leerKern(kernTabla([[36, 57, -80], [300, 5, 12]]));
+assert.equal(kv.get(36 * 65536 + 57), -80);
+assert.equal(kv.get(300 * 65536 + 5), 12);
+assert.equal(kv.size, 2);
+assert.equal(T.leerKern(null), null);
+assert.equal(T.leerKern(new Uint8Array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])), null);
+// con interletrado se piden las letras sin ligaduras; sin interletrado, con
+const pide = []; const espia = { ...motor(), forma(l, sin) { pide.push(!!sin); return motor().forma(l); } };
+T.textoEnCurvas(espia, gen({ texto: 'fi', esp: 0 })); T.textoEnCurvas(espia, gen({ texto: 'fi', esp: 100 }));
+assert.deepEqual(pide, [false, true]);
 
 // lo escrito se limpia antes de dibujar
 const ch = n => String.fromCharCode(n);
@@ -149,64 +175,91 @@ assert.equal(urls.length, 2);
 assert.ok(urls.every(u => u.endsWith('/@fontsource/lato@5.3.0/files/lato-latin-900-normal.woff')));
 
 // ---------- formas ----------
-// el path del SVG, de vuelta a comandos (uno o dos contornos: el de afuera y el de adentro del borde)
+// el path del SVG, de vuelta a comandos (el contorno de afuera y, con contorno, el hueco)
 const comandos = svg => [...(svg.match(/ d="([^"]+)"/)[1]).matchAll(/([MLCZ])([^MLCZ]*)/g)]
   .map(m => ({ type: m[1], values: m[2].trim() ? m[2].trim().split(/[ ,]+/).map(Number) : [] }));
 const contornos = cmds => cmds.reduce((a, c) => { if (c.type === 'M') a.push([]); a[a.length - 1].push(c); return a; }, []);
 const forma = o => T.formaEnCurvas({ ...T.FORMA_NUEVA, ...o });
+// puntos seguidos sobre un contorno (también sobre los tramos rectos), y distancias
+const denso = cmds => { const p = T.aplanar(cmds, 60), out = []; p.forEach((a, k) => { const b = p[(k + 1) % p.length], n = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 4)); for (let m = 0; m < n; m++) out.push([a[0] + (b[0] - a[0]) * m / n, a[1] + (b[1] - a[1]) * m / n]); }); return out; };
+const distSeg = (q, p, r) => { const vx = r[0] - p[0], vy = r[1] - p[1], l2 = vx * vx + vy * vy || 1, u = Math.max(0, Math.min(1, ((q[0] - p[0]) * vx + (q[1] - p[1]) * vy) / l2)); return Math.hypot(q[0] - p[0] - u * vx, q[1] - p[1] - u * vy); };
+const distPoli = (q, pts) => pts.reduce((m, p, k) => Math.min(m, distSeg(q, p, pts[(k + 1) % pts.length])), Infinity);
+const cruces = pts => { let n = 0; for (let a = 0; a < pts.length; a++) for (let b = a + 2; b < pts.length; b++) { if (a === 0 && b === pts.length - 1) continue;
+  const p = pts[a], q = pts[(a + 1) % pts.length], r = pts[b], s2 = pts[(b + 1) % pts.length], rx = q[0] - p[0], ry = q[1] - p[1], sx = s2[0] - r[0], sy = s2[1] - r[1], den = rx * sy - ry * sx;
+  if (Math.abs(den) < 1e-12) continue; const u = ((r[0] - p[0]) * sy - (r[1] - p[1]) * sx) / den, v = ((r[0] - p[0]) * ry - (r[1] - p[1]) * rx) / den; if (u > 1e-6 && u < 1 - 1e-6 && v > 1e-6 && v < 1 - 1e-6) n++; } return n; };
+
 for (const [id, , asp] of T.FORMAS) {
-  // relleno: un contorno, adentro de la caja de 1000 × 1000/proporción (con la proporción con la que nace)
+  // relleno: un contorno que llena su caja; el lado largo mide 1000 (una línea vertical no pide una imagen enorme)
   const r = forma({ forma: id, aspecto: asp });
-  assert.equal(r.w, 1000); assert.ok(Math.abs(r.h - 1000 / asp) < 1e-9, id);
+  assert.equal(Math.max(r.w, r.h), 1000, id); assert.ok(Math.abs(r.w / r.h - asp) < 1e-9, id);
   assert.ok(!/<text[\s>]/.test(r.svg) && (r.svg.match(/<path /g) || []).length === 1, id);
+  assert.ok(r.svg.includes('data-exacto="1"'), id); // la medida sale de la geometría, no de sondear píxeles
   const cs = contornos(comandos(r.svg));
   assert.equal(cs.length, 1, id);
   const k = T.cajaCurvas(cs[0]);
-  assert.ok(k.x1 > -0.01 && k.y1 > -0.01 && k.x2 < 1000.01 && k.y2 < r.h + 0.01, id + ' se sale de su caja');
-  assert.ok(k.x2 - k.x1 > 990 && k.y2 - k.y1 > r.h * 0.99, id + ' no llena su caja');
-  // contorno (salvo la línea, que es siempre llena): dos contornos en sentidos opuestos, así queda hueco
-  const b = forma({ forma: id, aspecto: asp, relleno: false, grosorMm: 2, anchoMm: 100 });
-  const cb = contornos(comandos(b.svg));
-  if (id === 'linea') { assert.equal(cb.length, 1); continue; }
-  assert.equal(cb.length, 2, id);
-  assert.ok(T.areaFirmada(T.aplanar(cb[0])) * T.areaFirmada(T.aplanar(cb[1])) < 0, id + ': el de adentro tiene que ir al revés');
+  assert.ok(k.x1 > -0.01 && k.y1 > -0.01 && k.x2 < r.w + 0.01 && k.y2 < r.h + 0.01, id + ' se sale de su caja');
+  assert.ok(k.x2 - k.x1 > r.w * 0.99 && k.y2 - k.y1 > r.h * 0.99, id + ' no llena su caja');
+  // la tinta declarada (de donde sale la medida) es la del contorno
+  assert.ok(Math.abs(r.ink.x1 - k.x1) < 0.01 && Math.abs(r.ink.x2 - k.x2) < 0.01 && Math.abs(r.ink.y1 - k.y1) < 0.01 && Math.abs(r.ink.y2 - k.y2) < 0.01, id);
 }
+const vert = forma({ forma: 'linea', aspecto: 0.02 }); // una línea vertical finita
+assert.equal(vert.h, 1000); assert.equal(vert.w, 20);
+
+/* el contorno: en un barrido de formas, proporciones y grosores, el borde mide el grosor pedido en todo el
+   recorrido (ni más fino ni más grueso), el hueco no se cruza, queda adentro y va al revés que el de afuera.
+   Si con ese grosor no queda hueco, la forma va llena (y lo dice), nunca con basura */
+let conHueco = 0, llenas = 0;
+for (const [id] of T.FORMAS) {
+  if (id === 'linea') continue;
+  for (const asp of [0.2, 1, 1.6, 6]) for (const pct of [0.5, 2, 6, 15, 30, 45]) for (const puntas of id === 'estrella' ? [4, 5, 12] : [5]) for (const esq of id === 'rect' ? [0, 50] : [0]) {
+    const caso = [id, asp, pct + ' %', puntas, esq].join(' · ');
+    const r = forma({ forma: id, aspecto: asp, relleno: false, grosorMm: pct, anchoMm: 100, puntas, esquinas: esq });
+    const cs = contornos(comandos(r.svg)), t = pct / 100 * r.w;
+    if (r.lleno) { llenas++; assert.equal(cs.length, 1, caso + ': llena, pero con hueco'); continue; }
+    conHueco++;
+    assert.equal(cs.length, 2, caso);
+    const fuera = denso(cs[0]), dentro = denso(cs[1]), ds = dentro.map(q => distPoli(q, fuera));
+    assert.ok(Math.min(...ds) > t * 0.97 && Math.max(...ds) < t * 1.03, caso + ': grosor ' + (Math.min(...ds) / t).toFixed(2) + '–' + (Math.max(...ds) / t).toFixed(2) + ' del pedido');
+    assert.equal(cruces(T.aplanar(cs[1], 1)), 0, caso + ': el hueco se cruza');
+    assert.ok(T.areaFirmada(T.aplanar(cs[0])) * T.areaFirmada(T.aplanar(cs[1])) < 0, caso + ': el hueco tiene que ir al revés');
+    const ka = T.cajaCurvas(cs[0]), kd = T.cajaCurvas(cs[1]);
+    assert.ok(kd.x1 > ka.x1 && kd.x2 < ka.x2 && kd.y1 > ka.y1 && kd.y2 < ka.y2, caso + ': el hueco se sale');
+  }
+}
+assert.ok(conHueco > 150 && llenas > 30, conHueco + ' con hueco, ' + llenas + ' llenas');
+// casos que fallaban: el corazón (lazo en la punta desde el 4 %), la estrella gruesa, formas estiradas, el óvalo
+for (const [o, min] of [[{ forma: 'corazon', aspecto: 1.1, grosorMm: 6.7, anchoMm: 30 }, 2], [{ forma: 'estrella', aspecto: 1.05, grosorMm: 4, anchoMm: 20 }, 2],
+  [{ forma: 'triangulo', aspecto: 80 / 13, grosorMm: 2, anchoMm: 80 }, 2], [{ forma: 'elipse', aspecto: 4, grosorMm: 1, anchoMm: 80 }, 2]])
+  assert.equal(contornos(comandos(forma({ ...o, relleno: false }).svg)).length, min, JSON.stringify(o));
 // el grosor es el pedido, en mm reales: 2 mm en un rectángulo de 100 mm de ancho son 20 de 1000
 let cb = contornos(comandos(forma({ forma: 'rect', aspecto: 2, relleno: false, grosorMm: 2, anchoMm: 100 }).svg));
 assert.deepEqual(T.cajaCurvas(cb[1]), { x1: 20, y1: 20, x2: 980, y2: 480 });
-// en el círculo, el de adentro es concéntrico
+// en el círculo, el de adentro es concéntrico (y sigue siendo un círculo: 4 curvas)
 cb = contornos(comandos(forma({ forma: 'elipse', aspecto: 1, relleno: false, grosorMm: 5, anchoMm: 50 }).svg));
 assert.deepEqual(T.cajaCurvas(cb[1]), { x1: 100, y1: 100, x2: 900, y2: 900 });
-// en la estrella (con puntas y entrantes), cada lado de adentro queda a la misma distancia del de afuera
-const pts = cs => T.aplanar(cs).map(p => p.map(v => +v));
-const est = contornos(comandos(forma({ forma: 'estrella', aspecto: 1.05, relleno: false, grosorMm: 3, anchoMm: 100 }).svg));
-const af = pts(est[0]), ad = pts(est[1]).reverse(); // el de adentro va al revés: se da vuelta para comparar lado a lado
-const distLado = (p, a, b) => Math.abs((b[0] - a[0]) * (a[1] - p[1]) - (a[0] - p[0]) * (b[1] - a[1])) / Math.hypot(b[0] - a[0], b[1] - a[1]);
-assert.equal(af.length, ad.length);
-for (let i = 0; i < af.length; i++) {
-  // el lado i de afuera y el punto de adentro que le corresponde (el orden se corrió uno al invertir)
-  const a = af[i], b2 = af[(i + 1) % af.length];
-  const cerca = Math.min(...ad.map(q => Math.abs(distLado(q, a, b2) - 30)));
-  assert.ok(cerca < 0.01, 'lado ' + i + ' de la estrella: ' + cerca); // el dibujo va con 2 decimales
-}
-// con el escudo y el corazón (curvas), el de adentro también queda adentro
-for (const id of ['escudo', 'corazon']) {
-  const c2 = contornos(comandos(forma({ forma: id, aspecto: 1, relleno: false, grosorMm: 3, anchoMm: 100 }).svg));
-  const ka = T.cajaCurvas(c2[0]), kd = T.cajaCurvas(c2[1]);
-  assert.ok(kd.x1 > ka.x1 + 25 && kd.x2 < ka.x2 - 25 && kd.y1 > ka.y1 + 25 && kd.y2 < ka.y2 - 25, id);
-}
-// un grosor imposible no tapa la forma: llega hasta el 45 % del lado corto
-cb = contornos(comandos(forma({ forma: 'rect', aspecto: 1, relleno: false, grosorMm: 90, anchoMm: 100 }).svg));
-assert.deepEqual(T.cajaCurvas(cb[1]), { x1: 450, y1: 450, x2: 550, y2: 550 });
+assert.equal(cb[1].filter(c => c.type === 'C').length, 4);
+// un grosor imposible no deja basura: la forma va llena y lo dice
+let imp = forma({ forma: 'rect', aspecto: 1, relleno: false, grosorMm: 90, anchoMm: 100 });
+assert.equal(imp.lleno, true); assert.equal(contornos(comandos(imp.svg)).length, 1);
+imp = forma({ forma: 'estrella', aspecto: 1.05, relleno: false, grosorMm: 8, anchoMm: 20 });
+assert.equal(imp.lleno, true); assert.equal(contornos(comandos(imp.svg)).length, 1);
+assert.equal(forma({ forma: 'rect', aspecto: 1, relleno: false, grosorMm: 2, anchoMm: 100 }).lleno, false);
 // sin medida todavía, el grosor es el 4 % del lado corto
 cb = contornos(comandos(forma({ forma: 'rect', aspecto: 2, relleno: false, anchoMm: 0 }).svg));
 assert.deepEqual(T.cajaCurvas(cb[1]), { x1: 20, y1: 20, x2: 980, y2: 480 });
 // las esquinas redondeadas: el rectángulo con esquinas al 50 % es una píldora (la caja no cambia)
 assert.deepEqual(T.cajaCurvas(contornos(comandos(forma({ forma: 'rect', aspecto: 3, esquinas: 50 }).svg))[0]), { x1: 0, y1: 0, x2: 1000, y2: 333.33 }); // el dibujo va con 2 decimales
+// la línea nace fina (1 mm cada 10 cm) y es siempre llena
+assert.equal(T.FORMAS.find(f => f[0] === 'linea')[2], 100);
+assert.equal(contornos(comandos(forma({ forma: 'linea', aspecto: 100, relleno: false }).svg)).length, 1);
 // invertir da vuelta el sentido, también con curvas
 const elip = contornos(comandos(forma({ forma: 'elipse', aspecto: 1.5 }).svg))[0];
 assert.ok(T.areaFirmada(T.aplanar(elip)) * T.areaFirmada(T.aplanar(T.invertirContorno(elip))) < 0);
 assert.deepEqual(T.cajaCurvas(T.invertirContorno(elip)), T.cajaCurvas(elip));
+// dónde cae la tinta en la imagen: de la geometría, sin sondear píxeles (una línea fina no pierde grosor)
+const lin = forma({ forma: 'linea', aspecto: 160 }); // 80 × 0,5 mm
+const rec = T.recorteExacto(lin.ink, lin.vb, 3000, Math.round(3000 * lin.vb[3] / lin.vb[2]));
+assert.ok(Math.abs(rec.w / rec.h / 160 - 1) < 0.01, 'la línea de 80 × 0,5 mm mide ' + (rec.w / rec.h).toFixed(1) + ':1');
 // nombres
 assert.equal(T.nombreForma({ ...T.FORMA_NUEVA, forma: 'estrella' }), 'Estrella');
 assert.equal(T.nombreForma({ ...T.FORMA_NUEVA, forma: 'elipse', relleno: false, grosorMm: 1.5 }), 'Círculo · contorno de 1,5 mm');
@@ -222,12 +275,32 @@ for (const [id, nombre, iconos] of T.ICONOS_CATEGORIAS) {
 }
 // el buscador es en inglés: lo más pedido se traduce, sin importar tildes ni mayúsculas
 assert.equal(T.traducirBusqueda('Corazón'), 'heart');
-assert.equal(T.traducirBusqueda('  café  y TORTA '), 'coffee y cake');
+assert.equal(T.traducirBusqueda('  café  y TORTA '), 'coffee cake'); // «y» no dice nada
+// la frase entera y, si no da, palabra por palabra (la más larga primero); sin conectores; plurales por su singular
+assert.deepEqual(T.consultasIcono('copa de vino'), ['glass wine', 'glass', 'wine']);
+assert.deepEqual(T.consultasIcono('sitio web'), ['web']); // las dos palabras dicen lo mismo
+assert.deepEqual(T.consultasIcono('Tijeras'), ['content-cut']);
+assert.deepEqual(T.consultasIcono('camiones'), ['truck']);
+assert.deepEqual(T.consultasIcono('E-mail'), ['email']);
+assert.deepEqual(T.consultasIcono('ñandú'), ['bird']);
+assert.deepEqual(T.consultasIcono('niños'), ['human-child']);
+assert.deepEqual(T.consultasIcono('x'), ['x']);
+assert.deepEqual(T.consultasIcono('y'), ['y']); // sola, no se descarta
+assert.deepEqual(T.consultasIcono('   '), []);
+// ninguna palabra del diccionario lleva acento ni mayúscula (se buscan ya sin acentos)
+for (const k of Object.keys(T.ICONOS_ES)) assert.ok(/^[a-z0-9-]+$/.test(k), 'clave del diccionario: ' + k);
+// una marca que no está entre los íconos se dice
+assert.ok(/TikTok/.test(T.sinIconosPara('tiktok')) && /Logo o imagen/.test(T.sinIconosPara('tiktok')));
+assert.ok(/«milanesa»|más general/.test(T.sinIconosPara('zzz')));
 assert.equal(T.traducirBusqueda('rocket'), 'rocket');
 // solo se usa un ícono que sea dibujo
 assert.ok(T.iconoSeguro('<path fill="currentColor" d="M0 0h24v24H0z"/>'));
-for (const malo of ['<script>alert(1)</script>', '<path onload="x()" d="M0 0"/>', '<image href="http://x/y.png"/>', '<use href="#a"/>', '<path style="fill:url(javascript:x)"/>', 5])
+for (const malo of ['<script>alert(1)</script>', '<path onload="x()" d="M0 0"/>', '<image href="http://x/y.png"/>', '<use href="#a"/>', '<path style="fill:url(javascript:x)"/>', 5,
+  '<x:script xmlns:x="http://www.w3.org/1999/xhtml">top.x=1</x:script>', '<SCRIPT>1</SCRIPT>', '<path d="M0 0"/><foreignObject/>', '<path d="M0 0"/><!-- x -->', '<a><path d="M0 0"/></a>', '<path d="&#x6a;"/>'])
   assert.ok(!T.iconoSeguro(malo), String(malo));
+assert.ok(T.iconoSeguro('<g fill="none"><circle cx="12" cy="12" r="10"/><path d="M1 1"/></g>'));
+// el tamaño que no sea un número no llega al SVG
+assert.ok(T.iconoEnSvg({ body: '<path d="M0 0"/>', width: '24" onload="x', height: null }, { icono: 'mdi:x' }).svg.includes('viewBox="0 0 24 24" width="24" height="24"'));
 const ico = T.iconoEnSvg({ body: '<path fill="currentColor" d="M0 0h20v20H0z"/>', width: 24, height: 24 }, { icono: 'mdi:heart' });
 assert.ok(ico.svg.includes('viewBox="0 0 24 24"') && !ico.svg.includes('currentColor') && ico.svg.includes('fill="#000000"'));
 assert.equal(T.nombreIcono({ icono: 'mdi:coffee' }), 'Ícono «coffee»');

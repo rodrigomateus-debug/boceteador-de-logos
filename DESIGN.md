@@ -124,8 +124,13 @@ pero ninguno es necesario para validar el boceto visual.
 > curvas (nunca `<text>`: el taller no necesita la tipografía), une con paper.js las
 > que se enciman (vinilo, láser, bordado) y guarda lo que dice y con qué tipografía,
 > para seguir editándolo. Las formas (con su contorno en mm reales, como figura cerrada)
-> y los íconos (Material Design Icons, por Iconify) siguen la misma receta. Sigue: texto
-> en arco.
+> y los íconos (Material Design Icons, por Iconify) siguen la misma receta. Tres reglas
+> que salieron de revisar combinaciones: **lo que se ve es lo que va al taller** (el PDF
+> en curvas respeta las capas; dos elementos encimados con la misma tinta se avisan),
+> **la medida sale de la geometría** (no de mirar píxeles: el contorno es la paralela
+> exacta y se rehace cuando cambia la escala) y **nada externo entra sin filtrar** (un
+> SVG se sanea antes de importarse al documento; un ícono, solo si es dibujo). Sigue:
+> texto en arco.
 
 ---
 
