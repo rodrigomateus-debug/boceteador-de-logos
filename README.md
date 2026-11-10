@@ -8,7 +8,7 @@ se abren directo en el navegador, sin instalación.
 
 | Archivo | Qué es |
 |---|---|
-| **`generador-bocetos.html`** | ⭐ **La app principal.** Generador de bocetos (formulario + ficha A4 de producción en vivo) con el boceteador "Cargá tu logo" integrado como modal: subís la foto del producto, marcás el área, aplicás el logo (tinte —blanco, negro, grabado o **un color a elección**, con código HEX o Pantone del mismo buscador de la ficha—, opacidad, rotación, **quitar el fondo o cualquier color** —blanco, negro, uno del selector o tomado con el cuentagotas tocando el logo— y **✨ Modificar logo con IA**) y la ficha se completa sola (foto compuesta, logo, medidas, técnica, posición). El lienzo del boceteador ocupa toda la altura de la pantalla. La vista previa de la ficha tiene zoom (botones arriba a la derecha o Ctrl + rueda; «1:1» muestra el tamaño real de impresión para revisar la calidad de la foto). Acepta logos en PNG, JPG, SVG, PDF y .ai de Illustrator (guardados con compatibilidad PDF, que es el default). Trae de **formas.shop** el nombre, el color, las fotos y las medidas del producto, y lo mide solo sobre la foto (ver «Traer de formas.shop»). Imprime a PDF y descarga HTML. |
+| **`generador-bocetos.html`** | ⭐ **La app principal.** Generador de bocetos (formulario + ficha A4 de producción en vivo) con el boceteador "Cargá tu logo" integrado como modal: subís la foto del producto, marcás el área, aplicás el logo (tinte —blanco, negro, grabado o **un color a elección**, con código HEX o Pantone del mismo buscador de la ficha—, opacidad, rotación, **quitar el fondo o cualquier color** —blanco, negro, uno del selector o tomado con el cuentagotas tocando el logo— y **✨ Modificar logo con IA**) sumás **textos en curvas con la tipografía que quieras** (ver «Textos») y la ficha se completa sola (foto compuesta, logo, medidas, técnica, posición). El lienzo del boceteador ocupa toda la altura de la pantalla. La vista previa de la ficha tiene zoom (botones arriba a la derecha o Ctrl + rueda; «1:1» muestra el tamaño real de impresión para revisar la calidad de la foto). Acepta logos en PNG, JPG, SVG, PDF y .ai de Illustrator (guardados con compatibilidad PDF, que es el default). Trae de **formas.shop** el nombre, el color, las fotos y las medidas del producto, y lo mide solo sobre la foto (ver «Traer de formas.shop»). Imprime a PDF y descarga HTML. |
 | `boceteador.html` | El boceteador standalone (versión previa a la integración; el modal del generador es su evolución). |
 | `cotizador-formas.html` | Maqueta funcional del cotizador (fase 3 del roadmap): técnica, cantidades, desglose de precio y markup. |
 | `DESIGN.md` | Documento de diseño: flujos, modelo de datos, sistema de diseño Formas, roadmap. |
@@ -53,7 +53,249 @@ taller»**: los colores de impresión y «📎 Adjuntar original del cliente».
 Con **varios logos**, las manijas, ⟳ y × se ven solo en el elegido, la barra va del
 lado donde tapa menos a los otros y un logo nuevo va en el lugar libre del área
 (o, si está llena, justo debajo del anterior, no encima). La medida del logo se
-corre al costado si tapaba la etiqueta del área.
+corre al costado si tapaba la etiqueta del área. Si se enciman, **«Capa: ⬆ Traer
+adelante · ⬇ Enviar atrás»** (debajo de las miniaturas) elige cuál va arriba; no
+cambia el orden de las hojas de la ficha.
+
+### Textos
+
+En el paso 3, **«＋ Texto»** agrega un texto al boceto. Es un logo más: se mueve,
+se agranda, se rota, se mide en cm, se pinta (Blanco, Negro, Grabado o Un color con
+HEX o Pantone), cuenta para «¿Cómo se imprimen estos logos?» y va a la ficha y al
+paquete del taller igual que los logos. Arranca como «Tu texto» en Montserrat
+Negrita, negro, o blanco si el área cae sobre una parte oscura del producto.
+
+En la barra sobre la foto, **«Texto»** (o un doble clic sobre el texto) abre lo que
+dice (se escribe ahí mismo y el boceto se actualiza al instante; con Enter, otro
+renglón), la **tipografía**, el **grosor** (Fina, Normal, Media, Seminegrita, Negrita,
+Extranegrita, Ultranegrita: los que tenga), el **espacio entre letras** y, con varios
+renglones, la **alineación** y el **espacio entre renglones** («Normal», «Más juntas
+(−20)», «Más separadas (+100)»).
+
+El menú está en dos columnas (lo que dice y la tipografía | el resto), así entra
+entero sin scroll. **Nunca se abre encima del texto**: va abajo o arriba de la
+barra, y si de ese lado no entra, al costado del texto (aunque tape un rato el panel
+de los pasos). En el celular es una **hoja abajo**, con «Listo» para cerrarla; el
+texto queda a la vista arriba, con la barra encima. Con el teclado: Tab entra a la
+lista de tipografías y sale en un paso, ↑ ↓ (y Inicio, Fin, RePág, AvPág) la
+recorren y Enter elige. Al editarlo, la letra queda del tamaño elegido y
+crece el largo; si así no entra en el área, se achica hasta entrar, y si después se
+acorta, **vuelve a su tamaño** («ACME» → «ACME Distribuidora S.R.L.» → «ACME»). El
+tamaño elegido es el de cuando se creó, se agrandó a mano o se escribió su medida.
+Con un texto elegido, el recuadro de arriba del paso 3 también abre su edición
+(aunque estén las guías ocultas). Un texto no tiene Fondo, Recortar, IA ni «Full
+color»: se arma acá, limpio y de un color. En «medida exacta del logo», el ancho y el
+alto de un texto van siempre juntos (con o sin 🔗): las letras no se deforman.
+
+- **Tipografías**: 32 de Google Fonts en 5 grupos (palo seco, con serif, display,
+  manuscritas y máquina de escribir), cada una con su letra en la lista. Se bajan
+  recién al usarlas (de fontsource por jsDelivr, con unpkg de respaldo); mientras
+  baja, la línea «Tipografía» dice «⏳ bajando…». Si un CDN falla o lleva 3 s sin
+  terminar, **se le pide también al otro y gana el que llega** (uno colgado no deja
+  esperando); si la conexión está caída se avisa y «＋ Texto» vuelve a quedar
+  disponible (nunca queda trabado).
+- **La tipografía del cliente**: «Subir la tipografía del cliente» acepta .ttf,
+  .otf o .woff (.woff2 no: hay que pedir el .ttf u .otf). Queda guardada en el
+  navegador y **viaja al taller** como adjunto del texto que la usa (deja de viajar
+  si se cambia por otra); el LEEME aclara que no hace falta para producir, porque el
+  texto ya va en curvas. Subir la misma dos veces no la repite en la lista. Si es una
+  **tipografía variable** (un solo archivo con todos los grosores), ofrece los
+  grosores que tiene, como las de la lista.
+- **Va en curvas, bien armado**: las letras las arma **HarfBuzz** (harfbuzzjs, el
+  mismo motor con el que el navegador dibuja el texto): con el **kerning que trae
+  cada tipografía** (la «AV», la «To» o la «LT» quedan juntas como en cualquier
+  programa de diseño), sus ligaduras (fi, fl) y, en las manuscritas, las formas que
+  se unen entre sí. El kerning «viejo» (tabla `kern`), que es el único que traen
+  Righteous, Satisfy y Permanent Marker, lo lee el boceteador (el HarfBuzz que se baja
+  no lo trae). Las que **no traen kerning** en el archivo que se baja (Poppins, Open
+  Sans, Lobster y las de máquina de escribir) van sin él. **Con espacio entre letras
+  no hay ligaduras** (una «fi» pegada no se puede separar). Después se pasan a
+  curvas, así que el taller no necesita tener la tipografía.
+  En el paquete, el texto sale «con sus curvas originales» (repintado a la tinta
+  elegida, con su Pantone como tinta directa) y su SVG va como referencia, rotulado
+  «texto en curvas armado en el boceteador». HarfBuzz (≈450 KB) se baja la primera
+  vez que se agrega un texto, con `fetch` y el módulo armado desde la memoria: si la
+  descarga se corta a mitad de camino, **el próximo «＋ Texto» anda sin recargar la
+  página** (importado directo de la URL, el navegador lo recordaba como roto). Lo que
+  baja **se mira antes de darlo por bueno** (que sea una tipografía entera, un
+  WebAssembly válido): si un CDN contesta con otra cosa —el portal de un wifi, un
+  filtro de la empresa, el archivo a medias—, cuenta como que falló y se le pide al
+  otro.
+- **Letras que se tocan, en un solo contorno**: en las manuscritas las letras se
+  enciman donde se unen, y hay letras cuyo dibujo se pisa a sí mismo: una Ç en dos
+  piezas y, sobre todo, las **tipografías variables** (la del cliente suele serlo),
+  donde la A son dos patas y un travesaño encimados (en Montserrat variable, 56 de
+  82 letras). En pantalla y en PDF eso no se nota, pero el corte de vinilo o láser
+  corta cada pieza y el bordado puntea dos veces lo encimado. Se detecta **tramo
+  contra tramo** (no por las cajas, que dejaban pasar el travesaño de la A; también
+  dos trazos montados sin cruzarse, o apoyados por un borde) y esas letras se unen en
+  una sola figura con paper.js. Se mira una vez por letra y tipografía, no en cada
+  tecla. **paper.js no frena al texto**: si
+  todavía no llegó, el texto se ve ya, sin unir, y se rehace solo cuando llega; al
+  aplicar se lo espera unos segundos. Si no se pudo (sin conexión), el paquete avisa
+  que hay que soldarlas antes de producir.
+- **Lo pegado se limpia**: los tabuladores de Excel y los saltos de Word quedan
+  como espacios o renglones, los acentos que vienen sueltos (al pegar desde una Mac o
+  un PDF) se pegan a su letra y los caracteres invisibles se sacan.
+- **Letras que la tipografía no tiene** (una «ł» o un «★», o la «ñ» en una
+  tipografía del cliente): **no se dibujan** —antes salía el cuadrado de «letra que
+  falta», en el boceto y en el taller—, queda su lugar vacío y se avisa en el menú,
+  en «Este texto», al aplicar (pide confirmación) y en la revisión del paquete.
+- **Lo que hay que mirar**: «Este texto», en el panel, dice la tipografía y el
+  **alto de la letra** en mm (para saber si la técnica lo imprime): el de las
+  mayúsculas si el texto tiene alguna; si es todo en minúsculas («www.marca.com.ar»),
+  el de la x, que en una manuscrita es la mitad o menos; un teléfono o un «2026»
+  dicen **el alto de sus números** («Los números miden…»), medido en el 0, el 1, el 7
+  y el 8 (en Pacifico miden dos tercios de una mayúscula). Se mide en el dibujo de la
+  tipografía (el dato que trae a veces no coincide) y va como dato en el paquete.
+- **«Tu texto» sin cambiar**: al aplicar, pregunta si va así (casi siempre es un
+  olvido).
+- **Textos blancos**: las miniaturas y el recuadro del paso 3 los muestran sobre gris
+  oscuro, y en la ficha (y en el PDF para Corel) el recuadro «Logo a imprimir» va
+  gris oscuro si su arte es blanco y el fondo elegido es claro: blanco sobre blanco
+  no se ve. Vale también para un logo en Blanco.
+- **Colores de impresión**: un texto (o un logo) en Blanco, Negro o Un color suma
+  ese color a la lista del paso 3. Si todo es de un color, la lista son esos colores
+  (un texto negro ya no queda como «Blanco», el de la ficha nueva); si hay un logo a
+  todo color, sus colores quedan y se suman los otros.
+- **Aplicar y Descargar PNG esperan al texto**: si se toca enseguida de escribir o
+  de elegir una tipografía que está bajando, esperan a que el texto esté al día (el
+  botón dice «⏳ Terminando…»). Si el último cambio no se pudo armar (sin
+  conexión), no aplica: muestra el texto con su aviso. **Una sola vez**: lo que se
+  ve es lo último que sí se armó, y con otro clic en «Aplicar» va eso.
+
+Al guardar una plantilla, el texto sigue siendo editable al abrirla. Con la
+tipografía del cliente, en otra computadora el texto se ve igual, pero para
+editarlo hay que volver a subir la tipografía (el boceteador lo avisa).
+
+### Formas e íconos
+
+Junto a «＋ Texto» están **«＋ Forma»** y **«＋ Ícono»**. Igual que un texto, son un
+logo más: se mueven, se rotan, se miden en cm, se pintan (Blanco, Negro, Grabado o Un
+color con HEX o Pantone), van a la ficha y al paquete del taller **en curvas**, se
+siguen pudiendo editar desde una plantilla y nacen negros, o blancos sobre una parte
+oscura del producto. Se editan con el recuadro de arriba del paso 3, con un doble
+clic sobre ellos o con su botón en la barra («Forma» o «Ícono»).
+
+- **Formas**: rectángulo (con las esquinas rectas, redondeadas o del todo redondas),
+  círculo, triángulo, rombo, hexágono, estrella (de 4 a 12 puntas), escudo, corazón y
+  línea. **Con relleno o solo el contorno**, con el **grosor en mm reales** (de 0,2 a
+  10 mm): el borde es una figura cerrada, no una línea, así el vinilo, el láser o el
+  bordado la toman tal cual. El borde de adentro es **la paralela exacta** al de
+  afuera (en una punta entrante, como entre dos puntas de una estrella, dobla con un
+  arco): el grosor es el pedido en todo el recorrido, también en el corazón, la
+  estrella gruesa o una forma muy estirada (medido en el PDF del taller: 2 mm ± 0,03).
+  En una estrella muy alta y gruesa el hueco puede quedar en dos o tres pedazos: es lo
+  que queda a más del grosor del borde. Si con ese grosor **no queda hueco**, la
+  forma va llena, el menú lo dice y el nombre y el archivo dicen «llena» (no
+  «contorno»); si el hueco queda de décimas de milímetro, avisa que impreso se tapa. El
+  contorno **se rehace cuando cambia la medida** (se corrigió la escala del producto,
+  se agrandó la forma): siempre mide lo que dice. **El ancho y el alto van sueltos**:
+  se estira desde una esquina o se escribe la medida (un rectángulo de 10 × 2 cm, con
+  decimales), y la forma se rehace con esa proporción (el contorno no se deforma). Al
+  cambiar de forma sin haberla estirado, toma la proporción de la nueva (de
+  rectángulo a círculo da un círculo) y, si estaba adentro del área, **sigue
+  adentro** (el círculo se achica hasta entrar). La línea es siempre llena: su grosor es su
+  alto, y **desde las puntas solo cambia de largo** (un pulso torpe no la engorda).
+  La medida de textos y formas sale **de su geometría**, no de mirar los píxeles: una
+  línea de 0,5 mm mide 0,5 mm, y una de 0,2 mm sobre un producto de 40 cm (un tercio
+  de píxel en pantalla) también: lo escrito es lo que mide, y las medidas de menos de
+  1 mm se muestran con un decimal más. Los campos de ancho y alto aceptan **coma o
+  punto** con el navegador en cualquier idioma.
+- **Íconos**: los de **Material Design Icons** (más de 7000, licencia Apache 2.0,
+  libres para trabajos comerciales), con **categorías** (Básicos, Contacto y redes,
+  Comida y bebida, Deportes, Naturaleza, Trabajo, Celebración, Salud, Transporte,
+  Flechas) y un **buscador en castellano**: unas 450 palabras de vendedor se
+  traducen (el servicio está en inglés), con los rubros («peluquería», «abogado»,
+  «inmobiliaria», «ferretería», «escribanía», «parrilla»), los regalos empresariales
+  («lapicera», «mochila», «paraguas») y los apodos («wsp», «celu», «birra»). Entiende
+  **frases** («copa de vino», «camión de reparto»: saca los conectores y, si la frase
+  entera no da nada, busca palabra por palabra, sin las sueltas de menos de 4 letras
+  que no conoce: «año» traía un piano), **frases hechas** («año nuevo», «día de la
+  madre»), **plurales** («tijeras») y **errores de tipeo** («telefno», «instagran»: si
+  lo escrito no da nada, muestra los de la palabra conocida más parecida y lo dice).
+  Mientras busca dice «Buscando…»; si no hay nada, sugiere una palabra más general, y
+  si es una marca que no está (TikTok, Mercado Libre, Visa) dice que se suba como
+  logo. Una búsqueda que tarda **no pisa** a la
+  categoría que se eligió mientras tanto. Los llenos van primero: los de línea fina
+  se pierden en una tampografía o un bordado chicos. «Ícono», en la barra, lo cambia
+  por otro con el mismo alto. Nace de un tercio del lado corto del área, y no de menos
+  de 28 px en pantalla salvo que el área sea más baja que eso (ahí, del 80 % de su
+  alto). Los
+  de marcas (WhatsApp, Instagram…) son de sus dueños: van sin cambiarles la forma,
+  para indicar la cuenta. Se bajan del servicio de Iconify (con dos servidores de
+  respaldo: si uno falla o lleva 2,5 s sin contestar, se le pide también al
+  siguiente; mientras bajan dice «Cargando los íconos…»); lo que llega se usa **solo
+  si es dibujo**: cada etiqueta tiene que estar en una lista corta (`path`, `g`,
+  `circle`…), sin eventos, enlaces ni estilos. La ventana tiene alto fijo: el
+  buscador no cambia de lugar con cada búsqueda.
+
+**Dónde nacen**: un texto, una forma o un ícono nuevos nacen siempre **adentro del
+área de impresión**: en la franja libre abajo o arriba de lo que ya está; si no hay
+(un área ancha y baja, como la de una lapicera), **al costado, pegados** (el ícono
+y, al lado, el número); y con el área ocupada, más chicos, en el lugar donde menos
+pisan a lo que hay, nunca justo encima de otro. Lo que nace sobre una placa llena
+del mismo tono va con el otro (un ícono negro sobre una placa negra no se veía). Una
+**forma llena que nace sobre lo que ya está nace atrás**: casi siempre es una placa de
+fondo, y arriba tapaba el texto o el logo («Traer adelante» la sube). Las manijas, la
+× y el ⟳ del elemento elegido se dibujan encima de todos, así que al que quedó atrás
+se lo agranda, gira o quita igual aunque otro le tape las esquinas; y un toque sin
+arrastre sobre el ⟳ elige lo que tiene debajo (el segundo texto suele quedar justo ahí).
+(Un logo subido
+como archivo, con el área llena, sigue yendo abajo de los otros: se ve y se puede
+tocar.)
+
+**Capas y tintas**: con varios elementos encimados, «Traer adelante / Enviar atrás»
+decide cuál va arriba, y **el PDF en curvas del taller los pinta en ese orden**
+(igual que el PNG y el mockup). Si dos elementos se pisan (tinta sobre tinta, medido
+en píxeles) y salen **con la misma tinta** —en láser, una placa y el texto encima—,
+impresos son una sola mancha aunque en el boceto se distingan: se avisa **junto a
+«Aplicar»** apenas pasa, arriba de los botones de «¿Cómo se imprimen?», y lo pide
+tildar la revisión del paquete. En láser el aviso no dice «cambiale el color» (todo
+sale del mismo tono): dice de separarlos o de anotar que va calado. El editor y el
+paquete comparan **la tinta, no el nombre del color** (`claveTinta`): la misma tinta
+directa o el mismo color. Un «Negro» y un «Un color #000000» son el mismo K 100; un
+Pantone escrito «485 C» o «485c» es la misma tinta directa.
+
+**Calar**: cuando lo de arriba es un texto, un ícono o una forma y lo de abajo una
+forma, el aviso trae el botón **«Calarlo»** (y en el panel, junto a las capas, está
+**«✂ Calar en la forma»** para cualquier elemento armado acá que pise una forma).
+Le resta a la forma lo que tiene encima: queda **una sola figura, la forma con el
+hueco**, y lo de arriba se saca. Es lo que el taller necesita cuando los dos van con
+la misma tinta (en láser, siempre). Se resta **en vectores** (paper.js), respetando
+la posición, el tamaño y el giro de cada uno, así el hueco va en curvas al PDF del
+taller igual que al PNG y al mockup (medido: 0,4 % de píxeles de diferencia; con todo
+rotado y dos calados seguidos, 98,8 % de coincidencia con lo que se veía antes). Se
+puede calar varias veces sobre la misma forma. La forma calada no se estira ni se
+edita (se mueve, se agranda parejo, se rota y se pinta); **Ctrl+Z deshace el calado**
+y vuelven la forma y lo que se le había restado.
+
+**A la vista**: el aviso de «se sale del área» (o «no entra») también va **junto a
+«Aplicar»**, y al aplicar así pregunta antes. En un elemento chico (una línea, un
+ícono), la × va por fuera para no tapar las manijas (arriba a la derecha; si ahí
+está «Ocultar guías» o se sale de la foto, abajo). Al quitar algo, el «Deshacer»
+aparece unos segundos **sobre la foto** (en el celular, abajo de la pantalla), además
+del del paso 3; si lo quitado tenía un cambio a medio armar, vuelve con ese cambio, y
+si se quitaron varias cosas sigue a la vista para la anterior. En «¿Cómo se
+imprimen?» y en «Recorte manual», Esc cierra esa ventana, no el editor. Si algo no
+entra o se sale del área y hay varios elementos, el aviso va **adentro de «¿Cómo se
+imprimen?»** (antes eran dos preguntas seguidas); con un solo elemento se pregunta
+como siempre. El menú del texto, cuando el texto es tan ancho como la foto, se abre
+pegado al borde del editor tapando apenas la punta (antes quedaba cortado abajo). En
+el celular «Ocultar guías» va arriba de la foto, no encima.
+
+**Teclado**: los elementos de la foto toman el foco (al tocarlos o con Tab). Con las
+**flechas** se mueven de a un píxel de pantalla (con Mayús, de a diez), **Supr** los
+quita, **Ctrl+D** los duplica (también «Duplicar», en la barra del elemento y en el
+panel) y **Ctrl+Z / Ctrl+Y** deshacen y rehacen (también ↶ ↷, abajo a la izquierda de
+la foto). Deshacer guarda una «foto» del boceto cada vez que las cosas se quedan
+quietas: dónde está cada elemento, su tamaño, giro, capa, color, opacidad y medida, lo
+que dice o cómo es si se armó acá, los agregados y quitados, y el área. No guarda lo
+que le pasa a la imagen de un logo subido (quitar fondo, recorte, IA): eso tiene su
+propio «Deshacer» en el panel. Con el foco en un campo de texto, Ctrl+Z es del campo.
+**Tab no se sale del editor** ni de la ventana que esté abierta encima (íconos, la
+pregunta de impresión). En la barra del elemento, ← y → pasan de botón en botón. En el celular, con la hoja de
+edición abierta, los botones de la barra no tapan lo que se edita.
 
 En los colores (de la ficha y de «Un color»), **cambiar el HEX a mano suelta el
 Pantone** que había: así al taller no le llega un Pantone que ya no corresponde.
@@ -353,7 +595,8 @@ proveedor (por mail o WhatsApp) para que imprima sin preguntar nada:
 - Una carpeta por aplicación (`Hoja N - posición - técnica - medida`) con:
   - **`Arte en curvas - medida real.pdf`**: PDF vectorial del tamaño exacto del
     arte, con los logos ubicados como en el boceto (si van varios juntos, la
-    combinación lista para la película o el shablón, con rotaciones incluidas).
+    combinación lista para la película o el shablón, con rotaciones incluidas y
+    **en el orden de las capas** del boceto: lo de arriba se pinta último).
   - el **arte a medida real en PNG 300 dpi** (lleva los dpi adentro, así abre al
     tamaño justo en Corel/Illustrator/Photoshop);
   - el mockup y los **archivos originales del cliente** tal cual se subieron,
@@ -395,7 +638,8 @@ etc.).
   un tamaño de referencia para escalar.
 - **Lo dudoso** (logo que es una foto metida en un PDF, textos sin convertir a
   curvas, degradés en técnicas de tinta plana, baja resolución, vectorizado
-  automático…) hay que tildarlo como revisado y queda escrito en el LEEME.
+  automático, **dos elementos que se pisan con la misma tinta**…) hay que tildarlo
+  como revisado y queda escrito en el LEEME.
 
 ### Detalles para no romper
 
@@ -407,8 +651,19 @@ etc.).
 - Los PDF se rasterizan con fondo transparente: pdf.js pinta la hoja de blanco
   por defecto y el logo quedaba con un recuadro blanco.
 - JSZip, pdf-lib, imagetracerjs y svg2pdf.js se cargan recién al usarlos (con un
-  CDN de respaldo). Los nombres dentro del zip van sin tildes porque los
-  descompresores viejos de Windows los rompen.
+  CDN de respaldo; cada uno tiene 15 s: si uno no contesta, se prueba el otro). Los
+  nombres dentro del zip van sin tildes porque los descompresores viejos de Windows
+  los rompen.
+- **Un SVG se sanea antes de entrar al documento** (`sanearSvg`): para pasarlo a
+  PDF hay que importarlo a la página, y un `<script>` adentro del archivo del cliente
+  (también disfrazado con otro espacio de nombres) se ejecutaba en la app, que guarda
+  el acceso a Drive y la clave de IA. Solo quedan los elementos de dibujo de SVG, sin
+  manejadores de eventos ni referencias hacia afuera (enlaces, `url(http…)`,
+  `@import`; las de adentro, `url(#degradé)` con o sin comillas, quedan). Un enlace
+  `<a>` que envuelve dibujo se cambia por un grupo **con sus atributos** (`transform`,
+  `fill`, `class`). Si hubo que sacar algo que sí dibujaba (HTML incrustado con
+  `foreignObject`), ese logo **se vectoriza desde lo que se ve y se avisa**, en vez de
+  decir «curvas originales» con un dibujo distinto. No sacar ese paso.
 
 ## Ramas y entornos de prueba
 
@@ -607,6 +862,10 @@ credencial en Google Cloud. Cada usuario también puede pegar otro con el botón
 - [x] Boceteador: área de impresión + logo con medidas reales (regla o medida exacta)
 - [x] Generador integrado (boceteador como modal, ficha A4 autocompletada)
 - [x] Ejecutivos en desplegable, multi-color de impresión (HEX/Pantone), barras de medida arrastrables, Nuevo boceto / Limpiar
+- [x] Textos en curvas con tipografía a elección (y la del cliente), y capas
+- [x] Formas (rectángulo, círculo, estrella, escudo…) con relleno o contorno en mm, e íconos
+- [x] Calar una forma con lo que tiene encima, deshacer / rehacer, duplicar y teclado
+- [ ] Texto en arco
 - [ ] Fase 2 — Links compartibles y aprobación del cliente
 - [ ] Fase 3 — Cotización conectada (ver `cotizador-formas.html`)
 - [ ] Fase 4 — Archivos de producción, cuentas, catálogo por API
