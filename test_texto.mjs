@@ -11,7 +11,7 @@ const T = new Function(html.slice(i, j)
   + 'return { FUENTES, GRUPOS_FUENTE, TEXTO_NUEVO, urlsFuente, pesoCercano, nombrePeso, etiquetaFuente, nombreTexto, archivoTexto, limpiarTexto, textoEnCurvas, cajaCurvas, contornoEncimado, gruposQueSeTocan, leerKern,'
   + ' FORMAS, FORMA_NUEVA, formaEnCurvas, invertirContorno, bordeAdentro, recorteExacto, aplanar, areaFirmada, nombreForma, archivoForma,'
   + ' ICONOS_CATEGORIAS, ICONOS_ES, ICONOS_FRASES, traducirBusqueda, consultasIcono, correccionIcono, distLetras, sinIconosPara, iconoSeguro, iconoEnSvg, nombreIcono, archivoIcono,'
-  + ' QR_NUEVO, QR_MARGEN, QR_PASO, QR_LARGO, qrLimpio, qrSinEsquema, nombreQr, archivoQr, qrTrazado, qrEnCurvas };')();
+  + ' QR_NUEVO, QR_MARGEN, QR_PASO, QR_LARGO, QR_HUECO, qrNivel, qrHueco, qrLimpio, qrSinEsquema, nombreQr, archivoQr, qrTrazado, qrEnCurvas };')();
 
 /* motor de mentira (como el de HarfBuzz): 1000 unidades por eme, cada letra avanza 600 (o lo que diga
    avance) y dibuja un rectángulo de 500 de ancho y 700 de alto (el alto de las mayúsculas; el de la x es 500);
@@ -413,12 +413,14 @@ assert.equal(T.archivoIcono({ icono: 'mdi:coffee' }), 'Icono coffee (Material De
     });
     return { nonzero: vueltas !== 0, evenodd: cruces % 2 === 1 };
   };
-  const revisar = (mat, oscuro, nombre) => {
-    const t = T.qrTrazado(mat, oscuro), cs = contornosDe(t.d), n = mat.length, m = oscuro ? T.QR_MARGEN : 0;
-    assert.equal(t.n, n); assert.equal(t.N, n + 2 * m); assert.equal(cs.length, t.contornos);
+  const revisar = (mat, oscuro, nombre, hueco = 0) => {
+    const t = T.qrTrazado(mat, oscuro, hueco), cs = contornosDe(t.d), n = mat.length, m = oscuro ? T.QR_MARGEN : 0, ini = (n - hueco) / 2;
+    assert.equal(t.n, n); assert.equal(t.N, n + 2 * m); assert.equal(cs.length, t.contornos); assert.equal(t.hueco, hueco);
     let tinta = 0;
     for(let r = 0; r < t.N; r++) for(let c = 0; c < t.N; c++){
-      const rr = r - m, cc = c - m, osc = rr >= 0 && cc >= 0 && rr < n && cc < n && !!mat[rr][cc], va = oscuro ? !osc : osc;
+      const rr = r - m, cc = c - m, osc = rr >= 0 && cc >= 0 && rr < n && cc < n && !!mat[rr][cc];
+      const enHueco = hueco > 0 && rr >= ini && rr < ini + hueco && cc >= ini && cc < ini + hueco; // el lugar del logo: nunca tinta
+      const va = enHueco ? false : oscuro ? !osc : osc;
       if(va) tinta++;
       const a = adentro(cs, (c + 0.5) * P, (r + 0.5) * P);
       assert.equal(a.nonzero, va, nombre + ': el cuadradito ' + r + ',' + c + ' (regla «nonzero»)');
@@ -469,6 +471,22 @@ assert.equal(T.archivoIcono({ icono: 'mdi:coffee' }), 'Icono coffee (Material De
     const mat = Array.from({ length: lado }, () => Array.from({ length: lado }, () => azar() < 0.5));
     revisar(mat, oscuro, 'al voleo ' + lado + (oscuro ? ' (fondo)' : ''));
   }
+  // con lugar para un logo en el centro: ese cuadrado queda sin tinta, con fondo o sin él
+  for(const lado of [21, 25, 33, 41]) for(const oscuro of [false, true]){
+    const mat = Array.from({ length: lado }, () => Array.from({ length: lado }, () => azar() < 0.5));
+    revisar(mat, oscuro, 'con hueco ' + lado + (oscuro ? ' (fondo)' : ''), T.qrHueco(lado));
+  }
+  revisar(Array.from({ length: 21 }, () => Array(21).fill(1)), false, 'todo oscuro con hueco', 5); // queda un marco: afuera y el hueco
+  // el hueco: impar (el centro es un cuadradito), hasta el 30 % del lado, y centrado
+  assert.equal(T.QR_HUECO, 0.3);
+  for(const [n, h] of [[21, 5], [25, 7], [29, 7], [33, 9], [37, 11], [41, 11], [45, 13], [49, 13], [53, 15], [57, 17], [61, 17]]){
+    assert.equal(T.qrHueco(n), h, 'hueco de un QR de ' + n);
+    assert.ok(h % 2 === 1 && h <= n * 0.3 && Number.isInteger((n - h) / 2));
+  }
+  // la corrección de errores: alta con el logo en el centro (aunque se haya pedido «menos»), baja en el simple, media si no
+  assert.equal(T.qrNivel({}), 'M'); assert.equal(T.qrNivel({ simple: true }), 'L');
+  assert.equal(T.qrNivel({ centro: true }), 'H'); assert.equal(T.qrNivel({ centro: true, simple: true }), 'H');
+  assert.equal(T.qrNivel(T.QR_NUEVO), 'M');
   // el SVG: su medida, el título con el link escapado y un solo trazado
   const g = { ...T.QR_NUEVO, texto: '  https://marca.com.ar/promo?a=1&b=<2>  ' };
   let s = T.qrEnCurvas([[1, 0], [0, 1]], g);
@@ -478,7 +496,14 @@ assert.equal(T.archivoIcono({ icono: 'mdi:coffee' }), 'Icono coffee (Material De
   assert.equal((s.svg.match(/<path /g) || []).length, 1);
   s = T.qrEnCurvas([[1, 0], [0, 1]], { ...g, fondo: true });
   assert.equal(s.w, (2 + 2 * T.QR_MARGEN) * P); assert.equal(s.lado, 2 + 2 * T.QR_MARGEN); assert.equal(s.cuadros, 2);
-  assert.ok(s.svg.includes('con el fondo impreso'));
+  assert.ok(s.svg.includes('con el fondo impreso')); assert.equal(s.hueco, 0);
+  {
+    const lleno = Array.from({ length: 25 }, () => Array(25).fill(1));
+    const c = T.qrEnCurvas(lleno, { ...g, centro: true });
+    assert.equal(c.hueco, 7); assert.equal(c.cuadros, 25); assert.equal(c.w, 25 * P);
+    assert.ok(c.svg.includes('con lugar para un logo en el centro'));
+    assert.equal(T.archivoQr({ texto: 'https://marca.com', centro: true }), 'QR marca.com - lugar para logo.svg');
+  }
   // nombres: el de la pantalla y el del archivo (sin nada que rompa un zip o una carpeta)
   assert.equal(T.nombreQr(g), 'QR «https://marca.com.ar/promo?…»');
   assert.equal(T.nombreQr({ texto: '' }), 'QR «sin link»');

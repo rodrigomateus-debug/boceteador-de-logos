@@ -412,9 +412,27 @@ Se edita con su botón «QR» de la barra, con un doble clic o con el recuadro d
 del paso 3.
 
 - **El link** se pega en el menú y el QR se rehace mientras se escribe (Enter es
-  «Listo»). Hasta 600 caracteres. El QR es el más chico en el que entra, con corrección
-  de errores media (M); los acentos y la ñ van en UTF-8. A «marca.com.ar/promo» le
-  ofrece agregarle «https://» (sin eso hay celulares que no lo abren como link).
+  «Listo»). Hasta 600 caracteres. El QR es el más chico en el que entra; los acentos y
+  la ñ van en UTF-8. A «marca.com.ar/promo» le ofrece agregarle «https://» (sin eso
+  hay celulares que no lo abren como link).
+- **Cuántos cuadraditos tiene** sale del largo del link y de la corrección de errores
+  (cuánto del QR puede faltar y se lee igual). «Cuadraditos: Normal» es la media (M);
+  **«Menos»** es la baja (L): un QR más simple, con cuadraditos más grandes, que
+  aguanta menos manchas, rayas o golpes. Lo que más lo simplifica es acortar el link:
+  el menú dice cuánto falta («con 2 caracteres menos bajaría a 25 × 25»).
+- **Lugar para un logo en el centro** («Centro: Lugar para un logo»): queda libre un
+  cuadrado en el medio, de hasta el 30 % del lado, y el QR pasa a la corrección alta
+  (H), así que lleva más cuadraditos (por eso ahí no se ofrece «Menos»). «＋ Logo…» y
+  «＋ Ícono…» traen el archivo o el ícono ya encajado en ese lugar, y cualquier
+  elemento que se lleve ahí queda como parte del QR: **lo acompaña** al moverlo,
+  agrandarlo, girarlo, con las flechas o al escribirle la medida. Si cambia el link y
+  el lugar se achica, lo del centro se vuelve a encajar. Con fondo impreso, el lugar
+  es una ventana sin tinta. El 30 % no es a ojo: con dos lectores (jsQR y ZXing) y
+  links de 12 a 120 caracteres, con la corrección alta se lee con el 35 % tapado por
+  lo que sea; con la media ya falla con el 30 %, y con la baja, con el 20 %.
+- **Si algo le tapa cuadraditos** (un elemento encima del QR fuera del lugar del
+  centro, o lo del centro agrandado de más) lo avisa junto a «Aplicar», y el menú
+  ofrece «Encajar de nuevo lo del centro».
 - **Sin link no se aplica**. Al nacer se ve un QR de muestra (leído dice «QR de
   muestra: falta pegarle el link»); «Aplicar» y «Descargar PNG» lo frenan, lo eligen y
   abren su menú.
@@ -914,6 +932,7 @@ credencial en Google Cloud. Cada usuario también puede pegar otro con el botón
 - [x] Formas (rectángulo, círculo, estrella, escudo…) con relleno o contorno en mm, e íconos
 - [x] Calar una forma con lo que tiene encima, deshacer / rehacer, duplicar y teclado
 - [x] QR en curvas con el link que se le pegue (sin fondo o con el fondo impreso) y tocar afuera para deseleccionar
+- [x] QR con lugar para un logo en el centro (que lo acompaña) y con menos cuadraditos
 - [ ] Texto en arco
 - [ ] Fase 2 — Links compartibles y aprobación del cliente
 - [ ] Fase 3 — Cotización conectada (ver `cotizador-formas.html`)

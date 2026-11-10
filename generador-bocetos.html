@@ -636,6 +636,10 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #lbPopQr{width:min(360px, calc(100vw - 40px))}
 #bocetoModal #lbPopQr textarea{word-break:break-all}
 #bocetoModal #lbPopQr .qrMal{color:#8A4B00; font-weight:600}
+#bocetoModal #qrCentroBtns{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:6px}
+#bocetoModal #qrCentroBtns[hidden]{display:none}
+#bocetoModal #qrCentroBtns .txtSubir{margin-top:6px; text-align:center}
+#bocetoModal #qrCentroBtns #qrEncajar{grid-column:1 / -1}
 #bocetoModal .formaGrilla{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px}
 #bocetoModal .formaGrilla button{display:flex; flex-direction:column; align-items:center; gap:4px; width:auto; margin:0; padding:8px 4px 6px; border:1.5px solid var(--formas-gray-200); border-radius:10px; background:#fff; font-family:var(--font-primary); font-size:11.5px; font-weight:600; color:var(--formas-ink); cursor:pointer}
 #bocetoModal .formaGrilla button img{width:34px; height:28px; object-fit:contain}
@@ -1318,7 +1322,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             <div class="txtNota" id="formaNota" aria-live="polite"></div>
           </div>
           <button type="button" class="lbBtn" id="lbIcono" title="Cambiar el ícono por otro" hidden><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="m12 3 2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg><span>Ícono</span></button>
-          <button type="button" class="lbBtn" id="lbQr" aria-expanded="false" aria-controls="lbPopQr" title="Editar el QR: el link, y si va sin fondo o con el fondo impreso" hidden><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3z"/><path d="M18 18h3v3"/><path d="M21 14v1"/><path d="M14 20v1"/></svg><span>QR</span></button>
+          <button type="button" class="lbBtn" id="lbQr" aria-expanded="false" aria-controls="lbPopQr" title="Editar el QR: el link, el fondo, el lugar para un logo y la cantidad de cuadraditos" hidden><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3z"/><path d="M18 18h3v3"/><path d="M21 14v1"/><path d="M14 20v1"/></svg><span>QR</span></button>
           <div class="lbPop lbPopGrande" id="lbPopQr" role="dialog" aria-label="Editar el QR" hidden>
             <div class="txtCab"><label class="lbPopTit" for="qrTexto">Link o texto del QR</label><button type="button" class="txtListo" id="qrListo">Listo</button></div>
             <textarea id="qrTexto" rows="2" maxlength="600" placeholder="Pegá acá el link: https://…" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby="qrNota"></textarea>
@@ -1326,6 +1330,19 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             <div class="txtFila"><span class="lbPopTit" id="qrFondoTit">Fondo</span><div class="seg" id="qrFondo" role="group" aria-labelledby="qrFondoTit">
               <button type="button" data-fondo="0" aria-pressed="true" title="Solo los cuadraditos, sobre el producto">Sin fondo</button>
               <button type="button" data-fondo="1" aria-pressed="false" title="Se imprime el fondo y los cuadraditos quedan del color del producto: para un producto oscuro con tinta clara">Con fondo</button>
+            </div></div>
+            <div class="txtFila"><span class="lbPopTit" id="qrCentroTit">Centro</span><div class="seg" id="qrCentro" role="group" aria-labelledby="qrCentroTit">
+              <button type="button" data-centro="0" aria-pressed="true">Lleno</button>
+              <button type="button" data-centro="1" aria-pressed="false" title="Deja libre un cuadrado en el medio para poner un logo o un ícono. Lleva más cuadraditos: el QR tiene que aguantar que le falte el centro">Lugar para un logo</button>
+            </div></div>
+            <div id="qrCentroBtns" hidden>
+              <button type="button" class="txtSubir" id="qrLogoArch" title="Elegir el archivo del logo: queda encajado en el centro del QR">＋ Logo…</button>
+              <button type="button" class="txtSubir" id="qrLogoIcono" title="Elegir un ícono (WhatsApp, Instagram, teléfono…): queda encajado en el centro del QR">＋ Ícono…</button>
+              <button type="button" class="txtSubir" id="qrEncajar" title="Lo que está en el centro vuelve a quedar justo adentro del lugar" hidden>⤢ Encajar de nuevo lo del centro</button>
+            </div>
+            <div class="txtFila" id="qrSimpleFila"><span class="lbPopTit" id="qrSimpleTit">Cuadraditos</span><div class="seg" id="qrSimple" role="group" aria-labelledby="qrSimpleTit">
+              <button type="button" data-simple="1" aria-pressed="false" title="Un QR más simple, con menos cuadraditos y más grandes. Aguanta menos manchas, rayas o golpes">Menos</button>
+              <button type="button" data-simple="0" aria-pressed="true">Normal</button>
             </div></div>
             <div class="txtNota" id="qrNota" aria-live="polite"></div>
           </div>
@@ -3121,6 +3138,7 @@ async function revisarPaquete(){
       if(L.letra) r.info.push('"' + nom + '": ' + (L.letra.que === 'números' ? 'los ' : 'las ') + L.letra.que + ' miden ' + String(L.letra.mm).replace('.', ',') + ' mm de alto' + (L.letra.que === 'minúsculas' ? ' (la altura de la x)' : '') + '.');
       if(L.qr){
         r.info.push('"' + nom + '": QR de ' + L.qr.n + ' × ' + L.qr.n + ' cuadraditos' + (L.qr.mm ? ' de ' + String(L.qr.mm).replace('.', ',') + ' mm' : '') + (L.qr.fondo ? ', con el fondo impreso (los cuadraditos quedan del color del producto)' : '')
+          + (L.qr.centro ? ', con un lugar libre en el centro para el logo (no agregarle cuadraditos ahí)' : '')
           + '. Probarlo con el celular antes de producir: tiene que abrir ' + L.qr.link);
         if(L.qr.chico) aviso('qr-chico-' + nom, '"' + nom + '": los cuadraditos del QR miden ' + String(L.qr.mm).replace('.', ',') + ' mm: impreso puede no leerse. Agrandalo o acortá el link en el boceteador.');
       }
@@ -5172,13 +5190,17 @@ $('zoneRefBtn').addEventListener('click', () => {
 $('alignH').addEventListener('click', () => {
   const L = selLogo();
   if(!L || !state.zone) return;
+  const seguir = qrSeguidor(L);
   L.x = clamp(state.zone.x + (state.zone.w - L.w)/2, 0, Math.max(0, 1 - L.w));
+  if(seguir) seguir(true);
   render();
 });
 $('alignV').addEventListener('click', () => {
   const L = selLogo();
   if(!L || !state.zone) return;
+  const seguir = qrSeguidor(L);
   L.y = clamp(state.zone.y + (state.zone.h - L.h)/2, 0, Math.max(0, 1 - L.h));
+  if(seguir) seguir(true);
   render();
 });
 
@@ -6537,7 +6559,8 @@ function reubicarLogos(previos){
 }
 
 /* el logo no puede ser más grande que el área ni que lo que imprime la técnica */
-function avisoExcede(){
+function avisoExcede(){ return avisoExcedeArea() || avisoQrTapado(); }
+function avisoExcedeArea(){
   const k = cmPerPx();
   if(!k || !state.zone || !state.logos.length) return '';
   const {w:FW,h:FH} = frameRect(), z = state.zone, zw = z.w*FW*k, zh = z.h*FH*k;
@@ -7302,10 +7325,11 @@ function applyTypedCm(axis){
      producto de 40 cm mide un tercio de píxel de alto, y agrandar los dos lados la dejaba de 19,6 cm × 0,5 mm */
   if(L.tipo === 'forma' && !esCalada(L.gen)){ wPx = Math.max(wPx, 0.02); hPx = Math.max(hPx, 0.02); }
   else if(chico < 0.5){ wPx *= 0.5/chico; hPx *= 0.5/chico; }
-  const cx = L.x + L.w/2, cy = L.y + L.h/2;
+  const cx = L.x + L.w/2, cy = L.y + L.h/2, seguir = qrSeguidor(L);
   L.w = wPx/FW; L.h = hPx/FH;
   L.x = clamp(cx - L.w/2, 0, Math.max(0, 1 - L.w));
   L.y = clamp(cy - L.h/2, 0, Math.max(0, 1 - L.h));
+  if(seguir) seguir(true);
   fijarEscalaTexto(L);
   ajustarForma(L); // la forma se rehace con su proporción nueva
   render();
@@ -7618,6 +7642,8 @@ function loadLogoSrc(url, name, isJpg, file, extra){
         const tapa = o => Math.max(0, Math.min(logo.x + logo.w, o.x + o.w) - Math.max(logo.x, o.x)) * Math.max(0, Math.min(logo.y + logo.h, o.y + o.h) - Math.max(logo.y, o.y)) / (o.w * o.h || 1);
         if(state.logos.some(o => tapa(o) > 0.05)) logo.z = state.logos.reduce((m, o) => Math.min(m, o.z || 0), 0) - 1;
       }
+      if(qrEspera && state.logos.includes(qrEspera)) encajarEnQr(qrEspera, logo); // lo pidió un QR para su centro
+      qrEspera = null;
       state.logos.push(logo);
       ordenarCapas();
       state.sel = state.logos.length - 1;
@@ -7862,6 +7888,7 @@ function syncLogoUI(){
   });
   $('addLogoBtn').hidden = !state.logos.length;
   if(L !== barLogo){ barLogo = L; cerrarPopsBarra(); } // otro logo: sus menús arrancan cerrados
+  if(qrEspera && L !== qrEspera) qrEspera = null; // se fue a otra cosa: lo próximo que agregue ya no es para ese QR
   $('logoCmFields').hidden = !L; // el ancho y el alto son de un elemento: sin ninguno elegido no van
   $('unitField').hidden = !state.logos.length;
   $('alignH').disabled = $('alignV').disabled = !L;
@@ -9298,24 +9325,35 @@ function iconoEnSvg(dato, g){
    producto oscuro con tinta clara: se imprime el fondo, con el margen de la norma, y los cuadraditos quedan del
    color del producto. Así el celular ve lo de siempre, oscuro sobre claro (un QR claro sobre fondo oscuro hay
    lectores que no lo toman) */
-const QR_NUEVO = { texto: '', fondo: false };
+const QR_NUEVO = { texto: '', fondo: false, centro: false, simple: false };
 const QR_MUESTRA = 'QR de muestra: falta pegarle el link'; // lo que dice el QR mientras no se le puso nada
 const QR_MARGEN = 4;  // la «zona de silencio» de la norma: 4 cuadraditos libres alrededor
 const QR_PASO = 10;   // unidades del SVG por cuadradito
 const QR_LARGO = 600; // caracteres: más da un QR tan cargado que impreso chico no se lee
+/* la corrección de errores (cuánto del QR puede faltar y se lee igual) decide, con el largo del link, cuántos
+   cuadraditos tiene: baja (L, ~7 %) da el más simple; media (M, ~15 %) es la de siempre; con lugar para un logo en
+   el centro va la alta (H, ~30 %), que es la que aguanta que le falte el medio */
+const qrNivel = g => g && g.centro ? 'H' : g && g.simple ? 'L' : 'M';
+/* el lugar para el logo: un cuadrado en el centro sin tinta, de hasta el 30 % del lado. Medido con dos lectores
+   (jsQR y ZXing), con la corrección alta se lee con el 35 % tapado, sea lo que sea que lo tape; con la media ya
+   falla con el 30 %, y con la baja, con el 20 %. Impar: el centro de un QR es un cuadradito */
+const QR_HUECO = 0.3;
+const qrHueco = n => { let h = Math.floor(n * QR_HUECO); if(h % 2 === 0) h--; return Math.max(3, h); };
 const qrLimpio = t => String(t == null ? '' : t).replace(/^\s+|\s+$/g, '').slice(0, QR_LARGO);
 // «marca.com.ar/promo» sin «https://»: hay celulares que no lo abren como link
 const qrSinEsquema = t => /^[a-z0-9-]+(\.[a-z0-9-]+)+([\/?#]\S*)?$/i.test(qrLimpio(t));
 const nombreQr = g => 'QR «' + recorteTexto(qrLimpio(g.texto) || 'sin link', 28) + '»';
-const archivoQr = g => ('QR ' + recorteTexto(qrLimpio(g.texto).replace(/^[a-z][a-z0-9+.-]*:\/*/i, '') || 'sin link', 40) + (g.fondo ? ' - fondo impreso' : ''))
+const archivoQr = g => ('QR ' + recorteTexto(qrLimpio(g.texto).replace(/^[a-z][a-z0-9+.-]*:\/*/i, '') || 'sin link', 40) + (g.fondo ? ' - fondo impreso' : '') + (g.centro ? ' - lugar para logo' : ''))
   .replace(/[\\/:*?"<>|«»…#%&=]+/g, ' ').replace(/\s+/g, ' ').trim() + '.svg';
 /* mat[fila][columna] = oscuro. Devuelve el trazado (en cuadraditos × QR_PASO), cuántos cuadraditos tiene de lado
-   el código (n) y el dibujo entero (N: con el margen, si lleva el fondo impreso) */
-function qrTrazado(mat, fondo){
-  const n = mat.length, m = fondo ? QR_MARGEN : 0, N = n + 2 * m;
+   el código (n) y el dibujo entero (N: con el margen, si lleva el fondo impreso). hueco: de cuántos cuadraditos
+   de lado es el lugar del centro que queda sin tinta (0: ninguno), con fondo o sin él */
+function qrTrazado(mat, fondo, hueco){
+  const n = mat.length, m = fondo ? QR_MARGEN : 0, N = n + 2 * m, h = hueco > 0 ? hueco : 0, a = (n - h) / 2;
   const tinta = (r, c) => { // ¿acá va tinta?
     if(r < 0 || c < 0 || r >= N || c >= N) return false;
     const rr = r - m, cc = c - m, osc = rr >= 0 && cc >= 0 && rr < n && cc < n && !!mat[rr][cc];
+    if(h && rr >= a && rr < a + h && cc >= a && cc < a + h) return false; // el lugar del logo
     return fondo ? !osc : osc;
   };
   /* los bordes entre tinta y no tinta, cada uno con la tinta a su derecha. De una esquina salen uno o dos */
@@ -9351,16 +9389,16 @@ function qrTrazado(mat, fondo){
     for(const p of pts.slice(0, -1)){ d += p[1] === antes[1] ? 'H' + p[0] * QR_PASO : 'V' + p[1] * QR_PASO; antes = p; }
     d += 'Z';
   }
-  return { d, n, N, contornos };
+  return { d, n, N, contornos, hueco: h };
 }
 function qrEnCurvas(mat, g){
-  const t = qrTrazado(mat, !!g.fondo), W = t.N * QR_PASO, aire = 0.01 * W;
+  const t = qrTrazado(mat, !!g.fondo, g.centro ? qrHueco(mat.length) : 0), W = t.N * QR_PASO, aire = 0.01 * W;
   const vb = [-aire, -aire, W + 2 * aire, W + 2 * aire].map(v => +v.toFixed(2));
   // data-exacto: la medida sale de esta geometría (ink), no de sondear los píxeles (ver normalizeSvg)
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" data-exacto="1" viewBox="' + vb.join(' ') + '" width="' + vb[2] + '" height="' + vb[3] + '">'
-    + '<title>' + escXml('QR en curvas: ' + (recorteTexto(qrLimpio(g.texto), 300) || 'sin link') + (g.fondo ? ' (con el fondo impreso: para producto oscuro)' : '')) + '</title>'
+    + '<title>' + escXml('QR en curvas: ' + (recorteTexto(qrLimpio(g.texto), 300) || 'sin link') + (g.fondo ? ' (con el fondo impreso: para producto oscuro)' : '') + (g.centro ? ' (con lugar para un logo en el centro)' : '')) + '</title>'
     + '<path fill="#000000" d="' + t.d + '"/></svg>';
-  return { svg, w: W, h: W, ink: { x1: 0, y1: 0, x2: W, y2: W }, vb, cuadros: t.n, lado: t.N };
+  return { svg, w: W, h: W, ink: { x1: 0, y1: 0, x2: W, y2: W }, vb, cuadros: t.n, lado: t.N, hueco: t.hueco };
 }
 /* fin del texto en curvas (lo de arriba no toca la página: lo prueba test_texto.mjs) */
 
@@ -10020,6 +10058,7 @@ async function ponerFigura(L, g, r){
       L.x = clamp(cx - L.w/2, 0, Math.max(0, 1 - L.w)); L.y = clamp(cy - L.h/2, 0, Math.max(0, 1 - L.h));
       if(state.mode === 'logo' && L.cmW > 0){ L.cmW *= k * tope; L.cmH = L.cmW; }
     }
+    qrAcomodar(L); // con otro link el lugar del centro puede haber cambiado: lo que lleva ahí sigue entrando
   }
   if(L.tipo === 'icono'){
     let h = L.h*FH, w = h*aspect;
@@ -10145,10 +10184,10 @@ $('formaListo').addEventListener('click', () => { cerrarPopsBarra(); $('lbForma'
 
 /* ---- QR ---- */
 const cargarQr = () => cargarLib(QR_URLS, () => typeof window.qrcode === 'function').catch(() => { throw new Error('qr-lib'); });
-function qrMatriz(texto){
+function qrMatriz(texto, nivel){
   const Q = window.qrcode;
   Q.stringToBytes = Q.stringToBytesFuncs['UTF-8']; // los acentos y la ñ, en UTF-8: lo que esperan los celulares
-  const q = Q(0, 'M'); // el más chico en el que entra, con corrección de errores media
+  const q = Q(0, nivel || 'M'); // el más chico en el que entra, con la corrección de errores que le toca (ver qrNivel)
   q.addData(texto);
   q.make();
   const n = q.getModuleCount();
@@ -10157,13 +10196,126 @@ function qrMatriz(texto){
 async function generarQr(g){
   await cargarQr();
   let mat;
-  try{ mat = qrMatriz(qrLimpio(g.texto) || QR_MUESTRA); }
+  try{ mat = qrMatriz(qrLimpio(g.texto) || QR_MUESTRA, qrNivel(g)); }
   catch(e){ throw new Error('qr-largo'); }
   const r = qrEnCurvas(mat, g);
   const url = await normalizeSvg(new File([r.svg], archivoQr(g), { type: 'image/svg+xml' }));
   return { url, svg: r.svg, box: { w: r.w, h: r.h }, ink: r.ink, vb: r.vb, lado: r.lado, cuadros: r.cuadros };
 }
 function qrElegido(){ const L = selLogo(); return L && L.tipo === 'qr' && L.gen ? L : null; }
+/* cuántos caracteres menos en el link lo bajan al tamaño anterior (o null si no viene al caso). Cuánto entra en
+   cada tamaño se le pregunta al codificador, una vez por tamaño y corrección */
+const qrCabenMemo = new Map();
+function qrCaben(v, nivel){
+  const k = v + nivel;
+  if(!qrCabenMemo.has(k)){
+    const cabe = n => { try{ const q = window.qrcode(v, nivel); q.addData('a'.repeat(n)); q.make(); return true; }catch(e){ return false; } };
+    let a = 0, b = 3000;
+    while(b - a > 1){ const m = (a + b) >> 1; if(cabe(m)) a = m; else b = m; }
+    qrCabenMemo.set(k, a);
+  }
+  return qrCabenMemo.get(k);
+}
+function qrAcortar(L){
+  const g = L.genOk || L.gen, n = qrCuadros(L), v = (n - 17) / 4, t = qrLimpio(g.texto);
+  if(typeof window.qrcode !== 'function' || !(v > 1) || !t) return null;
+  const sobran = new TextEncoder().encode(t).length - qrCaben(v - 1, qrNivel(g));
+  return sobran > 0 && sobran <= 20 ? { sobran, n: n - 4 } : null;
+}
+/* el lugar del centro de un QR, en la foto: su centro, su lado y lo que mide un cuadradito (en px), y el giro */
+function qrHuecoCaja(Q){
+  const g = Q && Q.tipo === 'qr' ? (Q.genOk || Q.gen) : null, n = g && g.centro ? qrCuadros(Q) : 0, N = n ? qrLado(Q) : 0;
+  if(!n || !N) return null;
+  const {w:FW, h:FH} = frameRect(), mod = Q.w*FW / N;
+  return { cx: (Q.x + Q.w/2)*FW, cy: (Q.y + Q.h/2)*FH, mod, lado: qrHueco(n) * mod, rot: Q.rot || 0 };
+}
+const giroPx = (x, y, grados) => { const r = grados * Math.PI / 180, c = Math.cos(r), s = Math.sin(r); return [x * c - y * s, x * s + y * c]; };
+/* lo que el QR lleva en el centro: los elementos de más arriba cuyo medio cae en su lugar */
+function qrPasajeros(Q, caja = qrHuecoCaja(Q)){
+  if(!caja) return [];
+  const {w:FW, h:FH} = frameRect();
+  return state.logos.filter(E => {
+    if(E === Q || (E.z || 0) <= (Q.z || 0)) return false;
+    const [x, y] = giroPx((E.x + E.w/2)*FW - caja.cx, (E.y + E.h/2)*FH - caja.cy, -caja.rot);
+    return Math.abs(x) <= caja.lado/2 && Math.abs(y) <= caja.lado/2;
+  });
+}
+/* lo del centro acompaña al QR: se anota dónde está cada uno respecto del QR y, cada vez que se llama a lo que
+   devuelve, se lo pone igual respecto de como esté el QR ahora (corrido, más grande o girado). fin: terminó el
+   gesto (un texto fija su letra; una forma rehace su contorno) */
+function qrSeguidor(Q){
+  const c0 = qrHuecoCaja(Q), ps = c0 ? qrPasajeros(Q, c0) : [];
+  if(!ps.length) return null;
+  const {w:FW, h:FH} = frameRect();
+  const ini = ps.map(E => {
+    const [lx, ly] = giroPx((E.x + E.w/2)*FW - c0.cx, (E.y + E.h/2)*FH - c0.cy, -c0.rot);
+    return { E, lx, ly, w: E.w*FW, h: E.h*FH, rot: E.rot || 0, cmW: E.cmW || 0, cmH: E.cmH || 0 };
+  });
+  return fin => {
+    const c1 = qrHuecoCaja(Q);
+    if(!c1) return;
+    const k = c1.mod / c0.mod;
+    ini.forEach(o => {
+      const E = o.E, [dx, dy] = giroPx(o.lx * k, o.ly * k, c1.rot);
+      E.w = o.w * k / FW; E.h = o.h * k / FH;
+      E.x = (c1.cx + dx) / FW - E.w/2; E.y = (c1.cy + dy) / FH - E.h/2;
+      E.rot = ((o.rot + c1.rot - c0.rot) % 360 + 360) % 360;
+      if(state.mode === 'logo' && o.cmW > 0){ E.cmW = o.cmW * k; E.cmH = o.cmH * k; }
+      if(fin && Math.abs(k - 1) > 1e-6){ fijarEscalaTexto(E); ajustarForma(E); }
+    });
+  };
+}
+/* un elemento, justo adentro del lugar del centro: centrado, con medio cuadradito de aire por lado, derecho
+   respecto del QR y por encima de él */
+function encajarEnQr(Q, E){
+  const c = qrHuecoCaja(Q);
+  if(!c || !E || E === Q) return;
+  const {w:FW, h:FH} = frameRect(), lugar = c.lado - c.mod, w0 = E.w*FW, h0 = E.h*FH;
+  if(!(w0 > 0 && h0 > 0 && lugar > 0)) return;
+  const k = Math.min(lugar / w0, lugar / h0);
+  E.w = w0 * k / FW; E.h = h0 * k / FH;
+  E.x = c.cx / FW - E.w/2; E.y = c.cy / FH - E.h/2;
+  E.rot = c.rot;
+  if((E.z || 0) <= (Q.z || 0)){ E.z = siguienteCapa(); ordenarCapas(); }
+  if(state.mode === 'logo' && E.cmW > 0){ E.cmW *= k; E.cmH *= k; }
+  fijarEscalaTexto(E); ajustarForma(E);
+}
+/* después de rehacer el QR (otro link, otra cantidad de cuadraditos): lo del centro que ya no entra, se encaja */
+function qrAcomodar(Q){
+  const c = qrHuecoCaja(Q);
+  if(!c) return;
+  const {w:FW, h:FH} = frameRect();
+  qrPasajeros(Q, c).forEach(E => { if(E.w*FW > c.lado - c.mod/2 || E.h*FH > c.lado - c.mod/2) encajarEnQr(Q, E); });
+}
+/* ¿algo de más arriba le tapa cuadraditos a un QR? (lo que está entero adentro del lugar del centro, no). Mira
+   uno (el del menú) o todos, y devuelve el aviso del primero que encuentra, o '' */
+function avisoQrTapado(uno){
+  const {w:FW, h:FH} = frameRect();
+  for(const Q of (uno ? [uno] : state.logos.filter(l => l.tipo === 'qr' && l.gen))){
+    const N = qrLado(Q);
+    if(!N) continue;
+    const mod = Q.w*FW / N, medio = Q.w*FW / 2, c = qrHuecoCaja(Q), qcx = (Q.x + Q.w/2)*FW, qcy = (Q.y + Q.h/2)*FH;
+    for(const E of state.logos){
+      if(E === Q || (E.z || 0) <= (Q.z || 0)) continue;
+      // la caja del elemento, vista desde el QR (con los giros de los dos)
+      const ex = (E.x + E.w/2)*FW - qcx, ey = (E.y + E.h/2)*FH - qcy, xs = [], ys = [];
+      for(const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]){
+        const [px, py] = giroPx(sx * E.w*FW/2, sy * E.h*FH/2, E.rot || 0), [lx, ly] = giroPx(ex + px, ey + py, -(Q.rot || 0));
+        xs.push(lx); ys.push(ly);
+      }
+      const x0 = Math.max(Math.min(...xs), -medio), x1 = Math.min(Math.max(...xs), medio), y0 = Math.max(Math.min(...ys), -medio), y1 = Math.min(Math.max(...ys), medio);
+      if(x1 - x0 < mod/2 || y1 - y0 < mod/2) continue; // no lo pisa (o apenas lo roza)
+      const h = c ? c.lado/2 + mod/4 : 0;
+      if(c && Math.min(...xs) >= -h && Math.max(...xs) <= h && Math.min(...ys) >= -h && Math.max(...ys) <= h) continue; // está en su lugar
+      const quien = esGenerado(E) ? queEs(E).el.replace(/^./, ch => ch.toUpperCase()) + ' «' + apodo(E) + '»' : '«' + (E.name || 'logo') + '»';
+      const enCentro = c && Math.abs(giroPx(ex, ey, -(Q.rot || 0))[0]) <= c.lado/2 && Math.abs(giroPx(ex, ey, -(Q.rot || 0))[1]) <= c.lado/2;
+      return enCentro ? quien + ' se sale del lugar del centro y le tapa cuadraditos al QR: achicalo (en el menú del QR, «Encajar de nuevo lo del centro»).'
+        : quien + ' le tapa cuadraditos al QR: así puede no leerse. Corrélo, o dejale un lugar en el centro (menú del QR, «Lugar para un logo»).';
+    }
+  }
+  return '';
+}
+var qrEspera = null; // el QR que pidió un logo o un ícono para su centro: lo próximo que se agregue va ahí (var: syncLogoUI lo mira desde antes)
 /* cuántos cuadraditos tiene de lado el dibujo (con el margen, si lleva el fondo impreso) y cuántos el código.
    Sale de la caja del dibujo, que se guarda con el boceto: así también se sabe en uno reabierto */
 const qrLado = L => L.genBox && L.genBox.w > 0 ? Math.round(L.genBox.w / QR_PASO) : 0;
@@ -10177,7 +10329,7 @@ const QR_MM_MIN = 0.4; // por debajo de esto, impreso, los cuadraditos se empast
 const qrMedida = L => { const mm = qrCuadradito(L), n = qrCuadros(L); return n ? n + ' × ' + n + ' cuadraditos' + (mm ? ' de ' + mmTxt(mm) : '') : ''; };
 function qrResumen(L){
   const t = qrLimpio(L.gen.texto), med = qrMedida(L);
-  return 'En curvas · ' + (t ? recorteTexto(t, 46) : 'sin link todavía') + (med ? ' · ' + med : '') + (L.gen.fondo ? ' · con el fondo impreso' : ' · sin fondo');
+  return 'En curvas · ' + (t ? recorteTexto(t, 46) : 'sin link todavía') + (med ? ' · ' + med : '') + (L.gen.fondo ? ' · con el fondo impreso' : ' · sin fondo') + (L.gen.centro ? ' · con lugar para un logo' : L.gen.simple ? ' · menos cuadraditos' : '');
 }
 /* ¿la tinta es clara? (true, false, o null si es a todo color y no se sabe) */
 function tintaClara(L){
@@ -10195,6 +10347,8 @@ function notaQr(L){
     const med = L.genOk && qrLimpio(L.genOk.texto) === t ? qrMedida(L) : '';
     if(med) ls.push([0, med + '. Probalo con el celular antes de mandarlo a producir.']);
     if(mm && mm < QR_MM_MIN) ls.push([1, 'Con cuadraditos de menos de ' + mmTxt(QR_MM_MIN) + ' puede no leerse: agrandalo o acortá el link.']);
+    const menos = med ? qrAcortar(L) : null;
+    if(menos) ls.push([0, 'Con ' + (menos.sobran === 1 ? 'un carácter' : menos.sobran + ' caracteres') + ' menos en el link bajaría a ' + menos.n + ' × ' + menos.n + ' cuadraditos (un acortador de links sirve).']);
   }
   if(g.fondo){
     ls.push([0, 'Con fondo: se imprime el fondo (con su margen) y los cuadraditos quedan del color del producto. Es lo que va en un producto oscuro con tinta clara: el celular ve lo de siempre, oscuro sobre claro.']);
@@ -10203,6 +10357,13 @@ function notaQr(L){
     ls.push([0, 'Sin fondo: solo los cuadraditos, sobre el producto. Dejale libre alrededor un margen de 4 cuadraditos' + (mm ? ' (' + mmTxt(mm * QR_MARGEN) + ')' : '') + '.']);
     if(clara) ls.push([1, 'Con una tinta clara sobre un producto oscuro queda un QR al revés, que hay celulares que no leen: ahí conviene «Con fondo».']);
   }
+  if(g.centro){
+    const c = qrHuecoCaja(L);
+    ls.push([0, 'Lugar para un logo' + (c && mm ? ': ' + mmTxt(mm * c.lado / c.mod) + ' de lado' : '') + '. Lo que pongas ahí acompaña al QR al moverlo, agrandarlo o girarlo. Por el lugar lleva más cuadraditos (tiene que leerse aunque le falte el centro).']);
+    if(qrCuadros(L) >= 45) ls.push([1, 'Con un link tan largo queda muy cargado para llevar un logo: si podés, acortalo.']);
+  } else if(g.simple) ls.push([0, 'Con menos cuadraditos aguanta menos manchas, rayas o golpes: para algo que se va a gastar con el uso, mejor «Normal».']);
+  const tapa = avisoQrTapado(L);
+  if(tapa) ls.push([1, tapa]);
   const box = $('qrNota');
   box.innerHTML = '';
   ls.forEach(([mal, tx]) => { const d = document.createElement('div'); if(mal) d.className = 'qrMal'; d.textContent = tx; box.appendChild(d); });
@@ -10213,6 +10374,11 @@ function syncQrPop(){
   if(document.activeElement !== $('qrTexto')) $('qrTexto').value = L.gen.texto || ''; // sin pisar lo que se está escribiendo
   document.querySelectorAll('#qrFondo button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.fondo === '1') === !!L.gen.fondo)));
   $('qrHttps').hidden = !qrSinEsquema(L.gen.texto);
+  document.querySelectorAll('#qrCentro button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.centro === '1') === !!L.gen.centro)));
+  document.querySelectorAll('#qrSimple button').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.simple === '1') === !!L.gen.simple)));
+  $('qrSimpleFila').hidden = !!L.gen.centro; // con el logo en el centro la corrección es la alta: no hay «menos»
+  $('qrCentroBtns').hidden = !L.gen.centro;
+  $('qrEncajar').hidden = !L.gen.centro || !qrPasajeros(L).length;
   notaQr(L);
 }
 function cambioQr(L){
@@ -10270,6 +10436,39 @@ document.querySelectorAll('#qrFondo button').forEach(b => b.addEventListener('cl
   cambioQr(L);
   syncLogoUI();
 }));
+document.querySelectorAll('#qrCentro button').forEach(b => b.addEventListener('click', () => {
+  const L = qrElegido(), v = b.dataset.centro === '1';
+  if(!L || !!L.gen.centro === v) return;
+  L.gen.centro = v;
+  cambioQr(L);
+}));
+document.querySelectorAll('#qrSimple button').forEach(b => b.addEventListener('click', () => {
+  const L = qrElegido(), v = b.dataset.simple === '1';
+  if(!L || !!L.gen.simple === v) return;
+  L.gen.simple = v;
+  cambioQr(L);
+}));
+$('qrLogoArch').addEventListener('click', () => {
+  const L = qrElegido();
+  if(!L) return;
+  qrEspera = L; pendingAdd = true;
+  $('logoInput').value = ''; $('logoInput').click();
+});
+$('qrLogoIcono').addEventListener('click', () => {
+  const L = qrElegido();
+  if(!L) return;
+  abrirIconos('nuevo');
+  qrEspera = L;
+});
+$('qrEncajar').addEventListener('click', () => {
+  const L = qrElegido();
+  if(!L) return;
+  qrPasajeros(L).forEach(E => encajarEnQr(L, E));
+  render(); syncQrPop();
+});
+// si se arrepiente (cierra el selector de archivos) o agrega otra cosa por su cuenta, ya no es para el centro del QR
+$('logoInput').addEventListener('cancel', () => { qrEspera = null; });
+document.querySelector('#bocetoModal .agregarRow').addEventListener('click', () => { qrEspera = null; }, true);
 /* un QR sin link muestra uno de muestra: ese no va a la ficha ni a un PNG. Se lo elige y se abre su menú */
 function frenoQrSinLink(){
   const L = state.logos.find(l => l.tipo === 'qr' && l.gen && !qrLimpio(l.gen.texto));
@@ -10574,8 +10773,10 @@ document.addEventListener('keydown', e => {
   if(!d) return;
   e.preventDefault();
   const {w:FW, h:FH} = frameRect(), paso = (e.shiftKey ? 10 : 1) / state.zoom; // un píxel de pantalla; con Mayús, diez
+  const seguir = qrSeguidor(L);
   L.x = clamp(L.x + d[0] * paso / FW, 0, Math.max(0, 1 - L.w));
   L.y = clamp(L.y + d[1] * paso / FH, 0, Math.max(0, 1 - L.h));
+  if(seguir) seguir(true);
   render();
 });
 
@@ -10768,6 +10969,7 @@ frame.addEventListener('pointerdown', e => {
       } else {
         active = { mode:'logo-move', logo:L, startPx:px, start:{x:L.x,y:L.y,w:L.w,h:L.h,rot:L.rot} };
       }
+      active.seguir = qrSeguidor(L); // un QR lleva consigo lo que tiene en el centro
       zoneEl.classList.add('faded'); // el área no molesta mientras se trabaja el logo
       frame.setPointerCapture(e.pointerId);
       e.preventDefault(); render(); return;
@@ -10872,6 +11074,7 @@ frame.addEventListener('pointermove', e => {
     if(snap !== undefined) ang = snap % 360;
     L.rot = ang;
   }
+  if(active.seguir) active.seguir();
   render();
 });
 
@@ -10893,11 +11096,13 @@ frame.addEventListener('pointermove', e => {
     const i = abajo ? state.logos.findIndex(l => l.el === abajo) : -1;
     if(i >= 0){
       active.logo.rot = active.start.rot; // un temblor del pulso no cuenta como giro
+      if(active.seguir) active.seguir();
       active = null; selectLogo(i);
       try{ abajo.focus({ preventScroll: true }); }catch(err){}
       return;
     }
   }
+  if(active.seguir) active.seguir(true);
   active = null; render();
 }));
 
@@ -11359,7 +11564,7 @@ const fichaArte = l => ({
   generado: esGenerado(l) ? l.tipo : undefined, // texto, forma o ícono armado en el boceteador (no lo mandó el cliente)
   letra: (a => a ? { mm: +(a.cm*10).toFixed(1), que: a.que } : undefined)(l.tipo === 'texto' ? alturaLetra(l) : null),
   // un QR: qué tiene que leer el taller al probarlo, y cuánto miden sus cuadraditos
-  qr: l.tipo === 'qr' && l.gen ? (mm => ({ link: qrLimpio(l.gen.texto), n: qrCuadros(l), mm: +mm.toFixed(2), fondo: !!l.gen.fondo, chico: mm > 0 && mm < QR_MM_MIN }))(qrCuadradito(l)) : undefined,
+  qr: l.tipo === 'qr' && l.gen ? (mm => ({ link: qrLimpio(l.gen.texto), n: qrCuadros(l), mm: +mm.toFixed(2), fondo: !!l.gen.fondo, centro: !!l.gen.centro, chico: mm > 0 && mm < QR_MM_MIN }))(qrCuadradito(l)) : undefined,
   encimados: l.tipo === 'texto' && l.encimados ? true : undefined,
   faltan: (l.tipo === 'texto' && l.faltan && l.faltan.length) ? l.faltan.slice() : undefined,
 });
