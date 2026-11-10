@@ -235,9 +235,11 @@ clic sobre ellos o con su botón en la barra («Forma» o «Ícono»).
 (un área ancha y baja, como la de una lapicera), **al costado, pegados** (el ícono
 y, al lado, el número); y con el área ocupada, más chicos, en el lugar donde menos
 pisan a lo que hay, nunca justo encima de otro. Lo que nace sobre una placa llena
-del mismo tono va con el otro (un ícono negro sobre una placa negra no se veía). (Un
-logo subido como archivo, con el área llena, sigue yendo abajo de los otros: se ve y
-se puede tocar.)
+del mismo tono va con el otro (un ícono negro sobre una placa negra no se veía). Una
+**forma llena que nace sobre lo que ya está nace atrás**: casi siempre es una placa de
+fondo, y arriba tapaba el texto o el logo («Traer adelante» la sube). (Un logo subido
+como archivo, con el área llena, sigue yendo abajo de los otros: se ve y se puede
+tocar.)
 
 **Capas y tintas**: con varios elementos encimados, «Traer adelante / Enviar atrás»
 decide cuál va arriba, y **el PDF en curvas del taller los pinta en ese orden**
@@ -251,6 +253,19 @@ paquete comparan **la tinta, no el nombre del color** (`claveTinta`): la misma t
 directa o el mismo color. Un «Negro» y un «Un color #000000» son el mismo K 100; un
 Pantone escrito «485 C» o «485c» es la misma tinta directa.
 
+**Calar**: cuando lo de arriba es un texto, un ícono o una forma y lo de abajo una
+forma, el aviso trae el botón **«Calarlo»** (y en el panel, junto a las capas, está
+**«✂ Calar en la forma»** para cualquier elemento armado acá que pise una forma).
+Le resta a la forma lo que tiene encima: queda **una sola figura, la forma con el
+hueco**, y lo de arriba se saca. Es lo que el taller necesita cuando los dos van con
+la misma tinta (en láser, siempre). Se resta **en vectores** (paper.js), respetando
+la posición, el tamaño y el giro de cada uno, así el hueco va en curvas al PDF del
+taller igual que al PNG y al mockup (medido: 0,4 % de píxeles de diferencia; con todo
+rotado y dos calados seguidos, 98,8 % de coincidencia con lo que se veía antes). Se
+puede calar varias veces sobre la misma forma. La forma calada no se estira ni se
+edita (se mueve, se agranda parejo, se rota y se pinta); **Ctrl+Z deshace el calado**
+y vuelven la forma y lo que se le había restado.
+
 **A la vista**: el aviso de «se sale del área» (o «no entra») también va **junto a
 «Aplicar»**, y al aplicar así pregunta antes. En un elemento chico (una línea, un
 ícono), la × va por fuera para no tapar las manijas (arriba a la derecha; si ahí
@@ -258,7 +273,24 @@ está «Ocultar guías» o se sale de la foto, abajo). Al quitar algo, el «Desh
 aparece unos segundos **sobre la foto** (en el celular, abajo de la pantalla), además
 del del paso 3; si lo quitado tenía un cambio a medio armar, vuelve con ese cambio, y
 si se quitaron varias cosas sigue a la vista para la anterior. En «¿Cómo se
-imprimen?» y en «Recorte manual», Esc cierra esa ventana, no el editor. En el celular, con la hoja de
+imprimen?» y en «Recorte manual», Esc cierra esa ventana, no el editor. Si algo no
+entra o se sale del área y hay varios elementos, el aviso va **adentro de «¿Cómo se
+imprimen?»** (antes eran dos preguntas seguidas); con un solo elemento se pregunta
+como siempre. El menú del texto, cuando el texto es tan ancho como la foto, se abre
+pegado al borde del editor tapando apenas la punta (antes quedaba cortado abajo). En
+el celular «Ocultar guías» va arriba de la foto, no encima.
+
+**Teclado**: los elementos de la foto toman el foco (al tocarlos o con Tab). Con las
+**flechas** se mueven de a un píxel de pantalla (con Mayús, de a diez), **Supr** los
+quita, **Ctrl+D** los duplica (también «Duplicar», en la barra del elemento y en el
+panel) y **Ctrl+Z / Ctrl+Y** deshacen y rehacen (también ↶ ↷, abajo a la izquierda de
+la foto). Deshacer guarda una «foto» del boceto cada vez que las cosas se quedan
+quietas: dónde está cada elemento, su tamaño, giro, capa, color, opacidad y medida, lo
+que dice o cómo es si se armó acá, los agregados y quitados, y el área. No guarda lo
+que le pasa a la imagen de un logo subido (quitar fondo, recorte, IA): eso tiene su
+propio «Deshacer» en el panel. Con el foco en un campo de texto, Ctrl+Z es del campo.
+**Tab no se sale del editor** ni de la ventana que esté abierta encima (íconos, la
+pregunta de impresión). En la barra del elemento, ← y → pasan de botón en botón. En el celular, con la hoja de
 edición abierta, los botones de la barra no tapan lo que se edita.
 
 En los colores (de la ficha y de «Un color»), **cambiar el HEX a mano suelta el
@@ -828,6 +860,7 @@ credencial en Google Cloud. Cada usuario también puede pegar otro con el botón
 - [x] Ejecutivos en desplegable, multi-color de impresión (HEX/Pantone), barras de medida arrastrables, Nuevo boceto / Limpiar
 - [x] Textos en curvas con tipografía a elección (y la del cliente), y capas
 - [x] Formas (rectángulo, círculo, estrella, escudo…) con relleno o contorno en mm, e íconos
+- [x] Calar una forma con lo que tiene encima, deshacer / rehacer, duplicar y teclado
 - [ ] Texto en arco
 - [ ] Fase 2 — Links compartibles y aprobación del cliente
 - [ ] Fase 3 — Cotización conectada (ver `cotizador-formas.html`)

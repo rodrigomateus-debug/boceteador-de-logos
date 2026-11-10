@@ -211,6 +211,8 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .logoItem{position:absolute;cursor:move;z-index:4;min-width:calc(1px/var(--Z, 1));min-height:calc(1px/var(--Z, 1))} /* una línea de menos de un píxel igual se ve */
 #bocetoModal .logoItem img{width:100%;height:100%;display:block;pointer-events:none}
 #bocetoModal .logoItem.selected{outline:1.5px solid var(--sheet-accent);outline-offset:1px}
+#bocetoModal .logoItem:focus{outline:none}
+#bocetoModal .logoItem:focus-visible{outline:calc(2.5px/var(--Z, 1)) solid var(--formas-navy);outline-offset:calc(2px/var(--Z, 1))}
 #bocetoModal .handle{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--sheet-accent);border:2.5px solid #fff;box-shadow:0 1px 4px rgba(11,11,35,.35);z-index:5;touch-action:none}
 #bocetoModal .handle.tl{top:-8px;left:-8px;cursor:nwse-resize}.handle.tr{top:-8px;right:-8px;cursor:nesw-resize}
 #bocetoModal .handle.bl{bottom:-8px;left:-8px;cursor:nesw-resize}.handle.br{bottom:-8px;right:-8px;cursor:nwse-resize}
@@ -442,6 +444,8 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #alignCtrls{position:absolute; bottom:28px; left:28px; z-index:10; display:flex; align-items:center; gap:2px; padding:4px 6px; border-radius:999px; border:1.5px solid var(--formas-gray-200); background:#fff; box-shadow:0 2px 8px rgba(11,11,35,.18)}
 #bocetoModal #alignCtrls button{width:28px; height:26px; border:none; background:none; border-radius:8px; font-size:14px; font-weight:700; color:var(--formas-navy); cursor:pointer; display:grid; place-items:center; padding:0}
 #bocetoModal #alignCtrls button:hover{background:var(--formas-gray-100)}
+#bocetoModal #alignCtrls button:disabled{opacity:.35; cursor:default; background:none}
+#bocetoModal #alignCtrls .ctrlSep{width:1px; height:16px; margin:0 3px; background:var(--formas-gray-200)}
 /* el área se desvanece mientras se manipula el logo */
 #bocetoModal #zone{transition:opacity .15s}
 #bocetoModal #zone.faded{opacity:.15; box-shadow:none !important}
@@ -497,6 +501,8 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
 /* vista limpia: sin guías, pero el logo sigue siendo arrastrable */
 #bocetoModal .stage-card{position:relative}
+/* en el celular «Ocultar guías» tapaba la esquina de arriba de la foto: lo que quedaba abajo no se podía ni tocar */
+@media (max-width:600px){ #bocetoModal .stage-card{padding-top:52px} #bocetoModal .stage-card #cleanToggle{top:10px; right:12px} }
 #bocetoModal #undoFlota{position:absolute; left:50%; bottom:26px; translate:-50% 0; z-index:13; display:flex; align-items:center; gap:8px; max-width:calc(100% - 56px); box-sizing:border-box; padding:8px 14px; border-radius:999px; background:var(--formas-ink, #0B0B23); color:#fff; font-size:12.5px; font-weight:600; line-height:1.3; box-shadow:0 8px 24px rgba(11,11,35,.3)}
 #bocetoModal #undoFlota[hidden]{display:none}
 /* en el celular va abajo de la pantalla, como cualquier aviso con «Deshacer»: sobre la foto tapaba el zoom y el centrado */
@@ -510,6 +516,7 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal #logoBar{position:absolute; z-index:12; display:flex; flex-wrap:wrap; align-items:center; gap:2px; max-width:calc(100% - 12px); box-sizing:border-box; padding:5px; border-radius:14px; background:#fff; border:1px solid var(--border-subtle); box-shadow:0 8px 24px rgba(11,11,35,.16); white-space:nowrap}
 #bocetoModal #logoBar[hidden]{display:none}
 #bocetoModal #logoBar.conHoja{padding:0; border:none; background:none; box-shadow:none}
+@media (max-width:600px){ #bocetoModal #lbDup{display:none} } /* en el celular la barra no tiene lugar: «Duplicar» está en el panel */
 #bocetoModal #logoBar.conHoja > :not(.lbPop){display:none}
 #bocetoModal .lbBtn{position:relative; display:flex; align-items:center; gap:6px; width:auto; height:40px; margin:0; padding:0 11px; border:none; border-radius:10px; background:none; font-family:var(--font-primary); font-size:12.5px; font-weight:600; color:var(--formas-navy); cursor:pointer}
 #bocetoModal .lbBtn:hover, #bocetoModal .lbBtn[aria-expanded="true"]{background:var(--formas-gray-100)}
@@ -1214,7 +1221,8 @@ html,body{margin:0;padding:0;background:#EDEDF2}
           <button type="button" class="bm-close" id="unirClose" aria-label="Cancelar">×</button>
         </div>
         <p class="cm-hint">Elegí según cómo lo va a producir el taller: la ficha se arma distinto en cada caso.</p>
-        <div class="note mal" id="unirTintaNote" role="alert" hidden>⚠ <span id="unirTintaTxt"></span></div>
+        <div class="note mal" id="unirExcedeNote" role="alert" hidden>⚠ <span id="unirExcedeTxt"></span></div>
+        <div class="note mal" id="unirTintaNote" role="alert" hidden>⚠ <span id="unirTintaTxt"></span> <button type="button" class="linkBtn" id="unirCalar" hidden>Calarlo</button></div>
         <div class="mode-row">
           <button type="button" class="mode-opt" id="unirSi" aria-pressed="false">
             <svg viewBox="0 0 24 24" fill="none" stroke="#000085" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1254,6 +1262,9 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <div id="alignCtrls" hidden>
           <button type="button" id="alignH" title="Centrar el logo horizontalmente en el área">⇔</button>
           <button type="button" id="alignV" title="Centrar el logo verticalmente en el área">⇕</button>
+          <i class="ctrlSep"></i>
+          <button type="button" id="histUndo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" disabled>↶</button>
+          <button type="button" id="histRedo" title="Rehacer (Ctrl+Y)" aria-label="Rehacer" disabled>↷</button>
         </div>
         <!-- la barra del logo: va pegada al logo elegido, sobre la foto (se esconde al arrastrarlo, al marcar el área y con «Ocultar guías») -->
         <div id="logoBar" role="toolbar" aria-label="Herramientas del logo" hidden>
@@ -1326,6 +1337,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
             <div class="lbPopTit">Opacidad · <span id="opacityVal">100%</span></div>
             <input type="range" id="logoOpacity" min="10" max="100" value="100" aria-label="Opacidad del logo">
           </div>
+          <button type="button" class="lbBtn" id="lbDup" aria-label="Duplicar" title="Duplicar (Ctrl+D)"><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
           <i class="lbSep" id="lbSepIa"></i>
           <button type="button" class="lbBtn lbIa" id="iaLogoBtn" aria-label="Modificar el logo con IA" title="Pedile a la IA un cambio en este logo: sacar un texto, cambiar un color, redibujarlo prolijo…"><svg class="lbIco" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0l1.58 6.14a2 2 0 0 0 1.44 1.44l6.14 1.58a.5.5 0 0 1 0 .96l-6.14 1.58a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"/></svg><span>IA</span></button>
         </div>
@@ -1483,9 +1495,11 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         <div class="logoChips" id="logoChips" hidden></div>
         <!-- con varios logos o textos encimados, cuál va arriba (no cambia el orden de las hojas) -->
         <div class="capasRow" id="capasRow" hidden>
-          <span class="label">Capa</span>
+          <span class="label" id="capasLbl">Capa</span>
           <button type="button" id="capaArriba" title="Que quede por encima de los demás">⬆ Traer adelante</button>
           <button type="button" id="capaAbajo" title="Que quede por debajo de los demás">⬇ Enviar atrás</button>
+          <button type="button" id="capaDup" title="Una copia igual, corrida un poco (Ctrl+D)">⧉ Duplicar</button>
+          <button type="button" id="capaCalar" title="Restarle este elemento a la forma que tiene debajo: queda la forma con su hueco, en una sola pieza (para la misma tinta, o para grabar). Ctrl+Z lo deshace" hidden>✂ Calar en la forma</button>
         </div>
         <div class="agregarRow">
           <button class="btn btn-secondary" type="button" id="addLogoBtn" hidden>＋ Otro logo o imagen</button>
@@ -1549,7 +1563,7 @@ html,body{margin:0;padding:0;background:#EDEDF2}
         </div>
         <div class="aplicarFalta" id="aplicarFalta" hidden></div>
         <div class="aplicarAviso" id="aplicarAviso" role="status" hidden></div>
-        <div class="aplicarAviso tinta" id="tintaAviso" role="status" hidden></div>
+        <div class="aplicarAviso tinta" id="tintaAviso" role="status" hidden><span id="tintaAvisoTxt"></span> <button type="button" class="linkBtn" id="tintaCalar" hidden>Calarlo</button></div>
       </div>
 
     </div>
@@ -5343,6 +5357,7 @@ function render(){
   syncPaso2();
   posLogoBar();
   syncTintaAviso();
+  histMarcar();
 }
 
 /* paso 2: si la medida y el área salieron solas y no hay nada que mirar, queda una línea de resumen;
@@ -5453,7 +5468,7 @@ function loadPhotoSrc(url, name, opts){
     if(!opts.conservarLogos){ // al cambiar de foto por la técnica, los logos siguen (se reubican después)
       state.logos.forEach(l => l.el.remove());
       state.logos = []; state.sel = -1; pendingAdd = false;
-      deletedLogos.length = 0; syncUndoUI(); // foto nueva: los borrados anteriores ya no aplican
+      deletedLogos.length = 0; syncUndoUI(); histVaciar(); // foto nueva: los borrados anteriores ya no aplican
       $('logoInput').value = '';
     }
     state.ruler = { x1:.08, y1:.5, x2:.92, y2:.5 };
@@ -7217,7 +7232,7 @@ function applyTypedCm(axis){
   const {w:FW,h:FH} = frameRect();
   let wPx = axis === 'w' ? v/k : (v/k) * L.aspect;
   let hPx = wPx / L.aspect;
-  if(L.tipo === 'forma'){ // una forma: el ancho y el alto van sueltos (un rectángulo de 10 × 2 cm)
+  if(L.tipo === 'forma' && !esCalada(L.gen)){ // una forma: el ancho y el alto van sueltos (un rectángulo de 10 × 2 cm)
     wPx = Math.min(axis === 'w' ? v/k : L.w*FW, FW);
     hPx = Math.min(axis === 'h' ? v/k : L.h*FH, FH);
   }
@@ -7228,7 +7243,7 @@ function applyTypedCm(axis){
   const chico = Math.min(wPx, hPx);
   /* solo para que no llegue a cero. En una forma, cada lado por su cuenta: una línea de 8 cm × 0,2 mm sobre un
      producto de 40 cm mide un tercio de píxel de alto, y agrandar los dos lados la dejaba de 19,6 cm × 0,5 mm */
-  if(L.tipo === 'forma'){ wPx = Math.max(wPx, 0.02); hPx = Math.max(hPx, 0.02); }
+  if(L.tipo === 'forma' && !esCalada(L.gen)){ wPx = Math.max(wPx, 0.02); hPx = Math.max(hPx, 0.02); }
   else if(chico < 0.5){ wPx *= 0.5/chico; hPx *= 0.5/chico; }
   const cx = L.x + L.w/2, cy = L.y + L.h/2;
   L.w = wPx/FW; L.h = hPx/FH;
@@ -7240,9 +7255,9 @@ function applyTypedCm(axis){
 }
 /* en «medida exacta», un texto o un ícono no se deforman (el otro lado acompaña siempre); una forma va con su
    ancho y su alto, y en pantalla toma esa proporción */
-const sinDeformar = L => L.tipo === 'texto' || L.tipo === 'icono';
+const sinDeformar = L => L.tipo === 'texto' || L.tipo === 'icono' || (L.tipo === 'forma' && esCalada(L.gen));
 function formaConMedida(L){
-  if(L.tipo !== 'forma' || !(L.cmW > 0 && L.cmH > 0)) return;
+  if(L.tipo !== 'forma' || esCalada(L.gen) || !(L.cmW > 0 && L.cmH > 0)) return;
   const {w:FW, h:FH} = frameRect(), cx = L.x + L.w/2, cy = L.y + L.h/2, asp = L.cmW / L.cmH;
   let w = L.w*FW, h = w / asp;
   if(h > FH * 0.95){ h = FH * 0.95; w = h * asp; }
@@ -7383,6 +7398,11 @@ function makeLogoEl(logo){
   const del = el.querySelector('.logoDelete');
   del.addEventListener('pointerdown', ev => ev.stopPropagation());
   del.addEventListener('click', () => deleteLogo(logo));
+  /* el elemento toma el foco al tocarlo (o con Tab): desde ahí las flechas lo mueven y Supr lo quita. Si el foco
+     quedara en un botón de la barra, ← y → pasarían de botón en botón */
+  el.tabIndex = 0; el.setAttribute('role', 'img');
+  el.addEventListener('pointerdown', () => { try{ el.focus({ preventScroll: true }); }catch(e){} });
+  el.addEventListener('focus', () => { const i = state.logos.indexOf(logo); if(i >= 0 && i !== state.sel) selectLogo(i); });
   logo.el = el;
   logo.img = el.querySelector('img');
   return el;
@@ -7542,7 +7562,14 @@ function loadLogoSrc(url, name, isJpg, file, extra){
         const placa = state.logos.filter(o => o.tipo === 'forma' && o.gen && (o.gen.relleno !== false || o.lleno) && pisa(o) > 0.5).sort((a, b) => (b.z || 0) - (a.z || 0))[0];
         if(placa && tono(placa) === logo.tint) logo.tint = logo.tint === 'black' ? 'white' : 'black';
       }
+      if(extra && logo.tipo === 'forma' && logo.gen && logo.gen.relleno !== false && logo.gen.forma !== 'linea'){
+        /* una forma llena que nace sobre lo que ya está es casi siempre una placa de fondo: nace atrás. Arriba
+           tapaba el texto o el logo que ya estaban (con «Traer adelante» se la sube) */
+        const tapa = o => Math.max(0, Math.min(logo.x + logo.w, o.x + o.w) - Math.max(logo.x, o.x)) * Math.max(0, Math.min(logo.y + logo.h, o.y + o.h) - Math.max(logo.y, o.y)) / (o.w * o.h || 1);
+        if(state.logos.some(o => tapa(o) > 0.05)) logo.z = state.logos.reduce((m, o) => Math.min(m, o.z || 0), 0) - 1;
+      }
       state.logos.push(logo);
+      ordenarCapas();
       state.sel = state.logos.length - 1;
     } else {
       // reemplaza el logo seleccionado manteniendo su posición
@@ -7715,7 +7742,11 @@ function mostrarUndoFlota(){
   $('undoFlota').hidden = false;
   clearTimeout(undoFlotaT); undoFlotaT = setTimeout(ocultarUndoFlota, 8000);
 }
-$('undoFlotaBtn').addEventListener('click', () => { ocultarUndoFlota(); $('undoDeleteBtn').click(); if(deletedLogos.length) mostrarUndoFlota(); });
+$('undoFlotaBtn').addEventListener('click', () => {
+  ocultarUndoFlota();
+  if(caladoReciente){ caladoReciente = false; histIr(true); return; }
+  $('undoDeleteBtn').click(); if(deletedLogos.length) mostrarUndoFlota();
+});
 $('undoDeleteBtn').addEventListener('click', () => {
   const entry = deletedLogos.pop();
   if(!entry){ syncUndoUI(); return; }
@@ -7737,6 +7768,7 @@ function deleteLogo(logo){
   logo.el.remove();
   state.logos.splice(i,1);
   deletedLogos.push({ logo, index: i });
+  caladoReciente = false;
   state.sel = state.logos.length ? Math.min(i, state.logos.length-1) : -1;
   $('logoInput').value = '';
   syncBocetoColorsFromTints();
@@ -7781,7 +7813,7 @@ function syncLogoUI(){
   $('iaLogoBtn').hidden = !L || esGen;
   $('lbSepIa').hidden = !L || esGen;
   $('lbTexto').hidden = !esTexto;
-  $('lbForma').hidden = !(esGen && L.tipo === 'forma');
+  $('lbForma').hidden = !(esGen && L.tipo === 'forma' && !esCalada(L.gen));
   $('lbIcono').hidden = !(esGen && L.tipo === 'icono');
   document.querySelector('#tintSeg [data-tint="original"]').hidden = esGen;
   $('tintSeg').classList.toggle('sinFull', esGen);
@@ -7807,10 +7839,13 @@ function syncLogoUI(){
     const q = queEs(l), x = l.el.querySelector('.logoDelete');
     x.title = q.quitar;
     x.setAttribute('aria-label', q.quitar + (esGenerado(l) ? ': ' + (l.name || '') : ''));
+    l.el.setAttribute('aria-label', (l.name || 'Logo') + '. Con las flechas se mueve (con Mayús, de a diez), con Supr se quita, con Ctrl+D se duplica.');
     if(l.img) l.img.alt = l.name || 'Logo';
   });
   const capas = enCapas(), iCapa = capas.indexOf(L);
-  $('capasRow').hidden = !L || state.logos.length < 2;
+  // la fila de la capa también tiene «Duplicar» (en el celular no entra en la barra): está siempre que hay algo elegido
+  $('capasRow').hidden = !L;
+  [$('capasLbl'), $('capaArriba'), $('capaAbajo')].forEach(e => { e.hidden = state.logos.length < 2; });
   $('capaArriba').disabled = iCapa === capas.length - 1;
   $('capaAbajo').disabled = iCapa <= 0;
   if(L){
@@ -7822,7 +7857,7 @@ function syncLogoUI(){
     $('logoThumb').classList.toggle('oscuro', L.tint === 'white');
     if(esGen){ // lo escrito va como texto, nunca como HTML
       $('logoTxt').textContent = L.name;
-      const s = document.createElement('small'); s.textContent = L.tipo === 'icono' ? 'clic para cambiarlo' : L.tipo === 'forma' ? 'clic para editarla' : 'clic para editarlo';
+      const s = document.createElement('small'); s.textContent = L.tipo === 'icono' ? 'clic para cambiarlo' : L.tipo !== 'forma' ? 'clic para editarlo' : esCalada(L.gen) ? 'calada: Ctrl+Z deshace el calado' : 'clic para editarla';
       $('logoTxt').appendChild(s);
     } else $('logoTxt').innerHTML = `${esc(L.name)}<small>clic para reemplazar este logo</small>`; // el nombre del archivo, escapado
     medirOpaco(L);
@@ -7981,7 +8016,7 @@ function syncCambios(){
   if(!L) return;
   const filas = [];
   const esGen = esGenerado(L), esTexto = esGen && L.tipo === 'texto';
-  if(esGen && L.tipo === 'forma') filas.push({ dato: true, txt: 'En curvas · ' + nombreForma(L.gen), de: 'la forma', acc: [['Editar', () => editarElemento(L)]] });
+  if(esGen && L.tipo === 'forma') filas.push({ dato: true, txt: 'En curvas · ' + nombreForma(L.gen), de: 'la forma', acc: esCalada(L.gen) ? [] : [['Editar', () => editarElemento(L)]] });
   if(esGen && L.tipo === 'icono') filas.push({ dato: true, txt: 'En curvas · «' + L.gen.icono.split(':').pop() + '» · Material Design Icons (licencia Apache 2.0)', de: 'el ícono', acc: [['Cambiar', () => editarElemento(L)]] });
   /* un texto: con qué tipografía está y qué alto tienen las letras (el color va en la barra, es suyo) */
   if(esTexto){
@@ -8710,11 +8745,15 @@ const FORMAS = [
 ];
 const FORMA_NUEVA = { forma: 'rect', relleno: true, grosorMm: 1, esquinas: 0, puntas: 5, aspecto: 1.6, anchoMm: 0 };
 const formaDe = id => FORMAS.find(f => f[0] === id) || FORMAS[0];
-const conContorno = g => !g.relleno && g.forma !== 'linea';
+/* una forma calada: a una forma se le restó lo que tenía encima (un texto, un ícono, otra forma). Su dibujo ya
+   está hecho (gen.d, en la caja gen.w × gen.h de la forma de la que salió) y no se estira ni se edita */
+const esCalada = g => !!g && g.forma === 'calada';
+const escXml = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const conContorno = g => !g.relleno && g.forma !== 'linea' && !esCalada(g);
 const mmTxt = v => String(+(+v).toFixed(1)).replace('.', ',') + ' mm';
 // (llena: se pidió con contorno, pero con ese grosor no queda hueco: el nombre y el archivo no dicen «contorno»)
-const nombreForma = (g, llena) => formaDe(g.forma)[1] + (!conContorno(g) ? '' : llena ? ' · llena (el contorno de ' + mmTxt(g.grosorMm) + ' no deja hueco)' : ' · contorno de ' + mmTxt(g.grosorMm));
-const archivoForma = (g, llena) => ('Forma ' + formaDe(g.forma)[1] + (!conContorno(g) ? '' : llena ? ' - llena' : ' - contorno ' + mmTxt(g.grosorMm)))
+const nombreForma = (g, llena) => esCalada(g) ? String(g.de || 'Forma') + (/a$/.test(String(g.de || 'Forma')) ? ' calada' : ' calado') : formaDe(g.forma)[1] + (!conContorno(g) ? '' : llena ? ' · llena (el contorno de ' + mmTxt(g.grosorMm) + ' no deja hueco)' : ' · contorno de ' + mmTxt(g.grosorMm));
+const archivoForma = (g, llena) => (esCalada(g) ? 'Forma calada - ' + String(g.de || 'forma') : 'Forma ' + formaDe(g.forma)[1] + (!conContorno(g) ? '' : llena ? ' - llena' : ' - contorno ' + mmTxt(g.grosorMm)))
   .replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() + '.svg';
 const K_ARCO = 0.5522847498; // un cuarto de círculo con una curva
 const cmM = (x, y) => ({ type: 'M', values: [x, y] }), cmL = (x, y) => ({ type: 'L', values: [x, y] });
@@ -8977,6 +9016,15 @@ function huecoForma(g, W, H, t){
    sale de los mm pedidos y del ancho real (anchoMm); sin medida todavía, el 4 % del lado corto. Si el contorno
    pedido es tan grueso que no queda hueco, va llena (lleno: true) */
 function formaEnCurvas(g){
+  if(esCalada(g)){
+    const W = +g.w > 0 ? +g.w : 1000, H = +g.h > 0 ? +g.h : 1000, aire = 0.01 * Math.max(W, H);
+    const vb = [-aire, -aire, W + 2 * aire, H + 2 * aire].map(v => +v.toFixed(2));
+    // el dibujo viene guardado (puede venir de una plantilla): solo vale un trazado; si no lo es, va la caja llena
+    const d = /^[MmLlHhVvCcSsQqTtAaZz0-9eE+.,\s-]+$/.test(String(g.d || '')) ? String(g.d) : 'M0 0H' + W + 'V' + H + 'H0Z';
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" data-exacto="1" viewBox="' + vb.join(' ') + '" width="' + vb[2] + '" height="' + vb[3] + '">'
+      + '<title>' + escXml('Forma en curvas: ' + nombreForma(g) + (Array.isArray(g.menos) && g.menos.length ? ' (se le restó: ' + g.menos.join(', ') + ')' : '')) + '</title><path fill="#000000" d="' + d + '"/></svg>';
+    return { svg, w: W, h: H, ink: { x1: 0, y1: 0, x2: W, y2: H }, vb, lleno: false, hueco: 0 };
+  }
   const asp = Math.max(0.001, Math.min(1000, g.aspecto || formaDe(g.forma)[2])); // una línea de 20 cm × 0,2 mm es 1000:1
   const W = asp >= 1 ? 1000 : 1000 * asp, H = W / asp; // el lado largo en 1000: una línea vertical no pide una imagen enorme
   const fuera = contornoForma(g, W, H);
@@ -9181,7 +9229,7 @@ const QUE_ES = {
   icono: { del: 'del ícono', Este: 'Este ícono', el: 'el ícono', aplicado: 'Ícono aplicado', quitar: 'Quitar este ícono' },
 };
 /* cómo se lo nombra entre comillas: lo que dice el texto, el nombre del ícono o de la forma (sin repetir «Texto», «Ícono») */
-const apodo = l => l.tipo === 'texto' && l.gen ? recorteTexto(l.gen.texto, 28) : l.tipo === 'icono' && l.gen ? idIcono(l.gen) : l.tipo === 'forma' && l.gen ? formaDe(l.gen.forma)[1] : (l.name || '');
+const apodo = l => l.tipo === 'texto' && l.gen ? recorteTexto(l.gen.texto, 28) : l.tipo === 'icono' && l.gen ? idIcono(l.gen) : l.tipo === 'forma' && l.gen ? nombreForma({ ...l.gen, relleno: true }) : (l.name || '');
 const queEs = l => (l && QUE_ES[l.tipo]) || { del: 'del logo', Este: 'Cambios en este logo', el: 'el logo', aplicado: 'Logo aplicado', quitar: 'Quitar este logo' };
 
 /* tipografías: cada una se baja una sola vez; las que sube el cliente quedan guardadas en el navegador
@@ -9788,7 +9836,7 @@ async function prepararFuenteCliente(L){
    rehacen al editarlos (rehacer). Cada uno se edita con lo suyo: el texto y la forma con su menú de la barra,
    el ícono con la ventana de íconos */
 function editarElemento(L){
-  if(!esGenerado(L)) return;
+  if(!esGenerado(L) || (L.tipo === 'forma' && esCalada(L.gen))) return; // una calada no se edita (Ctrl+Z deshace el calado)
   if(L.tipo === 'icono') abrirIconos('cambiar');
   else abrirPopBarra(L.tipo, true);
 }
@@ -9826,7 +9874,7 @@ function formaElegida(){ const L = selLogo(); return L && L.tipo === 'forma' && 
 /* después de estirarla, de escribir su medida o de cambiarle algo: se rehace con su proporción y su ancho real
    (el contorno va en mm de verdad) */
 function ajustarForma(L){
-  if(!L || L.tipo !== 'forma' || !L.gen) return;
+  if(!L || L.tipo !== 'forma' || !L.gen || esCalada(L.gen)) return; // una calada no se rehace: su dibujo es el que es
   const {w:FW, h:FH} = frameRect();
   L.gen.aspecto = +((L.w*FW) / (L.h*FH)).toPrecision(6);
   L.aspect = L.gen.aspecto;
@@ -9843,7 +9891,7 @@ function ajustarForma(L){
    (se corrigió la medida del producto, se pasó a «medida exacta») o se la movió de foto, hay que rehacerla. Si
    no, el nombre decía «contorno de 2 mm» y al taller le llegaban 4 */
 function formaVieja(L){
-  if(!L || L.tipo !== 'forma' || !L.gen || L.txtTimer || L.txtP) return false;
+  if(!L || L.tipo !== 'forma' || !L.gen || esCalada(L.gen) || L.txtTimer || L.txtP) return false;
   const {w:FW, h:FH} = frameRect(), asp = (L.w*FW) / (L.h*FH), m = medidaWH(L), mm = m && m.w > 0 ? m.w * 10 : 0;
   if(Math.abs(asp / L.gen.aspecto - 1) > 0.002) return true;
   return conContorno(L.gen) && Math.abs(mm - (L.gen.anchoMm || 0)) > Math.max(0.05, mm * 0.002);
@@ -10091,6 +10139,141 @@ $('iconoGrilla').addEventListener('keydown', e => {
   bs[clamp(j, 0, bs.length - 1)].focus();
 });
 
+/* ---------- deshacer / rehacer (Ctrl+Z, Ctrl+Y) ----------
+   Se guarda una «foto» del boceto (dónde está cada elemento, su tamaño, giro, capa, color, opacidad y medida; si
+   se armó acá, lo que dice o cómo es; y el área) cada vez que las cosas se quedan quietas, y deshacer vuelve a la
+   anterior. No guarda lo que le pasa a la imagen de un logo subido (quitar fondo, recorte, IA): eso tiene su
+   propio «Deshacer» en el panel */
+var hist = [], histRedo = [], histT = 0, histAplicando = false; // var: render() llama a histMarcar antes de llegar a esta línea
+var histIds = new WeakMap(), histN = 0;
+function histId(l){ if(!histIds.has(l)) histIds.set(l, ++histN); return histIds.get(l); }
+function histFoto(){
+  return { zone: state.zone ? { ...state.zone } : null, sel: state.sel,
+    logos: state.logos.map(l => ({ l, x: l.x, y: l.y, w: l.w, h: l.h, rot: l.rot || 0, z: l.z || 0, tint: l.tint, tintColor: l.tintColor ? { ...l.tintColor } : null,
+      opacity: l.opacity, cmW: l.cmW || 0, cmH: l.cmH || 0, gen: l.gen ? JSON.stringify(l.gen) : null, genEsc: l.genEsc || 0, genCmEsc: l.genCmEsc || 0 })) };
+}
+function histClave(f){ return JSON.stringify([f.zone, f.logos.map(o => [histId(o.l), o.x, o.y, o.w, o.h, o.rot, o.z, o.tint, o.tintColor, o.opacity, o.cmW, o.cmH, o.gen])]); }
+function histMarcar(){ // desde render(): cuando todo se queda quieto, se mira si algo cambió
+  clearTimeout(histT);
+  if(!histAplicando) histT = setTimeout(histTomar, 350);
+}
+function histTomar(){
+  clearTimeout(histT);
+  if(histAplicando || frame.hidden) return;
+  if(active || state.logos.some(l => l.txtTimer || l.txtP)){ histT = setTimeout(histTomar, 250); return; } // a mitad de un arrastre o de armar un texto
+  const f = histFoto(), c = histClave(f);
+  if(hist.length && hist[hist.length - 1].c === c) return;
+  hist.push({ f, c });
+  if(hist.length > 80) hist.shift();
+  histRedo = [];
+  syncHistUI();
+}
+function histVaciar(){ hist = []; histRedo = []; clearTimeout(histT); syncHistUI(); }
+function syncHistUI(){ $('histUndo').disabled = hist.length < 2; $('histRedo').disabled = !histRedo.length; }
+async function histIr(atras){
+  if(histAplicando || frame.hidden || active) return;
+  // lo de hace un instante también cuenta: se termina de armar y se guarda antes de volver
+  await Promise.all(state.logos.map(l => { if(l.txtTimer){ clearTimeout(l.txtTimer); l.txtTimer = 0; return rehacer(l); } return l.txtP; }).filter(Boolean));
+  histTomar();
+  if(atras ? hist.length < 2 : !histRedo.length) return;
+  histAplicando = true;
+  try{
+    let destino;
+    if(atras){ histRedo.push(hist.pop()); destino = hist[hist.length - 1]; }
+    else { destino = histRedo.pop(); hist.push(destino); }
+    await histAplicar(destino.f);
+  } finally { histAplicando = false; syncHistUI(); }
+}
+async function histAplicar(f){
+  cerrarPopsBarra(); ocultarUndoFlota();
+  const quedan = new Set(f.logos.map(o => o.l));
+  // lo agregado después de esa foto se va; lo quitado después, vuelve
+  state.logos.forEach(l => { if(!quedan.has(l)){ clearTimeout(l.txtTimer); l.txtTimer = 0; if(l.el) l.el.remove(); } });
+  f.logos.forEach(o => {
+    if(state.logos.includes(o.l)) return;
+    makeLogoEl(o.l);
+    const k = deletedLogos.findIndex(d => d.logo === o.l); if(k >= 0) deletedLogos.splice(k, 1);
+  });
+  state.logos = f.logos.map(o => o.l);
+  const espera = [];
+  for(const o of f.logos){
+    const l = o.l, sinImagen = !l.img || !l.img.getAttribute('src');
+    const cambiaTinte = l.tint !== o.tint || JSON.stringify(l.tintColor || null) !== JSON.stringify(o.tintColor);
+    const cambiaGen = !!o.gen && JSON.stringify(l.gen || null) !== o.gen;
+    Object.assign(l, { x: o.x, y: o.y, w: o.w, h: o.h, rot: o.rot, z: o.z, tint: o.tint, tintColor: o.tintColor ? { ...o.tintColor } : null,
+      opacity: o.opacity, cmW: o.cmW, cmH: o.cmH, genEsc: o.genEsc, genCmEsc: o.genCmEsc });
+    if(cambiaGen){ l.gen = JSON.parse(o.gen); l.txtAviso = ''; l.txtFallo = false; espera.push(rehacer(l)); } // lo que decía o cómo era: se arma de nuevo
+    else if(cambiaTinte || sinImagen) espera.push(new Promise(res => rebuildLogo(l, res)));
+  }
+  await Promise.all(espera);
+  // al rearmarse, un texto o una forma calculan de nuevo su caja: queda la de la foto
+  f.logos.forEach(o => Object.assign(o.l, { x: o.x, y: o.y, w: o.w, h: o.h, cmW: o.cmW, cmH: o.cmH, genEsc: o.genEsc, genCmEsc: o.genCmEsc }));
+  if(f.zone && state.zone) state.zone = { ...f.zone };
+  state.sel = state.logos.length ? clamp(f.sel, 0, state.logos.length - 1) : -1;
+  ordenarCapas();
+  syncBocetoColorsFromTints(); syncUndoUI(); syncLogoUI(); setStepStates(); render();
+}
+$('histUndo').addEventListener('click', () => histIr(true));
+$('histRedo').addEventListener('click', () => histIr(false));
+
+/* ---------- duplicar (Ctrl+D): una copia igual, corrida un poco y arriba de todo ---------- */
+function duplicarElemento(){
+  const L = selLogo();
+  if(!L || frame.hidden) return;
+  const {w:FW, h:FH} = frameRect(), copia = {};
+  for(const [k, v] of Object.entries(L)){
+    if(['el', 'img', 'txtP', 'txtTimer', 'txtOtra', 'txtUnir'].includes(k)) continue;
+    copia[k] = v && typeof v === 'object' ? JSON.parse(JSON.stringify(v)) : v;
+  }
+  const corr = 14 / state.zoom;
+  copia.z = siguienteCapa();
+  copia.x = clamp(L.x + corr / FW, 0, Math.max(0, 1 - L.w)); copia.y = clamp(L.y + corr / FH, 0, Math.max(0, 1 - L.h));
+  if(copia.x === L.x && copia.y === L.y){ copia.x = clamp(L.x - corr / FW, 0, 1); copia.y = clamp(L.y - corr / FH, 0, 1); } // en la esquina de abajo: para el otro lado
+  cerrarPopsBarra();
+  makeLogoEl(copia);
+  state.logos.push(copia); state.sel = state.logos.length - 1;
+  rebuildLogo(copia, () => { syncBocetoColorsFromTints(); syncLogoUI(); setStepStates(); render(); });
+}
+$('lbDup').addEventListener('click', duplicarElemento);
+$('capaDup').addEventListener('click', duplicarElemento);
+
+/* ---------- teclado: flechas, Supr, Ctrl+Z / Y / D, y Tab que no se sale del editor ---------- */
+const VENTANAS_ED = ['iconoModal', 'unirModal', 'cropModal', 'bgModal', 'iaLogoModal', 'limitesModal'];
+function atraparTab(e){
+  const abiertas = VENTANAS_ED.map(id => $(id)).filter(m => m && !m.hidden);
+  if(abiertas.some(m => !bocetoModal.contains(m))) return; // una ventana de afuera del editor: se arregla sola
+  const raiz = abiertas.length ? abiertas[abiertas.length - 1] : bocetoModal;
+  const foco = [...raiz.querySelectorAll('a[href], button, input, select, textarea, [tabindex]')].filter(el => !el.disabled && el.tabIndex >= 0 && el.type !== 'hidden'
+    && (el.offsetWidth || el.offsetHeight || el.getClientRects().length) && getComputedStyle(el).visibility !== 'hidden');
+  if(!foco.length) return;
+  const pri = foco[0], ult = foco[foco.length - 1], a = document.activeElement;
+  if(!raiz.contains(a)){ e.preventDefault(); (e.shiftKey ? ult : pri).focus(); }
+  else if(e.shiftKey && a === pri){ e.preventDefault(); ult.focus(); }
+  else if(!e.shiftKey && a === ult){ e.preventDefault(); pri.focus(); }
+}
+document.addEventListener('keydown', e => {
+  if(bocetoModal.hidden || e.defaultPrevented) return;
+  if(e.key === 'Tab'){ atraparTab(e); return; }
+  const t = e.target, enCampo = !!t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || ''));
+  if(enCampo || frame.hidden || state.drawMode || VENTANAS_ED.some(id => $(id) && !$(id).hidden)) return;
+  const ctrl = e.ctrlKey || e.metaKey, k = (e.key || '').toLowerCase();
+  if(ctrl && !e.altKey && k === 'z'){ e.preventDefault(); histIr(!e.shiftKey); return; }
+  if(ctrl && !e.altKey && k === 'y'){ e.preventDefault(); histIr(false); return; }
+  if(popAbierto()) return; // con un menú abierto, las flechas son del menú
+  const L = selLogo();
+  if(!L) return;
+  if(ctrl && !e.altKey && k === 'd'){ e.preventDefault(); duplicarElemento(); return; }
+  if(ctrl || e.altKey) return;
+  if(e.key === 'Delete' || e.key === 'Backspace'){ e.preventDefault(); deleteLogo(L); return; }
+  const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+  if(!d) return;
+  e.preventDefault();
+  const {w:FW, h:FH} = frameRect(), paso = (e.shiftKey ? 10 : 1) / state.zoom; // un píxel de pantalla; con Mayús, diez
+  L.x = clamp(L.x + d[0] * paso / FW, 0, Math.max(0, 1 - L.w));
+  L.y = clamp(L.y + d[1] * paso / FH, 0, Math.max(0, 1 - L.h));
+  render();
+});
+
 /* ---- capas: con logos o textos encimados, cuál va arriba. Es aparte del orden de la lista (que es el de
    las hojas de la ficha): z más alto, más arriba ---- */
 const siguienteCapa = () => state.logos.reduce((m, l) => Math.max(m, l.z || 0), 0) + 1;
@@ -10197,8 +10380,15 @@ function ubicarPop(pop, top, bh, bajoLogo, left, card, er){
     if(ph > lugar){
       pop.style.maxWidth = '';
       const pw = pop.offsetWidth, br = pop.parentElement.getBoundingClientRect();
-      const xDer = Math.max(er.right, br.right) + 10, xIzq = Math.min(er.left, br.left) - 10 - pw;
-      const der = cuerpo.right - 10 - xDer >= pw, izq = xIzq >= cuerpo.left + 10;
+      let xDer = Math.max(er.right, br.right) + 10, xIzq = Math.min(er.left, br.left) - 10 - pw;
+      let der = cuerpo.right - 10 - xDer >= pw, izq = xIzq >= cuerpo.left + 10;
+      if(!der && !izq){
+        /* ni a un costado entra entero (un texto tan ancho como la foto): pegado al borde del editor, si así
+           tapa apenas la punta del texto. Antes quedaba cortado abajo y había que desplazarlo */
+        const xD = cuerpo.right - 10 - pw, xI = cuerpo.left + 10, tapaD = er.right + 10 - xD, tapaI = xI + pw + 10 - er.left;
+        if(xD >= cuerpo.left + 10 && tapaD <= er.width * 0.2 && tapaD <= tapaI){ der = true; xDer = xD; }
+        else if(tapaI <= er.width * 0.2){ izq = true; xIzq = xI; }
+      }
       if(der || izq){
         const alto = Math.min(ph, limAb - limArr);
         const y = clamp(er.top + er.height/2 - alto/2, limArr, Math.max(limArr, limAb - alto));
@@ -10409,7 +10599,7 @@ const LADO_MIN = 8, CORTO_MIN = 3; // …y 3 px en el corto: un texto largo no q
 function resizeLogo(a, cur, FW, FH){
   const s = a.start, L = a.logo;
   const sx = s.x*FW, sy = s.y*FH, sw = s.w*FW, sh = s.h*FH;
-  const esForma = L.tipo === 'forma' && !!L.gen, esLinea = esForma && L.gen.forma === 'linea';
+  const esForma = L.tipo === 'forma' && !!L.gen && !esCalada(L.gen), esLinea = esForma && L.gen.forma === 'linea';
   // una forma tiene la proporción de su caja (la del recorte trae el redondeo a píxeles)
   const asp = esForma ? sw / sh : L.aspect;
   if(esForma && !s.rot){
@@ -10524,8 +10714,10 @@ async function listoParaAplicar(){
   const sinEscribir = state.logos.filter(l => l.tipo === 'texto' && l.gen && l.gen.texto.trim() === TEXTO_NUEVO.texto);
   if(sinEscribir.length && !confirm((sinEscribir.length > 1 ? 'Hay ' + sinEscribir.length + ' textos que todavía dicen' : 'Hay un texto que todavía dice')
     + ' «' + TEXTO_NUEVO.texto + '».\n\n¿Aplicar igual?')) return false;
-  const excede = avisoExcede(); // no entra o se sale del área: el taller no lo puede imprimir así
-  if(excede && !confirm(excede + '\n\n¿Aplicar igual?')) return false;
+  /* no entra o se sale del área: el taller no lo puede imprimir así. Con varios elementos viene después la
+     pregunta de cómo se imprimen: el aviso va ahí adentro (eran dos preguntas seguidas) */
+  const excede = avisoExcede();
+  if(excede && state.logos.length < 2 && !confirm(excede + '\n\n¿Aplicar igual?')) return false;
   const faltan = state.logos.filter(l => l.tipo === 'texto' && l.faltan && l.faltan.length);
   if(faltan.length && !confirm(faltan.map(l => l.name + ': la tipografía no tiene ' + l.faltan.map(c => '«' + c + '»').join(', ')).join('\n')
     + '.\n\nEsas letras quedan en blanco en el boceto y en el taller. ¿Aplicar igual?')) return false;
@@ -10658,31 +10850,128 @@ const todoLaser = () => /l[aá]ser/i.test(tecnicaElegida() || '') && state.logos
 const pinturaEd = l => (!l.tint || l.tint === 'original') ? null : pinturaDe({ tinte: l.tint, tinteColor: l.tintColor }, todoLaser());
 // «el texto «ACME»», «la forma «Rectángulo»», «logo.png»: sin comillas adentro de comillas
 const nombrar = l => esGenerado(l) ? queEs(l).el + ' «' + apodo(l) + '»' : '«' + (l.name || 'logo') + '»';
-function avisoMismaTinta(){
-  for(const [a, b] of solapes()){
+/* devuelve { txt, arriba } (o null): el aviso y el elemento de arriba. `pares` son los de solapes() */
+function avisoMismaTinta(pares){
+  for(const [a, b] of pares || solapes()){
     const A = state.logos[a], B = state.logos[b], P = pinturaEd(A);
     if(!P || claveTinta(P) !== claveTinta(pinturaEd(B))) continue;
-    const quien = nombrar(A).replace(/^./, c => c.toUpperCase()) + ' va encima de ' + nombrar(B);
-    return todoLaser()
-      ? 'En grabado láser todo sale del mismo tono: ' + quien.replace(/^./, c => c.toLowerCase()) + ' y, grabados, no se van a distinguir (acá se ven por la sombra). Separalos o sacá uno; si la idea es que vaya calado, dejalo así y anotalo en las observaciones de la ficha.'
-      : quien + ' y los dos salen con la misma tinta (' + P.nombre + '): impresos no se distinguen, aunque acá se vean. Cambiale el color a uno, separalos, o si va calado dejalo así y anotalo en las observaciones de la ficha.';
+    const quien = (nombrar(A).replace(/^./, c => c.toUpperCase()) + ' va encima de ' + nombrar(B)).replace(' de el ', ' del ');
+    const calable = esGenerado(A) && B.tipo === 'forma'; // se le puede restar a la forma de abajo con «Calar»
+    return { arriba: A, calable, txt: todoLaser()
+      ? 'En grabado láser todo sale del mismo tono: ' + quien.replace(/^./, c => c.toLowerCase()) + ' y, grabados, no se van a distinguir (acá se ven por la sombra). ' + (calable ? 'Calalo (queda el hueco con su forma), separalos o sacá uno.' : 'Separalos o sacá uno; si la idea es que vaya calado, dejalo así y anotalo en las observaciones de la ficha.')
+      : quien + ' y los dos salen con la misma tinta (' + P.nombre + '): impresos no se distinguen, aunque acá se vean. ' + (calable ? 'Calalo (queda el hueco con su forma), cambiale el color a uno o separalos.' : 'Cambiale el color a uno, separalos, o si va calado dejalo así y anotalo en las observaciones de la ficha.') };
   }
-  return '';
+  return null;
 }
 /* el mismo aviso, antes de aplicar: junto a «Aplicar», un momento después de que las cosas se quedan quietas
-   (mirar qué se pisa cuesta dibujar cada elemento: no se hace en cada movimiento) */
-var tintaAvisoT = 0; // var: render() puede llamar a syncTintaAviso antes de que se llegue a esta línea
+   (mirar qué se pisa cuesta dibujar cada elemento: no se hace en cada movimiento). De paso se sabe si lo
+   elegido se puede calar en una forma que tiene abajo */
+var tintaAvisoT = 0, tintaAvisoDe = null; // var: render() puede llamar a syncTintaAviso antes de que se llegue a esta línea
 function syncTintaAviso(){
   clearTimeout(tintaAvisoT);
-  const poner = t => { $('tintaAviso').hidden = !t; $('tintaAviso').textContent = t ? '⚠ ' + t : ''; };
-  if(frame.hidden || state.logos.length < 2){ poner(''); return; }
-  tintaAvisoT = setTimeout(() => { if(!active && !frame.hidden) poner(avisoMismaTinta()); }, 400);
+  const poner = (av, placa) => {
+    tintaAvisoDe = av && av.calable ? av.arriba : null;
+    $('tintaAviso').hidden = !av; $('tintaAvisoTxt').textContent = av ? '⚠ ' + av.txt : '';
+    $('tintaCalar').hidden = !tintaAvisoDe;
+    $('capaCalar').hidden = !placa;
+  };
+  if(frame.hidden || state.logos.length < 2){ poner(null, null); return; }
+  tintaAvisoT = setTimeout(() => {
+    if(active || frame.hidden) return;
+    const pares = solapes();
+    poner(avisoMismaTinta(pares), placaDe(selLogo(), pares));
+  }, 400);
 }
+
+/* ---------- calar: restarle a la forma de abajo el texto, el ícono o la forma que tiene encima ----------
+   Queda una sola figura (la forma con el hueco de lo de arriba) y lo de arriba se saca: es lo que el taller
+   necesita cuando los dos van con la misma tinta (en láser, siempre). Se resta en vectores (paper.js), así el
+   hueco va en curvas, como todo lo armado acá. Ctrl+Z lo deshace */
+function placaDe(L, pares){ // la forma más alta de las que L pisa por debajo (tinta sobre tinta), o null
+  if(!L || !esGenerado(L) || !L.genSvg) return null;
+  const i = state.logos.indexOf(L);
+  return (pares || solapes()).filter(par => par[0] === i).map(par => state.logos[par[1]])
+    .filter(o => o && o.tipo === 'forma' && o.gen && o.genSvg && o.gen.forma !== 'linea').sort((p, q) => (q.z || 0) - (p.z || 0))[0] || null;
+}
+function trazoPaper(l){ // el dibujo de un elemento armado acá, como un solo trazado de paper
+  const P = window.paper;
+  if(l.tipo === 'icono' && /<(circle|rect|ellipse|line|polyline|polygon)\b|transform=/.test(l.genSvg)){
+    // un ícono con círculos o rectángulos: se lo lee entero y se unen sus partes
+    const grupo = P.project.importSVG(l.genSvg, { insert: false, expandShapes: true });
+    const partes = grupo.getItems({ recursive: true, match: it => (it instanceof P.CompoundPath || (it instanceof P.Path && !(it.parent instanceof P.CompoundPath))) && !it.clipMask });
+    let u = null;
+    partes.forEach(it => { it.fillRule = 'nonzero'; u = u ? u.unite(it, { insert: false }) : it.unite(new P.Path({ insert: false }), { insert: false }); });
+    return u;
+  }
+  const ds = [...l.genSvg.matchAll(/<path[^>]* d="([^"]+)"/g)].map(m => m[1]);
+  if(!ds.length) return null;
+  const p = new P.CompoundPath({ pathData: ds.join(' '), insert: false });
+  p.fillRule = 'nonzero';
+  return p;
+}
+async function calar(L){
+  const placa = placaDe(L);
+  const decir = t => { $('tintaAviso').hidden = false; $('tintaAvisoTxt').textContent = '⚠ ' + t; $('tintaCalar').hidden = true; };
+  if(!placa){ decir('No hay una forma debajo para calar: lo que se cala tiene que estar encima de una forma.'); return; }
+  if(L.txtP || L.txtTimer || placa.txtP || placa.txtTimer) await generadosAlDia();
+  try{ await conTiempo(cargarPaper(), 12000); }
+  catch(e){ decir('No se pudo bajar la herramienta para calar: revisá la conexión a internet y probá de nuevo.'); return; }
+  const P = window.paper;
+  if(!paperListo){ P.setup(new P.Size(1, 1)); paperListo = true; }
+  let d = '', caja = null;
+  try{
+    const {w:FW, h:FH} = frameRect(), arriba = trazoPaper(L), base = trazoPaper(placa);
+    if(!arriba || !base) throw new Error('sin dibujo');
+    // la caja que en pantalla ocupa cada uno: una forma, la suya entera; un texto o un ícono, la de su tinta
+    const cajaDe = (l, it) => l.tipo === 'forma' && l.genBox ? new P.Rectangle(0, 0, l.genBox.w, l.genBox.h) : it.bounds;
+    const ca = cajaDe(L, arriba);
+    caja = cajaDe(placa, base);
+    // lo de arriba, de sus unidades a la pantalla…
+    arriba.translate(new P.Point(-ca.x, -ca.y));
+    arriba.scale(L.w*FW / ca.width, L.h*FH / ca.height, new P.Point(0, 0));
+    arriba.translate(new P.Point(L.x*FW, L.y*FH));
+    arriba.rotate(L.rot || 0, new P.Point((L.x + L.w/2)*FW, (L.y + L.h/2)*FH));
+    // …y de la pantalla a las unidades de la forma
+    arriba.rotate(-(placa.rot || 0), new P.Point((placa.x + placa.w/2)*FW, (placa.y + placa.h/2)*FH));
+    arriba.translate(new P.Point(-placa.x*FW, -placa.y*FH));
+    arriba.scale(caja.width / (placa.w*FW), caja.height / (placa.h*FH), new P.Point(0, 0));
+    arriba.translate(new P.Point(caja.x, caja.y));
+    const antes = Math.abs(base.area), resto = base.subtract(arriba, { insert: false }), queda = Math.abs(resto.area);
+    if(!(queda > antes * 0.01)){ decir('Calando ' + nombrar(L) + ' no queda nada de la forma: achicalo o agrandá la forma.'); return; }
+    if(queda > antes * 0.999){ decir(nombrar(L).replace(/^./, c => c.toUpperCase()) + ' no llega a pisar la forma: no hay nada que calar.'); return; }
+    d = resto.getPathData(null, 2);
+  }catch(e){ decir('No se pudo calar: probá de nuevo.'); return; }
+  const g0 = placa.gen, de = esCalada(g0) ? (g0.de || 'Forma') : formaDe(g0.forma)[1];
+  placa.gen = { forma: 'calada', relleno: true, d, w: +caja.width.toFixed(2), h: +caja.height.toFixed(2), aspecto: +(caja.width / caja.height).toPrecision(6),
+    de, menos: [...(Array.isArray(g0.menos) ? g0.menos : []), apodo(L)].slice(-6), anchoMm: g0.anchoMm || 0 };
+  placa.txtAviso = ''; placa.txtFallo = false;
+  cerrarPopsBarra();
+  // lo de arriba se saca (queda su hueco). No va a «lo quitado»: Ctrl+Z deshace el calado entero
+  const i = state.logos.indexOf(L);
+  clearTimeout(L.txtTimer); L.txtTimer = 0;
+  if(L.el) L.el.remove();
+  state.logos.splice(i, 1);
+  state.sel = state.logos.indexOf(placa);
+  await rehacer(placa);
+  syncBocetoColorsFromTints(); syncLogoUI(); setStepStates(); render();
+  // el aviso de «Deshacer», sobre la foto
+  $('undoFlotaTxt').textContent = 'Se caló ' + nombrar(L) + ' en la forma.';
+  caladoReciente = true; mostrarUndoFlota();
+}
+var caladoReciente = false; // el «Deshacer» flotante deshace el calado (no lo último quitado)
+$('tintaCalar').addEventListener('click', () => { if(tintaAvisoDe && state.logos.includes(tintaAvisoDe)) calar(tintaAvisoDe); });
+$('capaCalar').addEventListener('click', () => { const L = selLogo(); if(L) calar(L); });
+$('unirCalar').addEventListener('click', () => { const L = unirCalarDe; $('unirClose').click(); if(L && state.logos.includes(L)) calar(L); });
+var unirCalarDe = null;
 let unirCache = null;
 function abrirUnirModal(){
   unirCache = composeUnion();
   const mt = avisoMismaTinta();
-  $('unirTintaNote').hidden = !mt; $('unirTintaTxt').textContent = mt;
+  $('unirTintaNote').hidden = !mt; $('unirTintaTxt').textContent = mt ? mt.txt : '';
+  unirCalarDe = mt && mt.calable ? mt.arriba : null; $('unirCalar').hidden = !unirCalarDe;
+  // lo que no entra o se sale del área se dice acá (antes era otra pregunta, justo antes de esta)
+  const ex = avisoExcede();
+  $('unirExcedeNote').hidden = !ex; $('unirExcedeTxt').textContent = ex ? ex + ' Si elegís una opción, se aplica así.' : '';
   $('unirTitle').textContent = '¿Cómo se imprimen estos ' + state.logos.length + (state.logos.some(esGenerado) ? ' elementos?' : ' logos?');
   $('unirSiTxt').textContent = 'Van juntos en un mismo shablón o película: queda una sola hoja'
     + (unirCache.wCm ? ' de ' + fmtCm(unirCache.wCm*unitK()) + ' × ' + fmtCm(unirCache.hCm*unitK()) + ' ' + state.unit + ' en total.'
@@ -10875,7 +11164,7 @@ window.__bocetoSnapshot = () => {
 window.__bocetoRestore = data => {
   state.logos.forEach(l => l.el.remove());
   state.logos = []; state.sel = -1; pendingAdd = false;
-  deletedLogos.length = 0; syncUndoUI();
+  deletedLogos.length = 0; syncUndoUI(); histVaciar();
   state.zone = null; state.ruler = null;
   $('logoInput').value = ''; $('photoInput').value = '';
   if(!data || !data.photoSrc){

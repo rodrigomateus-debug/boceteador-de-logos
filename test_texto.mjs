@@ -290,6 +290,21 @@ assert.deepEqual(T.cajaCurvas(cb[1]), { x1: 20, y1: 20, x2: 980, y2: 480 });
 cb = contornos(comandos(forma({ forma: 'elipse', aspecto: 1, relleno: false, grosorMm: 5, anchoMm: 50 }).svg));
 assert.deepEqual(T.cajaCurvas(cb[1]), { x1: 100, y1: 100, x2: 900, y2: 900 });
 assert.equal(cb[1].filter(c => c.type === 'C').length, 4);
+// una forma calada (se le restó lo de arriba): su dibujo va tal cual, en la caja de la forma de la que salió
+const cal = forma({ forma: 'calada', relleno: true, d: 'M0 0H1000V625H0ZM100 100V500H900V100Z', w: 1000, h: 625, aspecto: 1.6, de: 'Rectángulo', menos: ['ACME <b>&"'] });
+assert.equal(cal.w, 1000); assert.equal(cal.h, 625); assert.equal(cal.lleno, false);
+assert.deepEqual(cal.ink, { x1: 0, y1: 0, x2: 1000, y2: 625 });
+assert.ok(cal.svg.includes(' d="M0 0H1000V625H0ZM100 100V500H900V100Z"') && cal.svg.includes('data-exacto="1"'));
+assert.ok(cal.svg.includes('ACME &lt;b&gt;&amp;&quot;') && !cal.svg.includes('<b>')); // lo que se restó va al título, escapado
+assert.equal(T.nombreForma({ forma: 'calada', de: 'Rectángulo' }), 'Rectángulo calado');
+assert.equal(T.nombreForma({ forma: 'calada', de: 'Estrella' }), 'Estrella calada');
+assert.equal(T.archivoForma({ forma: 'calada', de: 'Corazón' }), 'Forma calada - Corazón.svg');
+// un dibujo que no es un trazado (una plantilla tocada) no entra al SVG: va la caja llena
+const calMala = forma({ forma: 'calada', d: 'M0 0"/><script>x</script><path d="', w: 200, h: 100 });
+assert.ok(!/script/.test(calMala.svg) && calMala.svg.includes(' d="M0 0H200V100H0Z"'));
+// (paper.js devuelve el trazado con comandos relativos y notación corta: también vale)
+assert.ok(forma({ forma: 'calada', d: 'M10,10c1.5,-2 3,4 5,6l-3,2.5e1h4v-2z', w: 100, h: 100 }).svg.includes('M10,10c1.5,-2'));
+
 // un grosor imposible no deja basura: la forma va llena y lo dice
 let imp = forma({ forma: 'rect', aspecto: 1, relleno: false, grosorMm: 90, anchoMm: 100 });
 assert.equal(imp.lleno, true); assert.equal(contornos(comandos(imp.svg)).length, 1);
