@@ -213,6 +213,11 @@ iframe#preview{width:794px; height:1123px; border:none; display:block; backgroun
 #bocetoModal .logoItem.selected{outline:1.5px solid var(--sheet-accent);outline-offset:1px}
 #bocetoModal .logoItem:focus{outline:none}
 #bocetoModal .logoItem:focus-visible{outline:calc(2.5px/var(--Z, 1)) solid var(--formas-navy);outline-offset:calc(2px/var(--Z, 1))}
+/* las manijas, la × y el ⟳ del elemento elegido van en una caja aparte (#selCtl), que copia su lugar y se dibuja
+   encima de todos los elementos: adentro de cada uno, al que quedaba atrás (una placa bajo el logo) se los tapaba
+   el de arriba y no respondían. La caja deja pasar los toques; sus controles, no */
+#bocetoModal .logoItem.selCtl{pointer-events:none}
+#bocetoModal .logoItem.selCtl > *{pointer-events:auto}
 #bocetoModal .handle{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--sheet-accent);border:2.5px solid #fff;box-shadow:0 1px 4px rgba(11,11,35,.35);z-index:5;touch-action:none}
 #bocetoModal .handle.tl{top:-8px;left:-8px;cursor:nwse-resize}.handle.tr{top:-8px;right:-8px;cursor:nesw-resize}
 #bocetoModal .handle.bl{bottom:-8px;left:-8px;cursor:nesw-resize}.handle.br{bottom:-8px;right:-8px;cursor:nwse-resize}
@@ -5017,6 +5022,26 @@ window.__applyBoceto = res => {
 'use strict';
 const $ = id => document.getElementById(id);
 const frame = $('frame'), photo = $('photo'), zoneEl = $('zone');
+/* los controles del elemento elegido: una sola caja, la última de la foto (los elementos entran siempre antes que
+   ella). render() le copia el lugar del elegido */
+const ctlSel = document.createElement('div');
+ctlSel.id = 'selCtl'; ctlSel.className = 'logoItem selCtl selected'; ctlSel.hidden = true;
+ctlSel.innerHTML = '<span class="handle tl" data-corner="tl"></span><span class="handle tr" data-corner="tr"></span>'
+  + '<span class="handle bl" data-corner="bl"></span><span class="handle br" data-corner="br"></span>'
+  + '<button class="logoDelete" type="button" aria-label="Quitar logo" title="Quitar este logo">×</button>'
+  + '<span class="logoRotate" title="Rotá el logo">⟳</span>';
+frame.appendChild(ctlSel);
+{
+  const del = ctlSel.querySelector('.logoDelete');
+  del.addEventListener('pointerdown', ev => ev.stopPropagation());
+  del.addEventListener('click', () => {
+    const L = selLogo();
+    if(!L) return;
+    deleteLogo(L);
+    const N = selLogo(); // el foco pasa al que queda elegido: en la ×, otro Enter quitaría también ese
+    try{ if(N && N.el) N.el.focus({ preventScroll: true }); else del.blur(); }catch(e){}
+  });
+}
 const chip = $('measureChip');
 const fmtCm = n => n > 0 && n < 0.1 ? n.toLocaleString('es-AR',{minimumFractionDigits:3,maximumFractionDigits:3}) : n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); // una línea de 0,2 mm no es «0,02 cm»
 
@@ -5188,15 +5213,21 @@ function render(){
     l.img.style.opacity = l.opacity;
     l.el.classList.toggle('selected', i === state.sel);
     l.el.classList.toggle('chico', Math.min(l.w*FW, l.h*FH)*state.zoom < 44); // la × va por fuera: en una línea tapaba las dos manijas de la punta
-    l.el.classList.remove('xAbajo', 'xIzq', 'xMedio');
   });
   /* …por fuera es arriba a la derecha. Si justo ahí está «Ocultar guías» (en el celular, con el elemento en la
      franja de arriba del área) o más de la mitad queda fuera de la foto, se prueba arriba a la izquierda, a los
      costados y, al final, abajo: si no, tocar la × escondía las guías en vez de quitar. (Abajo va último: ahí
      suele estar la barra del elemento) */
   const Lx = selLogo();
+  ctlSel.hidden = !Lx;
+  ctlSel.classList.remove('xAbajo', 'xIzq', 'xMedio');
+  if(Lx){ // la caja de los controles, donde está el elegido
+    const e = Lx.el.style;
+    Object.assign(ctlSel.style, { left: e.left, top: e.top, width: e.width, height: e.height, transform: e.transform });
+    ctlSel.classList.toggle('chico', Lx.el.classList.contains('chico'));
+  }
   if(Lx && !frame.classList.contains('clean')){
-    const xEl = Lx.el.querySelector('.logoDelete'), w1 = $('frameWrap').getBoundingClientRect(), w2 = frame.getBoundingClientRect();
+    const xEl = ctlSel.querySelector('.logoDelete'), w1 = $('frameWrap').getBoundingClientRect(), w2 = frame.getBoundingClientRect();
     // lo que se ve de la foto (lo que sale de ahí queda recortado)
     const wr = { left: Math.max(w1.left, w2.left), top: Math.max(w1.top, w2.top), right: Math.min(w1.right, w2.right), bottom: Math.min(w1.bottom, w2.bottom) };
     const c = $('cleanToggle').hidden ? null : $('cleanToggle').getBoundingClientRect();
@@ -5210,11 +5241,11 @@ function render(){
     const lugares = Lx.el.classList.contains('chico') ? [[], ['xIzq'], ['xMedio'], ['xMedio', 'xIzq'], ['xAbajo'], ['xAbajo', 'xIzq']] : [[], ['xIzq'], ['xAbajo'], ['xAbajo', 'xIzq']];
     let hay = false;
     for(const clases of lugares){
-      Lx.el.classList.remove('xAbajo', 'xIzq', 'xMedio');
-      if(clases.length) Lx.el.classList.add(...clases);
+      ctlSel.classList.remove('xAbajo', 'xIzq', 'xMedio');
+      if(clases.length) ctlSel.classList.add(...clases);
       if(libre()){ hay = true; break; }
     }
-    if(!hay) Lx.el.classList.remove('xAbajo', 'xIzq', 'xMedio'); // ningún lugar libre: donde iba
+    if(!hay) ctlSel.classList.remove('xAbajo', 'xIzq', 'xMedio'); // ningún lugar libre: donde iba
   }
 
   const L = selLogo();
@@ -7389,15 +7420,8 @@ function loadLogo(file){
 function makeLogoEl(logo){
   const el = document.createElement('div');
   el.className = 'logoItem';
-  el.innerHTML = '<img alt="Logo">'
-    + '<span class="handle tl" data-corner="tl"></span><span class="handle tr" data-corner="tr"></span>'
-    + '<span class="handle bl" data-corner="bl"></span><span class="handle br" data-corner="br"></span>'
-    + '<button class="logoDelete" type="button" aria-label="Quitar logo" title="Quitar este logo">×</button>'
-    + '<span class="logoRotate" title="Rotá el logo">⟳</span>';
-  frame.appendChild(el);
-  const del = el.querySelector('.logoDelete');
-  del.addEventListener('pointerdown', ev => ev.stopPropagation());
-  del.addEventListener('click', () => deleteLogo(logo));
+  el.innerHTML = '<img alt="Logo">'; // las manijas, la × y el ⟳ están en #selCtl
+  frame.insertBefore(el, ctlSel);
   /* el elemento toma el foco al tocarlo (o con Tab): desde ahí las flechas lo mueven y Supr lo quita. Si el foco
      quedara en un botón de la barra, ← y → pasarían de botón en botón */
   el.tabIndex = 0; el.setAttribute('role', 'img');
@@ -7825,7 +7849,7 @@ function syncLogoUI(){
     const el = queEs(L).el, lo = L && L.tipo === 'forma' ? 'la' : 'lo';
     $('alignH').title = 'Centrar ' + el + ' horizontalmente en el área'; $('alignV').title = 'Centrar ' + el + ' verticalmente en el área';
     document.querySelector('#tintSeg [data-tint="custom"]').title = 'Pintar ' + el + ' de un solo color a elección: HEX o Pantone';
-    state.logos.forEach(l => { const r = l.el && l.el.querySelector('.logoRotate'); if(r) r.title = 'Rotá ' + queEs(l).el; });
+    ctlSel.querySelector('.logoRotate').title = 'Rotá ' + el;
   }
   $('lbColor').title = 'Color ' + del; $('lbOpac').title = 'Opacidad ' + del;
   $('logoOpacity').setAttribute('aria-label', 'Opacidad ' + del);
@@ -7834,11 +7858,13 @@ function syncLogoUI(){
   $('logoWcm').setAttribute('aria-label', 'Ancho ' + del); $('logoHcm').setAttribute('aria-label', 'Alto ' + del);
   document.querySelector('#logoReadout .label').textContent = queEs(L).aplicado;
   $('addLogoBtn').textContent = state.logos.some(l => !esGenerado(l)) ? '＋ Otro logo o imagen' : '＋ Logo o imagen';
-  state.logos.forEach(l => { // la × y la imagen de cada uno dicen qué son
+  { // la × dice qué quita…
+    const x = ctlSel.querySelector('.logoDelete');
+    x.title = queEs(L).quitar;
+    x.setAttribute('aria-label', queEs(L).quitar + (esGenerado(L) ? ': ' + (L.name || '') : ''));
+  }
+  state.logos.forEach(l => { // …y la imagen de cada uno, qué es
     if(!l.el) return;
-    const q = queEs(l), x = l.el.querySelector('.logoDelete');
-    x.title = q.quitar;
-    x.setAttribute('aria-label', q.quitar + (esGenerado(l) ? ': ' + (l.name || '') : ''));
     l.el.setAttribute('aria-label', (l.name || 'Logo') + '. Con las flechas se mueve (con Mayús, de a diez), con Supr se quita, con Ctrl+D se duplica.');
     if(l.img) l.img.alt = l.name || 'Logo';
   });
@@ -7914,7 +7940,9 @@ const popAbierto = () => Object.keys(POPS_BARRA).find(k => !$(POPS_BARRA[k][0]).
 function cerrarPopsBarra(){
   if(panPopInput && $('logoBar').contains(panPopInput)) cerrarPantonePop(); // la lista de Pantone del menú no queda suelta
   Object.values(POPS_BARRA).forEach(([pop, boton]) => { $(pop).hidden = true; $(boton).setAttribute('aria-expanded', 'false'); });
+  const eraHoja = $('logoBar').classList.contains('conHoja');
   $('stageCol').classList.remove('conMenu'); $('logoBar').classList.remove('conHoja');
+  if(eraHoja) posLogoBar(); // con la hoja abierta la barra no ocupaba lugar: al volver, que no caiga sobre la × ni el ⟳
 }
 /* forzar: abrirlo aunque ya esté abierto (si no, el botón lo abre y lo cierra) */
 function abrirPopBarra(cual, forzar){
@@ -10278,7 +10306,7 @@ document.addEventListener('keydown', e => {
    las hojas de la ficha): z más alto, más arriba ---- */
 const siguienteCapa = () => state.logos.reduce((m, l) => Math.max(m, l.z || 0), 0) + 1;
 const enCapas = () => state.logos.slice().sort((a, b) => (a.z || 0) - (b.z || 0));
-function ordenarCapas(){ enCapas().forEach(l => { if(l.el) frame.appendChild(l.el); }); }
+function ordenarCapas(){ enCapas().forEach(l => { if(l.el) frame.insertBefore(l.el, ctlSel); }); }
 function moverCapa(dir){
   const L = selLogo();
   if(!L) return;
@@ -10337,7 +10365,7 @@ function posLogoBar(){
   if(!ver){ if(!bar.hidden){ bar.hidden = true; cerrarPopsBarra(); } return; }
   bar.hidden = false;
   /* el logo con lo que lleva alrededor (medida, ⟳ y ×): la barra no tapa nada de eso */
-  const lr = [er, chip.hidden ? null : rectDe(chip), rectDe(L.el.querySelector('.logoRotate')), rectDe(L.el.querySelector('.logoDelete'))]
+  const lr = [er, chip.hidden ? null : rectDe(chip), rectDe(ctlSel.querySelector('.logoRotate')), rectDe(ctlSel.querySelector('.logoDelete'))]
     .filter(r => r && (r.width || r.height))
     .reduce((a, r) => ({ left: Math.min(a.left, r.left), top: Math.min(a.top, r.top), right: Math.max(a.right, r.right), bottom: Math.max(a.bottom, r.bottom) }));
   let piso = wr.bottom - 6;
@@ -10451,10 +10479,11 @@ frame.addEventListener('pointerdown', e => {
 
   const item = e.target.closest ? e.target.closest('.logoItem') : null;
   if(item){
-    const idx = state.logos.findIndex(l => l.el === item);
+    const idx = item === ctlSel ? state.sel : state.logos.findIndex(l => l.el === item);
     if(idx >= 0){
       if(idx !== state.sel){ state.sel = idx; syncLogoUI(); }
       const L = state.logos[idx];
+      if(item === ctlSel){ try{ L.el.focus({ preventScroll: true }); }catch(err){} } // el foco, al elemento: después las flechas lo mueven
       if(e.target.classList.contains('logoRotate')){
         active = { mode:'logo-rotate', logo:L, startPx:px, start:{x:L.x,y:L.y,w:L.w,h:L.h,rot:L.rot} };
       } else if(e.target.dataset && e.target.dataset.corner){
