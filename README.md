@@ -239,7 +239,9 @@ del mismo tono va con el otro (un ícono negro sobre una placa negra no se veía
 **forma llena que nace sobre lo que ya está nace atrás**: casi siempre es una placa de
 fondo, y arriba tapaba el texto o el logo («Traer adelante» la sube). Las manijas, la
 × y el ⟳ del elemento elegido se dibujan encima de todos, así que al que quedó atrás
-se lo agranda, gira o quita igual aunque otro le tape las esquinas. (Un logo subido
+se lo agranda, gira o quita igual aunque otro le tape las esquinas; y un toque sin
+arrastre sobre el ⟳ elige lo que tiene debajo (el segundo texto suele quedar justo ahí).
+(Un logo subido
 como archivo, con el área llena, sigue yendo abajo de los otros: se ve y se puede
 tocar.)
 

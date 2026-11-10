@@ -10485,7 +10485,7 @@ frame.addEventListener('pointerdown', e => {
       const L = state.logos[idx];
       if(item === ctlSel){ try{ L.el.focus({ preventScroll: true }); }catch(err){} } // el foco, al elemento: después las flechas lo mueven
       if(e.target.classList.contains('logoRotate')){
-        active = { mode:'logo-rotate', logo:L, startPx:px, start:{x:L.x,y:L.y,w:L.w,h:L.h,rot:L.rot} };
+        active = { mode:'logo-rotate', logo:L, startPx:px, start:{x:L.x,y:L.y,w:L.w,h:L.h,rot:L.rot}, toque:{ x:e.clientX, y:e.clientY } };
       } else if(e.target.dataset && e.target.dataset.corner){
         active = { mode:'logo-resize', logo:L, corner:e.target.dataset.corner, startPx:px, start:{x:L.x,y:L.y,w:L.w,h:L.h,rot:L.rot} };
       } else {
@@ -10608,6 +10608,18 @@ frame.addEventListener('pointermove', e => {
   }
   if(active.mode === 'auto-resize' || active.mode === 'auto-move') contornoAjustado();
   if(active.mode === 'logo-resize'){ fijarEscalaTexto(active.logo); ajustarForma(active.logo); }
+  /* un toque sin arrastre sobre el ⟳, con otro elemento debajo, elige ese: el ⟳ va encima de todo y, si no, se
+     tragaba el toque al vecino (el segundo texto, o un ícono arriba de un texto, quedan justo bajo el ⟳ del primero) */
+  if(e.type === 'pointerup' && active.mode === 'logo-rotate' && Math.hypot(e.clientX - active.toque.x, e.clientY - active.toque.y) < 4){
+    const abajo = document.elementsFromPoint(e.clientX, e.clientY).find(x => x !== ctlSel && x !== active.logo.el && x.classList.contains('logoItem'));
+    const i = abajo ? state.logos.findIndex(l => l.el === abajo) : -1;
+    if(i >= 0){
+      active.logo.rot = active.start.rot; // un temblor del pulso no cuenta como giro
+      active = null; selectLogo(i);
+      try{ abajo.focus({ preventScroll: true }); }catch(err){}
+      return;
+    }
+  }
   active = null; render();
 }));
 
